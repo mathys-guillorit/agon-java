@@ -1,11 +1,11 @@
-package org.example.Controller;
+package univ.bordeaux.fr.Controller;
 
 /**
  * Instianciate the app the first time
  */
-public class MainController {
+public class MainC {
 
-    public MainController() {
+    public MainC() {
         System.out.println("SUCCESS !");
     }
 

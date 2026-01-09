@@ -1,12 +1,12 @@
-package org.example;
+package univ.bordeaux.fr;
 
-import org.example.Controller.MainController;
+import univ.bordeaux.fr.Controller.MainC;
 
 /**
  * @version Java 21 (Microsoft OpenJdk 21.0.9)
  */
 public class Main {
     public static void main(String[] arg) {
-        new MainController();
+        new MainC();
     }
 }
