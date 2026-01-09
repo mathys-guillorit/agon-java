@@ -1,0 +1,4 @@
+@startuml
+class org.example.Controller.MainController {
+}
+@enduml

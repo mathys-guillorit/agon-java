@@ -1,0 +1,9 @@
+@startuml
+class Model{
+}
+class View{
+}
+class Controller{
+    - a : int
+}
+@enduml
