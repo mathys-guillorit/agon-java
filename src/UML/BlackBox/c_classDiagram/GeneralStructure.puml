@@ -1,0 +1,15 @@
+@startuml
+
+' changed DP MVC to Layered
+
+class ApplicationLayer {
+
+}
+class CoreDomain {
+
+}
+class DataLayer {
+    ' layer 7 (last one ?) let's think on that...
+
+}
+@enduml

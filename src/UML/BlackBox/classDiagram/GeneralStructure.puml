@@ -1,8 +1,0 @@
-@startuml
-class Model{
-}
-class View{
-}
-class Controller{
-}
-@enduml
