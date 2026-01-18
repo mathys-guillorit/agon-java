@@ -1,0 +1,25 @@
+@startuml
+
+skinparam actorStyle awesome
+left to right direction
+actor Player
+actor AI
+
+rectangle "Game – Flow" {
+    (Play a game)
+    (Play a turn)
+    (Move a piece)
+    (Undo a move)
+    (Redo a move)
+    (Ask for a hint)
+
+    (Play a game) --> (Play a turn) : <<include>>
+    (Play a turn) --> (Move a piece) : <<include>>
+    (Undo a move) --> (Move a piece) : <<extend>>
+    (Redo a move) --> (Move a piece) : <<extend>>
+}
+
+AI --> (Play a turn)
+Player --> (Play a game)
+Player --> (Ask for a hint)
+@enduml
