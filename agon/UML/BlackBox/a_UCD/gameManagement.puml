@@ -1,0 +1,25 @@
+@startuml
+
+skinparam actorStyle awesome
+left to right direction
+actor Player
+
+rectangle "Game Management" {
+    (Load a game)
+    (Save a game)
+    (Pause the game)
+    (Quit the game)
+    (Display the board)
+    (Display the history)
+    (Display the configuration)
+}
+
+Player --> (Load a game)
+Player --> (Save a game)
+Player --> (Pause the game)
+Player --> (Quit the game)
+Player --> (Display the board) #88f
+Player --> (Display the history) #88f
+Player --> (Display the configuration) #88f
+
+@enduml

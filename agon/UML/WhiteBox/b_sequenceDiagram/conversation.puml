@@ -1,0 +1,72 @@
+@startuml
+'IHM/GUI
+
+actor Player as p
+participant CLI as p #gold
+
+entity layer1 as l1 #skyblue
+entity layer2 as l2 #skyblue
+entity layer3 as l3 #skyblue
+entity layer4 as l4 #skyblue
+entity layer5 as l5 #skyblue
+database data as l6 #f66
+
+' default off and closed
+p -> l1: start game
+activate p
+	group running
+		loop message_loop_condition
+			group #Pink if logic_codition is something
+				p -> t: example
+				activate p #red
+					p -> j: condition example
+					p -> h: condition example
+				deactivate p
+				p -> p: message_c
+			else #abffa7 else other_condition(explicit)
+				p -> t: message_d
+				activate p #green
+					p -> j: message_e
+					p -> h: message_f
+				deactivate p
+				p -> p: message_g
+			end
+			group if message_title_e
+				p -> p: message_h
+				group if condition_message_i
+					p -> p: message_j
+				end
+			end
+			p -> u: message_k
+		end
+		p -> t: message_l
+		p -> j: message_m
+
+		activate j #0066ff
+			j -> t: message_o
+			activate t #999999
+				t -> j: message_p
+				t -> j: message_q
+			deactivate t
+			j -> p: message_r
+		deactivate j
+		p -> j: message_s
+		activate j #0066ff
+			j -> t: message_t
+			activate t #999999
+				t -> j: message_u
+				t -> j: message_v
+			deactivate t
+			j -> p: message_w
+		deactivate j
+		p -> h: message_x
+		activate h #ff5c33
+			h -> h: message_y
+			h -> p: message_z
+		deactivate h
+	p -> p: message_27
+	end group
+	p -> u: message_28
+	p -> p: message_29
+deactivate p
+@enduml
