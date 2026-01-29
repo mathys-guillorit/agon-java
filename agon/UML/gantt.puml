@@ -1,0 +1,98 @@
+@startgantt
+Language fr
+
+saturday are closed
+sunday are closed
+'attention format : aaaa/jj/mm
+Project starts the 2026/01/05
+skinparam roundcorner 10
+
+' dates de départ
+2026/01/04 is colored in #ff0000
+' date de fin (rendu)
+2026/04/02 is colored in red
+
+' oral pdp
+2026/03/23 is colored in orange
+2026/03/24 is colored in orange
+
+
+<style>
+ganttDiagram {
+    fontName Arial
+    fontSize 14
+    task {
+        BackgroundColor #EAEAEA
+        BorderColor #555555
+    }
+    milestone {
+        BackgroundColor #C62828
+        FontColor white
+        FontStyle bold
+    }
+}
+</style>
+
+[Semaine 0] as [s0] lasts 5 day
+[Semaine 1] as [s1] starts at [s0]'s end and lasts 5 day
+[Semaine 2] as [s2] starts at [s1]'s end and lasts 5 day
+[Semaine 3] as [s3] starts at [s2]'s end and lasts 5 day
+[Semaine 4] as [s4] starts at [s3]'s end and lasts 5 day
+[Semaine 5] as [s5] starts at [s4]'s end and lasts 5 day
+[Semaine 6] as [s6] starts at [s5]'s end and lasts 5 day
+[Semaine 7] as [s7] starts at [s6]'s end and lasts 5 day
+[Semaine 8] as [s8] starts at [s7]'s end and lasts 5 day
+[Semaine 9] as [s9] starts at [s8]'s end and lasts 5 day
+[Semaine 10] as [s10] starts at [s9]'s end and lasts 5 day
+[Semaine 11] as [s11] starts at [s10]'s end and lasts 5 day
+[Semaine 12] as [s12] starts at [s11]'s end and lasts 5 day
+
+[s1] displays on same row as [s2]
+[s2] displays on same row as [s3]
+[s3] displays on same row as [s4]
+[s4] displays on same row as [s5]
+[s5] displays on same row as [s6]
+[s6] displays on same row as [s7]
+[s7] displays on same row as [s8]
+[s8] displays on same row as [s9]
+[s9] displays on same row as [s10]
+[s10] displays on same row as [s11]
+[s11] displays on same row as [s12]
+
+
+
+[Explication du projet] as [begin] lasts 7 day
+[pre-projet] as [preproj] starts at [begin]'s end and lasts 13 day
+[tests continus] as [tests] starts at [preproj]'s end and lasts 35 day
+-- implementation --
+[reseau] as [network] starts at [preproj]'s end and lasts 29 day
+[version 1 (base du jeu et CLI (GUI possible)] as [v1] starts at [preproj]'s end and lasts 10 day
+[version 2 (GUI + IA)] as [v2] starts at [v1]'s end and lasts 10 days
+[version 3 (IA + Network)] as [v3] starts at [v2]'s end and lasts 10 days
+[finalisation] as [v4] starts at [v3]'s end and lasts 5 days
+-- détails développement CLI --
+[Théo] as [thl] starts at [preproj]'s end and lasts 10 days
+-- détails développement réseau --
+[Théo] as [thl] starts at [preproj]'s end and lasts 29 days
+-- détails développement IA --
+-- détails développement GUI --
+[Théo] as [thl] starts at [v1]'s end and lasts 10 days
+-- détails développement tests --
+[Félix] as [fttl] starts at [preproj]'s end and lasts 35 days
+-- légende --
+
+'[tests] displays on same row as [preproj]
+
+' coloration
+[tests] is colored in #cddc47/black
+
+' légende
+[passage a l'oral] is colored in #orange
+[fin de projet] is colored in #red
+[network] is colored in #cyan/black
+
+[thl] is colored in #cyan
+[fttl] is colored in #cddc47
+[Milan] is colored in #pink
+
+@endgantt
