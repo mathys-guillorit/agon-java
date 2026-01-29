@@ -63,36 +63,75 @@ ganttDiagram {
 
 [Explication du projet] as [begin] lasts 7 day
 [pre-projet] as [preproj] starts at [begin]'s end and lasts 13 day
-[tests continus] as [tests] starts at [preproj]'s end and lasts 35 day
 -- implementation --
-[reseau] as [network] starts at [preproj]'s end and lasts 29 day
 [version 1 (base du jeu et CLI (GUI possible)] as [v1] starts at [preproj]'s end and lasts 10 day
 [version 2 (GUI + IA)] as [v2] starts at [v1]'s end and lasts 10 days
 [version 3 (IA + Network)] as [v3] starts at [v2]'s end and lasts 10 days
 [finalisation] as [v4] starts at [v3]'s end and lasts 5 days
 -- détails développement CLI --
-[Théo] as [thl] starts at [preproj]'s end and lasts 10 days
+[Théo : aide ponctuelle] as [tt2] starts at [preproj]'s end and lasts 10 days
+[Félix : récupération des entrées pour traitement] as [ft3] starts at [preproj]'s end and lasts 13 days
+
+
 -- détails développement réseau --
-[Théo] as [thl] starts at [preproj]'s end and lasts 29 days
+
+[Théo] as [theo] starts at [preproj]'s end and lasts 30 days
+
 -- détails développement IA --
+
+[Milan] as [milan] starts 2026/02/02 and lasts 30 days
+[Félix: aide ponctuelle] as [ft2] starts at [preproj]'s end and lasts 30 days
+
 -- détails développement GUI --
-[Théo] as [thl] starts at [v1]'s end and lasts 10 days
+
+[Mathis] as [mathis] starts at [preproj]'s end and lasts 10 days
+[Théo : aide ponctuelle] as [tt1] starts at [preproj]'s end and lasts 30 days
+
 -- détails développement tests --
-[Félix] as [fttl] starts at [preproj]'s end and lasts 35 days
+
+[Félix aide cohérence générale + performance] as [felix] starts at [preproj]'s end and lasts 35 days
+[Milan : test IA] as [mit2] starts 2026/02/02 and lasts 30 days
+[Théo : test réseau] as [tt3] starts at [v1]'s end and lasts 20 days
+[Mathis : test ce qui est possible avec le GUI] as [mat1] starts at [preproj]'s end and lasts 30 days
+[Lukas : test agon core] as [lt1] starts at [preproj]'s end and lasts 30 days
+
+-- développement layer "technical" --
+
+[implémentation peristance, langage et config] as [ft1] starts at [preproj]'s end and lasts 35 days
+
+-- développement layer "agon core" --
+[Lukas] as [lukas] starts at [preproj]'s end and lasts 20 days
+
 -- légende --
+[présentation du projet final] is colored in #orange/black
+[fin de projet] is colored in #red/black
+[impossible]  is colored in #ff000099/black
+' assignation manuelle des couleurs
+[theo] is colored in #cyan/black
+[felix] is colored in #00cc1166/black
+[milan] is colored in #pink/black 
+[mathis] is colored in #FF96F9/black
+[lukas] is colored in #9698FF/black
 
-'[tests] displays on same row as [preproj]
+' tasks (cannot reuse same name or apply same colors to all)
+' denomination : first letters of (2 if required): name + t 
+' for first letter of "task" + number of task
 
-' coloration
-[tests] is colored in #cddc47/black
+' felix
+[ft1] is colored in #00cc1166/black
+[ft2] is colored in #00cc1166/black
+[ft3] is colored in #00cc1166/black
+' theo
+[tt1] is colored in #cyan/black
+[tt2] is colored in #cyan/black
+[tt3] is colored in #cyan/black
+' lukas
+[lt1] is colored in #9698FF/black
+' milan 
+[mit2] is colored in #pink/black 
+' mathis
+[mat1] is colored in #pink/black 
 
-' légende
-[passage a l'oral] is colored in #orange
-[fin de projet] is colored in #red
-[network] is colored in #cyan/black
 
-[thl] is colored in #cyan
-[fttl] is colored in #cddc47
-[Milan] is colored in #pink
 
 @endgantt
