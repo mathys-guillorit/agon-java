@@ -1,0 +1,27 @@
+@startuml
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    RoundCorner 15
+}
+skinparam shadowing true
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #black;line.bold
+skinparam backgroundColor #FAFAFA
+
+
+legend
+| Couleur | Rôle |
+|<#E3F2FD>| Configuration (.agonrc) |
+|<#E8F5E9>| Internationalisation (i18n) |
+|<#FFF3E0>| Persistance technique et IA |
+|<#F0F4C3>| Technical (parsing / serialization générique) |
+|<#F3E5F5>| IA (framework externe, TensorFlow) |
+
+- Interfaces et classes spécifiques sont séparées
+- Aucune dépendance métier dans technical, persistence ou IA
+- Les packages techniques peuvent être mockés pour les tests
+endlegend
+
+@enduml

@@ -1,0 +1,89 @@
+@startuml
+skinparam backgroundColor #FAFAFA
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam roundcorner 20
+skinparam shadowing false
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #333333
+
+package "lang" #E8F5E9 {
+
+    class LocaleManager <<locale>> #line.bold
+}
+package "config" #E3F2FD {
+
+    interface ConfigDecoder #D4E6FF;line.bold {
+        <color:#AE3400>// Décodage d'options depuis le CLI</color>
+        +decode(rawData)
+    }
+
+    class ConfParser <<parser>> {
+        +parse(rawData): GameConfig
+    }
+
+    class ConfSerializer <<serializer>> {
+        +serialize(conf: GameConfig)
+    }
+
+    enum AIMode {
+        MCTS
+        ML
+        ID
+        UCT
+        MinMax
+    }
+
+    enum AIHeuristic {
+        A <color:#AE3400>// a définir</color>
+        B <color:#AE3400>// a définir</color>
+        C <color:#AE3400>// a définir</color>
+    }
+
+    class AIDecoder <<decoder>> {
+        <color:#AE3400>// Décodage des options IA</color>
+        --
+        + getAIMode(): AIMode 
+        <color:#AE3400>// renvoie les options pour l'IA</color>
+        + getMinMaxDepth(): int
+        <color:#AE3400>// profondeur max de minmax</color>
+        + getMinMaxScoring(): IAHeuristic
+        <color:#AE3400>// type d'heuristique choisie pour Minmax</color>
+        + getMCTSSelection(): UCT | ML
+        <color:#AE3400>// renvoie l'algorithme sélectionné</color>
+        <color:#AE3400>// (avec UCT par défaut)</color>
+    }
+
+    class LangDecoder <<decoder>> {
+        <color:#AE3400>// Décodage de la langue depuis le CLI</color>
+        --
+        +getLanguageCode(): String
+    }
+
+    class GameConfig <<model>> {
+        <color:#AE3400>// Configuration centrale de la partie</color>
+        --
+        - aiDecoder: AIDecoder
+        - langDecoder: LangDecoder
+        --
+        +getAIDecoder(): AIDecoder
+        +getLangDecoder(): LangDecoder
+    }
+
+    ConfigDecoder <|-r- AIDecoder
+    ConfigDecoder <|-- LangDecoder
+
+    GameConfig *-- AIDecoder
+    GameConfig *-- LangDecoder: provides language
+
+    ConfParser -- GameConfig
+    ConfSerializer -- GameConfig
+    AIDecoder -- AIMode
+    AIDecoder -- AIHeuristic
+}
+
+LangDecoder -r- LocaleManager : initialize locale
+@enduml

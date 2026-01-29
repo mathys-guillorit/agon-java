@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor #FAFAFA
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam roundcorner 20
+skinparam shadowing false
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #333333
+
+
+package "persistence" #FFF3E0 {
+    interface PRepository <<repository>> {
+        +save(data)
+        +load(id)
+    }
+
+    class PStorage <<storage>> {
+        +saveAIData(data)
+        +loadAIData()
+    }
+
+    class PDatasource <<datasource>> {
+        +read(path)
+        +write(path, data)
+    }
+
+    PRepository -- PDatasource
+    PRepository -- PStorage
+}
+
+@enduml
+    
+

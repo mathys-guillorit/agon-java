@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FAFAFA
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam roundcorner 20
+skinparam shadowing false
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #333333
+
+package "ait\t" #F3E5F5 {
+    class AiFrameworkAdapter <<adapter>> {
+        +requestDecision(gameState)
+    }
+
+    class AiEngine <<engine>> {
+        +infer(input)
+    }
+
+
+    AiFrameworkAdapter -- AiEngine
+}
+
+package "config\t" #E3F2FD {
+
+
+    class GameConfig <<model>> #line.bold {
+        <color:#AE3400>// Configuration centrale de la partie</color>
+        --
+        - aiDecoder: AIDecoder
+        - langDecoder: LangDecoder
+        --
+        +getAIDecoder(): AIDecoder
+        +getLangDecoder(): LangDecoder
+    }
+
+}
+
+AiEngine -- GameConfig : getAIDecoder()
+
+
+
+@enduml
+
+
+

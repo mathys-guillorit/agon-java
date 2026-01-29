@@ -1,0 +1,12 @@
+
+rappel du sens des flèches : 
+
+- composition : flèche vers la classe qui possède l'élément
+- aggregation : pareil que composition 
+- heritage : flèche de la classe enfant vers la parent
+- implementation : flèche vers la classe la plus abstraite 
+    (source: internet & enseignant GL M1 "archi logicielle" Mr Auber David)
+
+
+
+# end page

@@ -1,0 +1,129 @@
+@startuml
+
+skinparam actorStyle awesome
+left to right direction
+
+actor user as u #888
+actor AI
+
+rectangle "AgonGameApp" {
+
+    ' for all the possible CLI commands
+    rectangle CLI {
+        rectangle optionnal_arguments #00ff0044 {
+            (commands) as cmds
+            (--help or -h) as _h
+            (--version or -V) as _V
+            (--verbose or -v) as _v
+            (--debug or -d) as _d
+            (--blitz or -b) as _b
+            ("--time minutes" or "-t minutes") as _t
+            (--contest or -c) as _c
+            (--gui or -g {run graphic interface}) as _g
+        }
+
+        rectangle AI_commands as aic {
+
+            (--ai) as ai_on
+            (--ai-time TIME) as ai_time
+
+            rectangle ai_modes {
+                (--ai-mode minimax) as ai_mm
+                (--ai-mode iterative) as ai_it
+                (--ai-mode mcts) as ai_mcts
+            }
+
+            rectangle minimax_options {
+                (--ai-minimax-depth DEPTH) as ai_mm_depth
+                (--ai-minimax-scoring SCORING) as ai_mm_score
+            }
+
+            rectangle mcts_options {
+                (--ai-mcts-selection UCT) as ai_mcts_uct
+                (--ai-mcts-selection ML) as ai_mcts_ml
+            }
+        }
+
+        rectangle network_commands {
+            (-s [PORT] or --server [PORT]) as _s
+            (-d or --daemon) as _da
+            (server list) as sl
+            (server start) as ss
+        }
+
+        (-placement or -p) as _p
+
+        rectangle known_commands as kc #ffc2c2;line.dotted;text:black  {
+            (quit) as __q
+            (load FILE) as __lf
+            (safe FILE) as __sf
+            (pause) as __p
+            (hint) as __h
+            (undo) as __u
+            (redo) as __r
+            (show board) as __sb
+            (show history) as __sh
+            (show time) as __st
+            (show configuration) as __sc
+            (set PARAM=VALUE) as __spv
+        }
+    }
+
+    ' game core principles
+    rectangle core_principles {
+        (move a piece) as mp
+        (undo a move) as um
+        (redo move) as rm
+        (move allowed) as ma
+        (one piece has moved already) as opma
+        (stack of moves is not empty) as mmne
+    }
+
+    rectangle AI_core {
+        (bounded thinking time) as bt
+        (minimax + alpha beta pruning) as mmab
+        (iterative deepening) as id
+        (evaluation function) as ef
+        (mcts search) as mcts
+        (ml selection policy) as ml
+    }
+
+    (choose a language) as cl #00ff0044
+    (close window) as cw
+
+    ' includes
+    um ..> (opma): <include>
+    rm ..> (mmne): <include>
+    mp ..> (ma): <include>
+
+    ai_time ..> bt
+    ai_mm ..> mmab
+    ai_it ..> id
+    ai_mm_score ..> ef
+    ai_mcts ..> mcts
+    ai_mcts_ml ..> ml
+
+    ' links
+    :u: --> mp
+    :u: --> um
+    :u: --> rm
+    :u: --> cw
+    :u: --> cl
+    :u: --> cmds
+
+    :cmds: --> _h
+    :cmds: --> _V
+    :cmds: --> _v
+    :cmds: --> _d
+    :cmds: --> _t
+    :cmds: --> _b
+    :cmds: --> _c
+    :cmds: --> _g
+    :cmds: --> aic
+    :cmds: --> _p
+    :cmds: --> kc
+
+    :AI: --> mp
+}
+
+@enduml

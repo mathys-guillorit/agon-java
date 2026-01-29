@@ -1,0 +1,40 @@
+@startuml
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    RoundCorner 15
+}
+
+skinparam shadowing true
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #333333
+skinparam roundcorner 20
+skinparam backgroundColor #FAFAFA
+
+
+package "lang" #E8F5E9 {
+
+    class LocaleManager <<locale>> #line.bold {
+        <color:#AE3400>// Gère la locale courante de l'application.</color>
+        <color:#AE3400>// réglage de langue active. Ne charge </color>
+        <color:#AE3400>// aucune ressource et ne traduit rien.</color>
+        +getCurrentLocale()
+        +setLocale(locale)
+    }
+
+    class ResourceBundleProvider <<bundle>> {
+        +getBundle(locale)
+    }
+
+    class LanguageService <<service>> {
+        <color:#AE3400>// Accès aux traductions runtime</color>
+        --
+        +translate(key): String
+        +format(key, args): String
+    }
+
+    LanguageService -- LocaleManager
+    LanguageService -- ResourceBundleProvider
+}
+    
