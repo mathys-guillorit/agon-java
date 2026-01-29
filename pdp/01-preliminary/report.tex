@@ -1,4 +1,4 @@
-\documentclass[10pt]{article} % (par défaut 12)
+\documentclass[9pt]{extarticle} % (par défaut 12)
 
 % --- Paquets standard ---
 \usepackage[french]{babel}
@@ -6,17 +6,17 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb}
 \usepackage{svg}
-\usepackage{graphicx}
+\usepackage{algpseudocode}
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{titlesec}
-\usepackage{booktabs} % Pour des tableaux professionnels
+\usepackage{placeins}
+\usepackage{subcaption}
+\usepackage{booktabs} % 
 \usepackage{graphicx} % 
-\usepackage{svg}
 \usepackage{tikz}
-\usepackage{graphicx}
 \usetikzlibrary{shapes.geometric}
 \usepackage{verbatim}
 \usetikzlibrary{arrows.meta, positioning, calc}
@@ -29,7 +29,6 @@
 \setlength{\textheight}{24cm}    % hauteur du texte (par défaut 24)
 
 
-
 % --- Configuration des couleurs pour le code ---
 \definecolor{backcolour}{rgb}{0.96,0.96,0.94}
 \lstset{
@@ -39,7 +38,25 @@
     frame=single,
     numbers=left,
     numberstyle=\tiny,
-    keywordstyle=\color{blue}
+    keywordstyle=\color{blue},
+    inputencoding=utf8,
+    extendedchars=true,
+    literate={é}{{\'e}}1
+             {è}{{\`e}}1
+             {à}{{\`a}}1
+             {ç}{{\c{c}}}1
+             {œ}{{\oe}}1
+             {ù}{{\`u}}1
+             {É}{{\'E}}1
+             {È}{{\`E}}1
+             {À}{{\`A}}1
+             {Ç}{{\c{C}}}1
+             {Œ}{{\OE}}1
+             {Ù}{{\`U}}1
+             {ê}{{\^e}}1
+             {î}{{\^i}}1
+             {ô}{{\^o}}1
+             {û}{{\^u}}1
 }
 
 \begin{document}
@@ -70,356 +87,562 @@
 \newpage
 
 \section{Introduction et Présentation du Jeu}
+
 \subsection{Contexte général}
-Le projet \textbf{Agon} s'inscrit dans le cadre de l'UE Projet de Programmation. Agon est l'un des plus anciens jeux de plateau connus se jouant sur un plateau hexagonal. Contrairement aux Échecs ou au Go qui ont des millénaires, Agon est apparu en France vers la fin du XVIIIe siècle. Le jeu traverse la Manche et devient extrêmement populaire dans l'Angleterre victorienne en 1842. Il s'agit d'un jeu de stratégie déterministe à information parfaite se jouant sur un plateau de 91 cases se jouant a 2 joueurs. Chaque joueur possède 6 pions ( ou garde ) et une Reine. Au début de la partie tous les pions y compris les Reines doivent êtres sur le cercle le plus vers l'extérieur du plateau. Les Reines sont disposés l’une en face de l’autre sur la ligne du centre. Et les pions quand à eux sont disposés une couleur sur deux avec une case vide d’écart entre deux pions sur les 4 côtés de l'hexagone et sur la partie haute et basse du plateau l’écart est de 2 cases vides. 
-\medskip
+Le projet \textbf{Agon} est réalisé dans le cadre de l’UE \textit{Projet de Programmation}.  
+Agon est un jeu de stratégie déterministe à information parfaite apparu en France à la fin du XVIII\ieme{} siècle, puis popularisé en Angleterre en 1842.  
+
+Il se joue à deux joueurs sur un plateau hexagonal de 91 cases. Chaque joueur dispose de 6 pions (ou gardes) et d’une Reine. En début de partie, toutes les pièces sont placées sur le cercle extérieur du plateau. Les Reines sont positionnées face à face sur l’axe central, tandis que les pions sont disposés en alternance de couleur avec des cases vides intermédiaires.
+
 \subsection{Règles du jeu}
-\textbf{Objectifs et Conditions de Victoire :} 
-L'objectif principal est de conquérir le case centrale du plateau, appelé "Great Abyss". Un joueur remporte la partie s'il remplit l'une des deux conditions suivantes :
 
-\bigskip
-
+\textbf{Objectif et conditions de victoire :}  
+Le but du jeu est de contrôler la case centrale du plateau, appelée \textit{Great Abyss}. Un joueur gagne s’il :
 \begin{itemize}
-    \item[$\bullet$] \textbf{Capture du centre :} Amener sa Reine sur la case centrale et l'entourer de ses six gardes. 
-    
-    \bigskip
-    
-    \item[$\bullet$] \textbf{Imposibilité de jouer un coup :} Si le joueur n'a plus de coup possible a jouer.
-    
+    \item place sa Reine sur la case centrale et l’entoure de ses six gardes ;
+    \item ou si son adversaire ne dispose plus d’aucun coup légal.
 \end{itemize}
 
-\bigskip
-\textbf{Règle de défaite automatique :} 
-Une attention particulière doit être portée au contrôle du centre : si un joueur occupe les six cases entourant la case "Great Abyss" avec ses gardes alors que sa propre Reine n'est pas sur la case centrale, il est déclaré perdant.
-\medskip
+\textbf{Défaite automatique :}  
+Un joueur est immédiatement perdant s’il occupe les six cases autour du centre avec ses gardes sans que sa Reine ne soit sur la \textit{Great Abyss}.
 
-\paragraph{\indent \textbf{Règles de Déplacement}} Les déplacements au jeu d'Agon sont régis par une contrainte de progression constante vers le centre du tablier :
-
-\bigskip
-
+\paragraph{\textbf{Déplacements}}
+Les déplacements obéissent à une contrainte de progression vers le centre :
 \begin{itemize}
-    \item[$\bullet$] \textbf{Direction et Progression :} Chaque pièce peut se déplacer d'une case vers n'importe quelle direction adjacente, à la condition stricte que ce mouvement ne l'éloigne pas du centre (le Trône). En d'autres termes, tout mouvement de recul est proscrit. 
-    
-    \bigskip
-    
-    \item[$\bullet$] \textbf{Préservation :} Par mesure de sécurité stratégique, il est interdit d'effectuer un déplacement volontaire qui placerait immédiatement la pièce en situation d'être \textbf{encadrée} par deux pièces adverses.
-    
-    \bigskip
-    
-    \item[$\bullet$] \textbf{Occupation :} Une case ne peut accueillir qu'une seule pièce à la fois ; le franchissement ou l'occupation d'une case déjà habitée est impossible.
-
+    \item une pièce se déplace d’une seule case vers une case adjacente, sans jamais s’éloigner du centre ;
+    \item un déplacement est interdit s’il place volontairement la pièce entre deux pièces adverses ;
+    \item une case ne peut contenir qu’une seule pièce.
 \end{itemize}
-\medskip
-\medskip
-\indent \textbf{Mécanisme de Capture}
-La capture dans Agon ne repose pas sur le remplacement, une pièce est neutralisée si ses deux cases adjacentes a cette case et opposées sont occupées par des pièces de couleur adverse ( sandwich ) :
+
+\paragraph{\textbf{Mécanisme de capture}}
+Une capture se produit lorsqu’une pièce est prise en sandwich entre deux pièces adverses alignées (horizontales ou diagonales).
 \begin{itemize}
-\bigskip
-    \item[$\bullet$] \textbf{Principe :} Une pièce est capturée si elle se retrouve prise en "sandwich" entre deux pièces adverses sur une même ligne. Une ligne peut etre formée dans toutes les directions : diagonales et horizontale
-
-    \bigskip
-    
-    \item[$\bullet$] \textbf{Effet de la capture :} La pièce capturée n'est pas retirée du jeu. Elle doit être replacée immédiatement sur le cercle le plus extérieur du plateau par son propriétaire. Mis à part la reine qui peut se replacer n'importe où sur le plateau sauf en son centre et dans une position qui entrainerait une capture. Replacer ses Pions ou sa Reine revient à jouer son tour.
-
-    \bigskip
-    
-    \item[$\bullet$] \textbf{Capture multiple :} Si plusieurs pièces sont capturées simultanément, elles doivent toutes être replacées avant le tour suivant.
+    \item une pièce capturée est replacée sur le cercle extérieur par son propriétaire ;
+    \item la Reine peut être replacée sur n’importe quelle case libre, sauf le centre et toute position menant à une capture immédiate ;
+    \item replacer une pièce équivaut à jouer son tour ;
+    \item en cas de captures multiples, toutes les pièces sont replacées avant le tour suivant.
 \end{itemize}
-\medskip
 
-\begin{figure}[h]
-    \centering
-    \begin{minipage}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{board1.png}
-        \caption{Le plateau d'Agon}
-    \end{minipage}
-    \hfill % Espace horizontal entre les deux
-    \begin{minipage}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{board2.png}
-        \caption{Victoire et Défaite}
-    \end{minipage}
+
+\begin{figure}[htbp]
+     \centering
+     
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[height=2.5cm, keepaspectratio]{mouvement.png}
+         \caption{Mouvements possibles}
+         \label{fig:img1}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[height=2.5cm, keepaspectratio]{victoire.png}
+         \caption{Victoire noir}
+         \label{fig:img2}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[height=2.5cm, keepaspectratio]{defaite.png}
+         \caption{Défaite noir}
+         \label{fig:img3}
+     \end{subfigure}
+     
+     \caption{Illustration des mécaniques de jeu.}
+     \label{fig:trois_images}
 \end{figure}
-Ce rapport détaille nos choix d'architecture logicielle, les structures de données optimisées et les protocoles de communication réseau prévus pour répondre aux exigences F1 à F40 du cahier des charges.
+
+
+Ce rapport présente les choix d’architecture logicielle, les structures de données et les mécanismes de communication réseau mis en œuvre afin de satisfaire les exigences F1 à F40 du cahier des charges.
 
 \section{Complexité du jeu}
 
-Agon appartient à la catégorie des jeux combinatoires, dont la complexité est principalement liée
-à la taille de l’arbre de jeu.
+Agon est un jeu combinatoire dont la complexité dépend de la taille de son arbre de jeu.  
+À chaque tour, un joueur dispose d’un facteur de branchement $b$ correspondant au nombre de coups légaux.
 
-À chaque tour, le joueur dispose d’un certain nombre de coups possibles, noté $b$ (facteur de branchement),
-et l’intelligence artificielle explore l’arbre des coups jusqu’à une profondeur $d$.
-L’algorithme Minimax utilisé dans le projet possède une complexité temporelle exponentielle :
+Le cas le plus complexe survient lors de la capture d’une Reine, qui doit être replacée sur le plateau. Le nombre maximal de positions possibles est alors :
+\[
+91 \;(\text{cases}) - 1 \;(\text{centre}) - 1 \;(\text{case de capture}) - 13 \;(\text{pièces restantes}) = 76
+\]
 
+En considérant une partie limitée à 100 coups, la complexité maximale de l’arbre est donc :
+\[
+76^{100}
+\]
+Ce pic de complexité est cohérent avec les observations présentées dans l’article de Santiago Ontañón \cite{ontanon2017}.
+
+Cependant, ce cas reste exceptionnel. En pratique, le facteur de branchement moyen est estimé à environ 20, ce qui conduit à une complexité en espace de $20^{100}$. L’intelligence artificielle explore l’arbre jusqu’à une profondeur $d$. L’algorithme \textit{Minimax} présente une complexité temporelle de :
 \[
 \mathcal{O}(b^d)
 \]
-
-L’utilisation de l’élagage $\alpha\beta$ permet de réduire cette complexité dans le meilleur des cas à :
-
+L’utilisation de l’élagage $\alpha$-$\beta$ \cite{Knuth} permet de réduire cette complexité, dans le meilleur des cas, à :
 \[
 \mathcal{O}(b^{d/2})
 \]
 
-L’état du plateau est représenté à l’aide de bitboards, ce qui permet d’effectuer les opérations
-de vérification et de génération de coups en temps constant. 
-En pratique, la profondeur de recherche et le temps de réflexion de l’intelligence artificielle
-sont limités afin de garantir des performances acceptables.
-\section{Analyse des Besoins}
+\section{Structures de données et Algorithmes}
 
-\subsection{controles du jeu}
-\subsubsection{gestion et structure de l'historique d'une partie}
+\subsection{Structures de données}
+\begin{itemize}
+    \item[$\bullet$] \textbf{Gestion de l’historique (Undo / Redo)}  
 
+    L’historique d’une partie est géré à l’aide de deux piles : une pile \textit{redo} (coups joués) et une pile \textit{undo} (coups annulés).  
+    Les opérations nécessaires sont \texttt{Push} et \texttt{Pop}.
+
+    Dans un modèle linéaire standard :
+    \begin{itemize}
+        \item \textbf{Complexité temporelle :} \texttt{Do}, \texttt{Undo} et \texttt{Redo} en $\mathcal{O}(1)$
+        \item \textbf{Complexité spatiale :} $\mathcal{O}(n)$, où $n$ est le nombre d’actions stockées
+    \end{itemize}
+
+    Cette structure est asymptotiquement optimale : toute opération nécessite au minimum $\Omega(1)$ en temps, et la conservation de l’historique impose $\Omega(n)$ en espace.
+\end{itemize}
+
+\bigskip
+
+\begin{figure}[h]
+\centering
 \begin{tikzpicture}[
-    box/.style={rounded corners=3pt, minimum width=2cm, minimum height=0.7cm, draw=black, thick, font=\small},
-    title/.style={font=\bfseries\small, align=center},
-    arrow/.style={-Stealth, thick, shorten >=2pt, shorten <=2pt},
-    node distance=0.8cm
+    scale=0.8,
+    transform shape,
+    box/.style={rounded corners=3pt, minimum width=1.6cm, minimum height=0.6cm, draw=black, thick, font=\scriptsize},
+    title/.style={font=\bfseries\scriptsize},
+    node distance=0.6cm
 ]
-
-% Pile des undo (verte)
-\node[title] at (0,3.8) {Pile des \textcolor{green!60!black}{undo}};
-\filldraw[black!90] (0,0) node[box, fill=green!30] {Mvt 1};
-\filldraw[black!90] (0,0.8) node[box, fill=green!30] {Mvt 2};
-\filldraw[black!90] (0,1.6) node[box, fill=green!30] {Mvt 3};
+\node[title] at (0,3.2) {Pile \textcolor{green!60!black}{Redo}};
+\node[box, fill=green!30] at (0,0) {Mvt 1};
+\node[box, fill=green!30] at (0,0.8) {Mvt 2};
+\node[box, fill=green!30] at (0,1.6) {Mvt 3};
 \draw (0,2.4) node[box] {};
-\draw (0,3.2) node[box] {};
 
-% Pile des redo (bleue)
-\node[title] at (3,3.8) {Pile des \textcolor{blue!60!black}{redo}};
-\filldraw[black!90] (3,0) node[box, fill=blue!30] {Mvt 4};
+\node[title] at (3,3.2) {Pile \textcolor{blue!60!black}{Undo}};
+\node[box, fill=blue!30] at (3,0) {Mvt 4};
 \draw (3,0.8) node[box] {};
 \draw (3,1.6) node[box] {};
 \draw (3,2.4) node[box] {};
-\draw (3,3.2) node[box] {};
 
-% Légende
-\node[align=left, anchor=north west] at (5.5, 4.0) {
-    \textbf{Légende :}\\
-    \textcolor{green!60!black}{$\blacksquare$} Mouvement enregistré (undo)\\
-    \textcolor{blue!60!black}{$\blacksquare$} Mouvement annulé (redo) \\ \\
-    On obtient cet état de pile en faisans 4 undo a la suite \\
-    et en faisans ensuite 1 redo.
+\node[align=left, anchor=north west, font=\scriptsize] at (5.3, 3) {
+\textbf{Principe :}\\
+Vert : coups joués\\
+Bleu : coups annulés
 };
-% Chronogramme d'exemple
-\node[align=left, anchor=north west] at (5.5, 1) {
-    \textbf{Exemple d'utilisation :}\\
-    1. Joueur fait Mvt 1 $\rightarrow$ empile dans \textcolor{green!60!black}{undo}\\
-    2. Joueur fait Mvt 2 $\rightarrow$ empile dans \textcolor{green!60!black}{undo}\\
-    3. Joueur fait \textcolor{red}{undo} $\rightarrow$ Mvt 2 est dépilé de \textcolor{green!60!black}{undo} et empilé dans \textcolor{blue!60!black}{redo}\\
-    4. Joueur fait \textcolor{blue}{redo} $\rightarrow$ Mvt 2 est dépilé de \textcolor{blue!60!black}{redo} et empilé dans \textcolor{green!60!black}{undo}
-};
-
-
-
 \end{tikzpicture}
 
-% segment de justification
-\subsubsection{Justification du choix de structure}
+\caption{Principe de gestion de l’historique Undo / Redo}
+\end{figure}
 
-Pour un système undo/redo linéaire (cas standard), l'analyse de complexité est la suivante :
-
-\vspace{0.5em}
+\bigskip
 
 \begin{itemize}
-    \item \textbf{Complexité temporelle :}
-    \begin{itemize}
-        \item Opérations \texttt{Do}, \texttt{Undo}, \texttt{Redo} : $\mathcal{O}(1)$
-    \end{itemize}
-    
-    \item \textbf{Complexité spatiale :}
-    \begin{itemize}
-        \item Mémoire : $\mathcal{O}(n)$, où $n$ est le nombre d'actions stockées
-        \item Cette complexité représente le \emph{strict minimum} nécessaire
-    \end{itemize}
+    \item[$\bullet$] \textbf{Bitboards}  
+
+    Le plateau est représenté à l’aide de plusieurs vecteurs de bits, chaque bit correspondant à une case du plateau hexagonal.  
+    Des bitboards distincts sont utilisés pour représenter les pièces de chaque joueur ainsi que les types de pièces (pions, Reine).
+
+    Les règles du jeu (déplacements autorisés, détection des captures en sandwich, contrôle des cases adjacentes) sont évaluées via des opérations bit à bit telles que \texttt{AND}, \texttt{OR}, \texttt{XOR} et des décalages binaires.
+
+    Par exemple, la détection d’une pièce adverse sur une case adjacente dans une direction donnée est réalisée en appliquant un décalage binaire sur le bitboard adverse, suivi d’une opération \texttt{AND} avec le bitboard courant. Les bits résultants à 1 indiquent les cases concernées.
+
+    Ces opérations s’exécutent en temps constant et permettent d’évaluer efficacement un grand nombre de positions. Cette rapidité est essentielle pour l’exploration de l’arbre de recherche par l’intelligence artificielle, notamment face au facteur de branchement élevé d’Agon.
 \end{itemize}
-
-\vspace{0.5em}
-
-\fcolorbox{red}{white}{%
-\begin{minipage}{0.95\textwidth}
-\textbf{Optimalité asymptotique :}
-
-Il est \emph{impossible} de faire mieux que cette complexité pour les raisons suivantes :
-\begin{enumerate}
-    \item Toute opération doit au minimum \emph{lire} une action :  $\Omega(1)$ en temps
-    \item Toute implémentation doit \emph{stocker} les $n$ actions : $\Omega(n)$ en espace
-\end{enumerate}
-
-Par conséquent, aucune structure de données ne peut améliorer ces complexités asymptotiques.
-\end{minipage}%
-}
-
-\vspace{0.5em}
-
-\textbf{Conclusion :} La structure choisie (pile ou liste double) atteint les bornes inférieures théoriques et est donc optimale. \\
-
-
-$\Omega$ est la notation en complexité pour indiquer une borne inférieure. \\
-O(n) est la borne supérieure \\
-$\Theta(n)$ est la borne exacte (prend exactement n opérations) \\
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.23\linewidth]{bitboard.png}
+    \caption{Exemple de représentation du plateau sous forme de bitboard ( 1 veut dire occupé )}
+\end{figure}
 
 % ################ SUB SUB SECTION ACTIONS ################
 
-\subsection{Deplacements}
-\subsubsection{représentation et gestion des déplacements}
-
-Dans le jeu Agon, les actions possibles pour un joueur sont représentées par une énumération des directions de déplacement. Cette énumération définit l'ensemble des coups légaux qu'un pion peut effectuer sur le plateau hexagonal.
-
-\begin{minipage}[t]{0.45\textwidth}
-\begin{verbatim}
-public enum Move {
-    HAUT_GAUCHE,
-    HAUT_DROITE,
-    DROITE,
-    BAS_DROITE,
-    BAS_GAUCHE,
-    GAUCHE
-}
-
-\end{verbatim}
-\end{minipage}
-\hfill
-
-\vspace{0.5em}
-
-Chaque etats de l'énumération correspond à une direction de déplacement dans le système de coordonnées hexagonales du plateau. Cette représentation permet de capturer toutes les directions possibles depuis n'importe quelle case du plateau.
-
-\subsubsection{Justification du choix de représentation}
-
-\paragraph{Approche retenue : énumération des directions}
-
-L'utilisation d'une énumération pour représenter les actions présente plusieurs avantages significatifs :
+\subsection{Algorithmes}
 
 \begin{itemize}
-    \item \textbf{Type-safety} : Java garantit à la compilation que seules les actions valides peuvent être utilisées, éliminant une classe entière d'erreurs potentielles
-    
-    \item \textbf{Lisibilité} : Le code devient auto-documenté, chaque action ayant un nom explicite (\texttt{HAUT\_DROITE} plutôt qu'un couple de coordonnées)
-    
-    \item \textbf{Maintenance} : L'ajout ou la modification d'actions se fait en un seul endroit, garantissant la cohérence du code
-    
-    \item \textbf{Performances} : Les énumérations Java sont compilées en constantes, offrant un accès en $\mathcal{O}(1)$ et une empreinte mémoire minimale
-    
-    \item \textbf{Pattern matching} : Utilisation naturelle avec les structures \texttt{switch}, facilitant la logique de déplacement (plus tard remplacé par un design pattern State)
+    \item[$\bullet$] \textbf{Détection des captures}
+
+    Une capture se produit lorsqu’un pion adverse est encadré par deux pions alliés sur un même axe de la grille hexagonale.  
+    Cette vérification est réalisée efficacement à l’aide d’opérations bit à bit.
+
+\begin{lstlisting}[language=Java, caption=Détection des captures par bitboards]
+// Détection des captures sur les axes principaux
+long captures = 0;
+for (int dir : AXES) {
+    long sandwich = (mesPions << dir) & (mesPions >> dir);
+    captures |= sandwich & pionsEnnemis;
+}
+return captures;
+\end{lstlisting}
+
+    \item[$\bullet$] \textbf{Génération des coups légaux}
+
+    La génération des coups respecte les règles du jeu : priorité au replacement des pièces capturées, déplacements sans recul et cases libres uniquement.
+
+\begin{lstlisting}[language=Java, caption=Génération des coups légaux]
+// Priorité : replacement des pièces capturées
+if (pionsEnReserve > 0)
+    return cercleExterieur & ~plateauOccupe;
+
+// Déplacements normaux
+for (Direction dir : directions) {
+    for (int c = 0; c <= 6; c++) {
+        long pionsCercle = mesPions & masquesCercles[c];
+        long cibles = shift(pionsCercle, dir) & masquesAutorises[c];
+        ajouterAuxCoups(cibles);
+    }
+}
+\end{lstlisting}
 \end{itemize}
 
-\paragraph{Comparaison avec d'autres approches}
+\subsubsection{Représentation des directions}
 
-Le tableau~\ref{tab:action_comparison} compare différentes représentations possibles pour les actions.
+Afin de simplifier la manipulation des bitboards, les déplacements sont représentés par une énumération correspondant aux décalages binaires possibles du plateau.
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|p{4cm}|p{3.4cm}|p{4cm}|p{2.3cm}|}
-\hline
-\textbf{Approche} & \textbf{Avantages} & \textbf{Inconvénients} & \textbf{Complexité} \\
-\hline
-\textbf{Énumération} (choix retenu) & 
-Type-safe, lisible, performances optimales, compile-time checking & 
-Rigide (nombre fixe d'actions) & 
-$\mathcal{O}(1)$ \\
-\hline
-\textbf{Paires d'entiers} \texttt{(dx, dy)} & 
-Flexible, représentation mathématique naturelle & 
-Pas de vérification de validité, erreurs possibles à l'exécution, moins lisible & 
-$\mathcal{O}(1)$ \\
-\hline
-\textbf{Chaînes de caractères} \texttt{"HAUT"} & 
-Facile à sérialiser et déboguer & 
-Pas de type-safety, comparaisons coûteuses, erreurs de frappe possibles & 
-$\mathcal{O}(k)$ (avec $k$ = longueur) \\
-\hline
-\textbf{Constantes entières} \texttt{0..7} & 
-Compact en mémoire, rapide & 
-Code peu lisible (\textit{magic numbers}), sujet aux erreurs & 
-$\mathcal{O}(1)$ \\
-\hline
-\textbf{Classes dédiées} (pattern Strategy) & 
-Très extensible, encapsulation forte & 
-Complexité excessive pour des actions simples, overhead mémoire & 
-$\mathcal{O}(1)$ \\
-\hline
-\end{tabular}
-\caption{Comparaison des différentes représentations d'actions}
-\label{tab:action_comparison}
+\begin{lstlisting}[language=Java, caption=Enumération des directions]
+public enum Direction {
+    NorthWest, NorthEast,
+    SouthEast, SouthWest,
+    West, East
+}
+\end{lstlisting}
 
-\end{table}
-overhead mémoire = surcharge mémoire (trop de mémoire utilisée par rapport au besoin optimisé)
+Cette abstraction améliore la lisibilité et facilite l’implémentation des algorithmes de déplacement et de capture.
 
-\paragraph{Conclusion}
+\subsection{Exigences Fonctionnelles (F1--F40)}
 
-Pour le jeu Agon, l'énumération représente le meilleur compromis entre sûreté, lisibilité et performances. Le nombre fixe de directions (8 dans un système hexagonal) rend cette approche parfaitement adaptée. Les alternatives comme les paires d'entiers auraient nécessité une validation supplémentaire à l'exécution, tandis que les approches orientées objet plus complexes auraient introduit une complexité injustifiée pour une structure aussi simple.
-
-% ################ SUB SUB SECTION ACTIONS END ################
-
-\subsection{Exigences Fonctionnelles (F1-F40)}
-Le périmètre du projet est divisé en cinq modules majeurs :
+Le projet est structuré autour de quatre modules principaux :
 \begin{itemize}
-    \item \textbf{Cœur métier :} Règles de capture, déplacements interdits vers l'arrière, gestion des tours.
-    \item \textbf{Interfaces :} Mode console (CLI) avec JLine et mode graphique (GUI) avec JavaFX.
-    \item \textbf{IA :} Adversaire capable de recherche (Minimax/MCTS) et évaluation par Deep Learning (TensorFlow).
-    \item \textbf{Réseau :} Lobby multi-joueurs, invitations et arbitrage centralisé.
+    \item \textbf{Cœur métier :} règles du jeu, captures, déplacements et gestion des tours ;
+    \item \textbf{Interfaces :} mode console (CLI) et interface graphique (GUI) ;
+    \item \textbf{IA :} recherche adversaire (Minimax/MCTS) et évaluation avancée ;
+    \item \textbf{Réseau :} gestion des parties multi-joueurs.
 \end{itemize}
 
 \subsection{Contraintes de Qualité (F1.6)}
-Une contrainte majeure est que les tests doivent atteindre une couverture de code d'au moins \textbf{80\%}. Cela impose une architecture dans laquelle le moteur de jeu est totalement découplé de l'interface, ce qui permet de réaliser des tests unitaires étendus sur le \texttt{Domain Layer}.
+
+Le projet impose une couverture de tests d’au moins \textbf{80\%}.  
+Cette exigence conduit à une architecture fortement découplée, où le moteur de jeu est indépendant des interfaces, facilitant la mise en place de tests unitaires sur le \texttt{Domain Layer}.
 
 \section{Architecture Globale du Système}
+
 \subsection{Choix du Modèle architectural}
-Nous utilisons une architecture en couches (Layered Architecture). Ce choix permet d'isoler le \textbf{Domaine} (les règles pures) des détails techniques comme la bibliothèque graphique ou les sockets réseau.
+Nous utilisons une architecture en couches afin de séparer clairement les responsabilités du système.
+Ce choix permet d’isoler le cœur du jeu Agon des interfaces utilisateur et des aspects techniques
+(persistance, réseau, bibliothèques externes).
 
 
 \subsection{Arborescence Détaillée}
-La structure du projet est organisée dans le package \texttt{fr.agon} :
+La structure du projet est organisée dans le package \texttt{fr.agon} et repose sur quatre couches :
 \begin{itemize}
-    \item \textbf{Presentation :} Contient les contrôleurs JavaFX et la gestion du prompt CLI.
-    \item \textbf{Application :} Contient les services de haut niveau (NetworkManager, MatchEngine).
-    \item \textbf{Domain :} Le cœur mathématique (Bitboard, RulesEngine).
-    \item \textbf{Infrastructure :} Les adaptateurs (Persistence ASCII, TensorFlowLoader).
+    \item \textbf{ui :} gère l’interaction avec l’utilisateur (CLI et interface graphique).
+    \item \textbf{application :} dirige les actions du système et orchestre les échanges.
+    \item \textbf{agonCore :} définit la logique métier et les règles du jeu Agon.
+    \item \textbf{technical :} gère les aspects techniques (persistance, langage, configuration, TensorFlow).
 \end{itemize}
 
-\section{Conception du Domaine : Le Bitboard (F26-F27)}
-Le plateau est modélisé par des \textbf{Bitboards}. Chaque type de pièce (Garde Noir, Reine Noire, etc.) est représenté par un entier de 128 bits (ou deux longs de 64 bits).
+\section{Spécifications Étendues : Système de Persistance et Sérialisation}
+
+Cette section détaille la conception du module de sauvegarde (exigences F21 à F25).
+La contrainte majeure est l’utilisation d’un format de fichier textuel propriétaire,
+structuré en sections \texttt{[settings]}, \texttt{[game]} et \texttt{[history]},
+ce qui nécessite la mise en place d’un mécanisme de sérialisation et de parsing robuste.
+
+\subsection{Identification du Besoin et Prérequis}
+\textbf{Besoin visé :} F21 (Sauvegarde et restauration d’une partie).
+
+\textbf{Prérequis fonctionnels :}
+\begin{itemize}
+    \item \textbf{F20 (Notation) :} lecture et écriture de l’historique en notation ABA-pro.
+    \item \textbf{F26 (Bitboard) :} conversion bidirectionnelle entre l’état binaire du plateau
+    et une représentation ASCII visuelle (F24).
+\end{itemize}
+
+\subsection{Décomposition en Sous-Besoins et Actions}
+Afin de garantir le découplage entre le format de fichier (susceptible d’évoluer)
+et le modèle métier (\texttt{AgonBoard}), le module repose sur le pattern
+\textbf{DTO (Data Transfer Object)}.
+
+\begin{enumerate}
+    \item \textbf{Sérialisation (Domaine $\rightarrow$ Texte)} :  
+    conversion de l’état du jeu (Bitboards, configuration et historique)
+    vers une représentation textuelle exploitable.
+
+    \item \textbf{Parsing robuste (Texte $\rightarrow$ Domaine)} :  
+    lecture ligne par ligne du fichier, détection des sections et reconstruction
+    sécurisée de l’état du jeu, avec gestion des erreurs de format (F22).
+
+    \item \textbf{Validation d’intégrité} :  
+    vérification que l’historique chargé conduit exactement à l’état final du plateau,
+    afin de détecter toute incohérence ou corruption des données.
+\end{enumerate}
+
+\subsection{Fonctions Clés et Design Technique}
+Le module est implémenté dans le package \texttt{technical.persistence} et repose sur
+deux composants principaux :
+\begin{itemize}
+    \item un \textbf{Serializer}, responsable de la transformation de l’état du jeu vers
+    le format de sauvegarde textuel ;
+    \item un \textbf{Parser}, chargé de reconstruire une partie à partir du fichier,
+    tout en signalant les erreurs de format ou d’historique invalide.
+\end{itemize}
+
+La robustesse du module est assurée par des tests de type \textit{round-trip},
+garantissant qu’une sauvegarde suivie d’un rechargement conserve un état de jeu identique.
+
+\subsection{Intégration dans l’Architecture}
+Ce module respecte les principes de la \textit{Clean Architecture} :
+\begin{itemize}
+    \item il réside dans la couche \textbf{Technical} (Infrastructure) ;
+    \item la couche \textbf{Application} (\texttt{MatchManager}) y accède via
+    une interface de persistance abstraite ;
+    \item le format de fichier constitue un détail d’implémentation, dont l’évolution
+    n’impacte ni la logique métier (\textbf{agonCore}) ni les interfaces utilisateur.
+\end{itemize}
+
+\subsection{Stratégie de Validation du Besoin}
+La validation de l’exigence F21 repose sur un scénario de test d’intégration automatisé :
+\begin{enumerate}
+    \item sauvegarde d’une partie en cours ;
+    \item rechargement immédiat de la sauvegarde ;
+    \item vérification de la reprise correcte de la partie ;
+    \item injection de fautes dans le fichier afin de valider la détection d’erreurs.
+\end{enumerate}
+
+\section{Conception de la Couche Présentation (UI)}
+
+La couche \textit{UI} gère exclusivement les interactions utilisateurs. Dépourvue de logique métier, elle délègue les traitements à la couche \textit{Application}. Le contrat d'interface \texttt{IGameUserInterface} garantit l'interchangeabilité totale entre les modes console et graphique.
+
+% <--- INSÉRER ICI : DIAGRAMME DE CLASSE GLOBAL (Celui avec IGameUserInterface et AbstractGameUI)
+% \begin{figure}[h] \centering \includegraphics[width=0.8\textwidth]{uml_ui_global.png} \caption{Architecture abstraite de l'UI} \end{figure}
+
+\subsection{Architecture Unifiée}
+La classe abstraite \texttt{AbstractGameUI} factorise le code commun (cycle de vie, lien vers \texttt{MatchManager}). Cela assure que les versions CLI et GUI partagent le même état et les mêmes règles de validation, évitant toute duplication de logique.
+
+\subsection{Interface en Ligne de Commande (CLI)}
+Le package \texttt{ui.cli} implémente une interface légère répondant aux contraintes :
+\begin{itemize}
+    \item \textbf{Shell Interactif (F15) :} La classe \texttt{AgonShell} assure la boucle REPL via la bibliothèque \textbf{JLine} (historique, édition).
+    \item \textbf{Parsing (F20) :} \texttt{InputHandler} convertit les saisies textuelles (ex: "move c3 d4") en objets \texttt{Move} du domaine.
+    \item \textbf{Rendu :} \texttt{ConsoleRenderer} projette l'état des Bitboards en grille ASCII.
+\end{itemize}
+
+% <--- INSÉRER ICI : DIAGRAMME DE CLASSE CLI (AgonShell, InputHandler...)
+
+\subsection{Interface Graphique (GUI - JavaFX)}
+L'interface graphique exploite \textbf{JavaFX} pour l'ergonomie.
+
+\subsubsection{Intégration et Structure}
+\begin{itemize}
+    \item \textbf{Pattern Adapter :} La classe \texttt{AgonGuiAdapter} encapsule le cycle de vie bloquant de JavaFX (\texttt{launch}), permettant l'injection propre des dépendances avant le démarrage de la vue.
+    \item \textbf{Séparation Vue/Contrôleur :} La structure visuelle est définie en \textbf{FXML} (dossier ressources), tandis que la logique événementielle est isolée dans les contrôleurs Java (\texttt{GameController}).
+\end{itemize}
+
+% <--- INSÉRER ICI : DIAGRAMME DE PAQUETAGE GUI (Montrant la séparation View/Controller/Adapter)
+
+\subsubsection{Composant HexagonTile (F30)}
+Pour permettre le déplacement à la souris sur un plateau non-rectangulaire, nous avons étendu la classe \texttt{javafx.scene.shape.Polygon} pour créer \texttt{HexagonTile}.
+Ce choix garantit une \textbf{hitbox} précise, essentielle pour gérer le \textit{Drag \& Drop} sur une grille en quinconce sans conflits de clic.
+
+\section{Conception du Domaine}
+Le plateau est modélisé par des \textbf{Bitboards}. Chaque type de pièce (Garde Noir, Reine Noire, etc.) est représenté par deux long de 64 bits. Nous utiliserons un CoordinateMapper pour transcire l'aba-pro en index Bitboard, une interface AgonBoard pour le plateau et une interface RestrictedBoard pour la partie UI. Nous avons une classe abstraite player qui sert de base pour tout type de joueur et des enums pour spécifier certains objets metier.
 
 \subsection{Avantages de la représentation binaire}
 \begin{itemize}
-    \item \textbf{Performance :} Les captures et déplacements sont calculés via des opérations \texttt{AND}, \texttt{OR} et \texttt{XOR}.
+    \item \textbf{Performance :} Les captures et déplacements sont calculés via des opérations \texttt{AND}, \texttt{OR} etc.
     \item \textbf{Empreinte mémoire :} L'état complet du jeu tient en quelques octets, facilitant les millions de simulations requises par l'IA MCTS.
 \end{itemize}
 
-\section{Intelligence Artificielle et TensorFlow}
+\begin{figure}[htbp]
+    \centering
+    % Tu peux régler la taille avec width (largeur) ou height (hauteur)
+    \includegraphics[width=0.6\textwidth]{Uml_agoncore.png} 
+    \caption{Diagramme UML du Domain}
+    \label{fig:mon_image_unique} % Pour citer l'image avec \ref{fig:mon_image_unique}
+\end{figure}
 
-\subsection{Algorithmes de recherche}
-Nous implémentons une recherche \textbf{Minimax avec élagage Alpha-Bêta}. Pour le milieu de partie, le \textbf{MCTS (Monte Carlo Tree Search)} est privilégié pour sa capacité à explorer des arbres de recherche larges.
+\section{Conception de l'Intelligence Artificielle}
 
-\subsection{Intégration de TensorFlow (Infrastructure)}
-L'IA utilise un modèle de Deep Learning pour évaluer les positions. Nous avons placé l'interface TensorFlow dans la couche \textbf{Infrastructure} car elle dépend d'une bibliothèque native externe. L'application appelle une interface générique d'évaluation, ignorant les détails de l'implémentation TensorFlow.
+Le module d’Intelligence Artificielle a été conçu pour satisfaire les exigences de performance (F31) et de variété tactique (F32--F37).  
+Compte tenu de la complexité combinatoire d’Agon ($b \approx 20$, $b_{max}=76$), l’architecture retenue est modulaire afin de permettre l’interchangeabilité des algorithmes et des heuristiques.
 
+\subsection{Architecture et Patrons de Conception}
 
-\section{Conception Réseau et Multijoueur (F38-F40)}
-Cette partie est l'une des plus complexes. Elle repose sur deux protocoles distincts.
+Plusieurs patrons de conception ont été employés afin de garantir maintenabilité et extensibilité :
+\begin{itemize}
+    \item \textbf{Strategy :} Les moteurs de recherche (Minimax, MCTS) implémentent une interface commune \texttt{AgonAI}, permettant de changer dynamiquement de stratégie (option \texttt{--ai-mode}, F8).
+    \item \textbf{Factory :} \texttt{AIFactory} centralise l’instanciation des IA en fonction de la configuration (\texttt{GameConfig}).
+    \item \textbf{Factorisation de l’évaluation :} La logique d’évaluation des plateaux est extraite dans l’interface \texttt{BoardEvaluator}, partagée par Minimax et MCTS afin d’éviter la duplication de code.
+\end{itemize}
+
+\subsection{Algorithmes de Recherche}
+
+\subsubsection{Minimax (F32, F34, F35)}
+Le Minimax classique est optimisé afin de respecter la contrainte de temps (F31) :
+\begin{itemize}
+    \item \textbf{Élagage Alpha-Bêta :} Réduction de la complexité théorique de $O(b^d)$ à $O(b^{d/2})$ dans le meilleur cas.
+    \item \textbf{Iterative Deepening :} La recherche est lancée par profondeurs croissantes et retourne le meilleur coup complet trouvé avant l’expiration du temps imparti.
+\end{itemize}
+
+\subsubsection{Monte Carlo Tree Search (MCTS) (F36, F37)}
+Le MCTS est utilisé pour les positions ouvertes de milieu de partie. Deux politiques de sélection sont proposées :
+\begin{itemize}
+    \item \textbf{UCT :} Méthode classique équilibrant exploration et exploitation.
+    \[
+    UCT = \frac{w_i}{n_i} + C \sqrt{\frac{\ln N}{n_i}}
+    \]
+    \item \textbf{Sélection guidée par ML :} Le terme d’exploitation est biaisé par une estimation issue d’un modèle de Machine Learning, accélérant la convergence vers des coups pertinents.
+\end{itemize}
+
+\subsection{Heuristiques et Machine Learning}
+
+Afin de satisfaire l’exigence F33, plusieurs implémentations de \texttt{BoardEvaluator} sont proposées :
+\begin{itemize}
+    \item \textbf{MobilityHeuristic :} Différence de mobilité entre les deux joueurs.
+    \item \textbf{CentralityHeuristic :} Pondération statique favorisant le contrôle du centre.
+    \item \textbf{MixedHeuristic :} Combinaison linéaire des deux précédentes.
+\end{itemize}
+
+\paragraph{Intégration du Deep Learning}
+L’intégration de TensorFlow (F1.15) respecte les principes de la \textit{Clean Architecture}.  
+Un adaptateur (\texttt{TensorFlowAdapter}) situé dans la couche technique est utilisé par \texttt{MLHeuristic}, isolant le cœur applicatif des dépendances externes et facilitant les tests unitaires.
+
+\subsection{Limites et Perspectives}
+
+L’IA actuelle reste perfectible en fin de partie, où des tables de finales seraient plus adaptées que le MCTS.  
+De plus, l’entraînement du modèle de Machine Learning pourrait être amélioré par des techniques de \textit{Reinforcement Learning} (self-play) plutôt que par apprentissage supervisé.
+
+\paragraph{Synthèse des relations inter-classes}
+L'\texttt{AIFactory} orchestre la création de l'IA en injectant une instance concrète de \texttt{BoardEvaluator} (ex: \texttt{Mobility}, \texttt{ML}) dans la stratégie \texttt{AgonAI} choisie (\texttt{Minimax} ou \texttt{MCTS}). Ces stratégies consomment l'interface d'évaluation pour noter les feuilles ou guider les simulations. Enfin, l'implémentation \texttt{MLHeuristic} fait le pont avec la couche technique en déléguant le calcul au \texttt{TensorFlowAdapter} (Pattern Adapter), tandis que \texttt{MixedHeuristic} agrège d'autres évaluateurs (Pattern Composite).
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{uml1.png}
+    \caption{Construction dynamique}
+    \label{fig:uml_1}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{uml2.png}
+    \caption{Factorisation des stratégies}
+    \label{fig:uml_2}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{uml3.png}
+    \caption{Couche d’évaluation et isolation du ML}
+    \label{fig:uml_3}
+\end{figure}
+
+\FloatBarrier
+
+\section{Conception Réseau et Multijoueur (F38--F40)}
+
+La conception réseau d’\textbf{Agon} repose sur une architecture client--serveur utilisant deux protocoles complémentaires : UDP pour la découverte de services et TCP pour la communication en jeu.
+
+\subsection{Architecture générale}
+
+Le serveur adopte une architecture en couches.  
+La couche réseau gère les communications bas niveau à l’aide des classes \texttt{ServerSocket} et \texttt{Socket}, tandis que les couches supérieures prennent en charge la gestion des sessions, des invitations et des parties.  
+Cette séparation permet de découpler le réseau de la logique métier et d’améliorer la maintenabilité.
 
 \subsection{Découverte de services (UDP)}
-Le serveur diffuse un datagramme toutes les 10 secondes sur le port 12346. Le client écoute ce port pour mettre à jour sa liste de serveurs disponibles.
 
-\subsection{Protocole de Communication (TCP)}
-Le format utilisé est l'ASCII pur avec délimiteur \texttt{\textbackslash n}. Voici un extrait des commandes prévues :
+La découverte des serveurs est assurée via UDP.  
+Le serveur diffuse toutes les 10 secondes un datagramme sur le port \texttt{12346}, que les clients écoutent afin de maintenir une liste à jour des serveurs disponibles sur le réseau local.  
+UDP est utilisé ici pour sa légèreté et son caractère non bloquant.
+
+\subsection{Protocole de communication en jeu (TCP)}
+
+Les échanges critiques (commandes, invitations, coups) s’effectuent via une connexion TCP persistante.  
+Le serveur accepte les connexions à l’aide d’un \texttt{ServerSocket}, chaque client étant ensuite géré par un \texttt{Socket} dédié.
+
+Le protocole applicatif utilise un format ASCII simple, avec un délimiteur de fin de ligne (\texttt{\textbackslash n}), facilitant le débogage et l’extension du protocole.
+
 \begin{center}
-\begin{tabular}{llp{6cm}}
+\begin{tabular}{llp{5cm}}
 \toprule
 Commande & Origine & Description \\
 \midrule
-\texttt{PING} & Client & Vérification de latence. \\
-\texttt{NEW <ID>} & Client & Envoi d'une invitation à un joueur. \\
-\texttt{MOVE <pos>} & Client & Transmission d'un coup en notation ABA-pro. \\
-\texttt{TIMEOUT} & Serveur & Notifie l'expiration des 5 minutes d'invitation. \\
+\texttt{PING} & Client & Mesure de la latence. \\
+\texttt{NEW <ID>} & Client & Envoi d’une invitation. \\
+\texttt{MOVE <pos>} & Client & Transmission d’un coup. \\
+\texttt{TIMEOUT} & Serveur & Expiration d’une invitation. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\subsection{Gestion de la Concurrence et Mutex}
-Pour gérer le multi-client, nous utilisons un \texttt{ExecutorService} (Thread Pool). Les accès à la liste des sessions (\texttt{PlayerSession}) sont protégés par des blocs \texttt{synchronized} pour éviter les conflits lors des changements d'état (ex: passer de \textit{idle} à \textit{ingame}).
+Les messages reçus sont analysés par un parseur puis routés vers les modules concernés (joueurs, invitations ou moteur de jeu).
 
+\subsection{Gestion de la concurrence}
+
+Le serveur utilise un \texttt{ExecutorService} basé sur un pool de threads afin de gérer plusieurs clients simultanément sans bloquer le processus principal.  
+Les ressources partagées, notamment les sessions joueurs (\texttt{PlayerSession}), sont protégées par des mécanismes de synchronisation (\texttt{synchronized}) afin de garantir la cohérence des états.
+
+\subsection{Architecture Réseau et Rôle des Composants}
+
+L’architecture réseau d’Agon repose sur un modèle client–serveur, dans lequel le serveur
+est autoritaire et centralise la gestion des connexions, des commandes et des parties.
+
+\begin{itemize}
+    \item \textbf{AgonServer} constitue le point d’entrée du serveur. Il accepte les connexions TCP,
+    initialise les gestionnaires de clients et coordonne les services réseau.
+
+    \item \textbf{ClientHandler} est associé à une connexion cliente. Exécuté dans un thread dédié,
+    il reçoit les messages, assure l’envoi des réponses et délègue le traitement des commandes.
+
+    \item \textbf{CommandDispatcher} analyse et distribue les commandes reçues vers les modules
+    concernés (gestion des joueurs, invitations ou parties), garantissant un routage centralisé.
+
+    \item \textbf{DiscoveryService} gère la découverte des serveurs sur le réseau local via UDP,
+    permettant aux clients d’identifier dynamiquement les serveurs disponibles.
+
+    \item \textbf{PlayerRegistry} maintient l’état des joueurs connectés et de leurs sessions,
+    facilitant la gestion des invitations et du statut des joueurs.
+
+    \item \textbf{InvitationManager} orchestre le cycle de vie des invitations à une partie,
+    incluant l’acceptation, le refus et l’expiration automatique via des tâches planifiées.
+
+    \item \textbf{GameRegistry} et \textbf{GameSession} assurent la création et la gestion des parties
+    actives, le serveur validant chaque action afin de garantir la cohérence du jeu.
+
+    \item \textbf{AgonClient} représente le client réseau. Il se connecte au serveur, envoie les
+    commandes utilisateur et reçoit les mises à jour de l’état du jeu.
+
+    \item \textbf{CommandParser} convertit les messages textuels du protocole réseau en commandes
+    structurées exploitables par le serveur.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{umlRx.png}
+    \caption{Couche Application - Network}
+    \label{fig:uml_3}
+\end{figure}
+
+\section{Couche \textit{Technical}}
+
+La couche \textbf{technical} regroupe l’ensemble des composants techniques nécessaires
+au fonctionnement de l’application, sans contenir de logique métier.
+Elle encapsule les dépendances externes et les mécanismes d’entrée/sortie,
+conformément aux principes de la Clean Architecture.
+
+Elle est organisée en plusieurs sous-modules spécialisés :
+\begin{itemize}
+    \item \textbf{config :} assure la lecture et l’analyse du fichier de configuration
+    (\texttt{.agonrc}) et l’initialisation des paramètres techniques.
+
+    \item \textbf{storage :} gère la persistance des données, notamment la sauvegarde
+    et le chargement des parties.
+
+    \item \textbf{lang :} fournit le support multilingue (i18n) de l’application.
+
+    \item \textbf{ait :} regroupe l’intégration des bibliothèques externes liées à
+    l’intelligence artificielle (par exemple TensorFlow), isolant ainsi toute
+    dépendance technique du cœur du jeu.
+\end{itemize}
+
+Les composants de sérialisation et de parsing (Serializer / Parser) appartiennent
+également à cette couche et assurent la transformation entre les objets métier
+et leurs représentations textuelles ou techniques.
 
 
 \section{Plan de Test et Validation}
@@ -428,17 +651,29 @@ Chaque règle de déplacement (non-retour en arrière, capture par encerclement)
 \subsection{Tests d'Intégration}
 Nous simulerons des scénarios complets comme undo/redo, sauvegarde et chargement.
 \subsection{Tests de réseau}
-Nous simulerons des scénarios réseau : deux clients virtuels se connectant, s'invitant, et jouant une partie complète jusqu'à la victoire afin de tester la robustesse du serveur. \\ 
-\\
-Une solution possible consistera a utiliser des conteneurs pour séparer les logiques des application et avoir des environnements isolés avec Podman/Docker pour réaliser des tests avec des systèmes différents sans changer de machine. (Les deux applications pourraient tourner sur la même machine pour faciliter les tests)
+Nous simulerons des scénarios réseau : deux clients virtuels se connectant, s'invitant, et jouant une partie complète jusqu'à la victoire afin de tester la robustesse du serveur.
 \subsection{Tests de non-régression}
 Chaque nouvel ajout ne doit surtout pas réintroduire des nouveaux bugs, ces tests seront là pour vérifier ce problème.
-\\\\
-Il est également possible d'utiliser les actions automatiques via git pour vérifier si un commit est valable au niveau des changements induits. En revanche aucune personne du groupe ne connais précisément le fonctionnement et est a l'aise avec ce type d'outils. De plus il n'est pas garanti que la mise en place de cet outils soit une meilleure solution comparé au temps de mise en place (+ courbe d'apprentissage de l'outil). On note ici que c'est un outil qui peut être intéressant dans ce projet.
 
 \section{Conclusion et Perspectives}
-La phase préliminaire confirme la faisabilité du projet Agon en respectant les principes de la \textit{Clean Architecture}. L'utilisation du Bitboard et d'une gestion rigoureuse de la concurrence réseau sont les clés de la réussite de ce projet. 
 
+Ce dossier de conception préliminaire met en évidence la faisabilité du projet Agon
+au regard des exigences fonctionnelles et techniques du cahier des charges.
+Les choix d’architecture retenus permettent une séparation claire des responsabilités et garantissent la maintenabilité, la testabilité et l’évolutivité du système.
+
+L’utilisation d’une représentation du plateau par \textit{Bitboards} constitue un élément
+central du projet, offrant des performances adaptées à l’exploration intensive de l’arbre
+de jeu par l’intelligence artificielle. De même, la conception du module réseau, fondée sur
+une gestion rigoureuse de la concurrence et des protocoles adaptés, assure la robustesse
+des parties multijoueur.
+
+Les perspectives de développement portent principalement sur l’implémentation progressive
+des différents modules décrits, l’optimisation des algorithmes d’intelligence artificielle,
+ainsi que l’amélioration de l’expérience utilisateur.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{references}
 
 \end{document}
 
