@@ -1,5 +1,3 @@
-package univ.bordeaux.fr;
-
 public class Example {
 
   private int value;
