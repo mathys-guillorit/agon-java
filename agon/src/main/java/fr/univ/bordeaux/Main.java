@@ -1,6 +1,7 @@
 package fr.univ.bordeaux;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.ui.gui.controllers.GUIExample;
@@ -22,8 +23,6 @@ public class Main {
     long[] blackPawns=new long[2];
     whiteQueen[0] = 1L << 58;
     whiteQueen[1] = 0L;
-
-    whitePawns[0] |= 1L << 50;
     whiteQueen[0] |= 1L << 63;
     blackQueen[1] |= 1L ;
     blackPawns[1] |= 1L << 74-64;
@@ -33,10 +32,10 @@ public class Main {
     BitBoard board = new BitBoard(whiteQueen, blackQueen, whitePawns, blackPawns);
     System.out.println("board avant mouvement");
     board.printBoard();
-    board.applyMove(CoordinateMapper.toIndex('G',9),CoordinateMapper.toIndex('F',8),Color.BLACK);
+    board.applyMove(new Move(CoordinateMapper.toIndex('G',9),CoordinateMapper.toIndex('F',8),Color.BLACK));
     System.out.println("Replacement blanc");
     board.printMask(board.generateLegalMoves(Color.WHITE));
-    board.applyMove(-1,CoordinateMapper.toIndex('D',7),Color.WHITE);
+    board.applyMove(new Move(-1,CoordinateMapper.toIndex('D',7),Color.WHITE));
     //board.applyMove(-1,CoordinateMapper.toIndex('B',1),Color.WHITE);
     System.out.println("board après mouvement");
     board.printBoard();
