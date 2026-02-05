@@ -13,6 +13,7 @@ public class AppCommandService {
     private AgonServer server;
     private AgonClient client;
 
+    // Exécute la commande local de l'utilisateur selon son type.
     public void execute(AppCommand command) {
         switch (command.getType()) {
             case SERVER_LIST -> {
