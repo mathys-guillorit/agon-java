@@ -1,8 +1,9 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
-
-public class BitBoard {
+import fr.univ.bordeaux.agonCore.agonElements.PieceType;
+import fr.univ.bordeaux.agonCore.agonElements.Move;
+public class BitBoard implements AgonBoard {
 
   private long[] whiteQueen = new long[2];
   private long[] blackQueen = new long[2];
@@ -42,18 +43,22 @@ public class BitBoard {
     initCirclesAndValidZones();
     initAllowedDestinations();
   }
-
   /**
-   * Applies a move or a piece relocation on the board. Priorities relocation (Queen first, then
-   * Pawns) before allowing normal moves.
+   * Applies a move or a piece relocation on the board using a Move object.
+   * * Logic flow:
+   * 1. Checks if the player has a Queen to relocate.
+   * 2. Checks if the player has Pawns to relocate.
+   * 3. If no relocations are pending, performs a standard move from one tile to another.
    *
-   * @param from  The starting index (ignored during relocation).
-   * @param to    The destination index.
-   * @param color The color of the player making the move.
-   * @return 1 if the move was successful, -1 otherwise.
+   * @param move The Move object containing the source (from), destination (to), and player color.
+   * @return 1 if the move was valid and successfully applied, -1 otherwise.
    */
-  public int applyMove(int from, int to, Color color) {
-    //Queen Relocation Case
+  public int applyMove(Move move) {
+    int from = move.getFrom();
+    int to = move.getTo();
+    Color color = move.getColor();
+
+    // 1. Queen Relocation Case (Priority 1)
     if (isQueenRelocating(color)) {
       setBit(getQueenTable(color), to, 1L);
       if (color == Color.WHITE) {
@@ -64,7 +69,8 @@ public class BitBoard {
       performCaptures(color);
       return 1;
     }
-    //Pawn Relocation Case
+
+    // 2. Pawn Relocation Case (Priority 2)
     if (isPawnRelocating(color)) {
       setBit(getPawnsTable(color), to, 1L);
       if (color == Color.WHITE) {
@@ -75,20 +81,25 @@ public class BitBoard {
       performCaptures(color);
       return 1;
     }
-    //Performs the required move if it is valid and check for captures
+
+    // 3. Normal Move Case
+    // Performs the required move if it is valid and checks for captures
     if (isValid(from, to, color)) {
-      long[] tab = getTabWhereIndexIsOn(from);
-      System.out.println(tab == null);
-      if (tab != null) {
-        setBit(tab, from, 0L);
-        setBit(tab, to, 1L);
+      long[] pieceTable = getTabWhereIndexIsOn(from);
+
+      if (pieceTable != null) {
+        // Remove piece from origin and place it at destination
+        setBit(pieceTable, from, 0L);
+        setBit(pieceTable, to, 1L);
+
+        // Check if this move triggers any captures
         performCaptures(color);
         return 1;
       }
     }
+
     return -1;
   }
-
   /**
    * Combines queen and pawns bitboards for a specific color to find occupied tiles.
    *
@@ -320,7 +331,24 @@ public class BitBoard {
     legalMoves[1] &= ~suicideMask[1];
     return legalMoves;
   }
-
+  public PieceType getPieceAt(int index) {
+    if (index < 0 || index > 120) {
+      return null;
+    }
+    if (isSet(whiteQueen, index)) {
+      return PieceType.WHITE_QUEEN;
+    }
+    if (isSet(blackQueen, index)) {
+      return PieceType.BLACK_QUEEN;
+    }
+    if (isSet(whitePawns, index)) {
+      return PieceType.WHITE_PAWN;
+    }
+    if (isSet(blackPawns, index)) {
+      return PieceType.BLACK_PAWN;
+    }
+    return null;
+  }
   /**
    * Retrieves the bitboard associated with the queen of the specified color.
    *
@@ -365,6 +393,8 @@ public class BitBoard {
     }
     return null;
   }
+
+
 
   /**
    * Generates a bitboard mask of tiles where a piece of the specified color would be sandwiched. A
