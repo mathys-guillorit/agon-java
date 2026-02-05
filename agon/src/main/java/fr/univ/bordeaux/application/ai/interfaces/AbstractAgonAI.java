@@ -1,12 +1,27 @@
 package fr.univ.bordeaux.application.ai.interfaces;
 
 public abstract class AbstractAgonAI implements AgonAI {
-    protected long timeLimit = 5000; 
+    private final BoardEvaluator evaluator;
+    protected long timeLimit = 5000;
     protected long startTime;
+    protected long nodeCount = 0;
+
+    public AbstractAgonAI(BoardEvaluator evaluator) {
+        this.evaluator = evaluator;
+    }
+
+    @Override
+    public void setTimeLimit(long millis) {
+        this.timeLimit = millis;
+    }
 
     // Méthode utilitaire pour les enfants
     protected boolean isTimeRemaining() {
         return (System.currentTimeMillis() - startTime) < (timeLimit - 50); 
+    }
+
+    public long getNodeCount() {
+        return nodeCount;
     }
     
     @Override
