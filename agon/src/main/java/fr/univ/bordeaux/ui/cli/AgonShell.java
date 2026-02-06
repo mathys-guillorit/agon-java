@@ -3,6 +3,12 @@ package fr.univ.bordeaux.ui.cli;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 
 public class AgonShell extends AbstractGameUI {
+
+    private boolean running;
+
+    public AgonShell() {
+        this.running = true;
+    }
     
     @Override
     public void start() {}
