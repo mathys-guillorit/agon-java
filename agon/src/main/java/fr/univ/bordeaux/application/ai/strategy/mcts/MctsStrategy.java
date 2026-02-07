@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy.mcts;
 
-import fr.univ.bordeaux.application.ai.interfaces.AbstractAgonAI;
+import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
 
 import java.util.Random;
 

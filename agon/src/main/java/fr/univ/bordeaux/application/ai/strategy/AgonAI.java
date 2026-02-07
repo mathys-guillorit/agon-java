@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.application.ai.interfaces;
+package fr.univ.bordeaux.application.ai.strategy;
 
 public interface AgonAI {
     Move getBestMove(AgonBoard board);

@@ -1,7 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.application.ai.interfaces.AgonAI;
-import fr.univ.bordeaux.application.ai.interfaces.BoardEvaluator;
+import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
 
 public class AIFactory {
 
@@ -10,7 +9,7 @@ public class AIFactory {
         return null;
     }
 
-    private BoardEvaluator createEvaluator(String type){
+    private Heuristics createEvaluator(String type){
         //Appelé par createAI pour créer la fonction d'évaluation utile au model
         return null;
     }

@@ -1,8 +1,6 @@
 package fr.univ.bordeaux.application.ai.heuristics;
 
-import fr.univ.bordeaux.application.ai.interfaces.BoardEvaluator;
-
-public class CentralityHeuristic implements BoardEvaluator {
+public class CentralityHeuristic implements Heuristics {
 
     @Override
     public double evaluate(AgonBoard board) {

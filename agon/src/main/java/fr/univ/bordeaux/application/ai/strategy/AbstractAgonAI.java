@@ -1,12 +1,14 @@
-package fr.univ.bordeaux.application.ai.interfaces;
+package fr.univ.bordeaux.application.ai.strategy;
+
+import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
 
 public abstract class AbstractAgonAI implements AgonAI {
-    private final BoardEvaluator evaluator;
+    private final Heuristics evaluator;
     protected long timeLimit = 5000;
     protected long startTime;
     protected long nodeCount = 0;
 
-    public AbstractAgonAI(BoardEvaluator evaluator) {
+    public AbstractAgonAI(Heuristics evaluator) {
         this.evaluator = evaluator;
     }
 
