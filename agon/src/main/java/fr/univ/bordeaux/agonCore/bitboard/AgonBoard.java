@@ -4,6 +4,8 @@ import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 
 public interface AgonBoard extends RestrictedAgonBoard{
-  int applyMove(Move move);
+  boolean applyMove(Move move);
+  boolean undoMove(Move move);
   boolean isGameWon(Color color);
 }
+ 

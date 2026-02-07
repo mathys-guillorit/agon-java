@@ -2,8 +2,8 @@ package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.PieceType;
-
+import java.util.List;
 public interface RestrictedAgonBoard{
-  long[] generateLegalMoves(Color color);
+  List<Move> generateLegalMoves(Color color);
   PieceType getPieceAt(int index);
 }
