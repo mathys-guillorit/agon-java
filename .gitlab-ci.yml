@@ -1,0 +1,45 @@
+# instance runner that works : #3 (VBcp8xyw) "Boursouflet" alias "CREMI"
+stages:
+  - test
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .m2/repository
+
+testJavafxCrossPlatform_GNU_Linux:
+  stage: test
+  tags:
+    - Boursouflet
+
+  parallel:
+    matrix:
+      - IMAGE:
+          - debian:bookworm # CREMI's OS we always use in GL
+          # for future parallel when available
+
+          # - eclipse-temurin:21-jdk # for compatibility (must used with java)
+          # - openjdk:21-jdk-slim
+          # - fedora:39
+          # - archlinux:latest
+          # - alpine:3.19
+
+  image: $IMAGE
+
+  before_script:
+    - set -e
+    - java -version
+    - mvn -version
+
+  script:
+    - cd agon
+    - mvn clean test
+
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - agon/target/surefire-reports/*.xml
