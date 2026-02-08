@@ -9,7 +9,7 @@ public class AIFactory {
         return null;
     }
 
-    private Heuristics createEvaluator(String type){
+    private Heuristics createHeuristic(String type){
         //Appelé par createAI pour créer la fonction d'évaluation utile au model
         return null;
     }

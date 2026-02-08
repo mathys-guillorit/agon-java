@@ -2,26 +2,26 @@ package fr.univ.bordeaux.application.ai.strategy.minimax;
 
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
-//import fr.univ.bordeaux.agonCore.agonElements.AgonBoard;
-//import fr.univ.bordeaux.agonCore.agonElements.Move;
+import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agonCore.agonElements.Move;
 
 import java.util.List;
 
 public class MinimaxStrategy extends AbstractAgonAI {
 
-    private int maxDepth;
+    private final int maxDepth;
 
-    public MinimaxStrategy(Heuristics evaluator, int maxDepth) {
-        super(evaluator);
+    public MinimaxStrategy(Heuristics heuristic, int maxDepth) {
+        super(heuristic);
         this.maxDepth = maxDepth;
     }
 
     @Override
     protected Move computeMove(AgonBoard board) {
-        List<Move> legalMoves = board.getPossibleMoves();
+        List<Move> legalMoves = board.generateLegalMoves(this.color);
         if (legalMoves.isEmpty()) return null;
 
-        Move bestMove = legalMoves.get(0);
+        Move bestMove = legalMoves.getFirst();
         long maxScore = Long.MIN_VALUE;
 
         // Initialisation Alpha-Beta
@@ -59,11 +59,11 @@ public class MinimaxStrategy extends AbstractAgonAI {
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
 
         // Condition d'arrêt
-        if (depth == 0 || board.isGameOver()) {
-            return evaluator.evaluate(board);
+        if (depth == 0 || board.isGameWon(this.color)) {
+            return heuristic.evaluate(board);
         }
 
-        List<Move> moves = board.getPossibleMoves();
+        List<Move> moves = board.generateLegalMoves(this.color);
 
         if (isMaximizingPlayer) {
             // JOUEUR MAX

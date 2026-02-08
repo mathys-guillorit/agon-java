@@ -1,10 +1,19 @@
 package fr.univ.bordeaux.application.ai.strategy.mcts;
 
+import fr.univ.bordeaux.agonCore.agonElements.Move;
+import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
 
+import java.util.List;
 import java.util.Random;
 
 public class MctsStrategy extends AbstractAgonAI {
+
+    public MctsStrategy(Heuristics heuristic) {
+        super(heuristic);
+    }
+
     @Override
     protected Move computeMove(AgonBoard board) {
         // Implémentation basique de MCTS
@@ -14,7 +23,7 @@ public class MctsStrategy extends AbstractAgonAI {
         // 4. Rétropropagation
 
         // Pour l'instant, on retourne un coup aléatoire (placeholder)
-        List<Move> legalMoves = board.generateLegalMoves();
+        List<Move> legalMoves = board.generateLegalMoves(this.color);
         return legalMoves.get(new Random().nextInt(legalMoves.size()));
     }
 
