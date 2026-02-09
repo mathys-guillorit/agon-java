@@ -7,102 +7,117 @@ import fr.univ.bordeaux.agonCore.agonElements.Move;
 
 import java.util.List;
 
+/**
+ * A concrete AI strategy implementing the <b>Minimax algorithm with Alpha-Beta Pruning</b>.
+ * <p>
+ * This strategy constructs a game tree to a specified depth and evaluates the terminal nodes
+ * using the injected {@link Heuristic}. It assumes the opponent plays optimally (zero-sum game).
+ * </p>
+ * <p>
+ * <b>Key optimization:</b> Although named Minimax, this implementation includes
+ * <b>Alpha-Beta Pruning</b>. This technique stops evaluating a move when at least one possibility
+ * has been found that proves the move to be worse than a previously examined move.
+ * This significantly reduces the number of nodes visited ({@code nodeCount}).
+ * </p>
+ */
 public class MinimaxStrategy extends AbstractAgonAI {
 
+    /**
+     * The maximum depth of the game tree search.
+     * <p>
+     * A depth of 1 means looking only at immediate moves.
+     * Higher depths increase the AI's foresight but exponentially increase calculation time.
+     * </p>
+     */
     private final int maxDepth;
 
+    /**
+     * Constructs a Minimax strategy with a fixed search depth.
+     *
+     * @param heuristic The evaluation function used for leaf nodes.
+     * @param maxDepth  The depth limit for the recursion (e.g., 3 or 4 for reasonable performance).
+     */
     public MinimaxStrategy(Heuristic heuristic, int maxDepth) {
         super(heuristic);
         this.maxDepth = maxDepth;
     }
 
+    /**
+     * Initiates the Minimax algorithm to find the best move from the current board state.
+     * <p>
+     * This method acts as the <b>Root Maximizer</b>. It generates the initial legal moves,
+     * calls the recursive {@link #minimax} function for each, and selects the move
+     * with the highest returned score.
+     * </p>
+     *
+     * @param board The current game board.
+     * @return The move that leads to the highest heuristic score, or {@code null} if no moves are available.
+     */
     @Override
     protected Move computeMove(AgonBoard board) {
         List<Move> legalMoves = board.generateLegalMoves(this.color);
         if (legalMoves.isEmpty()) return null;
-
         Move bestMove = legalMoves.getFirst();
         long maxScore = Long.MIN_VALUE;
-
-        // Initialisation Alpha-Beta
         long alpha = Long.MIN_VALUE;
         long beta = Long.MAX_VALUE;
-
-        // 2. Boucle Racine
         for (Move move : legalMoves) {
-
-            // Joue un coup
             board.applyMove(move);
             this.nodeCount++;
-
-            // Appelle minimax
             long score = minimax(board, this.maxDepth - 1, false, alpha, beta);
-
-            // Backtrack
             board.undoMove();
-
-            // Maximisation
             if (score > maxScore) {
                 maxScore = score;
                 bestMove = move;
                 // System.out.println("Nouveau meilleur coup : " + move + " (Score: " + score + ")");
             }
-
-            // Alpha-Beta Update
             alpha = Math.max(alpha, score);
         }
-
         System.out.println("Minimax fini. Nœuds visités: " + this.nodeCount);
         return bestMove;
     }
 
+    /**
+     * Recursive Minimax function with Alpha-Beta pruning.
+     * <p>
+     * Traverses the game tree, alternating between maximizing (AI) and minimizing (Opponent) layers.
+     * </p>
+     *
+     * @param board              The board state at the current node.
+     * @param depth              The remaining depth to explore. Returns heuristic value when 0.
+     * @param isMaximizingPlayer {@code true} if it's the AI's turn, {@code false} for the opponent.
+     * @param alpha              The best value that the maximizer can guarantee so far.
+     * @param beta               The best value that the minimizer can guarantee so far.
+     * @return The heuristic score of the board at this node (propagated from the leaves).
+     */
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
-
-        // Condition d'arrêt
         if (depth == 0 || board.isGameWon(this.color)) {
-            return heuristic.evaluate(board);
+            return heuristic.evaluate(board, this.color);
         }
-
         List<Move> moves = board.generateLegalMoves(this.color);
-
         if (isMaximizingPlayer) {
-            // JOUEUR MAX
             long maxEval = Long.MIN_VALUE;
-
             for (Move move : moves) {
                 board.applyMove(move);
                 this.nodeCount++;
-
                 long eval = minimax(board, depth - 1, false, alpha, beta);
-
                 board.undoMove();
-
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
-
-                // Élagage
                 if (beta <= alpha) {
                     break;
                 }
             }
             return maxEval;
-
         } else {
-            // JOUEUR MIN
             long minEval = Long.MAX_VALUE;
-
             for (Move move : moves) {
                 board.applyMove(move);
                 this.nodeCount++;
-
                 long eval = minimax(board, depth - 1, true, alpha, beta);
-
                 board.undoMove();
-
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
-
-                // Élagage
                 if (beta <= alpha) {
                     break;
                 }
