@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
+import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 public class AIFactory {
 
@@ -9,7 +9,7 @@ public class AIFactory {
         return null;
     }
 
-    private Heuristics createHeuristic(String type){
+    private Heuristic createHeuristic(String type){
         //Appelé par createAI pour créer la fonction d'évaluation utile au model
         return null;
     }

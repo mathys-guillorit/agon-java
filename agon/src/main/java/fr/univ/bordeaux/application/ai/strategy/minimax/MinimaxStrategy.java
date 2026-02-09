@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.ai.strategy.minimax;
 
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
-import fr.univ.bordeaux.application.ai.heuristics.Heuristics;
+import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 
@@ -11,7 +11,7 @@ public class MinimaxStrategy extends AbstractAgonAI {
 
     private final int maxDepth;
 
-    public MinimaxStrategy(Heuristics heuristic, int maxDepth) {
+    public MinimaxStrategy(Heuristic heuristic, int maxDepth) {
         super(heuristic);
         this.maxDepth = maxDepth;
     }
