@@ -1,45 +1,107 @@
-# instance runner that works : #3 (VBcp8xyw) "Boursouflet" alias "CREMI"
+# runner that works : #3 (VBcp8xyw) Boursouflet alias "CREMI"
+
 stages:
-  - test
+  - format-check
+  - coverage-check
+  - testGNU_Linux
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  JDK_IMAGE: "mcr.microsoft.com/java/jdk:21-ga"  # Microsoft OpenJDK 21 (projet constraint)
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - .m2/repository
 
-testJavafxCrossPlatform_GNU_Linux:
-  stage: test
+# same Template to all jobs
+.test_java:
   tags:
     - Boursouflet
-
-  parallel:
-    matrix:
-      - IMAGE:
-          - debian:bookworm # CREMI's OS we always use in GL
-          # for future parallel when available
-
-          # - eclipse-temurin:21-jdk # for compatibility (must used with java)
-          # - openjdk:21-jdk-slim
-          # - fedora:39
-          # - archlinux:latest
-          # - alpine:3.19
-
-  image: $IMAGE
-
   before_script:
     - set -e
     - java -version
     - mvn -version
-
   script:
     - cd agon
     - mvn clean test
-
   artifacts:
     when: always
     reports:
       junit:
         - agon/target/surefire-reports/*.xml
+  allow_failure: true
+
+# Template for all java jobs (avec Microsoft OpenJDK)
+.java_template:
+  tags:
+    - Boursouflet
+  image: $JDK_IMAGE  # use variable
+  before_script:
+    - set -e
+    - java -version
+    - mvn -version
+
+# Tests on each distributions
+check-format:
+  stage: format-check
+  image: $JDK_IMAGE
+  tags:
+    - Boursouflet
+  script:
+    - cd agon
+    - mvn spotless:check || (echo "Le code n'est pas correctement formaté. Voici les corrections nécessaires :"; mvn spotless:apply --dry-run)
+  allow_failure: true
+
+jacoco85p:
+  extends: .test_java
+  stage: coverage-check
+  script:
+    - cd agon
+    - mvn test jacoco:report
+    - mvn jacoco:check
+  allow_failure: true
+
+test-debian:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: debian:bookworm
+
+test-temurin:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: eclipse-temurin:21-jdk
+
+test-alpine:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: alpine:3.19
+
+test-fedora:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: fedora:39
+
+# https://gitlab.archlinux.org/archbot
+# https://gitlab.archlinux.org/archlinux/archlinux-docker/-/jobs?kind=BUILD
+test-arch:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: archlinux:base-20260201.0.486523
+
+test-ubuntu24:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: ubuntu:24.04
+
+test-ubuntu22:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: ubuntu:22.04
+
+test-opensuse:
+  extends: .test_java
+  stage: testGNU_Linux
+  image: opensuse/leap:15.5
+
+# end page
