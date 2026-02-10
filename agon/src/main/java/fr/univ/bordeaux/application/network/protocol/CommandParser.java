@@ -3,10 +3,16 @@ package fr.univ.bordeaux.application.network.protocol;
 import java.util.HashMap;
 import java.util.Map;
 
-//  Classe responsable de l'analyse (parsing) des messages réseau.
+// Responsible for parsing raw network messages into Command objects
 public class CommandParser {
 
-    // Analyse une ligne reçue depuis le réseau et la transforme en Command.
+    /**
+     * Parses a raw network line into a Command.
+     * The input line is expected to be composed of ASCII characters and
+     * terminated by a newline character ('\n') on the wire.
+     *
+     * @param line the raw line received from the network
+     */
     public Command parse(String line) {
         if (line == null) {
             return new Command(CommandType.UNKNOWN, Map.of());
@@ -19,10 +25,10 @@ public class CommandParser {
 
         String[] parts = raw.split("\\s+");
 
-        // Premier mot = type
+        // First token corresponds to the command type
         CommandType type = CommandType.convertCommandType(parts[0]);
 
-        // Le reste = args
+        // Remaining tokens are parsed as key=value arguments
         Map<String, String> args = new HashMap<>();
         for (int i = 1; i < parts.length; i++) {
             String token = parts[i];

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+// TCP game server entry point.
 public class AgonServer {
 
     private final int port;
@@ -12,17 +13,25 @@ public class AgonServer {
     private volatile ClientHandler currentClientHandler;
     private volatile boolean running = false;
 
-    // Constructeur par défaut.
+    /**
+     * Default constructor (uses TCP port 12345 as required by the specification).
+     */
     public AgonServer() {
         this.port = 12345;
     }
 
-    // Constructeur avec port personnalisé
+    /**
+     * Constructor with a custom TCP port.
+     *
+     * @param port the TCP port to listen on
+     */
     public AgonServer(int port) {
         this.port = port;
     }
 
-    // Démarre serveur TCP.
+    /**
+     * Starts the TCP server.
+     */
     public boolean start() {
         if (running) {
             System.out.println("[SERVER] is running");
@@ -45,8 +54,12 @@ public class AgonServer {
         return true;
     }
 
-    // Boucle qui permet l'acceptation ou non des clients
+    /**
+     * Main accept loop.
+     * This method runs in acceptClientThread and continuously waits for incoming TCP connections.
+     */
     private void acceptClientLoop() {
+        System.out.println("[SERVER] Accept loop started.");
         while(running) {
             try {
                 Socket clientSocket = serverSocket.accept();
@@ -62,9 +75,12 @@ public class AgonServer {
                 break;
             }
         }
+        System.out.println("[SERVER] Accept loop ended.");
     }
 
-    // Arrêt du serveur
+    /**
+     * Stops the TCP server.
+     */
     public boolean stop() {
         if (!running) {
             System.out.println("[SERVER] Is off");

@@ -1,23 +1,18 @@
 package fr.univ.bordeaux.application.appCommands;
 
-public class AppCommand {
+import fr.univ.bordeaux.application.AppContext;
 
-    private final AppCommandType type;
-    private final String arg;
 
-    // Construit une commande à partir de son type et de ses arguments.
-    public AppCommand(AppCommandType type, String arg) {
-        this.type = type;
-        this.arg = arg;
-    }
+/**
+ * Application-level command (Command Pattern).
+ */
+public interface AppCommand {
 
-    // Retourne le type de la commande.
-    public AppCommandType getType() {
-        return type;
-    }
+    /**
+     * Executes the command.
+     *
+     * @param context shared application context (services/state)
+     */
+    AppCommandResult execute(AppContext context);
 
-    // Retourne la valeur d'un argument donné.
-    public String getArg() {
-        return arg;
-    }
 }

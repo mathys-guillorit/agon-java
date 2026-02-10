@@ -1,10 +1,15 @@
 package fr.univ.bordeaux.application.network.protocol;
 
-// Enumération des types de commandes réseau supportées.
+// Enumeration of supported network command types.
 public enum CommandType {
     PING, PONG, QUIT, BYE, UNKNOWN;
 
-    // Convertit une chaîne de caractères en CommandType.
+
+    /**
+     * Converts a raw string into a CommandType.
+     *
+     * @param text the raw command keyword extracted from the network message
+     */
     public static CommandType convertCommandType(String text) {
         if (text == null) return UNKNOWN;
         String command = text.trim();

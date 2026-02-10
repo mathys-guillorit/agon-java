@@ -2,24 +2,36 @@ package fr.univ.bordeaux.application.network.protocol;
 
 import java.util.Map;
 
-// Représente une commande réseau reçue ou envoyée.
+// Represents a network command exchanged between a client and a server.
 public class Command {
 
     private final CommandType type;
     private final Map<String, String> args;
 
-    // Construit une commande à partir de son type et de ses arguments.
+    /**
+     * Creates a new Command instance.
+     *
+     * @param type the type of the command (must not be {@code null})
+     * @param args a map containing the command arguments, or an empty map
+     *             if the command has no arguments
+     */
     public Command(CommandType type, Map<String, String> args) {
         this.type = type;
         this.args = args;
     }
 
-    // Retourne le type de la commande.
+    /**
+     * Returns the type of this command.
+     */
     public CommandType getType() {
         return type;
     }
 
-    // Retourne la valeur d'un argument donné.
+    /**
+     * Returns the value of a given argument.
+     *
+     * @param key the argument name
+     */
     public String getArg(String key) {
         return args.get(key);
     }
