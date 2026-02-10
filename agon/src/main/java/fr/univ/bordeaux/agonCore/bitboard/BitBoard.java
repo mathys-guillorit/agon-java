@@ -5,15 +5,20 @@ import fr.univ.bordeaux.agonCore.bitboard.Direction;
 /**
  * A custom 128-bit bitset implementation using two {@code long} values (low and high).
  * <p>
- * This class provides high-performance bitwise operations tailored for an 11x11
- * hexagonal grid (121 tiles total). It supports logical operations, shifts with
- * carry-over, and morphological operations like dilation.
+ * This class provides high-performance bitwise operations tailored for an 11x11 hexagonal grid (121
+ * tiles total). It supports logical operations, shifts with carry-over, and morphological
+ * operations like dilation.
  * </p>
  */
 public class BitBoard {
-  /** Bits 0 to 63. */
+
+  /**
+   * Bits 0 to 63.
+   */
   private long low;
-  /** Bits 64 to 127 (Agon uses up to 120). */
+  /**
+   * Bits 64 to 127 (Agon uses up to 120).
+   */
   private long high;
 
   /**
@@ -115,8 +120,8 @@ public class BitBoard {
   /**
    * Shifts the entire 128-bit structure in a given direction.
    * <p>
-   * This method handles the carry-over between the {@code low} and {@code high}
-   * segments to ensure bit continuity during shifts.
+   * This method handles the carry-over between the {@code low} and {@code high} segments to ensure
+   * bit continuity during shifts.
    * </p>
    *
    * @param n The shift magnitude (negative for right shift, positive for left shift).
@@ -170,8 +175,8 @@ public class BitBoard {
   /**
    * Performs a morphological dilation on the current bitboard.
    * <p>
-   * This creates a new board where every tile adjacent to an existing piece
-   * is set to 1. Useful for calculating neighbors or influence zones.
+   * This creates a new board where every tile adjacent to an existing piece is set to 1. Useful for
+   * calculating neighbors or influence zones.
    * </p>
    *
    * @return A BitBoard representing the union of shifts in all 6 directions.
@@ -187,8 +192,8 @@ public class BitBoard {
   /**
    * Efficiently finds the index of the next bit set to 1 after a given position.
    * <p>
-   * This method uses {@code Long.numberOfTrailingZeros} for high-performance
-   * bit scanning, which is essential for move generation loops.
+   * This method uses {@code Long.numberOfTrailingZeros} for high-performance bit scanning, which is
+   * essential for move generation loops.
    * </p>
    *
    * @param currentBit The index to start scanning from (exclusive). Use -1 to find the first bit.
@@ -196,7 +201,9 @@ public class BitBoard {
    */
   public int nextSetBit(int currentBit) {
     int start = currentBit + 1;
-    if (start >= 121) return -1;
+    if (start >= 121) {
+      return -1;
+    }
 
     // Check the low part (0-63)
     if (start < 64) {

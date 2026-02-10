@@ -44,11 +44,12 @@ public class AgonBoardImpl implements AgonBoard {
     initCirclesAndValidZones();
     initAllowedDestinations();
   }
+
   /**
    * Determines the distance of a specific tile from the center of the board.
    * <p>
-   * The method checks which concentric circle contains the given index.
-   * In Agon, lower values represent higher centrality (e.g., Circle 0 is the Throne).
+   * The method checks which concentric circle contains the given index. In Agon, lower values
+   * represent higher centrality (e.g., Circle 0 is the Throne).
    * </p>
    *
    * @param index The tile index (0 to 120).
@@ -65,11 +66,12 @@ public class AgonBoardImpl implements AgonBoard {
     }
     return -1;
   }
+
   /**
    * Calculates the number of immediate legal moves available for a piece at a given index.
    * <p>
-   * This is a common heuristic for AI evaluation, representing how "trapped" or
-   * "free" a specific piece is based on current board constraints.
+   * This is a common heuristic for AI evaluation, representing how "trapped" or "free" a specific
+   * piece is based on current board constraints.
    * </p>
    *
    * @param index The tile index of the piece to evaluate.
@@ -81,17 +83,18 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard validMoves = neighbors.andOperation(legalMoves);
     return validMoves.countBits();
   }
+
   /**
    * Reverts a standard move by moving the piece from its destination back to its origin.
    * <p>
    * <b>Note:</b> This method only handles the physical movement of the piece.
-   * Complex state changes, such as restoring captured pieces to the board
-   * or updating relocation counters, must be managed separately.
+   * Complex state changes, such as restoring captured pieces to the board or updating relocation
+   * counters, must be managed separately.
    * </p>
    *
    * @param move The {@link Move} object representing the action to be undone.
-   * @return {@code true} if the piece was successfully moved back; {@code false} if no
-   * friendly piece was found at the destination.
+   * @return {@code true} if the piece was successfully moved back; {@code false} if no friendly
+   * piece was found at the destination.
    */
   public boolean undoMove(Move move) {
     int from = move.getFrom();
@@ -110,9 +113,10 @@ public class AgonBoardImpl implements AgonBoard {
     }
     return false;
   }
+
   /**
-   * Calculates a numerical evaluation score for the current board state from
-   * the perspective of the specified player.
+   * Calculates a numerical evaluation score for the current board state from the perspective of the
+   * specified player.
    * <p>
    * A higher score typically indicates a better position for the player.
    * </p>
@@ -256,13 +260,13 @@ public class AgonBoardImpl implements AgonBoard {
    * @return A bitboard containing the 6 adjacent tiles.
    */
   public BitBoard getNeighbors(int index) {
-      // On crée un bitboard avec uniquement le bit à l'index donné
-      BitBoard indexMask = new BitBoard(index);
+    // On crée un bitboard avec uniquement le bit à l'index donné
+    BitBoard indexMask = new BitBoard(index);
 
-      // La dilatation s'occupe de décaler ce bit dans les 6 directions
-      // et de fusionner les résultats.
-      return indexMask.dilation();
-    }
+    // La dilatation s'occupe de décaler ce bit dans les 6 directions
+    // et de fusionner les résultats.
+    return indexMask.dilation();
+  }
 
   /**
    * Retrieves the bitboard associated with the queen of the specified color.
@@ -302,17 +306,18 @@ public class AgonBoardImpl implements AgonBoard {
     }
     return null;
   }
+
   /**
    * Retrieves the {@link Color} of the player who owns the piece at the specified index.
    * <p>
-   * This helper method checks all active bitboards (Queens and Pawns for both players)
-   * to determine which player, if any, occupies the given tile. This is essential
-   * for calculating mobility, legal moves, and identifying potential capture targets.
+   * This helper method checks all active bitboards (Queens and Pawns for both players) to determine
+   * which player, if any, occupies the given tile. This is essential for calculating mobility,
+   * legal moves, and identifying potential capture targets.
    * </p>
    *
    * @param index The tile index (0 to 120) to check.
-   * @return The {@link Color} of the piece at the index; {@code null} if the tile
-   * is empty or if the index is out of the valid board range.
+   * @return The {@link Color} of the piece at the index; {@code null} if the tile is empty or if
+   * the index is out of the valid board range.
    */
   private Color getColorWhereIndexIsOn(int index) {
     if (index < 0 || index > 120) {
@@ -395,8 +400,10 @@ public class AgonBoardImpl implements AgonBoard {
       System.out.println();
     }
   }
+
   /**
-   * Generates a single {@link BitBoard} representing all valid destination tiles for the given player.
+   * Generates a single {@link BitBoard} representing all valid destination tiles for the given
+   * player.
    * <p>
    * This method follows a specific hierarchy of rules:
    * <ol>
@@ -459,12 +466,13 @@ public class AgonBoardImpl implements AgonBoard {
     legalMoves = legalMoves.andOperation(suicideMask.complementOperation());
     return legalMoves;
   }
+
   /**
    * Generates a comprehensive list of all legal {@link Move} objects for the current player.
    * <p>
-   * This method translates the bitboard-based logic into discrete Move objects.
-   * It uses a high-performance bit-scanning approach ({@code nextSetBit}) to iterate
-   * through active pieces and their potential destinations.
+   * This method translates the bitboard-based logic into discrete Move objects. It uses a
+   * high-performance bit-scanning approach ({@code nextSetBit}) to iterate through active pieces
+   * and their potential destinations.
    * </p>
    * <ul>
    * <li>If relocation is required, moves will have a source index of {@code -1}.</li>
@@ -534,16 +542,17 @@ public class AgonBoardImpl implements AgonBoard {
 
     return moves;
   }
+
   /**
    * Identifies the type of piece occupying a specific tile on the board.
    * <p>
-   * This method checks the internal bitboards for White/Black Queens and Pawns
-   * to determine the state of the requested index.
+   * This method checks the internal bitboards for White/Black Queens and Pawns to determine the
+   * state of the requested index.
    * </p>
    *
    * @param index The tile index (0 to 120) to inspect.
-   * @return The {@link PieceType} present at the index, or {@code null} if the tile is
-   * empty or the index is out of bounds.
+   * @return The {@link PieceType} present at the index, or {@code null} if the tile is empty or the
+   * index is out of bounds.
    */
   public PieceType getPieceAt(int index) {
     if (index < 0 || index > 120) {
@@ -567,9 +576,8 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Generates a bitboard mask of tiles where a piece of the specified color would be sandwiched. A
    * sandwich is formed when a tile is flanked by two enemy threats on opposite sides.
-   * @param
-   * color The color for which to check potential captures.
    *
+   * @param color The color for which to check potential captures.
    * @return A bitboard mask of capture zones.
    */
   private BitBoard getSuicideMask(Color color) {
@@ -652,11 +660,11 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Calculates the raw physical neighbors of all set bits in the provided bitboard.
    * <p>
-   * This method performs a pure mathematical dilation (expansion) in all six
-   * hexagonal directions. It does not check if the resulting tiles are within
-   * the legal board boundaries.
+   * This method performs a pure mathematical dilation (expansion) in all six hexagonal directions.
+   * It does not check if the resulting tiles are within the legal board boundaries.
    * </p>
    * * @param board The source {@link BitBoard} to expand.
+   *
    * @return A new {@link BitBoard} representing the dilated area.
    */
   private BitBoard getAllNeighborsInternal(BitBoard board) {
@@ -666,18 +674,20 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Calculates all valid adjacent tiles for the pieces present on the given bitboard.
    * <p>
-   * Unlike the internal version, this method filters the results against
-   * {@code validZoneMask} to ensure that only tiles actually belonging to the
-   * 121-tile Agon board are returned.
+   * Unlike the internal version, this method filters the results against {@code validZoneMask} to
+   * ensure that only tiles actually belonging to the 121-tile Agon board are returned.
    * </p>
    * * @param board The source {@link BitBoard} containing the pieces.
+   *
    * @return A {@link BitBoard} containing only the legal neighboring tiles.
    */
   private BitBoard getAllNeighbors(BitBoard board) {
     return board.dilation().andOperation(this.validZoneMask);
   }
+
   /**
-   * Validates if a move is physically possible (in the valid zone, adjacent, free and not moving backwards/outwards).
+   * Validates if a move is physically possible (in the valid zone, adjacent, free and not moving
+   * backwards/outwards).
    *
    * @param from  Start index.
    * @param to    Destination index.
@@ -749,11 +759,11 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Checks if the specified player has any captured pieces (Queen or Pawns)
-   * currently waiting in the relocation queue.
+   * Checks if the specified player has any captured pieces (Queen or Pawns) currently waiting in
+   * the relocation queue.
+   *
    * @param color The {@link Color} of the player to check.
-   * @return {@code true} if at least one piece is pending relocation;
-   * {@code false} otherwise.
+   * @return {@code true} if at least one piece is pending relocation; {@code false} otherwise.
    */
   private boolean hasPiecesToRelocate(Color color) {
     if (color == Color.WHITE) {
@@ -765,8 +775,8 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Pre-calculates the allowed destination masks for each concentric circle.
    * <p>
-   * This implements the "no retreating" rule: a piece can only move to a
-   * tile within its current circle or to a circle closer to the center (Throne).
+   * This implements the "no retreating" rule: a piece can only move to a tile within its current
+   * circle or to a circle closer to the center (Throne).
    * </p>
    */
   private void initAllowedDestinations() {

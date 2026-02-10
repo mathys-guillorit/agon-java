@@ -1,11 +1,13 @@
 package fr.univ.bordeaux.agonCore.bitboard;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests unitaires pour la classe BitBoard.
- * Vérifie la manipulation des 128 bits sur deux segments de 64 bits.
+ * Tests unitaires pour la classe BitBoard. Vérifie la manipulation des 128 bits sur deux segments
+ * de 64 bits.
  */
 class BitBoardTest {
 
@@ -117,18 +119,18 @@ class BitBoardTest {
   @Test
   @DisplayName("Test de dilation (voisins)")
   void testDilation() {
-    int index=60;//center
+    int index = 60;//center
     BitBoard bb = new BitBoard(index);
     BitBoard dilated = bb.dilation();
 
     // Vérifie que les voisins (selon les offsets de Direction) sont activés
     // East(+1), West(-1), NE(+12), NW(+11), SE(-11), SW(-12)
-    assertTrue(dilated.isSet(index+Direction.East.getValue()));
-    assertTrue(dilated.isSet(index+Direction.West.getValue()));
-    assertTrue(dilated.isSet(index+Direction.NorthEast.getValue()));
-    assertTrue(dilated.isSet(index+Direction.SouthWest.getValue()));
-    assertTrue(dilated.isSet(index+Direction.SouthEast.getValue()));
-    assertTrue(dilated.isSet(index+Direction.SouthWest.getValue()));
+    assertTrue(dilated.isSet(index + Direction.East.getValue()));
+    assertTrue(dilated.isSet(index + Direction.West.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NorthEast.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SouthWest.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SouthEast.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SouthWest.getValue()));
 
     // Le centre lui-même ne doit pas être activé par dilation (sauf si shifté sur lui-même)
     assertFalse(dilated.isSet(index));
