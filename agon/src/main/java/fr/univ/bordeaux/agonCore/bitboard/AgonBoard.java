@@ -13,4 +13,3 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   int getScore(Color color);
 }
- 

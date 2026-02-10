@@ -9,5 +9,6 @@ public class CmdQuit extends Cmd {
     return true;
   }
 
-
+  @Override
+  public void execute() {}
 }

@@ -1,9 +1,9 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests unitaires pour la classe BitBoard. Vérifie la manipulation des 128 bits sur deux segments
@@ -28,9 +28,9 @@ class BitBoardTest {
   void testSetBitBoundaries() {
     BitBoard bb = new BitBoard();
 
-    bb.setBit(0, 1L);   // Premier bit de low
-    bb.setBit(63, 1L);  // Dernier bit de low
-    bb.setBit(64, 1L);  // Premier bit de high
+    bb.setBit(0, 1L); // Premier bit de low
+    bb.setBit(63, 1L); // Dernier bit de low
+    bb.setBit(64, 1L); // Premier bit de high
     bb.setBit(120, 1L); // Limite du plateau Agon
 
     assertTrue(bb.isSet(0));
@@ -119,7 +119,7 @@ class BitBoardTest {
   @Test
   @DisplayName("Test de dilation (voisins)")
   void testDilation() {
-    int index = 60;//center
+    int index = 60; // center
     BitBoard bb = new BitBoard(index);
     BitBoard dilated = bb.dilation();
 
