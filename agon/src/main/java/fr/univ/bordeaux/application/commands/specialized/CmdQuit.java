@@ -1,4 +1,6 @@
-package fr.univ.bordeaux.application.commands;
+package fr.univ.bordeaux.application.commands.specialized;
+
+import fr.univ.bordeaux.application.commands.Cmd;
 
 public class CmdQuit extends Cmd {
 

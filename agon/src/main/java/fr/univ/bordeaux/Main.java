@@ -15,6 +15,7 @@ public class Main {
   public static void main(String[] arg) {
     AgonShell agonShell = new AgonShell();
     agonShell.loop();
+    agonShell.test();
     
   }
 }

@@ -6,6 +6,11 @@ public interface ICmd {
    * special case for quit command
    * @return boolean true if command is quit else false
    */
-  public boolean isQuit();
+  boolean isQuit();
+
+  /**
+   * execute specific actions
+   */
+  void execute();
 
 }
