@@ -38,33 +38,13 @@ public class Move {
     this.color = color;
   }
 
-  /**
-   * Returns the starting position of the move. * @return The source index, or -1 for relocations.
-   */
   public int getFrom() {
     return from;
   }
-
-  /**
-   * Returns the destination position of the move. * @return The target index.
-   */
   public int getTo() {
     return to;
   }
-
-  /**
-   * Returns the color of the player who owns this move. * @return The player's {@link Color}.
-   */
   public Color getColor() {
     return color;
   }
-
-  /**
-   * Returns a string representation of the move for debugging purposes. * @return A formatted
-   * string containing source, destination, and color.
-   */
-  @Override
-  public String toString() {
-    return "departure: " + from + " arrival: " + to + " color: " + color;
   }
-}
