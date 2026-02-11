@@ -34,7 +34,6 @@ public class History {
   public Move redo() {
     Move move = redoStack.pop();
     undoStack.push(move);
-    redoStack.clear();
     return move;
   }
 

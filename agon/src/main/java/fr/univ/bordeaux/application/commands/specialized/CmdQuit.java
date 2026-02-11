@@ -10,7 +10,5 @@ public class CmdQuit extends Cmd {
   }
 
   @Override
-  public void execute() {
-
-  }
+  public void execute() {}
 }

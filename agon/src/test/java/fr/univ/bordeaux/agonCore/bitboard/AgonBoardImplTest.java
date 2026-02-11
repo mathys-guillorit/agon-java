@@ -1,14 +1,13 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AgonBoardImplTest {
 
@@ -43,8 +42,8 @@ class AgonBoardImplTest {
 
     BitBoard blackPawns = new BitBoard(71);
 
-    AgonBoardImpl captureBoard = new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns,
-        blackPawns);
+    AgonBoardImpl captureBoard =
+        new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, blackPawns);
 
     captureBoard.performCaptures(Color.WHITE);
 
@@ -58,8 +57,8 @@ class AgonBoardImplTest {
   @DisplayName("Rule Test: Pawns cannot enter the throne")
   void testPawnCannotEnterThrone() {
     BitBoard whitePawns = new BitBoard(72);
-    AgonBoardImpl boardWithPawn = new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns,
-        new BitBoard());
+    AgonBoardImpl boardWithPawn =
+        new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, new BitBoard());
 
     List<Move> moves = boardWithPawn.generateLegalMoves(Color.WHITE);
 
@@ -74,14 +73,14 @@ class AgonBoardImplTest {
     assertEquals(2, board.getCentrality(startIdx));
 
     BitBoard whitePawns = new BitBoard(startIdx);
-    AgonBoardImpl moveBoard = new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns,
-        new BitBoard());
+    AgonBoardImpl moveBoard =
+        new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, new BitBoard());
 
     List<Move> moves = moveBoard.generateLegalMoves(Color.WHITE);
     for (Move m : moves) {
       int targetCircle = board.getCentrality(m.getTo());
-      assertTrue(targetCircle <= 2,
-          "A pawn cannot move to an outer circle (" + targetCircle + " > 2)");
+      assertTrue(
+          targetCircle <= 2, "A pawn cannot move to an outer circle (" + targetCircle + " > 2)");
     }
   }
 
@@ -97,8 +96,8 @@ class AgonBoardImplTest {
 
     AgonBoardImpl winBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, new BitBoard());
 
-    assertTrue(winBoard.isGameWon(Color.WHITE),
-        "White should win: Queen in the center and surrounded");
+    assertTrue(
+        winBoard.isGameWon(Color.WHITE), "White should win: Queen in the center and surrounded");
   }
 
   @Test
