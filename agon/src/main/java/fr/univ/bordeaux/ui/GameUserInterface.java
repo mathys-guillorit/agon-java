@@ -101,11 +101,4 @@ public interface GameUserInterface {
    * @return {@code true} if the user accepts, {@code false} otherwise.
    */
   boolean getUserConfirmation(String question);
-
-  /**
-   * Checks if the current game state is saved. Required for requirement F16 (Safe Quit).
-   *
-   * @return true if saved (or no game started), false if there are unsaved changes.
-   */
-  boolean isGameSaved();
 }
