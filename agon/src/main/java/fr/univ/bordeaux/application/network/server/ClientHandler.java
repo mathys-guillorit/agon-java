@@ -15,6 +15,7 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final CommandParser parser = new CommandParser();
     private volatile boolean running = true;
+    private BufferedWriter out;
 
     /**
      * Creates a new client handler for the given socket.
@@ -29,7 +30,15 @@ public class ClientHandler implements Runnable {
      * Stops the client handler and closes the client socket.
      */
     public void stop() {
+        if (!running) return;
         running = false;
+
+        try {
+            if (out != null && !socket.isClosed()) {
+                send("BYE"); // Notification demandée par l'énoncé
+            }
+        } catch (IOException ignored) {}
+
         try {
             socket.close();
         } catch (IOException e) {
@@ -48,12 +57,11 @@ public class ClientHandler implements Runnable {
 
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
-            BufferedWriter out = new BufferedWriter(
+            this.out = new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
 
             while (running && !socket.isClosed()) {
                 String line;
-
                 try {
                     line = in.readLine();
                 } catch (SocketTimeoutException e) {
@@ -61,18 +69,15 @@ public class ClientHandler implements Runnable {
                     break;
                 }
 
-                if (line == null) {
-                    // client closed connection
-                    break;
-                }
+                if (line == null) break; // Déconnexion inopinée
 
                 Command cmd = parser.parse(line);
 
                 if (cmd.getType() == CommandType.PING) {
-                    send(out, "PONG");
+                    send("PONG TIME=0ms");
                 }
                 else if (cmd.getType() == CommandType.QUIT) {
-                    send(out, "BYE");
+                    send("BYE");
                     break;
                 }
             }
@@ -87,9 +92,11 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void send(BufferedWriter out, String msg) throws IOException {
-        out.write(msg);
-        out.write('\n');
-        out.flush();
+    private void send(String msg) throws IOException {
+        if (out != null) {
+            out.write(msg);
+            out.write('\n');
+            out.flush();
+        }
     }
 }

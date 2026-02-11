@@ -1,8 +1,6 @@
 package fr.univ.bordeaux.application;
 
 
-import fr.univ.bordeaux.application.appCommands.AppCommand;
-import fr.univ.bordeaux.application.appCommands.AppCommandResult;
 //import fr.univ.bordeaux.ui.IAppController;
 
 /**

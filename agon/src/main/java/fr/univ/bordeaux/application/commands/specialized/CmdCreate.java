@@ -10,7 +10,7 @@ import fr.univ.bordeaux.application.commands.Cmd;
 public class CmdCreate extends Cmd {
 
   @Override
-  public void execute() {
+  public void execute(String[] args) {
 
   }
 }
