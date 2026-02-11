@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agonCore.agonElements.History;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.agonElements.PieceType;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class AgonBoardImpl implements AgonBoard {
   private int blackPawnsToRelocate = 0;
   private boolean whiteQueenToRelocate = false;
   private boolean blackQueenToRelocate = false;
+  private History history = new History();
   private int THRONE = 60;
 
   public AgonBoardImpl() {
@@ -92,26 +94,100 @@ public class AgonBoardImpl implements AgonBoard {
    * counters, must be managed separately.
    * </p>
    *
-   * @param move The {@link Move} object representing the action to be undone.
    * @return {@code true} if the piece was successfully moved back; {@code false} if no friendly
    * piece was found at the destination.
    */
-  public boolean undoMove(Move move) {
-    int from = move.getFrom();
-    int to = move.getTo();
-    BitBoard pawns = getPawnsTable(move.getColor());
-    BitBoard queen = getQueenTable(move.getColor());
-    if (queen.isSet(to)) {
-      queen.setBit(to, 0L);
-      queen.setBit(from, 1L);
-      return true;
+  public boolean undoMove() {
+    if (history.isEmptyUndo()) {
+      return false;
     }
-    if (pawns.isSet(to)) {
-      pawns.setBit(to, 0L);
-      pawns.setBit(from, 1L);
-      return true;
+
+    // 1. On récupère la couleur du dernier coup joué
+    Color lastPlayerColor = history.getHeadUndo().getColor();
+
+    // 2. Tant que le coup en haut de la pile appartient au même joueur, on annule
+    while (!history.isEmptyUndo() && history.getHeadUndo().getColor() == lastPlayerColor) {
+      Move moveToUndo = history.getHeadUndo();
+      int from = moveToUndo.getFrom();
+      int to = moveToUndo.getTo();
+      Color color = moveToUndo.getColor();
+
+      if (from == -1) {
+        // C'était une relocation : on retire la pièce du plateau
+        BitBoard table = getTabWhereIndexIsOn(to);
+        if (table != null) {
+          table.setBit(to, 0L);
+          // On remet à jour les compteurs de réserve
+          if (table == getQueenTable(color)) {
+            if (color == Color.WHITE) {
+              whiteQueenToRelocate = true;
+            } else {
+              blackQueenToRelocate = true;
+            }
+          } else {
+            if (color == Color.WHITE) {
+              whitePawnsToRelocate++;
+            } else {
+              blackPawnsToRelocate++;
+            }
+          }
+        }
+      } else {
+        // Mouvement standard : on déplace de 'to' vers 'from'
+        BitBoard table = getTabWhereIndexIsOn(to);
+        if (table != null) {
+          table.setBit(to, 0L);
+          table.setBit(from, 1L);
+          return true;
+        }
+      }
     }
     return false;
+  }
+
+  public boolean redoMove() {
+    if (history.isEmptyRedo()) {
+      return false;
+    }
+
+    // 1. On récupère la couleur du prochain coup à refaire
+    Color nextPlayerColor = history.getHeadRedo().getColor();
+
+    // 2. Tant que le coup appartient au même joueur, on le ré-applique
+    while (!history.isEmptyRedo() && history.getHeadRedo().getColor() == nextPlayerColor) {
+      Move moveToRedo = history.redo(); // Récupère et déplace vers undoStack
+      int from = moveToRedo.getFrom();
+      int to = moveToRedo.getTo();
+      Color color = moveToRedo.getColor();
+
+      if (from == -1) {
+        // C'était une relocation : on remet la pièce sur le plateau
+        // On détermine s'il s'agit de la Reine ou d'un Pion
+        if (isQueenRelocating(color)) {
+          getQueenTable(color).setBit(to, 1L);
+          if (color == Color.WHITE) {
+            whiteQueenToRelocate = false;
+          } else {
+            blackQueenToRelocate = false;
+          }
+        } else {
+          getPawnsTable(color).setBit(to, 1L);
+          if (color == Color.WHITE) {
+            whitePawnsToRelocate--;
+          } else {
+            blackPawnsToRelocate--;
+          }
+        }
+      } else {
+        // Mouvement standard : on déplace de 'from' vers 'to'
+        BitBoard pieceTable = getTabWhereIndexIsOn(from);
+        if (pieceTable != null) {
+          pieceTable.setBit(from, 0L);
+          pieceTable.setBit(to, 1L);
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -149,6 +225,7 @@ public class AgonBoardImpl implements AgonBoard {
       } else {
         blackQueenToRelocate = false;
       }
+      history.add(new Move(-1, to, color));
       performCaptures(color);
       return true;
     }
@@ -161,6 +238,7 @@ public class AgonBoardImpl implements AgonBoard {
       } else {
         blackPawnsToRelocate--;
       }
+      history.add(new Move(-1, to, color));
       performCaptures(color);
       return true;
     }
@@ -176,6 +254,7 @@ public class AgonBoardImpl implements AgonBoard {
         pieceTable.setBit(to, 1L);
 
         // Check if this move triggers any captures
+        history.add(new Move(from, to, color));
         performCaptures(color);
         return true;
       }
