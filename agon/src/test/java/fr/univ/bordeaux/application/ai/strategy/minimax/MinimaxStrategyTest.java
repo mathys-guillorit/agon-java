@@ -65,9 +65,9 @@ class MinimaxStrategyTest {
         AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
         Heuristic heuristic = new CentralityHeuristic();
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 2);
+        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 5);
 
-        int maxTurns = 10;
+        int maxTurns = 40;
         for (int i = 1; i <= maxTurns; i++) {
             System.out.println("\n---------------- TURN " + i + " ----------------");
 
@@ -102,6 +102,61 @@ class MinimaxStrategyTest {
 
             if (board.isGameWon(Color.BLACK)) {
                 System.out.println("Random won");
+                break;
+            }
+        }
+        System.out.println("\n=== END ===");
+    }
+
+    @Test
+    void simulateGameAiVsAi() {
+        System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs AI (BLACK) ===");
+
+        int wQ = CoordinateMapper.toIndex('A', 1);
+        int bQ = CoordinateMapper.toIndex('K', 11);
+        List<Integer> wP = List.of(CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), CoordinateMapper.toIndex('A', 4), CoordinateMapper.toIndex('A', 5),  CoordinateMapper.toIndex('A', 6), CoordinateMapper.toIndex('B', 7));
+        List<Integer> bP = List.of(CoordinateMapper.toIndex('K', 10), CoordinateMapper.toIndex('K', 9), CoordinateMapper.toIndex('K', 8), CoordinateMapper.toIndex('K', 7), CoordinateMapper.toIndex('K', 6), CoordinateMapper.toIndex('J', 5));
+
+        AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
+
+        Heuristic heuristic = new CentralityHeuristic();
+        MinimaxStrategy wAi = new MinimaxStrategy(heuristic, Color.WHITE, 5);
+        MinimaxStrategy bAi = new MinimaxStrategy(heuristic, Color.BLACK, 5);
+
+        int maxTurns = 40;
+        for (int i = 1; i <= maxTurns; i++) {
+            System.out.println("\n---------------- TURN " + i + " ----------------");
+
+            System.out.println("WHITE AI playing :");
+            Move wAiMove = wAi.getBestMove(board);
+
+            if (wAiMove == null) {
+                System.out.println("WHITE AI cannot find a move");
+                break;
+            }
+
+            board.applyMove(wAiMove);
+            board.printBoard();
+
+            if (board.isGameWon(Color.WHITE)) {
+                System.out.println("WHITE AI won");
+                break;
+            }
+
+            System.out.println("BLACK AI playing :");
+            Move bAiMove = bAi.getBestMove(board);
+
+
+            if (bAiMove == null) {
+                System.out.println("BLACK AI cannot find a move");
+                break;
+            }
+
+            board.applyMove(bAiMove);
+            board.printBoard();
+
+            if (board.isGameWon(Color.BLACK)) {
+                System.out.println("BLACK AI won");
                 break;
             }
         }
