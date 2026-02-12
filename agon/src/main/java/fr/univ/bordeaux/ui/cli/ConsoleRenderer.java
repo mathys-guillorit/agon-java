@@ -1,18 +1,19 @@
 package fr.univ.bordeaux.ui.cli;
 
-import java.util.ArrayList;
+import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
+import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 
-interface Bitboard {} //  temporary to fix problems
+import java.util.ArrayList;
 
 /** delegate display converts bitboard state into String grid */
 public class ConsoleRenderer {
 
-  private Bitboard board;
+  private CoordinateMapper board;
   private ArrayList<Character> lines;
 
   private static final short numberStartASCII = 48;
 
-  public ConsoleRenderer(Bitboard board) {
+  public ConsoleRenderer(CoordinateMapper board) {
     this.board = board;
     this.lines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
@@ -60,7 +61,7 @@ public class ConsoleRenderer {
    * update board display to terminal no arguments need board in constructor (to be used by
    * drawHexagon() first)
    */
-  public void renderer() {
+  public void renderer(CoordinateMapper board) {
     int idxContent, spaceCount;
     System.out.println();
     final int linesCount = 11;
@@ -103,7 +104,7 @@ public class ConsoleRenderer {
    * @param y diagonal coordinate
    */
   private void drawHexagon(int x, int y) {
-    ///  TODO: from Bitboard board get
+    ///  TODO: from Bitboard board get the exact character
     ///  the character at the exact x y position and print it
     System.out.print("" + (x + 6 - y));
   }

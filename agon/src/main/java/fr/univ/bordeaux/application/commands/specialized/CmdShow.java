@@ -3,8 +3,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.ICmdCtx;
 
-public class CmdQuit extends Cmd {
-
+public class CmdShow extends Cmd {
 
   /**
    * load delegate(s) and information to allow
@@ -12,27 +11,17 @@ public class CmdQuit extends Cmd {
    *
    * @param cmdCtx cmdCtx the responsibility to use resources in commands
    */
-  public CmdQuit(ICmdCtx cmdCtx) {
+  public CmdShow(ICmdCtx cmdCtx) {
     super(cmdCtx);
   }
 
   @Override
   public void execute() {
-    this.cliWln(
-        "Save the game before quitting ? [y/n]"
-    );
-    if (this.getCLIPrompt().equalsIgnoreCase("y")) {
-      /// TODO: Saving the file on local
-      this.cliWln("saving...");
-      this.cliWln("saved !");
-    }
+
   }
-
-
 
   @Override
   public void showHelp() {
 
   }
-
 }

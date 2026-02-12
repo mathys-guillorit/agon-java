@@ -1,0 +1,52 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package commands {
+    interface ICmd {
+        + execute(): void
+        + showHelp(): void
+    }
+    ' pour éviter de se répéter dans les commandes on place
+    ' le contexte ici
+    abstract class Cmd implements ICmd {
+        - iCmdCtx: ICmdCtx
+        - {static} prompt: String
+        --
+        + Cmd(ICmdCtx iCmdCtx)
+        --
+        + cliWln(String msg): void
+        + cliW(String msg): void
+        --
+        + getCLIPrompt(): String
+        + getICmdDelegate(): ICmdShellDelegate
+        + setUserPrompt(String prompt): void
+    }
+    package specialized {
+        class CmdCreate {}
+        class CmdHelp {}
+        class CmdHint {}
+        class CmdLoad {}
+    }
+    ' interface contextuelle pour les commandes
+    ' permet de ne plus modifier les contructeurs des commandes
+    ' si on rajoute des delegate (pour plus tard le network et la partie GUI)
+    interface ICmdCtx {
+        - iCmdShellDelegate: ICmdShellDelegate
+        - inetDelegate: INETDelegate
+        - guiDelegate: IGUIDelegate
+    }
+
+    ICmdShellDelegate --|> ICmdCtx
+
+    CmdCreate --|> Cmd
+    CmdHelp --|> Cmd
+    CmdHint --|> Cmd
+    CmdLoad --|> Cmd
+
+}
+
+note top of specialized
+  <color:#AE3400>11 commands</color>
+end note
+
+@enduml

@@ -1,5 +1,16 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.application.commands.CmdCtx;
+import fr.univ.bordeaux.application.commands.CmdRegister;
+import fr.univ.bordeaux.application.commands.ICmdCtx;
+import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
+import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
+import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
+import fr.univ.bordeaux.application.commands.specialized.CmdPause;
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.commands.specialized.CmdSave;
+import fr.univ.bordeaux.ui.cli.AgonShell;
+
 /**
  * @version Java 21 (Microsoft OpenJdk 21.0.9)<br>
  *     - test programm using <code>mvn test</code> (don't require to compile before)<br>
@@ -7,16 +18,10 @@ package fr.univ.bordeaux;
  *     - exec using : <code>mvn exec:java</code> (require to compile before)<br>
  *     - create jar package : <code>mvn package</code>
  * @short from "/agon" repertory
- * @version Java 21 (Microsoft OpenJdk 21.0.9)<br>
- *     - test programm using <code>mvn test</code> (don't require to compile before)<br>
- *     - compile program using <code>mvn compile</code> <br>
- *     - exec using : <code>mvn exec:java</code> (require to compile before)<br>
- *     - create jar package : <code>mvn package</code> from "/agon" repertory
  */
 public class Main {
 
   public static void main(String[] arg) throws Exception {
-    System.out.println("prog principal OK + ajout JUnit");
     /*BitBoard whiteQueen=new BitBoard();
     BitBoard blackQueen=new BitBoard();
     BitBoard whitePawns=new BitBoard();
@@ -35,5 +40,30 @@ public class Main {
     board.printBoard();*/
     /*var a = new GUIExample();
     a.launch(GUIExample.class, arg);*/
+
+    Main.testCli();
+
+
   }
+
+  /**
+   * test using real case and later with junit
+   */
+  private static void testCli(){
+    AgonShell shell = new AgonShell();
+    ICmdCtx ctx = new CmdCtx(
+      shell.getDelegate(),
+      null,
+      null
+    );
+    CmdRegister cmdRegistry = CmdRegister.getInstance();
+    cmdRegistry.register("quit", new CmdQuit(ctx));
+    cmdRegistry.register("new", new CmdCreate(ctx));
+    cmdRegistry.register("load", new CmdLoad(ctx));
+    cmdRegistry.register("help", new CmdHelp(ctx));
+    cmdRegistry.register("save", new CmdSave(ctx));
+    cmdRegistry.register("pause", new CmdPause(ctx));
+    shell.loop();
+  }
+
 }

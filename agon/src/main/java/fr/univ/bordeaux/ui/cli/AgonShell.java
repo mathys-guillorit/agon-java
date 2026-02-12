@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.commands.CmdRegister;
 import fr.univ.bordeaux.application.commands.ICmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import java.io.BufferedReader;
@@ -10,10 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.jline.consoleui.prompt.ConsolePrompt;
@@ -33,13 +33,9 @@ public class AgonShell extends AbstractGameUI {
   private String userCmdName;
   private String[] userOptions; // alias "args"
   private ICmd command;
-
   private Terminal terminal;
   private LineReader reader;
   private PromptBuilder promptBuilder;
-
-  /** represent all options available from the menu */
-  private Options options = null;
 
   /** Message Header of the cli for the entire App */
   private final String msgHA;
@@ -47,15 +43,17 @@ public class AgonShell extends AbstractGameUI {
   private final String mainMenuASCII;
 
   private ArrayList<String> cmdHistory;
+  /** represent all options available from the menu */
+  private Options options = null;
+  private String userPrompt = ">> ";
 
-  /** ASCII engine renderer */
+  /** ASCII engine renderer Used to communicate through the terminal with the user*/
   public AgonShell() {
     super(); // require the work of others
     this.running = true;
     this.msgHA = this.cliLayer();
     this.mainMenuASCII = this.loadMainMenu();
     this.cmdHistory = new ArrayList<>();
-    this.initOptions();
     try {
       this.terminal = TerminalBuilder.builder().build(); // IOException
       this.reader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -63,33 +61,131 @@ public class AgonShell extends AbstractGameUI {
       this.cliErr("terminal initialization failed");
       this.cliErr(e.getMessage());
     }
+    this.initOptions();
+  }
+
+
+  /**
+   * get shell context for commands
+   * @return ICmdShellDelegate the concerned delegate that contains information
+   */
+  public ICmdShellDelegate getDelegate(){
+      return new CmdShellDelegate(
+        this.terminal,
+        this.reader,
+        this.running,
+        this.cmdHistory
+      );
   }
 
   /** fill options for the cli (done once internally) */
   private void initOptions() {
     if (this.options != null) return; // done once
-    Option help =
-        Option.builder("h")
-            .longOpt("help")
-            .optionalArg(true)
-            .hasArg()
-            .argName("cmd")
-            .desc("Show help (otpionally for a specific command")
-            .get();
     this.options = new Options();
-    // display Shell help
-    this.options.addOption("h", "help", false, "show help");
-    // display command help
-    this.options.addOption("h", "help", true, "show help command");
+    // Commons Cli add already "--" no need to put them
+    Option help = Option.builder("h")
+      .longOpt("help")
+      .argName("cmd")
+      .desc("Show help (optionally for a specific command")
+      .get();
+    Option version = Option.builder("V")
+      .longOpt("version")
+      .desc("show program version")
+      .get();
+    Option verbose = Option.builder("v")
+      .longOpt("verbose")
+      .desc("add more text information")
+      .get();
+    Option debug = Option.builder("d")
+      .longOpt("debug")
+      .desc("show debug messages")
+      .get();
+    Option create = Option.builder("new")
+      .optionalArg(false)
+      .hasArg(true)
+      .argName("ARGS")
+      .desc("run a new game")
+      .get();
+    Option history = Option.builder("history")
+      .desc("show game turns history")
+      .get();
+    Option load = Option.builder("load")
+      .optionalArg(false)
+      .hasArg(true)
+      .argName("FILE")
+      .desc("load a game from a file")
+      .get();
+    Option quit = Option.builder("quit")
+      .desc("quit the game")
+      .get();
+    // if there is pause there is "resume" ?
+    Option pause = Option.builder("pause")
+      .desc("stop the passing time in blitz mode")
+      .get();
+    Option hint = Option.builder("hint")
+      .desc("show an advice to play a turn")
+      .get();
+    Option undo = Option.builder("undo")
+      .optionalArg(true)
+      .hasArg(true)
+      .argName("N")
+      .desc("cancel the last turn (or the N lasts)")
+      .get();
+    Option redo = Option.builder("undo")
+      .optionalArg(true)
+      .hasArg(true)
+      .argName("N")
+      .desc("replay the last canceled turn (or the N lasts)")
+      .get();
+    Option showBoard = Option.builder("board")
+      .desc("show the current board state")
+      .get();
+    Option showtime = Option.builder("time")
+      .desc("show time left for each players")
+      .get();
+    Option showConf = Option.builder("configuration")
+      .desc("show game configuration")
+      .get();
+    // set PARAM=VALUE : change current configuration
+    Option setParam = Option.builder("set")
+      .hasArg()
+      .argName("key=value")
+      .desc("change current game configuration, example : \"set debug=true\"")
+      .get();
+    // before stating a game
+    this.options.addOption(version);
+    this.options.addOption(verbose);
+    this.options.addOption(debug);
+    this.options.addOption(help);
+    // after starting a game
+    this.options.addOption(create);
+    this.options.addOption(history);
+    this.options.addOption(load);
+    this.options.addOption(quit);
+    this.options.addOption(pause);
+    this.options.addOption(hint);
+    this.options.addOption(undo);
+    this.options.addOption(redo);
+    this.options.addOption(showBoard);
+    this.options.addOption(showtime);
+    this.options.addOption(showConf);
+    this.options.addOption(setParam);
   }
+
 
   public void test() {
     var a = new ConsoleRenderer(null);
-    a.renderer();
+    a.renderer(new CoordinateMapper());
   }
 
+  /**
+   * display and update board into screen
+   * @param board used to comunicate informations
+   */
   @Override
-  public void updateBoard(String board) {}
+  public void updateBoard(ConsoleRenderer board) {
+    board.renderer(new CoordinateMapper());
+  }
 
   @Override
   public void showMessage(String message) {}
@@ -148,7 +244,8 @@ public class AgonShell extends AbstractGameUI {
     }
   }
 
-  /** load menu character in a variable once */
+  /** load menu character in a variable once
+   * from a file in resource directory */
   @Nonnull
   private String loadMainMenu() { // DP Command here
     final String defaultMenu = "Menu not available";
@@ -178,59 +275,39 @@ public class AgonShell extends AbstractGameUI {
     this.cliW(this.mainMenuASCII);
     String line;
     List<String> words;
+    boolean batchMode = true;
     while (this.running) {
-      line = this.reader.readLine(">> ");
+      line = this.reader.readLine(this.userPrompt).trim();
       // tokenized by JLine into words
       ParsedLine parsed = reader.getParser().parse(line, startCursorIdx);
       words = parsed.words();
       this.userCmdName = words.getFirst(); // == word.get(0);
+      if (this.userCmdName.equalsIgnoreCase("new")) batchMode = false;
       startCursorIdx++;
       // in options, we must get only options not the command name included
-      this.userOptions = words.subList(startCursorIdx, words.size()).toArray(new String[0]);
-      this.running = this.conditionalReturning();
+      if (batchMode) {
+        this.userOptions = words.subList(startCursorIdx, words.size()).toArray(new String[0]);
+      } else {
+        this.userOptions = new String[1];
+        this.userOptions[0] = this.userCmdName;
+      }
+      this.doCommand();
     }
     this.cliWln("Bye !");
     this.safeCloseTerminal();
   }
 
   /**
-   * check if the user want to exit or not
-   *
-   * @return boolean : false if the user want to exit, true otherwise
+   * apply command action associated with the command name
    */
-  private boolean conditionalReturning() { // Locked Here need work from the others
+  private void doCommand() { // Locked Here need work from the others
     // exit case
-    if ("quit".equalsIgnoreCase(this.userCmdName)) {
-      terminal.writer().println("Save the game before quitting ? [y/n]");
-      if (reader.readLine(">> ").equalsIgnoreCase("y")) {
-        /// TODO: DP Command here
-        this.cliWln("saving...");
-        this.cliWln("saved");
-      }
-      return false;
-    }
-    // others cases
-    if ("help".equalsIgnoreCase(this.userCmdName)) {
-      /// TODO: next version add argument with regex
-      this.cliWln(this.mainMenuASCII);
-      return true;
-    }
-    /// TODO: other cases required
-    return true;
-  }
-
-  private void cliActOnOptions() {
-    CommandLineParser parser = new DefaultParser();
-    try {
-      CommandLine cmdl = parser.parse(options, this.userOptions);
-      // just an example to how it works but no if and no switch must be done
-      if (cmdl.hasOption("v")) {
-        cliWln("Verbose mode");
-      }
-    } catch (Exception e) {
-      this.cliWln("Invalid Command");
-      //      new HelpFormatter().printHelp("load", options);
-    }
+    CmdRegister cmdRegister = CmdRegister.getInstance();
+    Optional<ICmd> optional = cmdRegister.get(this.userCmdName.toLowerCase());
+    if(optional.isEmpty()) return;
+    ICmd cmd = optional.get();
+    // edit actual "isRunning" if pointer is transmitted correctly
+    cmd.execute();
   }
 
   /**

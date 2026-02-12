@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.ui;
 
+import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
+
 public interface GameUserInterface {
   void startNewGame(String[] args);
 
@@ -21,7 +23,7 @@ public interface GameUserInterface {
 
   void requestHint();
 
-  void updateBoard(String boardRepresentation);
+  void updateBoard(ConsoleRenderer boardRepresentation);
 
   void showMessage(String message);
 

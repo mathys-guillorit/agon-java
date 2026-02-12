@@ -3,7 +3,7 @@
     new [ARGS] : run a new game
     help [CMD] : show Shell help (if no argument) or CMD's help
         example : "help" or "help pause"
-    quit : quit the program
+    quit : quit the game
     load FILE : load a game from a file
     save FILE : save the current game
     pause : stop the passing time in blitz mode
@@ -12,7 +12,7 @@
         example : "undo 6"
     redo [N] : replay the last canceled turn (or the N lasts)
         example : "redo 3"
-    show board : show the current game state
+    show board : show the current board state
     show history : show game turns history
     show time : show time left for each players
     show configuration : "explicit"
