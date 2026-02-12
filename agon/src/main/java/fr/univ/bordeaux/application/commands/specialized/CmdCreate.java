@@ -2,6 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.ICmdCtx;
+import fr.univ.bordeaux.ui.cli.ShellMode;
 
 /** Create a new game. Command representation in cli : "new [ARGS]" */
 public class CmdCreate extends Cmd {
@@ -18,12 +19,12 @@ public class CmdCreate extends Cmd {
   }
 
   @Override
-  public void execute() {
-
+  public void shellExecute() {
+    this.setShellMode(ShellMode.GAME);
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 

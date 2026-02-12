@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.commands;
 
 import fr.univ.bordeaux.ui.cli.ICmdShellDelegate;
-import org.jline.reader.LineReader;
+import fr.univ.bordeaux.ui.cli.ShellMode;
 
 import java.util.ArrayList;
 
@@ -70,5 +70,16 @@ public class CmdCtx implements ICmdCtx{
   }
   public void cliSetRunning(boolean running) {
     this.iCmdShellDelegate.cliSetRunning(running);
+  }
+
+  @Override
+  public ShellMode cliGetShellMode() {
+    return this.iCmdShellDelegate.cliGetShellMode();
+  }
+
+
+  @Override
+  public void cliGetShellMode(ShellMode mode) {
+    this.iCmdShellDelegate.cliGetShellMode(mode);
   }
 }

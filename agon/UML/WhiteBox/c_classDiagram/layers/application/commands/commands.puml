@@ -3,8 +3,8 @@
 
 package commands {
     interface ICmd {
-        + execute(): void
-        + showHelp(): void
+        + shellExecute(): void
+        + shellhowHelp(): void
     }
     ' pour éviter de se répéter dans les commandes on place
     ' le contexte ici
@@ -31,9 +31,9 @@ package commands {
     ' permet de ne plus modifier les contructeurs des commandes
     ' si on rajoute des delegate (pour plus tard le network et la partie GUI)
     interface ICmdCtx {
-        - iCmdShellDelegate: ICmdShellDelegate
-        - inetDelegate: INETDelegate
-        - guiDelegate: IGUIDelegate
+        + getICmdShellDelegate(): ICmdShellDelegate
+        + getINETDelegate(): INETDelegate
+        + getGUIDelegate(): IGUIDelegate
     }
     class CmdCtx {
           - iCmdShellDelegate: ICmdShellDelegate
@@ -72,7 +72,7 @@ package ui{
     }
 }
 
-ICmdShellDelegate --|> ICmdCtx
+ICmdShellDelegate <|-- ICmdCtx
 Cmd *-- CmdCtx
 ' CmdCtx implements ICmdCtx
 CmdCtx ..|> ICmdCtx

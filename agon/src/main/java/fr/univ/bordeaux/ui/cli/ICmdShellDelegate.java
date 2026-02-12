@@ -3,8 +3,6 @@ package fr.univ.bordeaux.ui.cli;
 /// TODO: fix {@link CmdDelegate}
 
 
-import org.jline.reader.LineReader;
-
 import java.util.ArrayList;
 
 /**
@@ -37,10 +35,10 @@ public interface ICmdShellDelegate {
    * @param prompt text before user's message
    */
   public void cliSetPromptHeader(String prompt);
-
   public boolean cliIsRunning();
   public ArrayList<String> cliCommandHistory();
-
   public void cliSetRunning(boolean running);
+  public ShellMode cliGetShellMode();
+  public void cliGetShellMode(ShellMode mode);
 
 }

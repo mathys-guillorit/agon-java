@@ -16,12 +16,12 @@ public class CmdShow extends Cmd {
   }
 
   @Override
-  public void execute() {
+  public void shellExecute() {
 
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 }

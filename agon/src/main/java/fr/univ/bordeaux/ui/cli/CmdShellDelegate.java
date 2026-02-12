@@ -13,14 +13,16 @@ public class CmdShellDelegate implements ICmdShellDelegate {
   private AtomicBoolean isRunning;
   private static ArrayList<String> commandHistory;
   private static String usrPrompt = null;
+  private ShellMode shellMode;
 
-  public CmdShellDelegate(Terminal terminal, LineReader lineReader, AtomicBoolean isRunning, ArrayList<String> commandHistory) {
+  public CmdShellDelegate(Terminal terminal, LineReader lineReader,
+   AtomicBoolean isRunning, ArrayList<String> commandHistory, ShellMode shellMode) {
     this.terminal = terminal;
     this.lineReader = lineReader;
     this.isRunning = isRunning;
+    this.shellMode = shellMode;
     CmdShellDelegate.commandHistory = commandHistory;
     if (usrPrompt == null) CmdShellDelegate.usrPrompt = ">> "; // default user prompt
-
   }
 
   /**
@@ -59,5 +61,14 @@ public class CmdShellDelegate implements ICmdShellDelegate {
 
   public void cliSetRunning(boolean running) {
     this.isRunning.set(running);
+  }
+
+  public ShellMode cliGetShellMode() {
+    return this.shellMode;
+  }
+
+  @Override
+  public void cliGetShellMode(ShellMode mode) {
+    this.shellMode = mode;
   }
 }

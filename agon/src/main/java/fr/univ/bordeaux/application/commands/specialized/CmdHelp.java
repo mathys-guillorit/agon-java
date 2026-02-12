@@ -16,12 +16,12 @@ public class CmdHelp extends Cmd {
   }
 
   @Override
-  public void execute() {
+  public void shellExecute() {
     this.cliWln("you written \"help\" command !");
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 }
