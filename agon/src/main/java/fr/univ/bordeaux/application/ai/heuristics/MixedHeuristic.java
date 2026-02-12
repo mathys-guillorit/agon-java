@@ -60,7 +60,7 @@ public class MixedHeuristic implements Heuristic {
      * @param mobilityWeight   The importance factor for the mobility score (e.g., 5.0).
      * @param centralityWeight The importance factor for the centrality score (e.g., 1.0).
      */
-    MixedHeuristic(double mobilityWeight, double centralityWeight) {
+    public MixedHeuristic(double mobilityWeight, double centralityWeight) {
         this.mobilityWeight = mobilityWeight;
         this.centralityWeight = centralityWeight;
         this.mobilityHeuristic = new MobilityHeuristic();

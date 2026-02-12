@@ -7,6 +7,7 @@ import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
+import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -119,7 +120,7 @@ class MinimaxStrategyTest {
 
         AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
-        Heuristic heuristic = new CentralityHeuristic();
+        Heuristic heuristic = new MixedHeuristic(10, 1);
         MinimaxStrategy wAi = new MinimaxStrategy(heuristic, Color.WHITE, 5);
         MinimaxStrategy bAi = new MinimaxStrategy(heuristic, Color.BLACK, 5);
 
@@ -128,7 +129,12 @@ class MinimaxStrategyTest {
             System.out.println("\n---------------- TURN " + i + " ----------------");
 
             System.out.println("WHITE AI playing :");
-            Move wAiMove = wAi.getBestMove(board);
+            Move wAiMove = wAi.getBestMove(new AgonBoardImpl(
+                    board.getWhiteQueen().copy2(),
+                    board.getBlackQueen().copy2(),
+                    board.getWhitePawns().copy2(),
+                    board.getBlackPawns().copy2()
+            ));
 
             if (wAiMove == null) {
                 System.out.println("WHITE AI cannot find a move");
@@ -144,7 +150,12 @@ class MinimaxStrategyTest {
             }
 
             System.out.println("BLACK AI playing :");
-            Move bAiMove = bAi.getBestMove(board);
+            Move bAiMove = bAi.getBestMove(new AgonBoardImpl(
+                    board.getWhiteQueen().copy2(),
+                    board.getBlackQueen().copy2(),
+                    board.getWhitePawns().copy2(),
+                    board.getBlackPawns().copy2()
+            ));
 
 
             if (bAiMove == null) {
