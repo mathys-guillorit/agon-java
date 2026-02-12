@@ -18,7 +18,18 @@ public class CmdHint extends Cmd {
 
   @Override
   public void execute() {
+    this.cliWln("--- Hint Request ---");
+    String bestMove = callDomainLayerForHint();
+    this.cliWln("AI suggests: " + bestMove);
+  }
 
+  /**
+   * Simulates communication with the Domain layer (AgonCore / Engine).
+   * To be replaced later by: return this.CmdCtx.getGameEngine().computeHint();
+   */
+  private String callDomainLayerForHint() {
+      // TODO: Connect this to the actual game engine once it is merged
+      return "";
   }
 
   @Override

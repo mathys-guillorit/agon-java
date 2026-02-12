@@ -1,19 +1,20 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
-
 import java.util.ArrayList;
+
+import fr.univ.bordeaux.agonCore.agonElements.PieceType;
+import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
 
 /** delegate display converts bitboard state into String grid */
 public class ConsoleRenderer {
 
-  private CoordinateMapper board;
+  private RestrictedAgonBoard board;
   private ArrayList<Character> lines;
 
   private static final short numberStartASCII = 48;
 
-  public ConsoleRenderer(CoordinateMapper board) {
+  public ConsoleRenderer(RestrictedAgonBoard board) {
     this.board = board;
     this.lines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
@@ -61,18 +62,23 @@ public class ConsoleRenderer {
    * update board display to terminal no arguments need board in constructor (to be used by
    * drawHexagon() first)
    */
-  public void renderer(CoordinateMapper board) {
+  public void renderer() {
     int idxContent, spaceCount;
     System.out.println();
+
     final int linesCount = 11;
     final int midLine = (linesCount - 1) / 2;
+
     for (int lines = 0; lines < linesCount; lines++) {
       for (spaceCount = 0; spaceCount < this.coneReversed(lines, 0, 5); spaceCount++)
         System.out.print(' ');
+
       if (lines > midLine) System.out.print(this.lines.get(lines) + " \\");
       else if (lines == midLine) System.out.print("F |");
       else System.out.print(this.lines.get(lines) + " /");
-      for (idxContent = 0; idxContent < 6 + this.cone(lines, midLine, -10); idxContent++) {
+
+      int width = 6 + this.cone(lines, midLine, -10);
+      for (idxContent = 0; idxContent < width; idxContent++) {
         if (coordinateValidator(lines, idxContent)) this.drawHexagon(lines, idxContent);
         if (idxContent != 10 - spaceCount) System.out.print(' ');
       }
@@ -104,8 +110,28 @@ public class ConsoleRenderer {
    * @param y diagonal coordinate
    */
   private void drawHexagon(int x, int y) {
-    ///  TODO: from Bitboard board get the exact character
-    ///  the character at the exact x y position and print it
-    System.out.print("" + (x + 6 - y));
+    try {
+          char rowChar = this.lines.get(x);
+          int logicalCol = y + 1; 
+          int index = CoordinateMapper.toIndex(rowChar, logicalCol);
+          PieceType piece = this.board.getPieceAt(index);
+          System.out.print(getSymbolFromPiece(piece));
+        } catch (Exception e) {
+          System.out.print(".");
+        };
+  }
+
+  /**
+   * Convert PieceType to ASCII character.
+   */
+  private char getSymbolFromPiece(PieceType piece) {
+    if (piece == null) return '.';
+    return switch (piece) {
+      case WHITE_PAWN -> 'O';
+      case BLACK_PAWN -> 'X';
+      case WHITE_QUEEN -> 'Q';
+      case BLACK_QUEEN -> 'q';
+      default -> '.';
+    };
   }
 }

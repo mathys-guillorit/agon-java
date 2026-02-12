@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdRegister;
 import fr.univ.bordeaux.application.commands.ICmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.Nonnull;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.jline.consoleui.prompt.ConsolePrompt;
@@ -28,6 +31,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
+
+import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
 
 public class AgonShell extends AbstractGameUI {
 
@@ -43,6 +48,8 @@ public class AgonShell extends AbstractGameUI {
   private final String msgHA;
 
   private final String mainMenuASCII;
+
+  private RestrictedAgonBoard board;
 
   private ArrayList<String> cmdHistory;
   /** represent all options available from the menu */
@@ -60,6 +67,7 @@ public class AgonShell extends AbstractGameUI {
     this.mainMenuASCII = this.loadMainMenu();
     this.cmdHistory = new ArrayList<>();
     this.restricted = true;
+    this.board = createStandardBoard();
     try {
       this.terminal = TerminalBuilder.builder().system(true).build(); // IOException
       this.reader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -76,6 +84,8 @@ public class AgonShell extends AbstractGameUI {
     // this.showMainMenu();
     this.cliWln("MAIN MENU HERE");
     this.cliWln(this.mainMenuASCII);
+    ConsoleRenderer renderer = new ConsoleRenderer(this.board);
+    renderer.renderer();
     String line;
     List<String> words;
     boolean batchMode = true;
@@ -232,7 +242,7 @@ public class AgonShell extends AbstractGameUI {
 
   public void test() {
     var a = new ConsoleRenderer(null);
-    a.renderer(new CoordinateMapper());
+    a.renderer();
   }
 
   /**
@@ -240,8 +250,8 @@ public class AgonShell extends AbstractGameUI {
    * @param board used to comunicate informations
    */
   @Override
-  public void updateBoard(ConsoleRenderer board) {
-    board.renderer(new CoordinateMapper());
+  public void updateBoard(ConsoleRenderer renderer) {
+    renderer.renderer();
   }
 
   @Override
@@ -371,5 +381,15 @@ public class AgonShell extends AbstractGameUI {
   private void cliW(String msg) {
     this.terminal.writer().print(msg);
     terminal.flush();
+  }
+
+  private fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl createStandardBoard() {
+      var wQ = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
+      var bQ = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
+      var wP = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
+      var bP = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
+      wQ.setBit(60, 1L);
+      bQ.setBit(64, 1L); 
+      return new fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl(wQ, bQ, wP, bP);
   }
 }

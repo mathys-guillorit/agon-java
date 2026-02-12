@@ -1,10 +1,12 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.application.GameLauncher;
 import fr.univ.bordeaux.application.commands.CmdCtx;
 import fr.univ.bordeaux.application.commands.CmdRegister;
 import fr.univ.bordeaux.application.commands.ICmdCtx;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
+import fr.univ.bordeaux.application.commands.specialized.CmdHint;
 import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
 import fr.univ.bordeaux.application.commands.specialized.CmdPause;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
@@ -41,7 +43,7 @@ public class Main {
     /*var a = new GUIExample();
     a.launch(GUIExample.class, arg);*/
 
-    Main.testCli();
+    new GameLauncher().launch(arg);
 
 
   }
@@ -49,7 +51,7 @@ public class Main {
   /**
    * test using real case and later with junit
    */
-  private static void testCli(){
+  public static void testCli(){
     AgonShell shell = new AgonShell();
     ICmdCtx ctx = new CmdCtx(
       shell.getDelegate(),
@@ -63,6 +65,7 @@ public class Main {
     cmdRegistry.register("help", new CmdHelp(ctx));
     cmdRegistry.register("save", new CmdSave(ctx));
     cmdRegistry.register("pause", new CmdPause(ctx));
+    cmdRegistry.register("hint", new CmdHint(ctx));
     shell.loop();
   }
 
