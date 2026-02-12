@@ -21,6 +21,8 @@ public class Move {
   /** The color of the player performing the move. */
   Color color;
 
+  PieceType pieceType;
+
   /**
    * Constructs a new Move.
    *
@@ -45,5 +47,15 @@ public class Move {
 
   public Color getColor() {
     return color;
+  }
+
+  public PieceType getPieceType() {
+    return pieceType;
+  }
+  public void setPieceType(PieceType pieceType) {
+    this.pieceType = pieceType;
+  }
+  public String toString() {
+    return "from : "+from + " to : " + to + " color : " + color;
   }
 }

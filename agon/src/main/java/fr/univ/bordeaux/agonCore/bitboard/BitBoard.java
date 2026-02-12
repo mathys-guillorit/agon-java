@@ -34,6 +34,11 @@ public class BitBoard {
     }
   }
 
+  public BitBoard(BitBoard board) {
+    this.low = board.low;
+    this.high = board.high;
+  }
+
   /**
    * Performs a bitwise OR operation with another BitBoard.
    *
@@ -210,5 +215,11 @@ public class BitBoard {
     }
 
     return -1;
+  }
+
+  public BitBoard copy(BitBoard bitBoard) {
+    this.low = bitBoard.low;
+    this.high = bitBoard.high;
+    return this;
   }
 }
