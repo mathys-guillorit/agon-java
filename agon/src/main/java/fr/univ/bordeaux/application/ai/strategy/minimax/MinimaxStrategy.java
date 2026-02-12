@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy.minimax;
 
+import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
@@ -37,8 +38,8 @@ public class MinimaxStrategy extends AbstractAgonAI {
      * @param heuristic The evaluation function used for leaf nodes.
      * @param maxDepth  The depth limit for the recursion (e.g., 3 or 4 for reasonable performance).
      */
-    public MinimaxStrategy(Heuristic heuristic, int maxDepth) {
-        super(heuristic);
+    public MinimaxStrategy(Heuristic heuristic, Color color, int maxDepth) {
+        super(heuristic, color);
         this.maxDepth = maxDepth;
     }
 
@@ -69,11 +70,9 @@ public class MinimaxStrategy extends AbstractAgonAI {
             if (score > maxScore) {
                 maxScore = score;
                 bestMove = move;
-                // System.out.println("Nouveau meilleur coup : " + move + " (Score: " + score + ")");
             }
             alpha = Math.max(alpha, score);
         }
-        System.out.println("Minimax fini. Nœuds visités: " + this.nodeCount);
         return bestMove;
     }
 
@@ -91,11 +90,11 @@ public class MinimaxStrategy extends AbstractAgonAI {
      * @return The heuristic score of the board at this node (propagated from the leaves).
      */
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
-        if (depth == 0 || board.isGameWon(this.color)) {
+        if (depth == 0 || board.isGameWon(Color.WHITE) || board.isGameWon(Color.BLACK)) {
             return heuristic.evaluate(board, this.color);
         }
-        List<Move> moves = board.generateLegalMoves(this.color);
         if (isMaximizingPlayer) {
+            List<Move> moves = board.generateLegalMoves(this.color);
             long maxEval = Long.MIN_VALUE;
             for (Move move : moves) {
                 board.applyMove(move);
@@ -110,6 +109,8 @@ public class MinimaxStrategy extends AbstractAgonAI {
             }
             return maxEval;
         } else {
+            Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+            List<Move> moves = board.generateLegalMoves(opponentColor);
             long minEval = Long.MAX_VALUE;
             for (Move move : moves) {
                 board.applyMove(move);

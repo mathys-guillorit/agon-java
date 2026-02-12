@@ -9,6 +9,12 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   boolean undoMove();
 
+  boolean redoMove();
+
+  int getCentrality(int index);
+
+  int getMobility(int index);
+
   boolean isGameWon(Color color);
 
   int getScore(Color color);

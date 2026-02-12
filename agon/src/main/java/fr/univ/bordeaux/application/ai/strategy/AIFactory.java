@@ -4,7 +4,7 @@ import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 public class AIFactory {
 
-    public AgonAI createAI(AiDecoder config){
+    public AgonAI createAI(){
         //Crée le bon model d'ia en fonction des parametres passés dans la config
         return null;
     }

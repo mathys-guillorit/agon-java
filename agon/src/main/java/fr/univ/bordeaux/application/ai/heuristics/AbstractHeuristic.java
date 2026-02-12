@@ -40,6 +40,14 @@ public abstract class AbstractHeuristic implements Heuristic {
         this.queenWeight = queenWeight;
     }
 
+    public long getPawnWeight() {
+        return pawnWeight;
+    }
+
+    public long getQueenWeight() {
+        return queenWeight;
+    }
+
     /**
      * Calculates the raw heuristic factor for a specific piece at a given position.
      * <p>
@@ -48,7 +56,7 @@ public abstract class AbstractHeuristic implements Heuristic {
      * </p>
      *
      * @param board The current board state.
-     * @param index The index (0-90) of the cell to evaluate.
+     * @param index The index (0-120) of the cell to evaluate.
      * @return The raw value of the factor before weight application.
      */
     protected abstract long getFactor(AgonBoard board, int index);
@@ -64,7 +72,7 @@ public abstract class AbstractHeuristic implements Heuristic {
     @Override
     public long evaluate(AgonBoard board, Color aiColor) {
         long score = 0;
-        for (int i = 0; i < 91; i++) {
+        for (int i = 0; i <= 120; i++) {
             PieceType piece = board.getPieceAt(i);
             if (piece == null) continue;
             long factor = getFactor(board, i);

@@ -56,8 +56,9 @@ public abstract class AbstractAgonAI implements AgonAI {
      *
      * @param heuristic The evaluation function to use.
      */
-    public AbstractAgonAI(Heuristic heuristic) {
+    public AbstractAgonAI(Heuristic heuristic, Color color) {
         this.heuristic = heuristic;
+        this.color = color;
     }
 
     /**

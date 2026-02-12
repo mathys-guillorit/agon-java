@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy.mcts;
 
+import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
@@ -10,8 +11,8 @@ import java.util.Random;
 
 public class MctsStrategy extends AbstractAgonAI {
 
-    public MctsStrategy(Heuristic heuristic) {
-        super(heuristic);
+    public MctsStrategy(Heuristic heuristic, Color color) {
+        super(heuristic, color);
     }
 
     @Override

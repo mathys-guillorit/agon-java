@@ -78,10 +78,20 @@ public class AgonBoardImpl implements AgonBoard {
    * @return The number of neighboring tiles that are currently legal destinations.
    */
   public int getMobility(int index) {
+    Color color = getColorWhereIndexIsOn(index);
+    if (color == null){ return -1;}
     BitBoard neighbors = getNeighbors(index);
-    BitBoard legalMoves = generateLegalMovesBitboard(getColorWhereIndexIsOn(index));
-    BitBoard validMoves = neighbors.andOperation(legalMoves);
-    return validMoves.countBits();
+    int circleIndex = getCentrality(index);
+    if (circleIndex == -1){ return -1;}
+    BitBoard allowed = allowedDestinations[circleIndex];
+    BitBoard legalMoves = neighbors.andOperation(allowed).andOperation(getFreeZones());
+    PieceType type = getPieceAt(index);
+    if (type != null && type.isPawn()) {
+      legalMoves = legalMoves.andOperation(circles[0].complementOperation());
+    }
+    BitBoard suicideMask = getSuicideMask(color);
+    legalMoves = legalMoves.andOperation(suicideMask.complementOperation());
+    return legalMoves.countBits();
   }
 
   /**
