@@ -8,6 +8,9 @@ public abstract class Cmd implements ICmd {
    * to allow leave the system and reuse components
    * @return boolean
    */
+  public boolean isQuit() {
+    return false;
+  }
 
 
 }

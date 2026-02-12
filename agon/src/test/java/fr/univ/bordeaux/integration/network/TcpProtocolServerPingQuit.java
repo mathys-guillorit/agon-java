@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.integration.network;
 
-import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Integration test verifying the raw TCP protocol for PING and QUIT sequences.
+ */
 public class TcpProtocolServerPingQuit {
 
     @Test
@@ -22,7 +24,6 @@ public class TcpProtocolServerPingQuit {
         AgonServer server = new AgonServer(port);
         assertTrue(server.start(), "Server should start");
 
-        // Petit délai pour être sûr que le thread accept() est prêt
         Thread.sleep(50);
 
         try (Socket socket = new Socket("127.0.0.1", port);

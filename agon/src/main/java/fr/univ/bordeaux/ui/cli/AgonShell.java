@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.application.commands.network.CmdJoin;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 
 import java.io.BufferedReader;
@@ -31,6 +32,12 @@ import org.jline.utils.AttributedStyle;
 
 import fr.univ.bordeaux.application.commands.ICmd;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.commands.CmdRegistry;
+
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.commands.network.CmdPing;
+
 import javax.annotation.Nonnull;
 
 public class AgonShell extends AbstractGameUI {
@@ -52,6 +59,8 @@ public class AgonShell extends AbstractGameUI {
 
   private ArrayList<String> cmdHistory;
 
+  private final CmdRegistry registry = CmdRegistry.getInstance();
+  private final AppContext context = new AppContext();
 
   /**
    * ASCII engine renderer
@@ -70,6 +79,16 @@ public class AgonShell extends AbstractGameUI {
       this.cliErr("terminal initialization failed");
       this.cliErr(e.getMessage());
     }
+    this.registerCommands();
+  }
+
+  /**
+   * Registers all available network and system commands into the command registry.
+   */
+  private void registerCommands() {
+    registry.register("ping", new CmdPing(context));
+    registry.register("quit", new CmdQuit(context));
+    registry.register("join", new CmdJoin(context));
   }
 
   /**
@@ -122,7 +141,7 @@ public class AgonShell extends AbstractGameUI {
 
   @Override
   public void start() {
-
+    this.loop();
   }
 
   /**
@@ -199,22 +218,29 @@ public class AgonShell extends AbstractGameUI {
   /**
    * run the program to interact with the user
    */
-  public void loop(){
-    //this.showMainMenu();
-    int startCursorIdx = 0;
+  public void loop() {
     this.cliW(this.mainMenuASCII);
-    String line;
-    List<String> words;
     while (this.running) {
-      line = this.reader.readLine(">> ");
-      // tokenized by JLine into words
-      ParsedLine parsed = reader.getParser().parse(line, startCursorIdx);
-      words = parsed.words();
-      this.userCmdName = words.getFirst(); // == word.get(0);
-      startCursorIdx++;
-      // in options, we must get only options not the command name included
-      this.userOptions = words.subList(startCursorIdx, words.size())
-        .toArray(new String[0]);
+      String line = this.reader.readLine(">> ");
+
+      if (line == null || line.trim().isEmpty()) continue;
+
+      // On parse la ligne à chaque fois
+      ParsedLine parsed = reader.getParser().parse(line, 0);
+      List<String> words = parsed.words();
+
+      if (words.isEmpty()) continue;
+
+      // La commande est toujours le premier mot (index 0)
+      this.userCmdName = words.get(0);
+
+      // Les options commencent toujours à l'index 1 jusqu'à la fin
+      if (words.size() > 1) {
+        this.userOptions = words.subList(1, words.size()).toArray(new String[0]);
+      } else {
+        this.userOptions = new String[0]; // Pas d'arguments
+      }
+
       this.running = this.conditionalReturning();
     }
     this.cliWln("Bye !");
@@ -226,25 +252,45 @@ public class AgonShell extends AbstractGameUI {
    * @return boolean : false if the user want to exit, true otherwise
    */
   private boolean conditionalReturning(){ // Locked Here need work from the others
-    // exit case
-    if ("quit".equalsIgnoreCase(this.userCmdName)){
-      terminal.writer().println(
-        "Save the game before quitting ? [y/n]"
-      );
-      if(reader.readLine(">> ").equalsIgnoreCase("y")){
-        /// TODO: DP Command here
-        this.cliWln("saving...");
-        this.cliWln("saved");
-      }
-      return false;
-    }
-    // others cases
-    if ("help".equalsIgnoreCase(this.userCmdName)){
-      /// TODO: next version add argument with regex
+    // 1) HELP: tu peux garder en dur (simple)
+    if ("help".equalsIgnoreCase(this.userCmdName)) {
       this.cliWln(this.mainMenuASCII);
       return true;
     }
-    /// TODO: other cases required
+
+    // 2) Chercher la commande dans le registry
+    var opt = registry.get(this.userCmdName);
+
+    if (opt.isEmpty()) {
+      this.cliErr("Unknown command: " + this.userCmdName);
+      return true;
+    }
+
+    ICmd cmd = opt.get();
+
+    // 3) Exécuter avec args
+    try {
+      cmd.execute(this.userOptions);
+    } catch (Exception e) {
+      this.cliErr("Command failed: " + e.getMessage());
+      return true;
+    }
+
+    // 4) Si la commande est "quit" et qu'elle veut quitter l'app
+    if (cmd.isQuit()) {
+      terminal.writer().println("Save the game before quitting ? [y/n]");
+      terminal.flush();
+
+      String answer = reader.readLine(">> ");
+      if ("y".equalsIgnoreCase(answer)) {
+        // TODO: later -> save command
+        this.cliWln("saving...");
+        this.cliWln("saved");
+      }
+      return false; // stop loop
+    }
+
+    // 5) Sinon on continue
     return true;
   }
 

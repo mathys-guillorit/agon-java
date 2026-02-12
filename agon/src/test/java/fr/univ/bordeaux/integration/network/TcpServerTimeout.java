@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Integration tests for TCP server timeout behavior.
+ */
 public class TcpServerTimeout {
 
     @Test
@@ -34,7 +37,7 @@ public class TcpServerTimeout {
             int nextRead = is.read();
             assertEquals(-1, nextRead, "La socket doit être fermée (EOF) après le message BYE");
 
-            System.out.println("[TEST] Timeout handled correctly by server.");
+            System.out.println("[TEST] Timeout");
         } finally {
             server.stop();
         }

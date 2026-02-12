@@ -5,6 +5,8 @@ import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.network.server.AgonServer;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.gui.controllers.GUIExample;
 import java.util.List;
 
@@ -25,7 +27,19 @@ import java.util.List;
 public class Main {
 
   public static void main(String[] arg) throws Exception {
-    System.out.println("prog principal OK + ajout JUnit");
+
+    AgonServer server = new AgonServer(12345);
+    server.start();
+
+    // 2️⃣ Start CLI
+    AgonShell shell = new AgonShell();
+    shell.start();
+
+    // j3️⃣ Stop server when CLI exits
+    server.stop();
+
+    //System.out.println("prog principal OK + ajout JUnit");
+
     /*BitBoard whiteQueen=new BitBoard();
     BitBoard blackQueen=new BitBoard();
     BitBoard whitePawns=new BitBoard();

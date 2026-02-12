@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Integration test class for verifying the end-to-end network interaction
+ * between AgonClient and AgonServer.
+ */
 public class TcpAgonClientPingQuit {
 
     @Test

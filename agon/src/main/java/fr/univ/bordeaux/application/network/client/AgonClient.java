@@ -5,7 +5,9 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
-
+/**
+ * The AgonClient class manages the TCP connection to the game server.
+ */
 public class AgonClient {
 
     private Socket socket;
@@ -64,7 +66,6 @@ public class AgonClient {
 
             String response = "[SERVER] PONG TIME=" + rtt + "ms";
 
-            System.out.println(response);
             return response;
 
         } catch (IOException e) {
@@ -105,6 +106,10 @@ public class AgonClient {
         out = null;
     }
 
+    /**
+     * Internal helper to send a line of text followed by a newline character.
+     * * @param msg The message to send.
+     */
     private void sendLine(String msg) throws IOException {
         if (out == null) throw new IOException("Not connected");
         out.write(msg);
@@ -112,6 +117,10 @@ public class AgonClient {
         out.flush();
     }
 
+    /**
+     * Internal helper to read a single line of text from the server.
+     * * @return The line received from the server.
+     * */
     private String readLine() throws IOException {
         if (in == null) throw new IOException("Not connected");
         return in.readLine();

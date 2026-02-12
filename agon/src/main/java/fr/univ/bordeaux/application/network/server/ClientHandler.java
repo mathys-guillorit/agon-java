@@ -9,7 +9,9 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
-// Handles the lifecycle of a single TCP client connection.
+/**
+ * Handles the communication lifecycle for a single TCP client.
+ */
 public class ClientHandler implements Runnable {
 
     private final Socket socket;
@@ -92,6 +94,11 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Sends a raw message to the client followed by a newline and flushes the buffer.
+     *
+     * @param msg The string message to send.
+     */
     private void send(String msg) throws IOException {
         if (out != null) {
             out.write(msg);
