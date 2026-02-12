@@ -28,7 +28,7 @@ public abstract class AgonRegister<T> {
    * @param type {@link T} associated with the key
    */
   public void register(String name, T type) {
-    this.correspondences.put(name, type);
+    this.correspondences.put(name.toLowerCase(), type);
   }
 
   /**
@@ -45,4 +45,5 @@ public abstract class AgonRegister<T> {
   public boolean isEmpty() {
     return this.correspondences.isEmpty();
   }
+
 }

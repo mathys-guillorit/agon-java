@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.commands;
 
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.ICmdShellDelegate;
 
 /**
@@ -21,7 +22,7 @@ public abstract class Cmd implements ICmd {
    */
   public Cmd(ICmdCtx cmdCtx) {
     this.CmdCtx = cmdCtx;
-    if (prompt == null) Cmd.prompt = cmdCtx.getPrompt();
+    if (prompt == null) Cmd.prompt = cmdCtx.cliGetPrompt();
   }
 
   /**
@@ -30,7 +31,7 @@ public abstract class Cmd implements ICmd {
    * @param prompt text t
    */
   public void setUserPrompt(String prompt) {
-    this.CmdCtx.setPromptHeader(prompt);
+    this.CmdCtx.cliSetPromptHeader(prompt);
   }
 
   /**
@@ -53,13 +54,35 @@ public abstract class Cmd implements ICmd {
     this.CmdCtx.cliW(msg);
   }
 
+  public void handleConfirmation(String input){
+    if (input.equalsIgnoreCase("y")) {
+      cliWln("saving...");
+      cliWln("saved !");
+    }
+    this.setRunning(false);
+  }
+
+  public void setRunning(boolean running){
+    this.CmdCtx.cliSetRunning(running);
+  }
+
   /**
-   * get user message from CLI
-   * shortened the access (redundant for each command)
-   * @return the message written by the user
+   * ask to {@link AgonShell} if the command require the user input
+   * @implNote change const false to a variable that is toggleable
+   * @return boolean false (by default)
    */
-  public String getCLIPrompt(){
-    return this.CmdCtx.getLineReader().readLine(Cmd.prompt);
+  public boolean requiresInput(){
+    return false;
+  }
+
+  /**
+   * get inputs from {@link AgonShell} (single entry point for
+   * user inputs)
+   * @implNote default empty must be change in sub commands
+   * @param input text from the user in cli
+   */
+  public void handleInput(String input){
+    // nothing
   }
 
 }

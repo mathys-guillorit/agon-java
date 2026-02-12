@@ -4,7 +4,6 @@ package fr.univ.bordeaux.ui.cli;
 
 
 import org.jline.reader.LineReader;
-import org.jline.terminal.Terminal;
 
 import java.util.ArrayList;
 
@@ -29,7 +28,7 @@ public interface ICmdShellDelegate {
    * message written by the user
    * @return text message prompt
    */
-  public String getPrompt();
+  public String cliGetPrompt();
 
   /**
    * change ">> example_user_message"
@@ -37,12 +36,11 @@ public interface ICmdShellDelegate {
    * (write/overwrite only)
    * @param prompt text before user's message
    */
-  public void setPromptHeader(String prompt);
+  public void cliSetPromptHeader(String prompt);
 
-  public LineReader getLineReader();
-  public boolean isRunning();
-  public ArrayList<String> commandHistory();
+  public boolean cliIsRunning();
+  public ArrayList<String> cliCommandHistory();
 
-  public void setRunning(boolean running);
+  public void cliSetRunning(boolean running);
 
 }

@@ -4,16 +4,17 @@ import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CmdShellDelegate implements ICmdShellDelegate {
 
   private Terminal terminal;
   private LineReader lineReader;
-  private boolean isRunning;
+  private AtomicBoolean isRunning;
   private static ArrayList<String> commandHistory;
   private static String usrPrompt = null;
 
-  public CmdShellDelegate(Terminal terminal, LineReader lineReader, boolean isRunning, ArrayList<String> commandHistory) {
+  public CmdShellDelegate(Terminal terminal, LineReader lineReader, AtomicBoolean isRunning, ArrayList<String> commandHistory) {
     this.terminal = terminal;
     this.lineReader = lineReader;
     this.isRunning = isRunning;
@@ -27,7 +28,7 @@ public class CmdShellDelegate implements ICmdShellDelegate {
    * to anything example : "$ hey i changed prompt"
    * @param prompt text before user's message
    */
-  public void setPromptHeader(String prompt){
+  public void cliSetPromptHeader(String prompt){
     CmdShellDelegate.usrPrompt = prompt;
   }
 
@@ -44,23 +45,19 @@ public class CmdShellDelegate implements ICmdShellDelegate {
   }
 
   @Override
-  public String getPrompt() {
+  public String cliGetPrompt() {
     return this.lineReader.readLine(CmdShellDelegate.usrPrompt);
   }
 
-  public LineReader getLineReader() {
-    return this.lineReader;
+  public boolean cliIsRunning() {
+    return this.isRunning.get();
   }
 
-  public boolean isRunning() {
-    return this.isRunning;
-  }
-
-  public ArrayList<String> commandHistory() {
+  public ArrayList<String> cliCommandHistory() {
     return CmdShellDelegate.commandHistory;
   }
 
-  public void setRunning(boolean running) {
-    this.isRunning = running;
+  public void cliSetRunning(boolean running) {
+    this.isRunning.set(running);
   }
 }

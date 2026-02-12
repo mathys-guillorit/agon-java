@@ -56,22 +56,19 @@ public class CmdCtx implements ICmdCtx{
   public void cliW(String msg) {
     this.iCmdShellDelegate.cliW(msg);
   }
-  public String getPrompt() {
-    return this.iCmdShellDelegate.getPrompt();
+  public String cliGetPrompt() {
+    return this.iCmdShellDelegate.cliGetPrompt();
   }
-  public void setPromptHeader(String prompt) {
-    this.iCmdShellDelegate.setPromptHeader(prompt);
+  public void cliSetPromptHeader(String prompt) {
+    this.iCmdShellDelegate.cliSetPromptHeader(prompt);
   }
-  public LineReader getLineReader() {
-    return this.iCmdShellDelegate.getLineReader();
+  public boolean cliIsRunning() {
+    return this.iCmdShellDelegate.cliIsRunning();
   }
-  public boolean isRunning() {
-    return this.iCmdShellDelegate.isRunning();
+  public ArrayList<String> cliCommandHistory() {
+    return this.iCmdShellDelegate.cliCommandHistory();
   }
-  public ArrayList<String> commandHistory() {
-    return this.iCmdShellDelegate.commandHistory();
-  }
-  public void setRunning(boolean running) {
-    this.iCmdShellDelegate.setRunning(running);
+  public void cliSetRunning(boolean running) {
+    this.iCmdShellDelegate.cliSetRunning(running);
   }
 }
