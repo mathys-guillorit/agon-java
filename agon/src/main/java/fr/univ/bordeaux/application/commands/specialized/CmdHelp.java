@@ -15,7 +15,7 @@ public class CmdHelp extends Cmd {
   }
 
   @Override
-  public void execute() {
+  public void shellExecute() {
     this.cliWln("--- Available Commands ---");
     this.cliWln(" quit    : Quit the game");
     this.cliWln(" help    : Show this message");

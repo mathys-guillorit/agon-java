@@ -33,8 +33,6 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
-import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
-
 public class AgonShell extends AbstractGameUI {
 
   private AtomicBoolean running; // copy reference for usage in commands
@@ -80,8 +78,6 @@ public class AgonShell extends AbstractGameUI {
   public void loop() {
     // this.showMainMenu();
     this.cliWln(this.mainMenuASCII);
-    ConsoleRenderer renderer = new ConsoleRenderer(this.board);
-    renderer.renderer();
     String line;
     List<String> words;
     boolean batchMode = true;
@@ -397,15 +393,5 @@ public class AgonShell extends AbstractGameUI {
   private void cliW(String msg) {
     this.terminal.writer().print(msg);
     terminal.flush();
-  }
-
-  private fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl createStandardBoard() {
-      var wQ = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
-      var bQ = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
-      var wP = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
-      var bP = new fr.univ.bordeaux.agonCore.bitboard.BitBoard();
-      wQ.setBit(60, 1L);
-      bQ.setBit(64, 1L); 
-      return new fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl(wQ, bQ, wP, bP);
   }
 }

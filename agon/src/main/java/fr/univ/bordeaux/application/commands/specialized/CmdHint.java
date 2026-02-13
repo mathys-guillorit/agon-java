@@ -17,7 +17,7 @@ public class CmdHint extends Cmd {
   }
 
   @Override
-  public void execute() {
+  public void shellExecute() {
     this.cliWln("--- Hint Request ---");
     String bestMove = callDomainLayerForHint();
     this.cliWln("AI suggests: " + bestMove);
