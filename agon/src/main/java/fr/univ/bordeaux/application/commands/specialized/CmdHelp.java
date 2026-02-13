@@ -2,7 +2,6 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.ICmdCtx;
-import fr.univ.bordeaux.ui.cli.ICmdShellDelegate;
 
 public class CmdHelp extends Cmd {
   /**
@@ -16,8 +15,13 @@ public class CmdHelp extends Cmd {
   }
 
   @Override
-  public void shellExecute() {
-    this.cliWln("you written \"help\" command !");
+  public void execute() {
+    this.cliWln("--- Available Commands ---");
+    this.cliWln(" quit    : Quit the game");
+    this.cliWln(" help    : Show this message");
+    this.cliWln(" hint    : Ask for a hint");
+    this.cliWln(" version : Show the version");
+    this.cliWln(" new     : New game (if available)");
   }
 
   @Override
