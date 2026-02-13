@@ -33,7 +33,7 @@ public class CmdHint extends Cmd {
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 

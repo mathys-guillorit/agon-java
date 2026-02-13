@@ -25,10 +25,10 @@ public abstract class AgonRegister<T> {
    * String is lowercased by the function
    *
    * @param name a name or key
-   * @param type {@link T} associated with the key
+   * @param value {@link T} associated with the key
    */
-  public void register(String name, T type) {
-    this.correspondences.put(name.toLowerCase(), type);
+  public void register(String name, T value) {
+    this.correspondences.put(name.toLowerCase(), value);
   }
 
   /**
@@ -44,6 +44,21 @@ public abstract class AgonRegister<T> {
 
   public boolean isEmpty() {
     return this.correspondences.isEmpty();
+  }
+
+  /**
+   * remove all pairs stored (key and value)
+   */
+  public void reset(){
+    this.correspondences.clear();
+  }
+
+  /**
+   * remove a value with its key
+   * @param key associated
+   */
+  public void remove(String key){
+    this.correspondences.remove(key.toLowerCase());
   }
 
 }

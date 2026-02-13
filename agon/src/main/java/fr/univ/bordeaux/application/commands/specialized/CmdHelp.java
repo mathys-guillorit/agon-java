@@ -25,7 +25,7 @@ public class CmdHelp extends Cmd {
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 }

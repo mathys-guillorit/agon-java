@@ -2,6 +2,7 @@ package fr.univ.bordeaux.application.commands;
 
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.ICmdShellDelegate;
+import fr.univ.bordeaux.ui.cli.ShellMode;
 
 /**
  * represent the fixed code for all different Commands
@@ -83,6 +84,28 @@ public abstract class Cmd implements ICmd {
    */
   public void handleInput(String input){
     // nothing
+  }
+
+  /**
+   * commands to be executed for GUI later
+   */
+  public void guiExecute(){
+
+  }
+
+  /**
+   * commands to be executed for GUI later
+   */
+  public void guiShowHelp(){
+
+  }
+
+  public void setShellMode(ShellMode mode){
+    this.CmdCtx.cliGetShellMode(mode);
+  }
+
+  public ShellMode getShellMode(){
+    return this.CmdCtx.cliGetShellMode();
   }
 
 }

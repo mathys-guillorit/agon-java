@@ -25,7 +25,7 @@ public class CmdQuit extends Cmd {
   }
 
   @Override
-  public void execute() {
+  public void shellExecute() {
     this.cliWln("Save the game before quitting ? [y/n]");
     this.waitingConfirmation = true;
   }
@@ -46,7 +46,7 @@ public class CmdQuit extends Cmd {
   }
 
   @Override
-  public void showHelp() {
+  public void shellShowHelp() {
 
   }
 

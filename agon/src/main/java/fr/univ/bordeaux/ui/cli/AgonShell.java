@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,18 +47,15 @@ public class AgonShell extends AbstractGameUI {
 
   /** Message Header of the cli for the entire App */
   private final String msgHA;
-
+  /** load the menu once display many times */
   private final String mainMenuASCII;
-
-  private RestrictedAgonBoard board;
-
   private ArrayList<String> cmdHistory;
   /** represent all options available from the menu */
   private Options options = null;
   private String userPrompt = "#> ";
   private Cmd activeCmd = null;
   /** allow only default minimal terminal (agon mode) */
-  private boolean restricted;
+  private ShellMode mode;
 
   /** ASCII engine renderer Used to communicate through the terminal with the user*/
   public AgonShell() {
@@ -66,8 +64,7 @@ public class AgonShell extends AbstractGameUI {
     this.msgHA = this.cliLayer();
     this.mainMenuASCII = this.loadMainMenu();
     this.cmdHistory = new ArrayList<>();
-    this.restricted = true;
-    this.board = createStandardBoard();
+    this.mode = ShellMode.RESTRICTED;
     try {
       this.terminal = TerminalBuilder.builder().system(true).build(); // IOException
       this.reader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -82,7 +79,6 @@ public class AgonShell extends AbstractGameUI {
   /** run the program to interact with the user */
   public void loop() {
     // this.showMainMenu();
-    this.cliWln("MAIN MENU HERE");
     this.cliWln(this.mainMenuASCII);
     ConsoleRenderer renderer = new ConsoleRenderer(this.board);
     renderer.renderer();
@@ -90,6 +86,13 @@ public class AgonShell extends AbstractGameUI {
     List<String> words;
     boolean batchMode = true;
     int startCursorIdx = 0;
+    if (CmdRegister.getInstance().isEmpty()) {
+      this.cliErr(String.format("%s%s",
+        "No Command \"Cmd\" registered, pleas fill \"CmdRegister\"",
+        " first with \"CmdRegister.getInstance()\""
+      ));
+      return;
+    }
     while (this.running.get()) {
       line = this.reader.readLine(this.userPrompt).trim();
       this.cliWln("message: '"+line+"'");
@@ -107,7 +110,7 @@ public class AgonShell extends AbstractGameUI {
       this.userOptions = words.subList(startCursorIdx+1, words.size()).toArray(new String[0]);
       this.doCommand();
     }
-    this.cliWln("Bye !");
+    this.cliWln("\nBye !");
     this.safeCloseTerminal();
   }
 
@@ -124,13 +127,18 @@ public class AgonShell extends AbstractGameUI {
       return;
     }
     Cmd cmd = (Cmd)optional.get();
-    // edit actual "isRunning" if pointer is transmitted correctly
-    cmd.execute();
-    if (cmd.requiresInput()) {
-      this.activeCmd = cmd;
+    this.cliWln(Arrays.toString(this.userOptions)); // something ab > opt is ab
+    if (this.mode == ShellMode.RESTRICTED) {
+      ICmd cmdName = optional.get();
+      if (userCmdName.equalsIgnoreCase("quit")) this.running.set(false);
+      // 4 possible options
+      return;
     }
-  }
 
+    cmd.shellExecute();
+    if (cmd.requiresInput()) this.activeCmd = cmd;
+
+  }
 
   /**
    * get shell context for commands
@@ -141,102 +149,110 @@ public class AgonShell extends AbstractGameUI {
         this.terminal,
         this.reader,
         this.running,
-        this.cmdHistory
+        this.cmdHistory,
+        this.mode
       );
+  }
+
+  private void addRestrictedOptions(){
+    // Commons Cli add already "--" no need to put them
+    Option help = Option.builder("h")
+            .longOpt("help")
+            .argName("cmd")
+            .desc("Show help (optionally for a specific command")
+            .get();
+    Option version = Option.builder("V")
+            .longOpt("version")
+            .desc("show program version")
+            .get();
+    Option verbose = Option.builder("v")
+            .longOpt("verbose")
+            .desc("add more text information")
+            .get();
+    Option debug = Option.builder("d")
+            .longOpt("debug")
+            .desc("show debug messages")
+            .get();
+    this.options.addOption(version);
+    this.options.addOption(verbose);
+    this.options.addOption(debug);
+    this.options.addOption(help);
+  }
+
+  private void addGameOptions(){
+    Option create = Option.builder("new")
+            .optionalArg(false)
+            .hasArg(true)
+            .argName("ARGS")
+            .desc("run a new game")
+            .get();
+    Option history = Option.builder("history")
+            .desc("show game turns history")
+            .get();
+    Option load = Option.builder("load")
+            .optionalArg(false)
+            .hasArg(true)
+            .argName("FILE")
+            .desc("load a game from a file")
+            .get();
+    Option quit = Option.builder("quit")
+            .desc("quit the game")
+            .get();
+    // if there is pause there is "resume" ?
+    Option pause = Option.builder("pause")
+            .desc("stop the passing time in blitz mode")
+            .get();
+    Option hint = Option.builder("hint")
+            .desc("show an advice to play a turn")
+            .get();
+    Option undo = Option.builder("undo")
+            .optionalArg(true)
+            .hasArg(true)
+            .argName("N")
+            .desc("cancel the last turn (or the N lasts)")
+            .get();
+    Option redo = Option.builder("undo")
+            .optionalArg(true)
+            .hasArg(true)
+            .argName("N")
+            .desc("replay the last canceled turn (or the N lasts)")
+            .get();
+    Option showBoard = Option.builder("board")
+            .desc("show the current board state")
+            .get();
+    Option showtime = Option.builder("time")
+            .desc("show time left for each players")
+            .get();
+    Option showConf = Option.builder("configuration")
+            .desc("show game configuration")
+            .get();
+    // set PARAM=VALUE : change current configuration
+    Option setParam = Option.builder("set")
+            .hasArg()
+            .argName("key=value")
+            .desc("change current game configuration, example : \"set debug=true\"")
+            .get();
+    this.options.addOption(create);
+    this.options.addOption(history);
+    this.options.addOption(load);
+    this.options.addOption(quit);
+    this.options.addOption(pause);
+    this.options.addOption(hint);
+    this.options.addOption(undo);
+    this.options.addOption(redo);
+    this.options.addOption(showBoard);
+    this.options.addOption(showtime);
+    this.options.addOption(showConf);
+    this.options.addOption(setParam);
   }
 
   /** fill options for the cli (done twice internally) */
   private void initOptions() {
-    if (this.options != null) return; // done once
     this.options = new Options();
-    if (this.restricted) {
-      // Commons Cli add already "--" no need to put them
-      Option help = Option.builder("h")
-              .longOpt("help")
-              .argName("cmd")
-              .desc("Show help (optionally for a specific command")
-              .get();
-      Option version = Option.builder("V")
-              .longOpt("version")
-              .desc("show program version")
-              .get();
-      Option verbose = Option.builder("v")
-              .longOpt("verbose")
-              .desc("add more text information")
-              .get();
-      Option debug = Option.builder("d")
-              .longOpt("debug")
-              .desc("show debug messages")
-              .get();
-      this.options.addOption(version);
-      this.options.addOption(verbose);
-      this.options.addOption(debug);
-      this.options.addOption(help);
+    if (this.mode == ShellMode.RESTRICTED) {
+      this.addRestrictedOptions();
     } else {
-      Option create = Option.builder("new")
-              .optionalArg(false)
-              .hasArg(true)
-              .argName("ARGS")
-              .desc("run a new game")
-              .get();
-      Option history = Option.builder("history")
-              .desc("show game turns history")
-              .get();
-      Option load = Option.builder("load")
-              .optionalArg(false)
-              .hasArg(true)
-              .argName("FILE")
-              .desc("load a game from a file")
-              .get();
-      Option quit = Option.builder("quit")
-              .desc("quit the game")
-              .get();
-      // if there is pause there is "resume" ?
-      Option pause = Option.builder("pause")
-              .desc("stop the passing time in blitz mode")
-              .get();
-      Option hint = Option.builder("hint")
-              .desc("show an advice to play a turn")
-              .get();
-      Option undo = Option.builder("undo")
-              .optionalArg(true)
-              .hasArg(true)
-              .argName("N")
-              .desc("cancel the last turn (or the N lasts)")
-              .get();
-      Option redo = Option.builder("undo")
-              .optionalArg(true)
-              .hasArg(true)
-              .argName("N")
-              .desc("replay the last canceled turn (or the N lasts)")
-              .get();
-      Option showBoard = Option.builder("board")
-              .desc("show the current board state")
-              .get();
-      Option showtime = Option.builder("time")
-              .desc("show time left for each players")
-              .get();
-      Option showConf = Option.builder("configuration")
-              .desc("show game configuration")
-              .get();
-      // set PARAM=VALUE : change current configuration
-      Option setParam = Option.builder("set")
-              .hasArg()
-              .argName("key=value")
-              .desc("change current game configuration, example : \"set debug=true\"")
-              .get();
-      this.options.addOption(create);
-      this.options.addOption(history);
-      this.options.addOption(load);
-      this.options.addOption(quit);
-      this.options.addOption(pause);
-      this.options.addOption(hint);
-      this.options.addOption(undo);
-      this.options.addOption(redo);
-      this.options.addOption(showBoard);
-      this.options.addOption(showtime);
-      this.options.addOption(showConf);
-      this.options.addOption(setParam);
+      this.addGameOptions();
     }
   }
 

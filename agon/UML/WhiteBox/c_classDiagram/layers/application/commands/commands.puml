@@ -3,12 +3,12 @@
 
 package commands {
     interface ICmd {
-        + execute(): void
-        + showHelp(): void
+        + shellExecute(): void
+        + shellhowHelp(): void
     }
     ' pour éviter de se répéter dans les commandes on place
     ' le contexte ici
-    abstract class Cmd implements ICmd {
+    abstract class Cmd {
         - iCmdCtx: ICmdCtx
         - {static} prompt: String
         --
@@ -31,12 +31,20 @@ package commands {
     ' permet de ne plus modifier les contructeurs des commandes
     ' si on rajoute des delegate (pour plus tard le network et la partie GUI)
     interface ICmdCtx {
-        - iCmdShellDelegate: ICmdShellDelegate
-        - inetDelegate: INETDelegate
-        - guiDelegate: IGUIDelegate
+        + getICmdShellDelegate(): ICmdShellDelegate
+        + getINETDelegate(): INETDelegate
+        + getGUIDelegate(): IGUIDelegate
+    }
+    class CmdCtx {
+          - iCmdShellDelegate: ICmdShellDelegate
+          - inetDelegate: INETDelegate
+          - guiDelegate: IGUIDelegate
+          --
+          + CmdCtx(iCmdShellDelegate,INETDelegate,IGUIDelegate)
+
     }
 
-    ICmdShellDelegate --|> ICmdCtx
+
 
     CmdCreate --|> Cmd
     CmdHelp --|> Cmd
@@ -44,9 +52,37 @@ package commands {
     CmdLoad --|> Cmd
 
 }
+package ui{
+    package cli {
+        interface ICmdShellDelegate {
+            + cliWln(): void
+            + cliW(): void
+            + cliGetPrompt(): String
+            + cliSetPromptHeader(): void
+            + cliIsRunning(): boolean
+            + cliCommandHistory(): void
+            <color:#AE3400>// will be removed</color>
+            + cliSetRunning(running: boolean): void
+
+        }
+        class CmdShellDelegate implements ICmdShellDelegate{
+            - isRunning: AtomicBoolean
+
+        }
+    }
+}
+
+ICmdShellDelegate <|-- ICmdCtx
+Cmd *-- CmdCtx
+' CmdCtx implements ICmdCtx
+CmdCtx ..|> ICmdCtx
+Cmd ..|> ICmd
+CmdCtx *- CmdShellDelegate
 
 note top of specialized
   <color:#AE3400>11 commands</color>
 end note
+
+
 
 @enduml

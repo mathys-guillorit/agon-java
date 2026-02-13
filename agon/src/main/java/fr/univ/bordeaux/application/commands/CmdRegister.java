@@ -29,4 +29,15 @@ public class CmdRegister extends AgonRegister<ICmd> {
     }
   }
 
+
+  @Override
+  public void reset() {
+    super.reset();
+  }
+
+  @Override
+  public void remove(String key){
+    super.remove(key);
+  }
+
 }
