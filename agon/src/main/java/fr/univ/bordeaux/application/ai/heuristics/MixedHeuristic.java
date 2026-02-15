@@ -7,11 +7,11 @@ import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
  * A composite heuristic strategy that combines **Centrality** and **Mobility** evaluations.
  * <p>
  * This class implements a <b>Linear Combination</b> of two distinct strategic goals:
+ * </p>
  * <ul>
  * <li><b>Centrality:</b> The drive to control the center of the board.</li>
  * <li><b>Mobility:</b> The need to maintain freedom of movement and avoid blockades.</li>
  * </ul>
- * </p>
  * <p>
  * <b>Why is this class necessary?</b><br>
  * The raw scores returned by {@link CentralityHeuristic} (e.g., ~5000) and {@link MobilityHeuristic} (e.g., ~50)
@@ -71,9 +71,11 @@ public class MixedHeuristic implements Heuristic {
      * Evaluates the board by calculating the weighted sum of both sub-heuristics.
      * <p>
      * The formula applied is:
+     * </p>
      * <pre>
      * FinalScore = (MobilityRaw * MobilityWeight) + (CentralityRaw * CentralityWeight)
      * </pre>
+     * <p>
      * The result is cast to a {@code long} to match the {@link Heuristic} interface.
      * </p>
      *

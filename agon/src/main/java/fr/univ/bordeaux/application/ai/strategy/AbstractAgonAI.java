@@ -14,13 +14,13 @@ import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
  * </p>
  * <p>
  * <b>Key features managed by this class:</b>
+ * </p>
  * <ul>
  * <li><b>Time Management:</b> Automatically tracks start time and provides a helper method
  * to check if execution time is running out.</li>
  * <li><b>Heuristic Storage:</b> Holds the reference to the evaluation strategy.</li>
  * <li><b>Performance Metrics:</b> Tracks the number of nodes visited ({@code nodeCount}) for debugging.</li>
  * </ul>
- * </p>
  */
 public abstract class AbstractAgonAI implements AgonAI {
 

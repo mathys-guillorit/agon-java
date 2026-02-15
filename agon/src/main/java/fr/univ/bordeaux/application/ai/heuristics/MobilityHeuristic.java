@@ -22,12 +22,12 @@ public class MobilityHeuristic extends AbstractHeuristic {
      * <p>
      * The weights are intentionally lower than those used in Centrality to ensure that
      * moving towards the goal (the Center) remains the priority.
+     * </p>
      * <ul>
      * <li><b>Pawns (Weight: 5):</b> Encourages keeping pawns active, but their blockage is acceptable.</li>
      * <li><b>Queen (Weight: 20):</b> Significant enough to prevent the Queen from entering a trap,
      * but low enough not to discourage her from entering tight spaces near the Throne.</li>
      * </ul>
-     * </p>
      */
     public MobilityHeuristic() {
         super(5, 20);

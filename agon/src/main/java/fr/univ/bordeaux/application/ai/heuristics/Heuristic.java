@@ -20,12 +20,12 @@ public interface Heuristic {
      * Evaluates the current board state and returns a score representing the advantage of the AI player.
      * <p>
      * The scoring convention used throughout the AI logic (Minimax/Alpha-Beta) is:
+     * </p>
      * <ul>
-     * <li><b>Positive Score (> 0):</b> The board is favorable to the {@code aiColor}.</li>
-     * <li><b>Negative Score (< 0):</b> The board is favorable to the opponent.</li>
+     * <li><b>Positive Score (&gt; 0):</b> The board is favorable to the {@code aiColor}.</li>
+     * <li><b>Negative Score (&lt; 0):</b> The board is favorable to the opponent.</li>
      * <li><b>Zero (0):</b> The position is neutral or balanced.</li>
      * </ul>
-     * </p>
      *
      * @param board   The current state of the game board to evaluate.
      * @param aiColor The color of the player for whom the score is calculated (the Maximizing player).
