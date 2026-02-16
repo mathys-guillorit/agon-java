@@ -90,7 +90,17 @@ public class MinimaxStrategy extends AbstractAgonAI {
      * @return The heuristic score of the board at this node (propagated from the leaves).
      */
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
-        if (depth == 0 || board.isGameWon(Color.WHITE) || board.isGameWon(Color.BLACK)) {
+        Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        System.out.println("noeud : "+nodeCount+"hauteur : "+depth);
+        if (board.isGameWon(this.color)){
+            System.out.println("victoire");
+            return 1000000L + depth;
+        }
+        if (board.isGameWon(opponentColor)) {
+            System.out.println("defaite");
+            return -1000000L - depth;
+        }
+        if (depth == 0) {
             return heuristic.evaluate(board, this.color);
         }
         if (isMaximizingPlayer) {
@@ -109,7 +119,6 @@ public class MinimaxStrategy extends AbstractAgonAI {
             }
             return maxEval;
         } else {
-            Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
             List<Move> moves = board.generateLegalMoves(opponentColor);
             long minEval = Long.MAX_VALUE;
             for (Move move : moves) {
