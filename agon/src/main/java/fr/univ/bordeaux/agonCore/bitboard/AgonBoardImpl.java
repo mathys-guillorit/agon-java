@@ -1,28 +1,56 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.History;
+import fr.univ.bordeaux.agonCore.history.History;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.agonElements.PieceType;
+import fr.univ.bordeaux.agonCore.history.HistoryInformations;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Implementation of the Agon board using bitboard.
+ *
+ * <p>This class manages the game state using several {@link BitBoard} instances for queens and pawns.
+ * It handles the core logic of Agon, including the "no-retreating" rule, hexagonal movement,
+ * capture processing (sandwiches), and mandatory relocation sequences.</p>
+ *
+ * <p>The board is structured as 121 tiles organized into 6 concentric circles (0 to 5),
+ * where Circle 0 is the central "Throne".</p>
+ *
+ *
+ */
 public class AgonBoardImpl implements AgonBoard {
 
+  /** Bitboard for the white queen. */
   private BitBoard whiteQueen;
+  /** Bitboard for the black queen. */
   private BitBoard blackQueen;
+  /** Bitboard for the white pawns. */
   private BitBoard whitePawns;
+  /** Bitboard for the black pawns. */
   private BitBoard blackPawns;
+  /** Mask representing all 121 playable tiles on the hexagonal grid. */
   private BitBoard validZoneMask = new BitBoard();
+  /** Array of 6 bitboards, each representing one concentric ring (0=center, 5=outer). */
   private BitBoard[] circles = new BitBoard[6];
+  /** Pre-calculated masks defining valid destination circles for a piece in circle [i]. */
   BitBoard[] allowedDestinations = new BitBoard[6];
+  /** Number of white pawns captured and waiting to return to the board. */
   private int whitePawnsToRelocate = 0;
+  /** Number of black pawns captured and waiting to return to the board. */
   private int blackPawnsToRelocate = 0;
+  /** Flag indicating if the white queen is captured and must be relocated. */
   private boolean whiteQueenToRelocate = false;
+  /** Flag indicating if the black queen is captured and must be relocated. */
   private boolean blackQueenToRelocate = false;
+  /** Stack-based history manager for undo/redo operations. */
   private History history = new History();
+  /** The constant index of the central tile (Circle 0). */
   private int THRONE = 60;
 
+  /**
+   * Initializes a new Agon board with empty bitboards and pre-calculated geometry masks.
+   */
   public AgonBoardImpl() {
     this.whiteQueen = new BitBoard();
     this.blackQueen = new BitBoard();
@@ -116,20 +144,32 @@ public class AgonBoardImpl implements AgonBoard {
     if (history.isEmptyUndo()) {
       return false;
     }
-    Color lastPlayerColor = history.getHeadUndo().getColor();
-    while (!history.isEmptyUndo() && history.getHeadUndo().getColor() == lastPlayerColor) {
-      Move moveToUndo = history.undo();
-      Color color = moveToUndo.getColor();
-      PieceType piece = moveToUndo.getPieceType();
-      if (moveToUndo.getFrom() == -1) {
-        movePieceInBitboard(moveToUndo.getTo(), -1, color, piece);
-        if (piece.isQueen()) {
-          setQueenRelocating(color, true);
-        } else {
+    HistoryInformations historyInformations = history.undo();
+    List<Move> moves = historyInformations.getMoves();
+
+    for (int i = moves.size() - 1; i >= 0; i--) {
+      Move move = moves.get(i);
+      Color color = move.getColor();
+      PieceType type = move.getPieceType();
+
+      if (move.getFrom() == -1) {
+        movePieceInBitboard(move.getTo(), -1, color, type);
+        if (type.isPawn()) {
           updatePawnRelocationCount(color, 1);
+        } else {
+          setQueenRelocating(color, true);
         }
-      } else {
-        movePieceInBitboard(moveToUndo.getTo(), moveToUndo.getFrom(), color, piece);
+      }
+      else if (move.getTo() == -1) {
+        movePieceInBitboard(-1, move.getFrom(), color, type);
+        if (type.isPawn()) {
+          updatePawnRelocationCount(color, -1);
+        } else {
+          setQueenRelocating(color, false);
+        }
+      }
+      else {
+        movePieceInBitboard(move.getTo(), move.getFrom(), color, type);
       }
     }
     return true;
@@ -148,18 +188,10 @@ public class AgonBoardImpl implements AgonBoard {
     if (history.isEmptyRedo()) {
       return false;
     }
-    Color nextPlayerColor = history.getHeadRedo().getColor();
-    while (!history.isEmptyRedo() && history.getHeadRedo().getColor() == nextPlayerColor) {
-      Move m = history.redo();
-      PieceType type = m.getPieceType();
-      movePieceInBitboard(m.getFrom(), m.getTo(), nextPlayerColor, type);
-      if (m.getFrom() == -1) {
-        if (type.isQueen()) {
-          setQueenRelocating(m.getColor(), false);
-        } else {
-          updatePawnRelocationCount(m.getColor(), -1);
-        }
-      }
+    HistoryInformations historyInformations = history.redo();
+    List<Move> moves = historyInformations.getMoves();
+    for (Move move : moves) {
+      movePieceInBitboard(move.getFrom(),move.getTo(),move.getColor(),move.getPieceType());
     }
     return true;
   }
@@ -240,30 +272,31 @@ public class AgonBoardImpl implements AgonBoard {
   public boolean applyMove(Move move) {
     Color color = move.getColor();
     PieceType type = null;
+    List<Move> moves=new ArrayList<>();
     if (isQueenRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_QUEEN : PieceType.BLACK_QUEEN;
     } else if (isPawnRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
     }
     if (type != null) {
+      moves.add(new Move(-1,move.getTo(),color,type));
       movePieceInBitboard(-1, move.getTo(), color, type);
       if (type.isQueen()) {
         setQueenRelocating(color, false);
       } else {
         updatePawnRelocationCount(color, -1);
       }
-      move.setPieceType(type);
-      history.add(move);
-      performCaptures(color);
+      performCaptures(color,moves);
+      history.add(new HistoryInformations(moves,type,color));
       return true;
     }
     if (isValid(move.getFrom(), move.getTo(), color)) {
       type = getPieceAt(move.getFrom());
       if (type != null) {
+        moves.add(new Move(move.getFrom(),move.getTo(),color,type));
         movePieceInBitboard(move.getFrom(), move.getTo(), color, type);
-        move.setPieceType(type);
-        history.add(move);
-        performCaptures(color);
+        performCaptures(color,moves);
+        history.add(new HistoryInformations(moves,type,color));
         return true;
       }
     }
@@ -288,14 +321,16 @@ public class AgonBoardImpl implements AgonBoard {
    * the board and added to the enemy's relocation queue.
    *
    * @param playerColor The color of the player who just moved.
+   * @param moves a list of Move where the function add the captured Move.
    */
-  public void performCaptures(Color playerColor) {
+  public void performCaptures(Color playerColor,List<Move> moves) {
     Color enemyColor = (playerColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
     BitBoard capturedMask = getSuicideMask(enemyColor);
     BitBoard notCaptured = capturedMask.complementOperation();
     // capture the queen and erase it
     BitBoard queenTable = getQueenTable(enemyColor);
     if (!capturedMask.andOperation(queenTable).isEmpty()) {
+      moves.add(new Move(queenTable.nextSetBit(-1),-1,enemyColor,PieceType.getQueen(enemyColor)));
       setQueenRelocating(enemyColor, true);
       queenTable.copy(queenTable.andOperation(notCaptured));
     }
@@ -304,6 +339,11 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard capturedPawns = capturedMask.andOperation(pawnsTable);
     int count = capturedPawns.countBits();
     if (count > 0) {
+      PieceType type=PieceType.getPawn(enemyColor);
+      for (int i = capturedPawns.nextSetBit(-1); i != -1; i = capturedPawns.nextSetBit(i)) {
+        moves.add(
+            new Move(i, -1, enemyColor, type));
+      }
       updatePawnRelocationCount(enemyColor, count);
       pawnsTable.copy(pawnsTable.andOperation(notCaptured));
     }

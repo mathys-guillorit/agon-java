@@ -2,7 +2,12 @@ package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
-
+/**
+ * Defines the core operations and state evaluations for an Agon game board.
+ * * <p>This interface extends {@link RestrictedAgonBoard} to provide advanced
+ * game logic, including move application, history management (undo/redo),
+ * and heuristic evaluation for AI agents.</p>
+ */
 public interface AgonBoard extends RestrictedAgonBoard {
 
   /**
@@ -35,7 +40,15 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return {@code true} if the player has won the game; {@code false} otherwise.
    */
   boolean isGameWon(Color color);
-
+  /**
+   * Re-applies the last move sequence that was undone.
+   *
+   * <p>Restores the state that existed before the last {@link #undoMove()} call,
+   * moving pieces forward and updating the game state accordingly.</p>
+   *
+   * @return {@code true} if a move sequence was successfully reapplied;
+   * {@code false} if the redo stack is empty.
+   */
   boolean redoMove();
 
   /**
