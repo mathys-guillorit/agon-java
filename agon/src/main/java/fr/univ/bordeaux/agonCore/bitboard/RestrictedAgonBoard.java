@@ -4,19 +4,23 @@ import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.agonElements.PieceType;
 import java.util.List;
-
+/**
+ * Provides a read-only or limited access view of the Agon board state.
+ *
+ * <p>This interface is designed for components that need to inspect the board
+ * or calculate potential actions without having the authority to modify the game state directly.</p>
+ */
 public interface RestrictedAgonBoard {
   /**
    * Generates a complete list of all legal moves for the specified player.
-   * * <p>The method accounts for the current game state, including:
+   *
+   * <p>The method accounts for the current game state, including:</p>
    * <ul>
    * <li>Mandatory relocations if the player has captured pieces.</li>
    * <li>Movement constraints (no retreating to outer circles).</li>
    * <li>Specific piece rules (e.g., pawns cannot enter the throne).</li>
    * <li>Suicide prevention (pieces cannot move into a sandwich).</li>
    * </ul>
-   * </p>
-   *
    * @param color The {@link Color} of the player whose moves are being generated.
    * @return A {@link List} of all valid {@link Move} objects available.
    */
