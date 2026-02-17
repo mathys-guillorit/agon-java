@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.technical.config;
 
+import fr.univ.bordeaux.agonCore.agonElements.Color;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,7 +65,7 @@ public class ConfigParser {
                 break;
 
             case "timeout":
-                config.setTimeout(value);
+                config.setTimeout(Integer.parseInt(value));
                 break;
 
             case "ai":
@@ -71,7 +73,12 @@ public class ConfigParser {
                 break;
 
             case "ai_color":
-                config.setAiColor(value);
+                try {
+                    Color color = Color.valueOf(value.toUpperCase());
+                    config.setAiColor(color);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Config error : Unknown color '" + value);
+                }
                 break;
 
             case "ai_mode":
@@ -79,11 +86,11 @@ public class ConfigParser {
                 break;
 
             case "ai_depth":
-                config.setAiDepth(value);
+                config.setAiDepth(Integer.parseInt(value));
                 break;
 
             case "ai_time_limit":
-                config.setAiTimeLimit(value);
+                config.setAiTimeLimit(Integer.parseInt(value));
                 break;
 
             case "ai_iterative_deepening":
