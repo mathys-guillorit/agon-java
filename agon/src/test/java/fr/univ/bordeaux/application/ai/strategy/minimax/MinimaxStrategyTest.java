@@ -7,6 +7,7 @@ import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
+import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MinimaxStrategyTest {
+
+    private int THRONE = 60;
 
     private AgonBoardImpl createCustomBoard(int wQueenIdx, int bQueenIdx, List<Integer> wPawnsIdx, List<Integer> bPawnsIdx) {
         BitBoard wQ = new BitBoard();
@@ -34,9 +37,9 @@ class MinimaxStrategyTest {
     void testPuzzleWinInOneMove() {
         System.out.println("=== PUZZLE TEST : WIN IN ONE MOVE ===");
 
-        AgonBoardImpl board = createCustomBoard(60, -1, List.of(CoordinateMapper.toIndex('G',6),CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),CoordinateMapper.toIndex('H',8)), List.of());
+        AgonBoardImpl board = createCustomBoard(THRONE, -1, List.of(CoordinateMapper.toIndex('G',6),CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),CoordinateMapper.toIndex('H',8)), List.of());
 
-        Heuristic heuristic = new CentralityHeuristic();
+        Heuristic heuristic = new MixedHeuristic(10, 1);
         MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 1);
 
         System.out.println("Initial state :");
@@ -54,112 +57,36 @@ class MinimaxStrategyTest {
     }
 
     @Test
-    void simulateGameAiVsRandomBot() {
-        System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs RANDOM (BLACK) ===");
+    void testDefenseOpponentWinByCapturing() {
+        System.out.println("=== TEST : BLOCK OPPONENT WIN ===");
 
-        int wQ = CoordinateMapper.toIndex('A', 1);
-        int bQ = CoordinateMapper.toIndex('K', 11);
-        List<Integer> wP = List.of(CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), CoordinateMapper.toIndex('A', 4), CoordinateMapper.toIndex('A', 5),  CoordinateMapper.toIndex('A', 6), CoordinateMapper.toIndex('B', 7));
-        List<Integer> bP = List.of(CoordinateMapper.toIndex('K', 10), CoordinateMapper.toIndex('K', 9), CoordinateMapper.toIndex('K', 8), CoordinateMapper.toIndex('K', 7), CoordinateMapper.toIndex('K', 6), CoordinateMapper.toIndex('J', 5));
+        List<Integer> bPawns = List.of(CoordinateMapper.toIndex('G',6),
+                CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),
+                CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),
+                CoordinateMapper.toIndex('H',8));
 
-        AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
+        List<Integer> wPawns = List.of(CoordinateMapper.toIndex('H', 7),
+                CoordinateMapper.toIndex('I', 9), CoordinateMapper.toIndex('C', 3),
+                CoordinateMapper.toIndex('D', 5), CoordinateMapper.toIndex('D', 6),
+                CoordinateMapper.toIndex('K', 8));
 
-        Heuristic heuristic = new CentralityHeuristic();
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 5);
+        AgonBoardImpl board = createCustomBoard(-1, THRONE, wPawns, bPawns);
 
-        int maxTurns = 40;
-        for (int i = 1; i <= maxTurns; i++) {
-            System.out.println("\n---------------- TURN " + i + " ----------------");
+        Heuristic heuristic = new MixedHeuristic(10, 1);
 
-            System.out.println("AI playing :");
-            Move aiMove = ai.getBestMove(board);
+        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 2);
 
-            if (aiMove == null) {
-                System.out.println("AI cannot find a move");
-                break;
-            }
+        System.out.println("Critical situation (AI needs to block G7) :");
+        board.printBoard();
 
-            board.applyMove(aiMove);
-            board.printBoard();
+        Move bestMove = ai.getBestMove(board);
 
-            if (board.isGameWon(Color.WHITE)) {
-                System.out.println("AI won");
-                break;
-            }
+        board.applyMove(bestMove);
 
-            System.out.println("Random playing :");
-            List<Move> blackMoves = board.generateLegalMoves(Color.BLACK);
+        board.printBoard();
 
-            if (blackMoves.isEmpty()) {
-                System.out.println("Random cannot find a move");
-                break;
-            }
+        assertNotNull(bestMove);
 
-            Move randomMove = blackMoves.get((int)(Math.random() * blackMoves.size()));
-
-            board.applyMove(randomMove);
-            board.printBoard();
-
-            if (board.isGameWon(Color.BLACK)) {
-                System.out.println("Random won");
-                break;
-            }
-        }
-        System.out.println("\n=== END ===");
-    }
-
-    @Test
-    void simulateGameAiVsAi() {
-        System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs AI (BLACK) ===");
-
-        int wQ = CoordinateMapper.toIndex('A', 1);
-        int bQ = CoordinateMapper.toIndex('K', 11);
-        List<Integer> wP = List.of(CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), CoordinateMapper.toIndex('A', 4), CoordinateMapper.toIndex('A', 5),  CoordinateMapper.toIndex('A', 6), CoordinateMapper.toIndex('B', 7));
-        List<Integer> bP = List.of(CoordinateMapper.toIndex('K', 10), CoordinateMapper.toIndex('K', 9), CoordinateMapper.toIndex('K', 8), CoordinateMapper.toIndex('K', 7), CoordinateMapper.toIndex('K', 6), CoordinateMapper.toIndex('J', 5));
-
-        AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
-
-        Heuristic heuristic = new CentralityHeuristic();
-        MinimaxStrategy wAi = new MinimaxStrategy(heuristic, Color.WHITE, 5);
-        MinimaxStrategy bAi = new MinimaxStrategy(heuristic, Color.BLACK, 5);
-
-        int maxTurns = 40;
-        for (int i = 1; i <= maxTurns; i++) {
-            System.out.println("\n---------------- TURN " + i + " ----------------");
-
-            System.out.println("WHITE AI playing :");
-            Move wAiMove = wAi.getBestMove(board);
-
-            if (wAiMove == null) {
-                System.out.println("WHITE AI cannot find a move");
-                break;
-            }
-
-            board.applyMove(wAiMove);
-            board.printBoard();
-
-            if (board.isGameWon(Color.WHITE)) {
-                System.out.println("WHITE AI won");
-                break;
-            }
-
-            System.out.println("BLACK AI playing :");
-            Move bAiMove = bAi.getBestMove(board);
-
-
-            if (bAiMove == null) {
-                System.out.println("BLACK AI cannot find a move");
-                break;
-            }
-
-            board.applyMove(bAiMove);
-            board.printBoard();
-
-            if (board.isGameWon(Color.BLACK)) {
-                System.out.println("BLACK AI won");
-                break;
-            }
-        }
-        System.out.println("\n=== END ===");
+        assertEquals(CoordinateMapper.toIndex('H', 9), bestMove.getTo(), "AI should have blocked G7 in order to block the opponent");
     }
 }

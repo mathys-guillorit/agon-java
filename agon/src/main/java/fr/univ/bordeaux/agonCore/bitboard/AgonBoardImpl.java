@@ -905,4 +905,17 @@ public class AgonBoardImpl implements AgonBoard {
       this.validZoneMask = this.validZoneMask.orOperation(circles[i]);
     }
   }
+
+  public BitBoard getWhiteQueen() {
+    return whiteQueen;
+  }
+  public BitBoard getBlackQueen() {
+    return blackQueen;
+  }
+  public BitBoard getWhitePawns() {
+    return whitePawns;
+  }
+  public BitBoard getBlackPawns() {
+    return blackPawns;
+  }
 }

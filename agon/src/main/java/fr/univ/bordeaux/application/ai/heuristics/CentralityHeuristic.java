@@ -17,12 +17,12 @@ public class CentralityHeuristic extends AbstractHeuristic {
      * Constructs the Centrality heuristic with specific weights.
      * <p>
      * The weights are configured as follows:
+     * </p>
      * <ul>
      * <li><b>Pawns (Weight: 5):</b> Encouraged to control the center, but are expendable.</li>
      * <li><b>Queen (Weight: 200):</b> Heavily prioritized. The Queen's position is the primary
      * factor in this evaluation to ensure she reaches the Throne.</li>
      * </ul>
-     * </p>
      */
     public CentralityHeuristic() {
         super(5, 200);
@@ -34,11 +34,13 @@ public class CentralityHeuristic extends AbstractHeuristic {
      * The formula used is: <code>(6 - distance)^2</code>.
      * <br>
      * Examples of return values:
+     * </p>
      * <ul>
      * <li><b>Throne (Distance 0):</b> (6-0)^2 = 36 (Maximum score)</li>
      * <li><b>Inner Ring (Distance 1):</b> (6-1)^2 = 25</li>
      * <li><b>Outer Ring (Distance 5):</b> (6-5)^2 = 1 (Minimum score)</li>
      * </ul>
+     * <p>
      * This non-linear progression makes the inner squares significantly more valuable than the outer ones.
      * </p>
      *
