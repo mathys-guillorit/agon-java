@@ -8,12 +8,17 @@ public class GameConfig {
     private boolean blitzMode;
     private int timeout;
     private boolean aiActive;
-    private Color aiColor;
     private String aiMode;
     private int aiDepth;
     private double aiTimeLimit;
     private boolean aiIterativeDeepening;
     private String aiHeuristic;
+    private boolean whiteIsAI = false;
+    private boolean blackIsAI = false;
+
+    public void setWhiteAI(boolean whiteIsAI) { this.whiteIsAI = whiteIsAI; }
+
+    public void setBlackAI(boolean blackIsAI) { this.blackIsAI = blackIsAI; }
 
     public void setVerbose(boolean verbose) {
         this.verbose=verbose;
@@ -35,10 +40,6 @@ public class GameConfig {
         this.aiActive=ai;
     }
 
-    public void setAiColor(Color color) {
-        this.aiColor=color;
-    }
-
     public void setAiMode(String mode) {
         this.aiMode=mode;
     }
@@ -58,4 +59,48 @@ public class GameConfig {
     public void setAiHeuristic(String heuristic) {
         this.aiHeuristic=heuristic;
     }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public boolean isBlitzMode() {
+        return blitzMode;
+    }
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public boolean isAiActive() {
+        return aiActive;
+    }
+
+    public String getAiMode() {
+        return aiMode;
+    }
+
+    public int getAiDepth() {
+        return aiDepth;
+    }
+
+    public double getAiTimeLimit() {
+        return aiTimeLimit;
+    }
+
+    public boolean isAiIterativeDeepening() {
+        return aiIterativeDeepening;
+    }
+
+    public String getAiHeuristic() {
+        return aiHeuristic;
+    }
+
+    public boolean isWhiteAI() { return whiteIsAI; }
+
+    public boolean isBlackAI() { return blackIsAI; }
 }

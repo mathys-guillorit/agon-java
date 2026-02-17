@@ -73,11 +73,24 @@ public class ConfigParser {
                 break;
 
             case "ai_color":
-                try {
-                    Color color = Color.valueOf(value.toUpperCase());
-                    config.setAiColor(color);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Config error : Unknown color '" + value);
+                String val = value.toUpperCase();
+                switch (val) {
+                    case "ALL" -> {
+                        config.setWhiteAI(true);
+                        config.setBlackAI(true);
+                    }
+                    case "WHITE" -> {
+                        config.setWhiteAI(true);
+                        config.setBlackAI(false);
+                    }
+                    case "BLACK" -> {
+                        config.setWhiteAI(false);
+                        config.setBlackAI(true);
+                    }
+                    default -> {
+                        config.setWhiteAI(false);
+                        config.setBlackAI(false);
+                    }
                 }
                 break;
 
