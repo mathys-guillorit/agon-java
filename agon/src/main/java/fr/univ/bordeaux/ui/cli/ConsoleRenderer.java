@@ -1,10 +1,9 @@
 package fr.univ.bordeaux.ui.cli;
 
-import java.util.ArrayList;
-
 import fr.univ.bordeaux.agonCore.agonElements.PieceType;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
+import java.util.ArrayList;
 
 /** delegate display converts bitboard state into String grid */
 public class ConsoleRenderer {
@@ -111,19 +110,18 @@ public class ConsoleRenderer {
    */
   private void drawHexagon(int x, int y) {
     try {
-          char rowChar = this.lines.get(x);
-          int logicalCol = y + 1; 
-          int index = CoordinateMapper.toIndex(rowChar, logicalCol);
-          PieceType piece = this.board.getPieceAt(index);
-          System.out.print(getSymbolFromPiece(piece));
-        } catch (Exception e) {
-          System.out.print(".");
-        };
+      char rowChar = this.lines.get(x);
+      int logicalCol = y + 1;
+      int index = CoordinateMapper.toIndex(rowChar, logicalCol);
+      PieceType piece = this.board.getPieceAt(index);
+      System.out.print(getSymbolFromPiece(piece));
+    } catch (Exception e) {
+      System.out.print(".");
+    }
+    ;
   }
 
-  /**
-   * Convert PieceType to ASCII character.
-   */
+  /** Convert PieceType to ASCII character. */
   private char getSymbolFromPiece(PieceType piece) {
     if (piece == null) return '.';
     return switch (piece) {

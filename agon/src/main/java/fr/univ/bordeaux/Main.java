@@ -36,12 +36,9 @@ public class Main {
     new GameLauncher().launch(arg);
   }
 
-  /**
-   * test using real case and later with junit
-   */
-  public static void testCli(){
+  /** test using real case and later with junit */
+  public static void testCli() {
     AgonShell shell = new AgonShell();
     shell.start();
   }
-
 }

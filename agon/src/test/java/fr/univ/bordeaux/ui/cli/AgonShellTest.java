@@ -1,4 +1,3 @@
 package fr.univ.bordeaux.ui.cli;
 
-public class AgonShellTest {
-}
+public class AgonShellTest {}

@@ -25,6 +25,7 @@ public interface GameUserInterface {
 
   /**
    * update board representation with ui
+   *
    * @param boardRepresentation object up-to-date to display the new state
    */
   void updateBoard(ConsoleRenderer boardRepresentation);
@@ -36,5 +37,4 @@ public interface GameUserInterface {
   boolean getUserConfirmation(String question);
 
   void showHelp();
-
 }

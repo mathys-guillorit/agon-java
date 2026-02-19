@@ -4,6 +4,8 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
+import java.util.HashMap;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -12,26 +14,20 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 import org.jline.reader.UserInterruptException;
-import org.jline.reader.impl.completer.StringsCompleter;
 
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-
-/**
- * default mode (restricted)
- */
+/** default mode (restricted) */
 public class CmdAgon extends Cmd {
 
   // no switch
   private final HashMap<String, Runnable> optsCorresp;
-  /**
-   * all options for this specific command
-   */
+
+  /** all options for this specific command */
   private Options options;
 
   /**
-   * load delegate(s) and information to allow
-   * commands interact with the system (for the CLI or GUI)
+   * load delegate(s) and information to allow commands interact with the system (for the CLI or
+   * GUI)
+   *
    * @param uictx ui context in sub package
    */
   public CmdAgon(AgonShell uictx) {
@@ -44,27 +40,16 @@ public class CmdAgon extends Cmd {
     optsCorresp.put("v", this::toggleVerbose);
     optsCorresp.put("d", this::debug);
     this.options = new Options();
-    Option help = Option.builder("h")
+    Option help =
+        Option.builder("h")
             .longOpt("help")
             .argName("cmd")
             .desc("Show help (optionally for a specific command")
             .get();
-    Option version = Option.builder("V")
-            .longOpt("version")
-            .desc("show program version")
-            .get();
-    Option verbose = Option.builder("v")
-            .longOpt("verbose")
-            .desc("add more text information")
-            .get();
-    Option debug = Option.builder("d")
-            .longOpt("debug")
-            .desc("show debug messages")
-            .get();
-    Option quit = Option.builder("q")
-      .longOpt("quit")
-      .desc("leave the cli")
-      .get();
+    Option version = Option.builder("V").longOpt("version").desc("show program version").get();
+    Option verbose = Option.builder("v").longOpt("verbose").desc("add more text information").get();
+    Option debug = Option.builder("d").longOpt("debug").desc("show debug messages").get();
+    Option quit = Option.builder("q").longOpt("quit").desc("leave the cli").get();
     this.options.addOption(version);
     this.options.addOption(verbose);
     this.options.addOption(debug);
@@ -72,9 +57,7 @@ public class CmdAgon extends Cmd {
     this.options.addOption(quit);
   }
 
-  /**
-   * where commands manage its options and go things with them...
-   */
+  /** where commands manage its options and go things with them... */
   @Override
   public void execute() {
     // special here only for shell/CLI not gui
@@ -87,16 +70,15 @@ public class CmdAgon extends Cmd {
         this.getCtx().showHelp();
         return;
       }
-      CommandLine cmdOpts = parser.parse(
-        this.options,
-        ctx.getTxtOptions()
-      );
-      this.optsCorresp.keySet().forEach((optName) -> {
-        if(cmdOpts.hasOption(optName))
-          this.optsCorresp.get(optName).run();
-        /// @WARNING: if one option is included it's continuing to next options
-      });
-    } catch (UserInterruptException e){
+      CommandLine cmdOpts = parser.parse(this.options, ctx.getTxtOptions());
+      this.optsCorresp
+          .keySet()
+          .forEach(
+              (optName) -> {
+                if (cmdOpts.hasOption(optName)) this.optsCorresp.get(optName).run();
+                /// @WARNING: if one option is included it's continuing to next options
+              });
+    } catch (UserInterruptException e) {
       ctx.showMessage("\nbye\n");
     } catch (ParseException e) {
       ctx.showError(e.getMessage());
@@ -108,28 +90,26 @@ public class CmdAgon extends Cmd {
     }
   }
 
-  private void quit(){
+  private void quit() {
     this.getCtx().quitGame();
   }
 
-  private void version(){
+  private void version() {
     try {
-      String vFile = new LoadLocalFile(
-        "cmdsInformations/version.txt"
-      ).getContent();
+      String vFile = new LoadLocalFile("cmdsInformations/version.txt").getContent();
       this.getCtx().showMessage(vFile);
     } catch (Exception e) {
       this.getCtx().showError(e.getMessage());
     }
   }
 
-  private void toggleVerbose(){
+  private void toggleVerbose() {
     if (!(this.getCtx() instanceof AgonShell ctx)) return;
     // specific to CLI/shell only
     ctx.setVerbose();
   }
 
-  private void debug(){
+  private void debug() {
     ///  TODO : do a better/stronger debug mode
     this.getCtx().showMessage("\nmove to debug mode\n");
   }
@@ -141,24 +121,20 @@ public class CmdAgon extends Cmd {
 
   ///  ////////////////// GETTERS & SETTERS //////////////////
 
-
-
   /**
    * auto-completer for commands in restricted mode
+   *
    * <pre>
    * - split and transform Options (given by context) from Commons-cli to JLine format
    * - simple version
    * </pre>
+   *
    * @return with tab, matching command
    */
   @Nonnull
   @Override
   public Completer getAutoCompleter() {
-    if (!(this.getCtx() instanceof AgonShell ctx)) {
-      return new StringsCompleter("agon");
-    }
-    return new OptCompleterAdapter(this.options)
-            .getCompleter("agon");
+    return new OptCompleterAdapter(this.options).getCompleter("agon");
   }
 
   @Override
@@ -170,6 +146,4 @@ public class CmdAgon extends Cmd {
   public Options getOptions() {
     return this.options;
   }
-
-
 }

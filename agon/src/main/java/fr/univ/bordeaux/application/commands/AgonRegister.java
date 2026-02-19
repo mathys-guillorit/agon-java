@@ -8,9 +8,10 @@ import java.util.Set;
 ///  into CommandRegister, add this to tests
 
 /**
- * {@code @warning} never inheritance only composition on this class
- * @param <T> any class that want implement Registry in his property
- * (specific for agon to be Singleton, too complex for synchronizing some objects between layers)
+ * comment ça {@code @warning} never inheritance only composition on this class
+ *
+ * @param <T> any class that want implement Registry in his property (specific for agon to be
+ *     Singleton, too complex for synchronizing some objects between layers)
  */
 public class AgonRegister<T> {
 
@@ -21,15 +22,16 @@ public class AgonRegister<T> {
   /** initialize variables */
   public AgonRegister() {
     this.correspondences = new HashMap<>();
-    this.caseSensitive=false;
-    this.size=0;
+    this.caseSensitive = false;
+    this.size = 0;
   }
 
   public AgonRegister(boolean caseSensitive) {
     this.correspondences = new HashMap<>();
     this.caseSensitive = caseSensitive;
-    this.size=0;
+    this.size = 0;
   }
+
   /**
    * register a {@link T} to be used from an identifier for later access by {@link String} the
    * String is lowercased by the function
@@ -38,7 +40,7 @@ public class AgonRegister<T> {
    * @param value {@link T} associated with the key
    */
   public void register(String name, T value) {
-    if (!this.caseSensitive) name=name.toLowerCase();
+    if (!this.caseSensitive) name = name.toLowerCase();
     this.correspondences.put(name, value);
     this.size++;
   }
@@ -51,7 +53,7 @@ public class AgonRegister<T> {
    * @return the concerned {@link Object} or null
    */
   public Optional<T> get(String key) {
-    if (!this.caseSensitive) key=key.toLowerCase();
+    if (!this.caseSensitive) key = key.toLowerCase();
     return Optional.ofNullable(this.correspondences.get(key));
   }
 
@@ -59,20 +61,19 @@ public class AgonRegister<T> {
     return this.correspondences.isEmpty();
   }
 
-  /**
-   * remove all pairs stored (key and value)
-   */
-  public void reset(){
+  /** remove all pairs stored (key and value) */
+  public void reset() {
     this.correspondences.clear();
-    this.size=0;
+    this.size = 0;
   }
 
   /**
    * remove a value with its key
+   *
    * @param key associated
    */
-  public void remove(String key){
-    if (!this.caseSensitive) key=key.toLowerCase();
+  public void remove(String key) {
+    if (!this.caseSensitive) key = key.toLowerCase();
     this.correspondences.remove(key);
     this.size--;
   }
@@ -80,17 +81,16 @@ public class AgonRegister<T> {
   /**
    * @return int the number of registered items
    */
-  public int size(){
+  public int size() {
     return this.size;
   }
 
   /**
    * get all keys
+   *
    * @return keys from pairs
    */
-  public Set<String> getKeys(){
+  public Set<String> getKeys() {
     return this.correspondences.keySet();
   }
-
-
 }

@@ -7,24 +7,21 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 /**
- * use the load local files (example:
- * cli required to load local Menu for display into cli
- * it's load by this class)
- * - UTF-8 only (ASCII)
+ * use the load local files (example: cli required to load local Menu for display into cli it's load
+ * by this class) - UTF-8 only (ASCII)
  */
 public class LoadLocalFile {
 
   private String content;
 
-  public LoadLocalFile(String filepath) throws IOException, NullPointerException{
+  public LoadLocalFile(String filepath) throws IOException, NullPointerException {
     // DP Command here
     final String defaultTxt = "";
     final String resourcePath = "/" + filepath;
     InputStream stream = getClass().getResourceAsStream(resourcePath);
-    if (stream == null) this.content=defaultTxt;
-    BufferedReader reader = new BufferedReader(
-      new InputStreamReader(stream, StandardCharsets.UTF_8)
-    );
+    if (stream == null) this.content = defaultTxt;
+    BufferedReader reader =
+        new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
     var lines = new StringBuilder();
     String line;
     while ((line = reader.readLine()) != null) {
@@ -33,8 +30,7 @@ public class LoadLocalFile {
     this.content = lines.toString();
   }
 
-  public String getContent(){
+  public String getContent() {
     return content;
   }
-
 }

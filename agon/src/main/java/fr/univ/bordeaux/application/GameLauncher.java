@@ -1,13 +1,12 @@
 package fr.univ.bordeaux.application;
 
+import fr.univ.bordeaux.Main;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import fr.univ.bordeaux.Main;
 
 public class GameLauncher {
   private final Options options;
@@ -24,7 +23,7 @@ public class GameLauncher {
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine cmd = parser.parse(options, args);
-      
+
       if (cmd.hasOption("help")) {
         printHelp();
         System.exit(0);
@@ -33,13 +32,13 @@ public class GameLauncher {
         printVersion();
         System.exit(0);
       }
-      
+
       boolean verbose = cmd.hasOption("verbose");
       boolean debug = cmd.hasOption("debug");
-      
+
       if (verbose) System.out.println("[INFO] Verbose mode enabled.");
       if (debug) System.out.println("[DEBUG] Debug mode enabled.");
-      
+
       startGame();
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
