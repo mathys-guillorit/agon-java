@@ -14,6 +14,13 @@ public class LoadLocalFile {
 
   private String content;
 
+  /**
+   * Load a local file in "resources" directory
+   *
+   * @param filepath path from resource directory where to find a file
+   * @throws IOException Exception if file not present or invalid path or other problems
+   * @throws NullPointerException Exception if file not present
+   */
   public LoadLocalFile(String filepath) throws IOException, NullPointerException {
     // DP Command here
     final String defaultTxt = "";
