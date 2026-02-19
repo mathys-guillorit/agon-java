@@ -101,4 +101,6 @@ public interface GameUserInterface {
    * @return {@code true} if the user accepts, {@code false} otherwise.
    */
   boolean getUserConfirmation(String question);
+
+  void showHelp();
 }

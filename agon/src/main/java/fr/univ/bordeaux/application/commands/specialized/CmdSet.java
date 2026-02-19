@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-public class CmdSave extends Cmd {
+public class CmdSet extends Cmd {
 
   private Options opts;
 
@@ -16,7 +16,7 @@ public class CmdSave extends Cmd {
    *
    * @param uictx
    */
-  public CmdSave(AbstractGameUI uictx) {
+  public CmdSet(AbstractGameUI uictx) {
     super(uictx);
     this.opts = this.getOptions();
   }
@@ -29,7 +29,7 @@ public class CmdSave extends Cmd {
 
   @Override
   public String getName() {
-    return "save";
+    return "set";
   }
 
   @Override
@@ -42,8 +42,7 @@ public class CmdSave extends Cmd {
 
   @Override
   public void showHelp() {
-      this.getCtx().showMessage("Usage: save [filename]\n");
-      this.getCtx().showMessage("Description: Saves the current game state and history to the specified file.\n");
-      this.getCtx().showMessage("Example: save my_save.txt\n");
+      this.getCtx().showMessage("Usage: set PARAM=VALUE\n");
+      this.getCtx().showMessage("Description: Changes the current game configuration dynamically during the session.\n");
   }
 }

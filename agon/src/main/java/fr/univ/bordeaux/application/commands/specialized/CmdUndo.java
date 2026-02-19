@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-public class CmdSave extends Cmd {
+public class CmdUndo extends Cmd {
 
   private Options opts;
 
@@ -16,9 +16,9 @@ public class CmdSave extends Cmd {
    *
    * @param uictx
    */
-  public CmdSave(AbstractGameUI uictx) {
+  public CmdUndo(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = this.getOptions();
+    this.opts = new Options();
   }
 
   @Nonnull
@@ -29,7 +29,7 @@ public class CmdSave extends Cmd {
 
   @Override
   public String getName() {
-    return "save";
+    return "undo";
   }
 
   @Override
@@ -42,8 +42,7 @@ public class CmdSave extends Cmd {
 
   @Override
   public void showHelp() {
-      this.getCtx().showMessage("Usage: save [filename]\n");
-      this.getCtx().showMessage("Description: Saves the current game state and history to the specified file.\n");
-      this.getCtx().showMessage("Example: save my_save.txt\n");
+      this.getCtx().showMessage("Usage: undo [N]\n");
+      this.getCtx().showMessage("Description: Cancels the last played turn. If a number N is provided, it cancels the last N turns.\n");
   }
 }

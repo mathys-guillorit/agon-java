@@ -6,8 +6,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-/** Create a new game. Command representation in cli : "new [ARGS]" */
-public class CmdCreate extends Cmd {
+public class CmdShow extends Cmd {
 
   private Options opts;
 
@@ -15,9 +14,9 @@ public class CmdCreate extends Cmd {
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
    * GUI)
    *
-   * @param uictx context
+   * @param uictx
    */
-  public CmdCreate(AbstractGameUI uictx) {
+  public CmdShow(AbstractGameUI uictx) {
     super(uictx);
     this.opts = new Options();
   }
@@ -30,7 +29,7 @@ public class CmdCreate extends Cmd {
 
   @Override
   public String getName() {
-    return "new";
+    return "show";
   }
 
   @Override
@@ -43,7 +42,12 @@ public class CmdCreate extends Cmd {
 
   @Override
   public void showHelp() {
-      this.getCtx().showMessage("Usage: new\n");
-      this.getCtx().showMessage("Description: Starts a new Agon game session. This will reset the board and timers.\n");
+      this.getCtx().showMessage("Usage: show [target]\n");
+      this.getCtx().showMessage("Description: Displays specific information about the current game state.\n");
+      this.getCtx().showMessage("Available targets:\n");
+      this.getCtx().showMessage("  - board         : Shows the current hexagonal board state.\n");
+      this.getCtx().showMessage("  - history       : Shows the history of all played turns.\n");
+      this.getCtx().showMessage("  - time          : Shows the remaining time for each player.\n");
+      this.getCtx().showMessage("  - configuration : Shows the current game settings.\n");
   }
 }

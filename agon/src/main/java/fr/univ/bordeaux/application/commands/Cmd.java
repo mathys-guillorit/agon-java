@@ -1,14 +1,53 @@
 package fr.univ.bordeaux.application.commands;
 
-public abstract class Cmd implements ICmd {
+import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.cli.AgonShell;
+import javax.annotation.Nonnull;
+import org.jline.reader.Completer;
+
+/**
+ * represent the fixed code for all different Commands
+ *
+ * @warning little changes require a lot refactor here
+ * @apiNote each command knows his options only <br>
+ *     (to make easier auto-complete)
+ */
+public abstract class Cmd implements CmdAction {
+
+  private AbstractGameUI ctx;
+  // may require a GUI delegate here for later (example : IGUIDelegate)
+  // mau require a delegate here for the NETwork for later (or
+  // juste create one without args in the constructor) (example: INETDelegate)
+  private static String prompt = null;
 
   /**
-   * check if the command for later concretions is leaving or not for this specific special command
-   * to allow leave the system and reuse components
-   *
-   * @return boolean
+   * load delegate(s) and information to allow commands interact with the system (for the CLI or
+   * GUI)
    */
-  public boolean isQuit() {
+  public Cmd(AbstractGameUI uictx) {
+    this.ctx = uictx;
+  }
+
+  public AbstractGameUI getCtx() {
+    return this.ctx;
+  }
+
+  /**
+   * ask to {@link AgonShell} if the command require the user input
+   *
+   * @implNote change const false to a variable that is toggleable
+   * @return boolean false (by default)
+   */
+  public boolean requiresInput() {
     return false;
   }
+
+  /**
+   * override in sub commands
+   *
+   * @return Completer for completing user writing with tab keycap
+   */
+  @Nonnull
+  @Override
+  public abstract Completer getAutoCompleter();
 }
