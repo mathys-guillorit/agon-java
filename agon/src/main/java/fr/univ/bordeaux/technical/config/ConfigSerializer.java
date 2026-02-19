@@ -6,12 +6,31 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Handles the serialization of game configuration settings into a file.
+ * <p>
+ * This class is responsible for writing a {@link GameConfig} object into a
+ * plain text file using an INI-like format (with sections like {@code [system]}
+ * or {@code [game]}). It can also generate a default configuration file if
+ * one does not already exist.
+ * </p>
+ */
 public class ConfigSerializer {
 
+    /**
+     * Constructs a new {@code ConfigSerializer}.
+     */
     public ConfigSerializer() {}
 
     /**
-     * Crée un fichier de configuration avec les valeurs par défaut.
+     * Creates a configuration file populated with the default settings.
+     * <p>
+     * This method instantiates a new {@link GameConfig} with its default
+     * values and immediately serializes it to the specified file path.
+     * </p>
+     *
+     * @param filePath The destination path for the default configuration file.
+     * @throws IOException If an I/O error occurs while creating or writing to the file.
      */
     public void createDefault(String filePath) throws IOException {
         GameConfig defaultConfig = new GameConfig();
@@ -19,7 +38,16 @@ public class ConfigSerializer {
     }
 
     /**
-     * Sérialise un objet GameConfig dans un fichier au format INI.
+     * Serializes a {@link GameConfig} object and writes it to a file in an INI format.
+     * <p>
+     * The output file will be organized into logical sections such as {@code [system]},
+     * {@code [game]}, {@code [ai_setup]}, and {@code [ai_tuning]}. If the file
+     * already exists, it will be overwritten.
+     * </p>
+     *
+     * @param config   The {@link GameConfig} instance containing the settings to save.
+     * @param filePath The destination path where the configuration file will be saved.
+     * @throws IOException If an I/O error occurs while opening or writing to the file.
      */
     public void save(GameConfig config, String filePath) throws IOException {
         Path path = Paths.get(filePath);
