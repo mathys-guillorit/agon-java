@@ -1,5 +1,7 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.application.GameLauncher;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
