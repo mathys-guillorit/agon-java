@@ -41,5 +41,13 @@ public class CmdShow extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: show [target]\n");
+      this.getCtx().showMessage("Description: Displays specific information about the current game state.\n");
+      this.getCtx().showMessage("Available targets:\n");
+      this.getCtx().showMessage("  - board         : Shows the current hexagonal board state.\n");
+      this.getCtx().showMessage("  - history       : Shows the history of all played turns.\n");
+      this.getCtx().showMessage("  - time          : Shows the remaining time for each player.\n");
+      this.getCtx().showMessage("  - configuration : Shows the current game settings.\n");
+  }
 }

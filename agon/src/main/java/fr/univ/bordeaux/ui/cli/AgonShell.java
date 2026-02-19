@@ -518,4 +518,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   public String[] getTxtOptions() {
     return this.userOptions;
   }
+
+    public AgonRegister<CmdAction> getCmds() { return this.cmds; }
 }

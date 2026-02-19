@@ -41,5 +41,9 @@ public class CmdLoad extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: load [filename]\n");
+      this.getCtx().showMessage("Description: Loads a previously saved game from the specified file.\n");
+      this.getCtx().showMessage("Example: load my_save.txt\n");
+  }
 }

@@ -40,5 +40,8 @@ public class CmdRedo extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: redo [N]\n");
+      this.getCtx().showMessage("Description: Replays the last canceled turn. If a number N is provided, it replays the last N canceled turns.\n");
+  }
 }

@@ -41,5 +41,8 @@ public class CmdQuit extends Cmd {
     this.getCtx().quitGame();
   }
 
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: quit (or Ctrl+C)\n");
+      this.getCtx().showMessage("Description: Exits the game. You will be prompted to save your current progress before leaving.\n");
+  }
 }
