@@ -41,5 +41,8 @@ public class CmdSet extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: set PARAM=VALUE\n");
+      this.getCtx().showMessage("Description: Changes the current game configuration dynamically during the session.\n");
+  }
 }

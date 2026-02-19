@@ -42,5 +42,8 @@ public class CmdCreate extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: new\n");
+      this.getCtx().showMessage("Description: Starts a new Agon game session. This will reset the board and timers.\n");
+  }
 }

@@ -41,5 +41,8 @@ public class CmdUndo extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: undo [N]\n");
+      this.getCtx().showMessage("Description: Cancels the last played turn. If a number N is provided, it cancels the last N turns.\n");
+  }
 }

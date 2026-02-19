@@ -41,5 +41,9 @@ public class CmdSave extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: save [filename]\n");
+      this.getCtx().showMessage("Description: Saves the current game state and history to the specified file.\n");
+      this.getCtx().showMessage("Example: save my_save.txt\n");
+  }
 }

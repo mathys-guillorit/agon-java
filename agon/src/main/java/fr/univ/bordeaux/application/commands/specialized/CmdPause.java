@@ -40,5 +40,8 @@ public class CmdPause extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: pause\n");
+      this.getCtx().showMessage("Description: Pauses the passing time. This command is only available when playing in Blitz mode.\n");
+  }
 }

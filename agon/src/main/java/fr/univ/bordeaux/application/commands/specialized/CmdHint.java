@@ -41,5 +41,9 @@ public class CmdHint extends Cmd {
   public void execute() {}
 
   @Override
-  public void showHelp() {}
+  public void showHelp() {
+      this.getCtx().showMessage("Usage: hint\n");
+      this.getCtx().showMessage("Description: Asks the AI to suggest the best possible move for the current player.\n");
+      this.getCtx().showMessage("Note: This does not play the move for you, it only highlights it.\n");
+  }
 }
