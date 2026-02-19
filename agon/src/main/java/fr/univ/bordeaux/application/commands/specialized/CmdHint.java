@@ -1,40 +1,50 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.application.commands.ICmdCtx;
+import fr.univ.bordeaux.ui.AbstractGameUI;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
+
+import javax.annotation.Nonnull;
 
 public class CmdHint extends Cmd {
 
+  private Options opts;
 
   /**
    * load delegate(s) and information to allow
    * commands interact with the system (for the CLI or GUI)
    *
-   * @param cmdCtx cmdCtx the responsibility to use resources in commands
+   * @param uictx
    */
-  public CmdHint(ICmdCtx cmdCtx) {
-    super(cmdCtx);
+  public CmdHint(AbstractGameUI uictx) {
+    super(uictx);
+    this.opts = new Options();
+  }
+
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return null;
   }
 
   @Override
-  public void shellExecute() {
-    this.cliWln("--- Hint Request ---");
-    String bestMove = callDomainLayerForHint();
-    this.cliWln("AI suggests: " + bestMove);
-  }
-
-  /**
-   * Simulates communication with the Domain layer (AgonCore / Engine).
-   * To be replaced later by: return this.CmdCtx.getGameEngine().computeHint();
-   */
-  private String callDomainLayerForHint() {
-      // TODO: Connect this to the actual game engine once it is merged
-      return "";
+  public String getName() {
+    return "hint";
   }
 
   @Override
-  public void shellShowHelp() {
+  public Options getOptions() {
+    return this.opts;
+  }
+
+  @Override
+  public void execute() {
 
   }
 
+  @Override
+  public void showHelp() {
+
+  }
 }

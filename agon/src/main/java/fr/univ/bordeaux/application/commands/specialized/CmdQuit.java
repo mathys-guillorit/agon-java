@@ -1,58 +1,52 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.application.commands.CmdRegister;
-import fr.univ.bordeaux.application.commands.ICmd;
-import fr.univ.bordeaux.application.commands.ICmdCtx;
+import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.cli.AgonShell;
-import org.jline.reader.ParsedLine;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
 
-import java.util.List;
-import java.util.Optional;
+import javax.annotation.Nonnull;
 
 public class CmdQuit extends Cmd {
-
-  private boolean waitingConfirmation = false;
+  private Options opts;
 
   /**
    * load delegate(s) and information to allow
    * commands interact with the system (for the CLI or GUI)
    *
-   * @param cmdCtx cmdCtx the responsibility to use resources in commands
+   * @param uictx display context
    */
-  public CmdQuit(ICmdCtx cmdCtx) {
-    super(cmdCtx);
+  public CmdQuit(AbstractGameUI uictx) {
+    super(uictx);
+    this.opts = new Options();
+  }
+
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return null;
   }
 
   @Override
-  public void shellExecute() {
-    this.cliWln("Save the game before quitting ? [y/n]");
-    this.waitingConfirmation = true;
+  public String getName() {
+    return "quit";
+  }
+
+  @Override
+  public Options getOptions() {
+    return this.opts;
   }
 
   /**
-   * recover input from {@link AgonShell}
-   * @param input text from the user in cli
+   * to be run with higher levels in code
    */
-  @Override
-  public void handleInput(String input) {
-    if (input.equalsIgnoreCase("y")) {
-      /// TODO: must replace here with a real save
-      this.cliWln("saving...");
-      this.cliWln("saved !");
-    }
-    this.waitingConfirmation = false;
-    this.setRunning(false);
+  public void execute() {
+    this.getCtx().quitGame();
   }
 
-  @Override
-  public void shellShowHelp() {
+  public void showHelp() {
 
-  }
-
-  @Override
-  public boolean requiresInput() {
-    return waitingConfirmation;
   }
 
 

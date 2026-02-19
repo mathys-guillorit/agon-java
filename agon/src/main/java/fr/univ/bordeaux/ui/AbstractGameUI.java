@@ -35,8 +35,9 @@ public abstract class AbstractGameUI implements GameUserInterface {
   */
 
   @Override
-  public void undo() {
+  public boolean undo() {
     getGameEngine().undo();
+    return false;
   }
 
   @Override

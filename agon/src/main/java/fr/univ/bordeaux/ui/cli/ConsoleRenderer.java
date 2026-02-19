@@ -62,7 +62,7 @@ public class ConsoleRenderer {
    * update board display to terminal no arguments need board in constructor (to be used by
    * drawHexagon() first)
    */
-  public void renderer() {
+  public void render() {
     int idxContent, spaceCount;
     System.out.println();
 

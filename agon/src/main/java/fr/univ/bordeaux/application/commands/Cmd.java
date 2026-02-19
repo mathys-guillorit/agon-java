@@ -1,38 +1,36 @@
 package fr.univ.bordeaux.application.commands;
 
+import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.cli.AgonShell;
-import fr.univ.bordeaux.ui.cli.ShellMode;
+import org.jline.reader.Completer;
+
+import javax.annotation.Nonnull;
 
 /**
  * represent the fixed code for all different Commands
  * @warning little changes require a lot refactor here
+ * @apiNote each command knows his options only <br/>(to make easier auto-complete)
  */
-public abstract class Cmd {
+public abstract class Cmd implements CmdAction {
 
+  private AbstractGameUI ctx;
   // may require a GUI delegate here for later (example : IGUIDelegate)
   // mau require a delegate here for the NETwork for later (or
   // juste create one without args in the constructor) (example: INETDelegate)
   private static String prompt = null;
-
   /**
    * load delegate(s) and information to allow
    * commands interact with the system (for the CLI or GUI)
    */
-  public Cmd() {
-    
-  }
-  
-  public void handleConfirmation(String input){
-    if (input.equalsIgnoreCase("y")) {
-      cliWln("saving...");
-      cliWln("saved !");
-    }
-    this.setRunning(false);
+  public Cmd(AbstractGameUI uictx) {
+    this.ctx = uictx;
   }
 
-  public void setRunning(boolean running){
-    this.CmdCtx.cliSetRunning(running);
+
+  public AbstractGameUI getCtx() {
+    return this.ctx;
   }
+
 
   /**
    * ask to {@link AgonShell} if the command require the user input
@@ -44,35 +42,13 @@ public abstract class Cmd {
   }
 
   /**
-   * get inputs from {@link AgonShell} (single entry point for
-   * user inputs)
-   * @implNote default empty must be change in sub commands
-   * @param input text from the user in cli
+   * override in sub commands
+   * @return Completer for completing user writing with tab keycap
    */
-  public void handleInput(String input){
-    // nothing
-  }
+  @Nonnull
+  @Override
+  public abstract Completer getAutoCompleter();
 
-  /**
-   * commands to be executed for GUI later
-   */
-  public void guiExecute(){
 
-  }
-
-  /**
-   * commands to be executed for GUI later
-   */
-  public void guiShowHelp(){
-
-  }
-
-  public void setShellMode(ShellMode mode){
-    this.CmdCtx.cliGetShellMode(mode);
-  }
-
-  public ShellMode getShellMode(){
-    return this.CmdCtx.cliGetShellMode();
-  }
 
 }

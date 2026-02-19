@@ -7,7 +7,7 @@ public interface GameUserInterface {
 
   // void tryMove(Position from, Position to);
   // void selectPiece(Position pos);
-  void undo();
+  boolean undo();
 
   void redo();
 
@@ -23,6 +23,10 @@ public interface GameUserInterface {
 
   void requestHint();
 
+  /**
+   * update board representation with ui
+   * @param boardRepresentation object up-to-date to display the new state
+   */
   void updateBoard(ConsoleRenderer boardRepresentation);
 
   void showMessage(String message);
@@ -30,4 +34,7 @@ public interface GameUserInterface {
   void showError(String error);
 
   boolean getUserConfirmation(String question);
+
+  void showHelp();
+
 }

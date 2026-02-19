@@ -1,29 +1,50 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.application.commands.ICmdCtx;
+import fr.univ.bordeaux.ui.AbstractGameUI;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
+
+import javax.annotation.Nonnull;
 
 public class CmdLoad extends Cmd {
 
+  private Options opts;
 
   /**
    * load delegate(s) and information to allow
    * commands interact with the system (for the CLI or GUI)
    *
-   * @param cmdCtx cmdCtx the responsibility to use resources in commands
+   * @param uictx
    */
-  public CmdLoad(ICmdCtx cmdCtx) {
-    super(cmdCtx);
+  public CmdLoad(AbstractGameUI uictx) {
+    super(uictx);
+    this.opts = this.getOptions();
+  }
+
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return null;
   }
 
   @Override
-  public void shellExecute() {
+  public String getName() {
+    return "load";
+  }
+
+  @Override
+  public Options getOptions() {
+    return this.opts;
+  }
+
+  @Override
+  public void execute() {
 
   }
 
   @Override
-  public void shellShowHelp() {
+  public void showHelp() {
 
   }
-
 }

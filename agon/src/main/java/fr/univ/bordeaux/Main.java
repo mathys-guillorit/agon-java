@@ -1,16 +1,6 @@
 package fr.univ.bordeaux;
 
 import fr.univ.bordeaux.application.GameLauncher;
-import fr.univ.bordeaux.application.commands.CmdCtx;
-import fr.univ.bordeaux.application.commands.CmdRegister;
-import fr.univ.bordeaux.application.commands.ICmdCtx;
-import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
-import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
-import fr.univ.bordeaux.application.commands.specialized.CmdHint;
-import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.specialized.CmdPause;
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.specialized.CmdSave;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 
 /**
@@ -44,8 +34,6 @@ public class Main {
     a.launch(GUIExample.class, arg);*/
 
     new GameLauncher().launch(arg);
-
-
   }
 
   /**
@@ -53,20 +41,7 @@ public class Main {
    */
   public static void testCli(){
     AgonShell shell = new AgonShell();
-    ICmdCtx ctx = new CmdCtx(
-      shell.getDelegate(),
-      null,
-      null
-    );
-    CmdRegister cmdRegistry = CmdRegister.getInstance();
-    cmdRegistry.register("quit", new CmdQuit(ctx));
-    cmdRegistry.register("new", new CmdCreate(ctx));
-    cmdRegistry.register("load", new CmdLoad(ctx));
-    cmdRegistry.register("help", new CmdHelp(ctx));
-    cmdRegistry.register("save", new CmdSave(ctx));
-    cmdRegistry.register("pause", new CmdPause(ctx));
-    cmdRegistry.register("hint", new CmdHint(ctx));
-    shell.loop();
+    shell.start();
   }
 
 }
