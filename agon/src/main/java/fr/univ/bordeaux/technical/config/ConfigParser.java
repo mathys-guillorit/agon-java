@@ -37,7 +37,7 @@ public class ConfigParser {
         return config;
     }
 
-    private void parseLine(String line, GameConfig config) {
+    private void parseLine(String line, GameConfig config) throws IOException {
         String cleanLine = line.trim();
 
         if (cleanLine.isEmpty() || cleanLine.startsWith("#") || cleanLine.startsWith("[")) {
@@ -46,76 +46,71 @@ public class ConfigParser {
 
         String[] parts = cleanLine.split("=", 2);
 
-        if (parts.length != 2) return;
+        if (parts.length != 2) {
+            throw new IOException("Malformed line (no '=') : " + line);
+        }
 
         String key = parts[0].trim().toLowerCase();
         String value = parts[1].trim();
 
-        switch (key) {
-            case "verbose":
-                config.setVerbose(Boolean.parseBoolean(value));
-                break;
-
-            case "debug":
-                config.setDebug(Boolean.parseBoolean(value));
-                break;
-
-            case "blitz":
-                config.setBlitzMode(Boolean.parseBoolean(value));
-                break;
-
-            case "timeout":
-                config.setTimeout(Integer.parseInt(value));
-                break;
-
-            case "ai":
-                config.setAi(Boolean.parseBoolean(value));
-                break;
-
-            case "ai_color":
-                String val = value.toUpperCase();
-                switch (val) {
-                    case "ALL" -> {
-                        config.setWhiteAI(true);
-                        config.setBlackAI(true);
+        try {
+            switch (key) {
+                case "verbose":
+                    config.setVerbose(Boolean.parseBoolean(value));
+                    break;
+                case "debug":
+                    config.setDebug(Boolean.parseBoolean(value));
+                    break;
+                case "blitz":
+                    config.setBlitzMode(Boolean.parseBoolean(value));
+                    break;
+                case "timeout":
+                    config.setTimeout(Integer.parseInt(value));
+                    break;
+                case "ai":
+                    config.setAi(Boolean.parseBoolean(value));
+                    break;
+                case "ai_color":
+                    String val = value.toUpperCase();
+                    switch (val) {
+                        case "ALL" -> {
+                            config.setWhiteAI(true);
+                            config.setBlackAI(true);
+                        }
+                        case "WHITE" -> {
+                            config.setWhiteAI(true);
+                            config.setBlackAI(false);
+                        }
+                        case "BLACK" -> {
+                            config.setWhiteAI(false);
+                            config.setBlackAI(true);
+                        }
+                        default -> {
+                            config.setWhiteAI(false);
+                            config.setBlackAI(false);
+                        }
                     }
-                    case "WHITE" -> {
-                        config.setWhiteAI(true);
-                        config.setBlackAI(false);
-                    }
-                    case "BLACK" -> {
-                        config.setWhiteAI(false);
-                        config.setBlackAI(true);
-                    }
-                    default -> {
-                        config.setWhiteAI(false);
-                        config.setBlackAI(false);
-                    }
-                }
-                break;
-
-            case "ai_mode":
-                config.setAiMode(value);
-                break;
-
-            case "ai_depth":
-                config.setAiDepth(Integer.parseInt(value));
-                break;
-
-            case "ai_time_limit":
-                config.setAiTimeLimit(Integer.parseInt(value));
-                break;
-
-            case "ai_iterative_deepening":
-                config.setAiIterativeDeepening(Boolean.parseBoolean(value));
-                break;
-
-            case "ai_heuristic":
-                config.setAiHeuristic(value);
-                break;
-
-            default:
-                System.out.println("Ignored option : " + key);
+                    break;
+                case "ai_mode":
+                    config.setAiMode(value);
+                    break;
+                case "ai_depth":
+                    config.setAiDepth(Integer.parseInt(value));
+                    break;
+                case "ai_time_limit":
+                    config.setAiTimeLimit(Integer.parseInt(value));
+                    break;
+                case "ai_iterative_deepening":
+                    config.setAiIterativeDeepening(Boolean.parseBoolean(value));
+                    break;
+                case "ai_heuristic":
+                    config.setAiHeuristic(value);
+                    break;
+                default:
+                    throw new IOException("Invalid option : "+key);
+            }
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid value for option '" + key + "' : " + value);
         }
     }
 }
