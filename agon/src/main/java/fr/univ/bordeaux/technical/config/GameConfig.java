@@ -3,18 +3,18 @@ package fr.univ.bordeaux.technical.config;
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 
 public class GameConfig {
-    private boolean verbose;
-    private boolean debug;
-    private boolean blitzMode;
-    private int timeout;
-    private boolean aiActive;
-    private String aiMode;
-    private int aiDepth;
-    private double aiTimeLimit;
-    private boolean aiIterativeDeepening;
-    private String aiHeuristic;
+    private boolean verbose = false;
+    private boolean debug = false;
+    private boolean blitzMode = false;
+    private int timeout = 1800;
+    private boolean aiActive = true;
+    private String aiMode = "MINIMAX";
+    private int aiDepth = 4;
+    private int aiTimeLimit = 5;
+    private boolean aiIterativeDeepening = true;
+    private String aiHeuristic = "MIXED";
     private boolean whiteIsAI = false;
-    private boolean blackIsAI = false;
+    private boolean blackIsAI = true;
 
     public void setWhiteAI(boolean whiteIsAI) { this.whiteIsAI = whiteIsAI; }
 
@@ -88,7 +88,7 @@ public class GameConfig {
         return aiDepth;
     }
 
-    public double getAiTimeLimit() {
+    public int getAiTimeLimit() {
         return aiTimeLimit;
     }
 
