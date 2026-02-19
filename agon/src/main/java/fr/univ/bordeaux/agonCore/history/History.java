@@ -1,6 +1,8 @@
 package fr.univ.bordeaux.agonCore.history;
 
 import fr.univ.bordeaux.agonCore.agonElements.Move;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -99,5 +101,9 @@ public class History {
    */
   public boolean isEmptyRedo() {
     return redoStack.isEmpty();
+  }
+
+  public List<HistoryInformations> toList() {
+    return new ArrayList<>(undoStack).reversed();
   }
 }

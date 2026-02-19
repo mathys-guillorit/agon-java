@@ -76,4 +76,12 @@ public enum PieceType {
   public static PieceType getPawn(Color color) {
     return (color == Color.WHITE) ? WHITE_PAWN : BLACK_PAWN;
   }
+  @Override
+  public String toString() {
+    if (this.isQueen) {
+      return (this.color == Color.WHITE) ? "WhiteQueen" : "BlackQueen";
+    } else {
+      return (this.color == Color.WHITE) ? "WhitePawn" : "BlackPawn";
+    }
+  }
 }

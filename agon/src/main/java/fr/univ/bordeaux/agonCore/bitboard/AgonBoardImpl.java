@@ -918,4 +918,8 @@ public class AgonBoardImpl implements AgonBoard {
   public BitBoard getBlackPawns() {
     return blackPawns;
   }
+
+  public List<HistoryInformations> getHistory() {
+    return history.toList();
+  }
 }

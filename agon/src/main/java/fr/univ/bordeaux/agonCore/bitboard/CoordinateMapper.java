@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
+import javax.print.DocFlavor.STRING;
+
 /**
  * Utility class for converting board coordinates between human-readable formats
  * and internal bitboard indices.
@@ -26,5 +28,11 @@ public class CoordinateMapper {
   public static int toIndex(char letter, int col) {
     int Base = 'A';
     return (((int) letter - Base) * (11)) + (col - 1);
+  }
+
+  public static String toAbaPro(int index) {
+      char letter = (char) ('A' + (index / 11));
+      int col = (index % 11) + 1;
+      return "" + letter + col;
   }
 }
