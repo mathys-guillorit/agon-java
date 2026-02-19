@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.CmdAction;
+import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -117,6 +118,16 @@ public class AgonRegisterTest {
     public Completer getAutoCompleter() {
       return null;
     }
+
+    @Override
+    public String getName() {
+      return "";
+    }
+
+    @Override
+    public Options getOptions() {
+      return null;
+    }
   }
   private static class TestCmd implements CmdAction {
     @Override public void execute() {
@@ -129,6 +140,16 @@ public class AgonRegisterTest {
     @Nonnull
     @Override
     public Completer getAutoCompleter() {
+      return null;
+    }
+
+    @Override
+    public String getName() {
+      return "";
+    }
+
+    @Override
+    public Options getOptions() {
       return null;
     }
   }

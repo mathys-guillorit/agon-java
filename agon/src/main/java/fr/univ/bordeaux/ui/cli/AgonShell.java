@@ -13,10 +13,13 @@ import org.apache.commons.cli.ParseException;
 import org.jline.consoleui.prompt.ConsolePrompt;
 import org.jline.consoleui.prompt.PromptResultItemIF;
 import org.jline.consoleui.prompt.builder.PromptBuilder;
+import org.jline.keymap.KeyMap;
 import org.jline.reader.Candidate;
+import org.jline.reader.History;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
+import org.jline.reader.Reference;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -91,6 +94,12 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface{
       this.cliErr(e.getMessage());
     }
     this.setGameEngine(this);
+    // shortcut for "ctrl+r" show history
+    reader.getWidgets().put("show-full-history", this::showFullHistory);
+    reader.getKeyMaps().get(LineReader.MAIN).bind(
+        new Reference("show-full-history"),
+        KeyMap.ctrl('R')
+    );
   }
 
 
@@ -182,6 +191,27 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface{
       this.cliErr(e.getMessage());
     }
   }
+
+  /**
+   * display all history
+   * @return entry for JLine
+   */
+  private boolean showFullHistory() {
+    History history = reader.getHistory();
+    reader.getBuffer().clear();
+    reader.callWidget(LineReader.REDRAW_LINE);
+    reader.callWidget(LineReader.REDISPLAY);
+    this.cliWln("");
+    int i = 1;
+    for (History.Entry entry : history) {
+      System.out.printf("%3d  %s%n", i++, entry.line());
+    }
+    // redraw prompt
+    reader.callWidget(LineReader.REDRAW_LINE);
+    reader.callWidget(LineReader.REDISPLAY);
+    return true;
+  }
+
 
   /**
    * completer used by JLine to complete commands and option for all commands.
