@@ -4,10 +4,8 @@ package fr.univ.bordeaux.agonCore.bitboard;
  * A high-performance 128-bit bitset implementation optimized for Agon's hexagonal grid.
  *
  * <p>Using two {@code long} primitives ({@code low} and {@code high}), this class represents the
- * 121 tiles of the Agon board as a linear sequence of bits. It provides near-instantaneous
- * bitwise operations for move generation, adjacency calculations, and pattern matching.</p>
- *
- *
+ * 121 tiles of the Agon board as a linear sequence of bits. It provides near-instantaneous bitwise
+ * operations for move generation, adjacency calculations, and pattern matching.
  */
 public class BitBoard {
 
@@ -17,14 +15,18 @@ public class BitBoard {
   /** Bits 64 to 127 (Upper half of the board; Agon uses up to index 120). */
   private long high;
 
-  /** * Constructs an empty BitBoard with all bits initialized to zero.
-   */
+  /** * Constructs an empty BitBoard with all bits initialized to zero. */
   public BitBoard() {
     this.low = 0L;
     this.high = 0L;
   }
 
-  public BitBoard(long low, long high) {this.low = low; this.high = high;}  public BitBoard copy2() {
+  public BitBoard(long low, long high) {
+    this.low = low;
+    this.high = high;
+  }
+
+  public BitBoard copy2() {
     return new BitBoard(this.low, this.high);
   }
 
@@ -129,11 +131,11 @@ public class BitBoard {
   /**
    * Shifts the entire bitboard content in a specific direction.
    *
-   * <p>This method maintains bit continuity across the 64-bit boundary by
-   * calculating the carry-over between the {@code low} and {@code high} segments.</p>
+   * <p>This method maintains bit continuity across the 64-bit boundary by calculating the
+   * carry-over between the {@code low} and {@code high} segments.
    *
-   * @param n The shift offset (corresponds to {@link Direction#getValue()}).
-   * Positive moves bits toward higher indices, negative toward lower.
+   * @param n The shift offset (corresponds to {@link Direction#getValue()}). Positive moves bits
+   *     toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(int n) {
@@ -182,8 +184,9 @@ public class BitBoard {
   /**
    * Expands the current bitboard state to include all adjacent hexagonal neighbors.
    *
-   * <p>Technically, this performs a morphological dilation using a hexagonal
-   * structuring element. It is used to find all reachable or surrounding tiles.</p>
+   * <p>Technically, this performs a morphological dilation using a hexagonal structuring element.
+   * It is used to find all reachable or surrounding tiles.
+   *
    * @return A new {@link BitBoard} representing the dilated area.
    */
   public BitBoard dilation() {
@@ -197,8 +200,8 @@ public class BitBoard {
   /**
    * Scans the bitboard for the next set bit after a given index.
    *
-   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find
-   * pieces rapidly, which is critical for efficient move generation loops.</p>
+   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find pieces rapidly, which
+   * is critical for efficient move generation loops.
    *
    * @param currentBit The index to start scanning from (exclusive). Use {@code -1} for the start.
    * @return The index of the next set bit, or {@code -1} if none remain.

@@ -1,2 +1,0 @@
-help [CmdName]      show help message for specific command "CmdName"
-                    example : "help help" shows this help

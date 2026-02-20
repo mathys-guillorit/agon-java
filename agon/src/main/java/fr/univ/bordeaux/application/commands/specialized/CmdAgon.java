@@ -4,21 +4,19 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
-import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import java.util.HashMap;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jline.reader.Completer;
 import org.jline.reader.UserInterruptException;
 
 /** default mode (restricted) */
 public class CmdAgon extends Cmd {
 
+  private final String desc;
   // no switch
   private final HashMap<String, Runnable> optsCorresp;
 
@@ -40,7 +38,6 @@ public class CmdAgon extends Cmd {
     optsCorresp.put("V", this::version);
     optsCorresp.put("v", this::toggleVerbose);
     optsCorresp.put("d", this::debug);
-    this.options = new Options();
     Option help =
         Option.builder("h")
             .longOpt("help")
@@ -51,11 +48,12 @@ public class CmdAgon extends Cmd {
     Option verbose = Option.builder("v").longOpt("verbose").desc("add more text information").get();
     Option debug = Option.builder("d").longOpt("debug").desc("show debug messages").get();
     Option quit = Option.builder("q").longOpt("quit").desc("leave the cli").get();
-    this.options.addOption(version);
-    this.options.addOption(verbose);
-    this.options.addOption(debug);
-    this.options.addOption(help);
-    this.options.addOption(quit);
+    this.addOption(version);
+    this.addOption(verbose);
+    this.addOption(debug);
+    this.addOption(help);
+    this.addOption(quit);
+    this.desc = "main command";
   }
 
   /** where commands manage its options and go things with them... */
@@ -87,6 +85,7 @@ public class CmdAgon extends Cmd {
     } catch (Exception e) {
       ctx.showError("unexpected error occurred");
       ctx.showError(e.getMessage());
+      e.printStackTrace();
       ctx.showHelp();
     }
   }
@@ -116,35 +115,15 @@ public class CmdAgon extends Cmd {
   }
 
   @Override
-  public void showHelp() {
-    this.getCtx().showHelp();
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   ///  ////////////////// GETTERS & SETTERS //////////////////
 
-  /**
-   * auto-completer for commands in restricted mode
-   *
-   * <pre>
-   * - split and transform Options (given by context) from Commons-cli to JLine format
-   * - simple version
-   * </pre>
-   *
-   * @return with tab, matching command
-   */
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return new OptCompleterAdapter(this.options).getCompleter("agon");
-  }
-
   @Override
   public String getName() {
     return "agon";
-  }
-
-  @Override
-  public Options getOptions() {
-    return this.options;
   }
 }

@@ -73,7 +73,4 @@ public abstract class AbstractGameUI implements GameUserInterface {
   public void requestHint() {
     getGameEngine().requestHint();
   }
-
-
-
 }

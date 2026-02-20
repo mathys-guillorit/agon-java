@@ -2,13 +2,10 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdSave extends Cmd {
 
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -18,13 +15,13 @@ public class CmdSave extends Cmd {
    */
   public CmdSave(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = this.getOptions();
+    this.desc = "save the game into a file";
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   @Override
@@ -33,17 +30,5 @@ public class CmdSave extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
-  @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: save [filename]\n");
-      this.getCtx().showMessage("Description: Saves the current game state and history to the specified file.\n");
-      this.getCtx().showMessage("Example: save my_save.txt\n");
-  }
 }

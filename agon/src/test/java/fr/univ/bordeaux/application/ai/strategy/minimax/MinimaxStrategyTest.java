@@ -1,92 +1,113 @@
 package fr.univ.bordeaux.application.ai.strategy.minimax;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class MinimaxStrategyTest {
 
-    private int THRONE = 60;
+  private int THRONE = 60;
 
-    private AgonBoardImpl createCustomBoard(int wQueenIdx, int bQueenIdx, List<Integer> wPawnsIdx, List<Integer> bPawnsIdx) {
-        BitBoard wQ = new BitBoard();
-        BitBoard bQ = new BitBoard();
-        BitBoard wP = new BitBoard();
-        BitBoard bP = new BitBoard();
+  private AgonBoardImpl createCustomBoard(
+      int wQueenIdx, int bQueenIdx, List<Integer> wPawnsIdx, List<Integer> bPawnsIdx) {
+    BitBoard wQ = new BitBoard();
+    BitBoard bQ = new BitBoard();
+    BitBoard wP = new BitBoard();
+    BitBoard bP = new BitBoard();
 
-        if (wQueenIdx != -1) wQ.setBit(wQueenIdx, 1L);
-        if (bQueenIdx != -1) bQ.setBit(bQueenIdx, 1L);
+    if (wQueenIdx != -1) wQ.setBit(wQueenIdx, 1L);
+    if (bQueenIdx != -1) bQ.setBit(bQueenIdx, 1L);
 
-        for (Integer idx : wPawnsIdx) wP.setBit(idx, 1L);
-        for (Integer idx : bPawnsIdx) bP.setBit(idx, 1L);
+    for (Integer idx : wPawnsIdx) wP.setBit(idx, 1L);
+    for (Integer idx : bPawnsIdx) bP.setBit(idx, 1L);
 
-        return new AgonBoardImpl(wQ, bQ, wP, bP);
-    }
+    return new AgonBoardImpl(wQ, bQ, wP, bP);
+  }
 
-    @Test
-    void testPuzzleWinInOneMove() {
-        System.out.println("=== PUZZLE TEST : WIN IN ONE MOVE ===");
+  @Test
+  void testPuzzleWinInOneMove() {
+    System.out.println("=== PUZZLE TEST : WIN IN ONE MOVE ===");
 
-        AgonBoardImpl board = createCustomBoard(THRONE, -1, List.of(CoordinateMapper.toIndex('G',6),CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),CoordinateMapper.toIndex('H',8)), List.of());
+    AgonBoardImpl board =
+        createCustomBoard(
+            THRONE,
+            -1,
+            List.of(
+                CoordinateMapper.toIndex('G', 6),
+                CoordinateMapper.toIndex('F', 5),
+                CoordinateMapper.toIndex('E', 5),
+                CoordinateMapper.toIndex('E', 6),
+                CoordinateMapper.toIndex('F', 7),
+                CoordinateMapper.toIndex('H', 8)),
+            List.of());
 
-        Heuristic heuristic = new MixedHeuristic(10, 1);
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 1);
+    Heuristic heuristic = new MixedHeuristic(10, 1);
+    MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 1);
 
-        System.out.println("Initial state :");
-        board.printBoard();
+    System.out.println("Initial state :");
+    board.printBoard();
 
-        Move bestMove = ai.getBestMove(board);
+    Move bestMove = ai.getBestMove(board);
 
-        assertNotNull(bestMove, "AI must find a move");
+    assertNotNull(bestMove, "AI must find a move");
 
-        board.applyMove(bestMove);
-        System.out.println("Final state :");
-        board.printBoard();
+    board.applyMove(bestMove);
+    System.out.println("Final state :");
+    board.printBoard();
 
-        assertTrue(board.isGameWon(Color.WHITE), "Game should be won");
-    }
+    assertTrue(board.isGameWon(Color.WHITE), "Game should be won");
+  }
 
-    @Test
-    void testDefenseOpponentWinByCapturing() {
-        System.out.println("=== TEST : BLOCK OPPONENT WIN ===");
+  @Test
+  void testDefenseOpponentWinByCapturing() {
+    System.out.println("=== TEST : BLOCK OPPONENT WIN ===");
 
-        List<Integer> bPawns = List.of(CoordinateMapper.toIndex('G',6),
-                CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),
-                CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),
-                CoordinateMapper.toIndex('H',8));
+    List<Integer> bPawns =
+        List.of(
+            CoordinateMapper.toIndex('G', 6),
+            CoordinateMapper.toIndex('F', 5),
+            CoordinateMapper.toIndex('E', 5),
+            CoordinateMapper.toIndex('E', 6),
+            CoordinateMapper.toIndex('F', 7),
+            CoordinateMapper.toIndex('H', 8));
 
-        List<Integer> wPawns = List.of(CoordinateMapper.toIndex('H', 7),
-                CoordinateMapper.toIndex('I', 9), CoordinateMapper.toIndex('C', 3),
-                CoordinateMapper.toIndex('D', 5), CoordinateMapper.toIndex('D', 6),
-                CoordinateMapper.toIndex('K', 8));
+    List<Integer> wPawns =
+        List.of(
+            CoordinateMapper.toIndex('H', 7),
+            CoordinateMapper.toIndex('I', 9),
+            CoordinateMapper.toIndex('C', 3),
+            CoordinateMapper.toIndex('D', 5),
+            CoordinateMapper.toIndex('D', 6),
+            CoordinateMapper.toIndex('K', 8));
 
-        AgonBoardImpl board = createCustomBoard(-1, THRONE, wPawns, bPawns);
+    AgonBoardImpl board = createCustomBoard(-1, THRONE, wPawns, bPawns);
 
-        Heuristic heuristic = new MixedHeuristic(10, 1);
+    Heuristic heuristic = new MixedHeuristic(10, 1);
 
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 2);
+    MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 2);
 
-        System.out.println("Critical situation (AI needs to block G7) :");
-        board.printBoard();
+    System.out.println("Critical situation (AI needs to block G7) :");
+    board.printBoard();
 
-        Move bestMove = ai.getBestMove(board);
+    Move bestMove = ai.getBestMove(board);
 
-        board.applyMove(bestMove);
+    board.applyMove(bestMove);
 
-        board.printBoard();
+    board.printBoard();
 
-        assertNotNull(bestMove);
+    assertNotNull(bestMove);
 
-        assertEquals(CoordinateMapper.toIndex('H', 9), bestMove.getTo(), "AI should have blocked G7 in order to block the opponent");
-    }
+    assertEquals(
+        CoordinateMapper.toIndex('H', 9),
+        bestMove.getTo(),
+        "AI should have blocked G7 in order to block the opponent");
+  }
 }

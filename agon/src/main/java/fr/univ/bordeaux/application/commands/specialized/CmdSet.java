@@ -2,13 +2,11 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
+import org.apache.commons.cli.Option;
 
 public class CmdSet extends Cmd {
 
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -18,13 +16,20 @@ public class CmdSet extends Cmd {
    */
   public CmdSet(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = this.getOptions();
+    this.addOption(
+        Option.builder()
+            .longOpt("key")
+            .hasArg()
+            .argName("value")
+            .desc("Set an arbitrary key to a value, syntax: key=value")
+            .get());
+    this.desc = "change current configuration, example: \"debug=true\"";
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return desc;
   }
 
   @Override
@@ -33,16 +38,5 @@ public class CmdSet extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
-  @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: set PARAM=VALUE\n");
-      this.getCtx().showMessage("Description: Changes the current game configuration dynamically during the session.\n");
-  }
 }

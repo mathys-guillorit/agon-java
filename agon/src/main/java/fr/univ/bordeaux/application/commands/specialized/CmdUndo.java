@@ -2,13 +2,10 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdUndo extends Cmd {
 
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -18,13 +15,12 @@ public class CmdUndo extends Cmd {
    */
   public CmdUndo(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = new Options();
+    this.desc = "redo a turn if there a turn to redo if not it will not work";
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
+  public String getDescription() {
+    return this.desc;
   }
 
   @Override
@@ -33,16 +29,5 @@ public class CmdUndo extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
-  @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: undo [N]\n");
-      this.getCtx().showMessage("Description: Cancels the last played turn. If a number N is provided, it cancels the last N turns.\n");
-  }
 }

@@ -2,12 +2,9 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdPause extends Cmd {
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -17,13 +14,15 @@ public class CmdPause extends Cmd {
    */
   public CmdPause(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = this.getOptions();
+    // may add resume command so ? (if we can pause in logic we can resume too)
+    // or it's not only "pause" but it toggles pause
+    this.desc = "pause the game";
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   @Override
@@ -32,16 +31,5 @@ public class CmdPause extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
-  @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: pause\n");
-      this.getCtx().showMessage("Description: Pauses the passing time. This command is only available when playing in Blitz mode.\n");
-  }
 }

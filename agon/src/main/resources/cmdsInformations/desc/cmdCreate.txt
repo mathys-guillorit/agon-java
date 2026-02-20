@@ -1,0 +1,2 @@
+Description: Starts a new Agon game session.
+This will reset the board and timer.

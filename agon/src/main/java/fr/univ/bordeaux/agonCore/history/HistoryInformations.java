@@ -6,12 +6,13 @@ import fr.univ.bordeaux.agonCore.agonElements.PieceType;
 import java.util.List;
 
 /**
- * Encapsulates all necessary data to track and revert a single game turn.
- * * <p>In Agon, a single turn can trigger multiple physical displacements (e.g., a
- * standard move followed by one or more mandatory relocations). This class
- * groups these actions together, along with context about the piece and player,
- * to ensure that the {@link fr.univ.bordeaux.agonCore.bitboard.AgonBoard} can
- * accurately restore previous states during undo operations.</p>
+ * Encapsulates all necessary data to track and revert a single game turn. *
+ *
+ * <p>In Agon, a single turn can trigger multiple physical displacements (e.g., a standard move
+ * followed by one or more mandatory relocations). This class groups these actions together, along
+ * with context about the piece and player, to ensure that the {@link
+ * fr.univ.bordeaux.agonCore.bitboard.AgonBoard} can accurately restore previous states during undo
+ * operations.
  */
 public class HistoryInformations {
 
@@ -27,9 +28,9 @@ public class HistoryInformations {
   /**
    * Constructs a new history record.
    *
-   * @param moves     A {@link List} of all moves performed (standard + relocations).
+   * @param moves A {@link List} of all moves performed (standard + relocations).
    * @param pieceType The {@link PieceType} of the main piece moved.
-   * @param color     The {@link Color} of the active player.
+   * @param color The {@link Color} of the active player.
    */
   public HistoryInformations(List<Move> moves, PieceType pieceType, Color color) {
     this.moves = moves;
@@ -38,9 +39,10 @@ public class HistoryInformations {
   }
 
   /**
-   * Returns the sequence of moves that occurred during this turn.
-   * * <p>This list is ordered chronologically: the first element is the standard
-   * move, followed by any capture-induced relocations.</p>
+   * Returns the sequence of moves that occurred during this turn. *
+   *
+   * <p>This list is ordered chronologically: the first element is the standard move, followed by
+   * any capture-induced relocations.
    *
    * @return A {@link List} of {@link Move} objects.
    */
@@ -50,6 +52,7 @@ public class HistoryInformations {
 
   /**
    * Get the PieceType of the piece that has been moved
+   *
    * @return The {@link PieceType} that was originally moved.
    */
   public PieceType getPieceType() {
@@ -58,6 +61,7 @@ public class HistoryInformations {
 
   /**
    * Get the color of the player who made the move
+   *
    * @return The {@link Color} of the player who made the move.
    */
   public Color getColor() {

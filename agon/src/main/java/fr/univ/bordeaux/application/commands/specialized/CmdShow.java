@@ -2,13 +2,11 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
+import org.apache.commons.cli.Option;
 
 public class CmdShow extends Cmd {
 
-  private Options opts;
+  private String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -18,13 +16,11 @@ public class CmdShow extends Cmd {
    */
   public CmdShow(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = new Options();
-  }
-
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return null;
+    this.addOption(Option.builder().longOpt("board").desc("Show the current board state").get());
+    this.addOption(Option.builder().longOpt("history").desc("Show game turns history").get());
+    this.addOption(Option.builder().longOpt("time").desc("Show time left for each player").get());
+    this.addOption(Option.builder().longOpt("configuration").desc("Explicit configuration").get());
+    this.desc = "display various information";
   }
 
   @Override
@@ -33,21 +29,11 @@ public class CmdShow extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: show [target]\n");
-      this.getCtx().showMessage("Description: Displays specific information about the current game state.\n");
-      this.getCtx().showMessage("Available targets:\n");
-      this.getCtx().showMessage("  - board         : Shows the current hexagonal board state.\n");
-      this.getCtx().showMessage("  - history       : Shows the history of all played turns.\n");
-      this.getCtx().showMessage("  - time          : Shows the remaining time for each player.\n");
-      this.getCtx().showMessage("  - configuration : Shows the current game settings.\n");
-  }
 }

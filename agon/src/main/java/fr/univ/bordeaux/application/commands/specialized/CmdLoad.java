@@ -2,13 +2,10 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdLoad extends Cmd {
 
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -18,13 +15,7 @@ public class CmdLoad extends Cmd {
    */
   public CmdLoad(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = this.getOptions();
-  }
-
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return null;
+    this.desc = "load a file from disk";
   }
 
   @Override
@@ -33,17 +24,11 @@ public class CmdLoad extends Cmd {
   }
 
   @Override
-  public Options getOptions() {
-    return this.opts;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: load [filename]\n");
-      this.getCtx().showMessage("Description: Loads a previously saved game from the specified file.\n");
-      this.getCtx().showMessage("Example: load my_save.txt\n");
-  }
 }

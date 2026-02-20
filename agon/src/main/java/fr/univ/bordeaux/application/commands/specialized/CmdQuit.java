@@ -2,12 +2,9 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdQuit extends Cmd {
-  private Options opts;
+  private final String desc;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -17,13 +14,13 @@ public class CmdQuit extends Cmd {
    */
   public CmdQuit(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = new Options();
+    this.desc = "leaving the program with this command or \"ctrl-c\"";
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
+  public String getDescription() {
+    /// TODO: add i18n later here (or in constructor)
+    return this.desc;
   }
 
   @Override
@@ -31,18 +28,8 @@ public class CmdQuit extends Cmd {
     return "quit";
   }
 
-  @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
   /** to be run with higher levels in code */
   public void execute() {
     this.getCtx().quitGame();
-  }
-
-  public void showHelp() {
-      this.getCtx().showMessage("Usage: quit (or Ctrl+C)\n");
-      this.getCtx().showMessage("Description: Exits the game. You will be prompted to save your current progress before leaving.\n");
   }
 }
