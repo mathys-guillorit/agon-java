@@ -10,7 +10,8 @@ import java.util.List;
 
 public abstract class Match {
   private AgonBoard agonBoard;
-  private Color currentPlayer=Color.BLACK;
+  private Color currentPlayer = Color.BLACK;
+
   public Match(AgonBoard agonBoard) {
     this.agonBoard = agonBoard;
   }
@@ -33,10 +34,15 @@ public abstract class Match {
     List<MoveDTO> uiList = new ArrayList<>();
     for (HistoryInformations info : domainHistory) {
       Move mainMove = info.getMoves().getFirst();
-      uiList.add(new MoveDTO(CoordinateMapper.toAbaPro(mainMove.getFrom()),CoordinateMapper.toAbaPro(mainMove.getTo()),mainMove.getPieceType().toString()));
+      uiList.add(
+          new MoveDTO(
+              CoordinateMapper.toAbaPro(mainMove.getFrom()),
+              CoordinateMapper.toAbaPro(mainMove.getTo()),
+              mainMove.getPieceType().toString()));
     }
     return uiList;
   }
+
   public void switchPlayer() {
     currentPlayer = (currentPlayer == Color.WHITE) ? Color.BLACK : Color.WHITE;
   }

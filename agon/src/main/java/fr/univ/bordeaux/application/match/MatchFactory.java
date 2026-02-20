@@ -13,5 +13,5 @@ public class MatchFactory {
       case "Standard" -> new StandardMatch(agonBoard);
       default -> throw new IllegalArgumentException("Invalid match type");
     };
-    }
+  }
 }

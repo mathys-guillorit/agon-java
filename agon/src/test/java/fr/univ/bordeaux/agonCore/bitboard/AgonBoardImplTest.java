@@ -24,17 +24,18 @@ class AgonBoardImplTest {
 
   @Test
   @DisplayName("Test applyMove")
-  void testApplyMove(){
+  void testApplyMove() {
     BitBoard wPawns = new BitBoard();
     BitBoard bQueen = new BitBoard();
     BitBoard bPawns = new BitBoard();
     BitBoard wQueen = new BitBoard();
-    wQueen.setBit(60,1L);
-    wPawns.setBit(63,1L);
-    board=new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
-    assertFalse(board.applyMove(new Move(60,13,Color.WHITE)));
-    assertTrue(board.applyMove(new Move(63,62,Color.WHITE)));
+    wQueen.setBit(60, 1L);
+    wPawns.setBit(63, 1L);
+    board = new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
+    assertFalse(board.applyMove(new Move(60, 13, Color.WHITE)));
+    assertTrue(board.applyMove(new Move(63, 62, Color.WHITE)));
   }
+
   @Test
   @DisplayName("Geometry Test: Circle Centrality")
   void testCentrality() {
@@ -60,7 +61,7 @@ class AgonBoardImplTest {
     AgonBoardImpl captureBoard =
         new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, blackPawns);
 
-    List<Move> moves=new ArrayList<>();
+    List<Move> moves = new ArrayList<>();
     captureBoard.performCaptures(Color.WHITE, moves);
 
     assertNull(captureBoard.getPieceAt(71), "The black pawn at 71 should be captured");
@@ -108,75 +109,75 @@ class AgonBoardImplTest {
     wPawns.setBit(61, 1L);
 
     AgonBoardImpl boardReloc = new AgonBoardImpl(new BitBoard(), bQueen, wPawns, new BitBoard());
-    List<Move> history=new ArrayList<>();
+    List<Move> history = new ArrayList<>();
     boardReloc.performCaptures(Color.WHITE, history);
     List<Move> moves = boardReloc.generateLegalMoves(Color.BLACK);
     assertFalse(moves.isEmpty());
     for (Move m : moves) {
-      assertEquals(-1, m.getFrom(),
-          "While queen is captured only relocation move could be able");
+      assertEquals(-1, m.getFrom(), "While queen is captured only relocation move could be able");
     }
   }
 
-    @Test
-    @DisplayName("Victory Test: Queen + 6 pawns")
-    void testVictoryCondition() {
-      BitBoard wQueen = new BitBoard(THRONE);
-      BitBoard wPawns = new BitBoard();
-      int[] neighbors = {48, 49, 59, 61, 71, 72};
-      for (int n : neighbors) {
-        wPawns.setBit(n, 1L);
-      }
-
-      AgonBoardImpl winBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, new BitBoard());
-
-      assertTrue(
-          winBoard.isGameWon(Color.WHITE), "White should win: Queen in the center and surrounded");
+  @Test
+  @DisplayName("Victory Test: Queen + 6 pawns")
+  void testVictoryCondition() {
+    BitBoard wQueen = new BitBoard(THRONE);
+    BitBoard wPawns = new BitBoard();
+    int[] neighbors = {48, 49, 59, 61, 71, 72};
+    for (int n : neighbors) {
+      wPawns.setBit(n, 1L);
     }
 
-    @Test
-    @DisplayName("Non-Victory Test: 6 pawns without Queen")
-    void testNotVictoryCondition() {
-      BitBoard wQueen = new BitBoard();
-      BitBoard wPawns = new BitBoard();
+    AgonBoardImpl winBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, new BitBoard());
 
-      int[] neighbors = {48, 49, 59, 61, 71, 72};
-      for (int n : neighbors) {
-        wPawns.setBit(n, 1L);
-      }
+    assertTrue(
+        winBoard.isGameWon(Color.WHITE), "White should win: Queen in the center and surrounded");
+  }
 
-      AgonBoardImpl winBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, new BitBoard());
+  @Test
+  @DisplayName("Non-Victory Test: 6 pawns without Queen")
+  void testNotVictoryCondition() {
+    BitBoard wQueen = new BitBoard();
+    BitBoard wPawns = new BitBoard();
 
-      assertFalse(winBoard.isGameWon(Color.WHITE));
+    int[] neighbors = {48, 49, 59, 61, 71, 72};
+    for (int n : neighbors) {
+      wPawns.setBit(n, 1L);
     }
-    @Test
-    @DisplayName("Test undoMove : back to the last state")
-    void testUndoMove() {
-      BitBoard wPawns = new BitBoard(0);
-      AgonBoardImpl undoBoard = new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns,
-          new BitBoard());
 
-      Move move = new Move(0, 1, Color.WHITE);
-      undoBoard.applyMove(move);
+    AgonBoardImpl winBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, new BitBoard());
 
-      assertEquals(PieceType.WHITE_PAWN, undoBoard.getPieceAt(1));
-      assertNull(undoBoard.getPieceAt(0));
+    assertFalse(winBoard.isGameWon(Color.WHITE));
+  }
 
-      undoBoard.undoMove();
+  @Test
+  @DisplayName("Test undoMove : back to the last state")
+  void testUndoMove() {
+    BitBoard wPawns = new BitBoard(0);
+    AgonBoardImpl undoBoard =
+        new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns, new BitBoard());
 
-      assertEquals(PieceType.WHITE_PAWN, undoBoard.getPieceAt(0),
-          "Pawn should be back to index 0");
-      assertNull(undoBoard.getPieceAt(1), "index 1 should be empty after undo");
-      assertFalse(undoBoard.undoMove());
-    }
+    Move move = new Move(0, 1, Color.WHITE);
+    undoBoard.applyMove(move);
+
+    assertEquals(PieceType.WHITE_PAWN, undoBoard.getPieceAt(1));
+    assertNull(undoBoard.getPieceAt(0));
+
+    undoBoard.undoMove();
+
+    assertEquals(PieceType.WHITE_PAWN, undoBoard.getPieceAt(0), "Pawn should be back to index 0");
+    assertNull(undoBoard.getPieceAt(1), "index 1 should be empty after undo");
+    assertFalse(undoBoard.undoMove());
+  }
+
   @Test
   @DisplayName("Test redoMove : back to the last state")
-   void testRedoMove(){
+  void testRedoMove() {
     BitBoard wPawns = new BitBoard();
     BitBoard bQueen = new BitBoard();
     wPawns.setBit(62, 1L);
     bQueen.setBit(53, 1L);
-    board=new AgonBoardImpl(wPawns, bQueen, new BitBoard(), new BitBoard());
+    board = new AgonBoardImpl(wPawns, bQueen, new BitBoard(), new BitBoard());
     board.applyMove(new Move(62, 61, Color.WHITE));
     board.applyMove(new Move(53, 52, Color.BLACK));
     board.undoMove();
@@ -187,16 +188,17 @@ class AgonBoardImplTest {
     board.applyMove(new Move(53, 52, Color.BLACK));
     assertFalse(board.redoMove());
   }
+
   @Test
   @DisplayName("Test getMobility")
-  void testGetMobility(){
+  void testGetMobility() {
     BitBoard wPawns = new BitBoard();
     BitBoard bQueen = new BitBoard();
     BitBoard bPawns = new BitBoard();
     BitBoard wQueen = new BitBoard();
     bQueen.setBit(60, 1L);
-    board=new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
-    assertEquals(board.getMobility(61),-1);
-    assertEquals(board.getMobility(60),0);
+    board = new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
+    assertEquals(board.getMobility(61), -1);
+    assertEquals(board.getMobility(60), 0);
   }
-  }
+}

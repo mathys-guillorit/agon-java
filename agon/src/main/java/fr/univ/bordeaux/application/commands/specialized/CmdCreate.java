@@ -1,10 +1,54 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.application.match.MatchFactory;
+import fr.univ.bordeaux.ui.AbstractGameUI;
+import javax.annotation.Nonnull;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
 
 /** Create a new game. Command representation in cli : "new [ARGS]" */
 public class CmdCreate extends Cmd {
 
+  private Options opts;
+
+  /**
+   * load delegate(s) and information to allow commands interact with the system (for the CLI or
+   * GUI)
+   *
+   * @param uictx context
+   */
+  public CmdCreate(AbstractGameUI uictx) {
+    super(uictx);
+    this.opts = new Options();
+  }
+
+  @Nonnull
   @Override
-  public void execute() {}
+  public Completer getAutoCompleter() {
+    return null;
+  }
+
+  @Override
+  public String getName() {
+    return "new";
+  }
+
+  @Override
+  public Options getOptions() {
+    return this.opts;
+  }
+
+  @Override
+  public void execute() {
+    this.getCtx().startNewGame(null);
+  }
+
+  @Override
+  public void showHelp() {
+    this.getCtx().showMessage("Usage: new\n");
+    this.getCtx()
+        .showMessage(
+            "Description: Starts a new Agon game session. This will reset the board and timers.\n");
+  }
 }
