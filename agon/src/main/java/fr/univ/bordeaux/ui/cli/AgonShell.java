@@ -256,40 +256,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     a.render();
   }
 
-  /** test to display a list in terminal */
-  public void advancedTerminal() {
-    ConsolePrompt prompt = new ConsolePrompt(terminal);
-    this.promptBuilder = prompt.getPromptBuilder();
-
-    // Create a list prompt for single selection
-    this.promptBuilder
-        .createListPrompt()
-        .name("color")
-        .message("Choose your favorite color")
-        .newItem()
-        .text("Red")
-        .add()
-        .newItem("green")
-        .text("Green")
-        .add()
-        .newItem("blue")
-        .text("Blue")
-        .add()
-        .newItem("yellow")
-        .text("Yellow")
-        .add()
-        .pageSize(3) // Show 3 items at a time
-        .addPrompt();
-    try {
-      Map<String, PromptResultItemIF> result = prompt.prompt(this.promptBuilder.build());
-      System.out.println("Selected color: " + result.get("color").getResult());
-      Thread.sleep(1000);
-    } catch (Exception e) {
-      this.cliErr("exception type: " + e.getClass());
-      this.cliErr(e.getMessage());
-    }
-  }
-
   /** load menu character in a variable once from a file in resource directory */
   @Nonnull
   private String loadMainMenu(String shellMenuTxtFile) {
@@ -405,9 +371,9 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
    *
    * @return ???
    */
-  public boolean undo() {
-
-    return false;
+  @Override
+  public void undo() {
+    //
   }
 
   /** when in game mode redo a turn if history is not empty */

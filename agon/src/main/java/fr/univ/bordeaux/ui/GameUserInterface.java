@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.ui;
 
+import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
+
 /**
  * Unified interface defining possible interactions in the Agon game.
  *
@@ -78,7 +80,7 @@ public interface GameUserInterface {
    *
    * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(String boardRepresentation);
+  void updateBoard(ConsoleRenderer boardRepresentation);
 
   /**
    * Displays an informational message to the user.
@@ -103,4 +105,11 @@ public interface GameUserInterface {
   boolean getUserConfirmation(String question);
 
   void showHelp();
+
+  /**
+   * get options name written by the user
+   * @return "args" from app EntryPoint
+   */
+  public String[] getTxtOptions();
+
 }
