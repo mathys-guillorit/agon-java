@@ -2,7 +2,6 @@ package fr.univ.bordeaux.ui;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -83,7 +82,7 @@ public interface GameUserInterface {
    *
    * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(ConsoleRenderer boardRepresentation);
+  void updateBoard(String boardRepresentation);
 
   /**
    * Displays an informational message to the user.

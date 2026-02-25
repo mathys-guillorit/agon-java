@@ -249,8 +249,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
   public void test() {
-    var a = new ConsoleRenderer(null);
-    a.render();
   }
 
   /** load menu character in a variable once from a file in resource directory */
@@ -423,8 +421,8 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
    * @param boardRepresentation the object used to show characters into terminal
    */
   @Override
-  public void updateBoard(ConsoleRenderer boardRepresentation) {
-    boardRepresentation.render();
+  public void updateBoard(String boardRepresentation) {
+    this.cliWln(boardRepresentation);
   }
 
   @Override
