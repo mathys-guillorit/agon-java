@@ -91,13 +91,10 @@ public class MinimaxStrategy extends AbstractAgonAI {
      */
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
         Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
-        System.out.println("noeud : "+nodeCount+"hauteur : "+depth);
         if (board.isGameWon(this.color)){
-            System.out.println("victoire");
             return 1000000L + depth;
         }
         if (board.isGameWon(opponentColor)) {
-            System.out.println("defaite");
             return -1000000L - depth;
         }
         if (depth == 0) {
