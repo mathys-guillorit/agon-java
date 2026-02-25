@@ -56,7 +56,8 @@ public class ConfigSerializer {
 
             writer.write("[system]\n");
             writer.write("verbose = " + config.isVerbose() + "\n");
-            writer.write("debug = " + config.isDebug() + "\n\n");
+            writer.write("debug = " + config.isDebug() + "\n");
+            writer.write("placement = " + config.isManualPlacement() + "\n\n");
 
             writer.write("[game]\n");
             writer.write("blitz = " + config.isBlitzMode() + "\n");

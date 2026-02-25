@@ -32,6 +32,7 @@ class ConfigParserTest {
         assertTrue(config.isVerbose());
         assertEquals(600, config.getTimeout());
         assertEquals("MCTS", config.getAiMode());
+        assertFalse(config.isManualPlacement());
         assertFalse(config.isWhiteAI());
         assertTrue(config.isBlackAI());
     }

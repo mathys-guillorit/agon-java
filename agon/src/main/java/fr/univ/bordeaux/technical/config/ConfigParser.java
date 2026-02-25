@@ -88,6 +88,9 @@ public class ConfigParser {
                 case "debug":
                     config.setDebug(Boolean.parseBoolean(value));
                     break;
+                case "placement":
+                    config.setManualPlacement(Boolean.parseBoolean(value));
+                    break;
                 case "blitz":
                     config.setBlitzMode(Boolean.parseBoolean(value));
                     break;

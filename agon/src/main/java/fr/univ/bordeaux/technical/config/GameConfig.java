@@ -13,6 +13,7 @@ public class GameConfig {
     private boolean verbose = false;
     private boolean debug = false;
     private boolean blitzMode = false;
+    private boolean manualPlacement = false;
     private int timeout = 1800;
     private boolean aiActive = true;
     private String aiMode = "MINIMAX";
@@ -230,4 +231,22 @@ public class GameConfig {
      * @return {@code true} if Black is an AI, {@code false} otherwise.
      */
     public boolean isBlackAI() { return blackIsAI; }
+
+    /**
+     * Checks if the placement is configured to be manual or automatic.
+     *
+     * @return {@code true} if placement is manual, {@code false} otherwise.
+     */
+    public boolean isManualPlacement() {
+        return manualPlacement;
+    }
+
+    /**
+     * Enables or disables the manual placement of Pawns and Queens.
+     *
+     * @param manualPlacement {@code true} to allow the players to manually choose the initial placement of their pawns, {@code false} to make it automatic.
+     */
+    public void setManualPlacement(boolean manualPlacement) {
+        this.manualPlacement = manualPlacement;
+    }
 }
