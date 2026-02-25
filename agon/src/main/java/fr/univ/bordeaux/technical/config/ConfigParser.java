@@ -115,9 +115,16 @@ public class ConfigParser {
                             config.setWhiteAI(false);
                             config.setBlackAI(true);
                         }
+                        case "NONE" -> {
+                            if(config.isAiActive()) {
+                                throw new IOException("Ai mode is active but is not assigned to any color");
+                            }else{
+                                config.setWhiteAI(false);
+                                config.setBlackAI(false);
+                            }
+                        }
                         default -> {
-                            config.setWhiteAI(false);
-                            config.setBlackAI(false);
+                            throw new IOException("Invalid value for option '" + key + "' : " + value);
                         }
                     }
                     break;

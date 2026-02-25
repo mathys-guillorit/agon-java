@@ -106,6 +106,19 @@ class ConfigParserTest {
     }
 
     @Test
+    void testParseAiActiveWithNoColor() throws IOException {
+        Path configFile = tempDir.resolve("ai_active.agonrc");
+        String content = "ai = true\n" + "ai_color = NONE\n";
+        Files.writeString(configFile, content);
+
+        ConfigParser parser = new ConfigParser();
+
+        assertThrows(IOException.class, () -> {
+            parser.parse(configFile.toString());
+        });
+    }
+
+    @Test
     void testParseAiColorVariations() throws IOException {
         Path configFile = tempDir.resolve("colors.agonrc");
         ConfigParser parser = new ConfigParser();
@@ -120,7 +133,8 @@ class ConfigParserTest {
         assertTrue(configWhite.isWhiteAI());
         assertFalse(configWhite.isBlackAI());
 
-        Files.writeString(configFile, "ai_color = NONE\n");
+        String content = "ai = false\n" + "ai_color = NONE\n";
+        Files.writeString(configFile, content);
         GameConfig configNone = parser.parse(configFile.toString());
         assertFalse(configNone.isWhiteAI());
         assertFalse(configNone.isBlackAI());
