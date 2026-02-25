@@ -35,30 +35,23 @@ class MinimaxStrategyTest {
 
     @Test
     void testPuzzleWinInOneMove() {
-        System.out.println("=== PUZZLE TEST : WIN IN ONE MOVE ===");
 
         AgonBoardImpl board = createCustomBoard(THRONE, -1, List.of(CoordinateMapper.toIndex('G',6),CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),CoordinateMapper.toIndex('E',6),CoordinateMapper.toIndex('F',7),CoordinateMapper.toIndex('H',8)), List.of());
 
         Heuristic heuristic = new MixedHeuristic(10, 1);
         MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 1);
 
-        System.out.println("Initial state :");
-        board.printBoard();
-
         Move bestMove = ai.getBestMove(board);
 
         assertNotNull(bestMove, "AI must find a move");
 
         board.applyMove(bestMove);
-        System.out.println("Final state :");
-        board.printBoard();
 
         assertTrue(board.isGameWon(Color.WHITE), "Game should be won");
     }
 
     @Test
     void testDefenseOpponentWinByCapturing() {
-        System.out.println("=== TEST : BLOCK OPPONENT WIN ===");
 
         List<Integer> bPawns = List.of(CoordinateMapper.toIndex('G',6),
                 CoordinateMapper.toIndex('F',5),CoordinateMapper.toIndex('E',5),
@@ -74,16 +67,11 @@ class MinimaxStrategyTest {
 
         Heuristic heuristic = new MixedHeuristic(10, 1);
 
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 2);
-
-        System.out.println("Critical situation (AI needs to block G7) :");
-        board.printBoard();
+        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 4);
 
         Move bestMove = ai.getBestMove(board);
 
         board.applyMove(bestMove);
-
-        board.printBoard();
 
         assertNotNull(bestMove);
 
