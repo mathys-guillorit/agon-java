@@ -111,7 +111,14 @@ public class History {
   public boolean isEmptyRedo() {
     return redoStack.isEmpty();
   }
-
+  /**
+   * Returns a list representation of the move history.
+   * This method converts the internal undo stack into a list, reversing the order
+   * so that the moves are presented in chronological order (from the first move
+   * to the most recent one).
+   * @return a {@link List} of {@link HistoryInformations} containing all
+   * performed moves in chronological order.
+   */
   public List<HistoryInformations> toList() {
     return new ArrayList<>(undoStack).reversed();
   }

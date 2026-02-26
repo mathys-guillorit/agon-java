@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
@@ -63,7 +64,7 @@ public class CmdAgon extends Cmd {
     // special here only for shell/CLI not gui
     // because some methods are required here are not defined in
     // the higher abstraction levels, so it requires a clean cast with Java 16 improvements
-    if (!(this.getCtx() instanceof AgonShell ctx)) return;
+    GameUserInterface ctx = this.getCtx();
     CommandLineParser parser = new DefaultParser();
     try {
       if (ctx.getTxtOptions().length == 0) { // no args

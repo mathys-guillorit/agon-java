@@ -105,4 +105,11 @@ public interface GameUserInterface {
   boolean getUserConfirmation(String question);
 
   void showHelp();
+
+  /**
+   * get options name written by the user
+   * @return "args" from app EntryPoint
+   */
+  public String[] getTxtOptions();
+
 }

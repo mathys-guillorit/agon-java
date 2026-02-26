@@ -11,7 +11,7 @@ import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import java.util.List;
 
-public class AiExample {
+/*public class AiExample {
 
   private AgonBoardImpl createCustomBoard(
       int wQueenIdx, int bQueenIdx, List<Integer> wPawnsIdx, List<Integer> bPawnsIdx) {
@@ -183,4 +183,4 @@ public class AiExample {
 
     aiExample.simulateGameAiVsRandomBot();
   }
-}
+}*/

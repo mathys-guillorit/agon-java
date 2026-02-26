@@ -27,7 +27,13 @@ public class CoordinateMapper {
     int Base = 'A';
     return (((int) letter - Base) * (11)) + (col - 1);
   }
-
+  /**
+   * Converts a linear BitBoard index into AbaPro coordinate notation.
+   * AbaPro notation uses a letter for the ring or zone (A, B, C...)
+   * followed by a number for the column (1 to 11).
+   * @param index the numerical identifier of the cell.
+   * @return a {@link String} representing the coordinate in letter + digit format.
+   */
   public static String toAbaPro(int index) {
     char letter = (char) ('A' + (index / 11));
     int col = (index % 11) + 1;

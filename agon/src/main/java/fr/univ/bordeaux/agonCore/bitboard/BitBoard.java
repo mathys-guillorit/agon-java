@@ -21,15 +21,6 @@ public class BitBoard {
     this.high = 0L;
   }
 
-  public BitBoard(long low, long high) {
-    this.low = low;
-    this.high = high;
-  }
-
-  public BitBoard copy2() {
-    return new BitBoard(this.low, this.high);
-  }
-
   /**
    * Constructs a BitBoard with a single bit set at the specified index.
    *

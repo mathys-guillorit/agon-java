@@ -22,7 +22,6 @@ public class AgonRegisterTest {
   @DisplayName("Test if the add works in register")
   void testAdd2RegisterTest() {
     CmdAction cmd = new DummyCmd();
-    ;
     AgonRegister<CmdAction> cmdRegister = new AgonRegister<>();
     cmdRegister.register("test", cmd);
     assertFalse(cmdRegister.isEmpty());
@@ -156,10 +155,11 @@ public class AgonRegisterTest {
     assertTrue(cmdRegister.get(cmdName1).isEmpty());
   }
 
-  /// tools to test AgonRegister only
+  /// tools to test in AgonRegister only
 
   /// fake commands to test CANNOT USE EXTERN CONTEXT
-  /// (the only way to test CmdRegister is private static class)
+  /// (the only way to test AgonRegister in private static class)
+  /// isolate each part is a better way to test to see where exactly is the problem if we get one
 
   private static class DummyCmd implements CmdAction {
     @Override
