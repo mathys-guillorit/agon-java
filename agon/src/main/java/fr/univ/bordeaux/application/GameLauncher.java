@@ -1,12 +1,19 @@
 package fr.univ.bordeaux.application;
 
-import fr.univ.bordeaux.Main;
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.*;
+import fr.univ.bordeaux.ui.cli.AgonShell;
+import fr.univ.bordeaux.ui.cli.LoadLocalFile;
+import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 public class GameLauncher {
   private final Options options;
@@ -49,7 +56,33 @@ public class GameLauncher {
   private void startGame() {
     System.out.println("Starting Agon Shell...");
     // Lien avec le shell de ton collègue
-    Main.testCli();
+    String mainMenu = null;
+    try {
+      final String path = "/cmdsInformations/agonShellMenu.txt";
+      mainMenu = new LoadLocalFile(path).getContent();
+    } catch (IOException | NullPointerException e) {
+      // if the file doesn't exist
+      System.out.println("error when loading menu: " + e);
+    }
+    try {
+      Terminal terminal = TerminalBuilder.builder().system(true).build(); // IOException
+      AgonShell shell = new AgonShell(terminal);
+      var cmds = new AgonRegister<CmdAction>();
+      cmds.register("quit", new CmdQuit(shell));
+      cmds.register("new", new CmdCreate(shell));
+      cmds.register("load", new CmdLoad(shell));
+      cmds.register("help", new CmdHelp(shell));
+      cmds.register("save", new CmdSave(shell));
+      cmds.register("pause", new CmdPause(shell));
+      cmds.register("hint", new CmdHint(shell));
+      cmds.register("set", new CmdSet(shell));
+      if (mainMenu != null) shell.loadMainMenu(mainMenu);
+      shell.initCmds(cmds);
+      shell.start();
+    } catch (IOException e) {
+      System.out.println("terminal instance (from JLine cannot be created)");
+      e.printStackTrace();
+    }
   }
 
   private void printHelp() {

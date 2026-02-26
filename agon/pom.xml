@@ -250,6 +250,12 @@
         </executions>
       </plugin>
     </plugins>
+    <!-- add ressource to path for test -->
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
   </build>
 
 </project>

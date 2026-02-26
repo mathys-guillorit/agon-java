@@ -7,10 +7,10 @@ import fr.univ.bordeaux.application.commands.specialized.*;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -25,7 +25,6 @@ import org.jline.reader.ParsedLine;
 import org.jline.reader.Reference;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
@@ -49,7 +48,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   private final String msgBW;
 
   /** load the menu once display many times */
-  private final String mainMenuASCII;
+  private String mainMenuASCII;
 
   /** represent all options available from the menu */
   private String userPrompt = "#> ";
@@ -61,29 +60,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   private AtomicBoolean debug;
 
-  /** ASCII engine renderer Used to communicate through the terminal with the user */
-  public AgonShell() {
-    super(); // require the work of others
-    this.msgHA = this.cliLayer();
-    this.msgBI = this.cliInfo();
-    this.msgBW = this.cliWarn();
-
+  private void init() {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
     this.cmds = new AgonRegister<>();
-    cmds.register("agon", new CmdAgon(this));
     this.running = new AtomicBoolean(true);
-    this.mainMenuASCII = this.loadMainMenu("cmdsInformations/agonShellMenu.txt");
-    this.initCmds();
-    try {
-      this.terminal = TerminalBuilder.builder().system(true).build(); // IOException
-      // default reader
-      this.reader =
-          LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
-    } catch (IOException e) {
-      this.cliErr("terminal initialization failed");
-      this.cliErr(e.getMessage());
-    }
     this.setGameEngine(this);
     // shortcut for "ctrl+r" show history
     reader.getWidgets().put("show-full-history", this::showFullHistory);
@@ -91,6 +72,43 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
         .getKeyMaps()
         .get(LineReader.MAIN)
         .bind(new Reference("show-full-history"), KeyMap.ctrl('R'));
+  }
+
+  public AgonShell(Terminal term) {
+    super(); // require the work of others
+    this.terminal = term;
+    // default reader
+    this.reader =
+        LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
+    this.msgHA = this.cliLayer();
+    this.msgBI = this.cliInfo();
+    this.msgBW = this.cliWarn();
+    this.mainMenuASCII = "No default Menu set";
+    this.init();
+  }
+
+  public AgonShell(Terminal term, boolean initReader) {
+    super(); // require the work of others
+    this.terminal = term;
+    // default reader
+    if (initReader)
+      this.reader =
+          LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
+    this.msgHA = this.cliLayer();
+    this.msgBI = this.cliInfo();
+    this.msgBW = this.cliWarn();
+    this.mainMenuASCII = "No default Menu set";
+    this.init();
+  }
+
+  /**
+   * load ASCII main menu to shell
+   *
+   * @param mainMenu file find from the root at main/resources/+<strong>filepath</strong> passed as
+   *     argument
+   */
+  public void loadMainMenu(String mainMenu) {
+    this.mainMenuASCII = mainMenu;
   }
 
   /** run the program to interact with the user */
@@ -148,6 +166,10 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   private void doCommand() {
     // Locked Here need work from the others
     // exit case
+    if (this.cmds == null) {
+      this.cliErr("no command added into cli");
+      return;
+    }
     Optional<CmdAction> optional = this.cmds.get(this.userCmdName.toLowerCase());
     if (optional.isEmpty()) {
       this.cliErr("Unknown command: '" + this.userCmdName + "'");
@@ -237,34 +259,13 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
   /** fill options for the cli (done twice internally) */
-  private void initCmds() {
-    cmds.register("quit", new CmdQuit(this));
-    cmds.register("new", new CmdCreate(this));
-    cmds.register("load", new CmdLoad(this));
-    cmds.register("help", new CmdHelp(this));
-    cmds.register("save", new CmdSave(this));
-    cmds.register("pause", new CmdPause(this));
-    cmds.register("hint", new CmdHint(this));
-    cmds.register("agon", new CmdAgon(this));
+  public void initCmds(AgonRegister<CmdAction> cmds) {
+    this.cmds = cmds;
   }
 
   public void test() {
     var a = new ConsoleRenderer(null);
     a.render();
-  }
-
-  /** load menu character in a variable once from a file in resource directory */
-  @Nonnull
-  private String loadMainMenu(String shellMenuTxtFile) {
-    // DP Command here
-    final String defaultMenu = "Menu not available";
-    try {
-      return new LoadLocalFile(shellMenuTxtFile).getContent();
-    } catch (IOException | NullPointerException e) {
-      // if the file doesn't exist
-      this.cliErr("when reading menu : " + e.getMessage());
-    }
-    return defaultMenu;
   }
 
   /**
@@ -340,23 +341,25 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   /**
    * show a message in terminal using JLine shortened the code verbose (because used many times and
-   * must be changed once for all)
+   * must be changed once for all) (without header)
    *
    * @param msg message to send in terminal
    */
   private void cliWln(String msg) {
     this.terminal.writer().println(msg);
-    terminal.flush();
+    this.terminal.flush();
   }
 
   /**
-   * show a message in terminal using JLine display inline without jump line ("\n")
+   * show a message in terminal using JLine display inline without jump line ("\n") (without header)
    *
    * @param msg message to send in terminal
    */
   private void cliW(String msg) {
-    this.terminal.writer().print(msg);
-    terminal.flush();
+    PrintWriter pw = this.terminal.writer();
+    pw.print(msg);
+    pw.flush();
+    this.terminal.flush();
   }
 
   public void showHelp() {
@@ -439,7 +442,8 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   ///  ////////////////// GETTERS & SETTERS //////////////////
 
-  public void setVerbose() {
+  public void setVerbose(boolean state) {
+
     if (this.verbose) {
       this.cliIWln("verbose already enabled");
       return;
@@ -448,6 +452,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.verbose = true;
     this.cliIWln("current verbose set to : enable");
   }
+
 
   /**
    * useless

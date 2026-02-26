@@ -124,4 +124,6 @@ public interface GameUserInterface {
    * @return a register of all commands
    */
   public AgonRegister<CmdAction> getCmds();
+
+  public void setVerbose(boolean state);
 }

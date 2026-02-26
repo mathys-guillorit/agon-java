@@ -88,7 +88,7 @@ public abstract class Cmd implements CmdAction {
    */
   public String loadText(String filePath) {
     final StringBuilder result = new StringBuilder();
-    final String finalPath = "cmdsInformations/desc/" + filePath;
+    final String finalPath = "/cmdsInformations/desc/" + filePath;
     try {
       LoadLocalFile txt = new LoadLocalFile(finalPath);
       result.append(txt.getContent());
