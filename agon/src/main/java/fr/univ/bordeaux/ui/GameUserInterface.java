@@ -1,6 +1,8 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Unified interface defining possible interactions in the Agon game.
@@ -80,7 +82,7 @@ public interface GameUserInterface {
    *
    * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(ConsoleRenderer boardRepresentation);
+  void updateBoard(String boardRepresentation);
 
   /**
    * Displays an informational message to the user.
@@ -108,8 +110,17 @@ public interface GameUserInterface {
 
   /**
    * get options name written by the user
+   *
    * @return "args" from app EntryPoint
    */
   public String[] getTxtOptions();
 
+  public AtomicBoolean getDebugMode();
+
+  /**
+   * get commands from the ui object
+   *
+   * @return a register of all commands
+   */
+  public AgonRegister<CmdAction> getCmds();
 }

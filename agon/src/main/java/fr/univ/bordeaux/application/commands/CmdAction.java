@@ -15,6 +15,11 @@ public interface CmdAction {
   /** show help for the specific sub (inherited) command */
   void showHelp();
 
+  /**
+   * override in sub commands
+   *
+   * @return Completer for completing user writing with tab keycap
+   */
   @Nonnull
   Completer getAutoCompleter();
 

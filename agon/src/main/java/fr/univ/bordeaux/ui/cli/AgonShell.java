@@ -10,7 +10,6 @@ import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
@@ -18,8 +17,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
-import org.jline.consoleui.prompt.ConsolePrompt;
-import org.jline.consoleui.prompt.PromptResultItemIF;
 import org.jline.consoleui.prompt.builder.PromptBuilder;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Candidate;
@@ -65,7 +62,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   /** allow only default minimal terminal (agon mode) */
   private boolean verbose;
 
-  private boolean debug;
+  private AtomicBoolean debug;
 
   /** ASCII engine renderer Used to communicate through the terminal with the user */
   public AgonShell() {
@@ -75,7 +72,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.msgBW = this.cliWarn();
 
     this.verbose = false;
-    this.debug = false;
+    this.debug = new AtomicBoolean(false);
     this.cmds = new AgonRegister<>();
     cmds.register("agon", new CmdAgon(this));
     this.running = new AtomicBoolean(true);
@@ -255,8 +252,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
   public void test() {
-    var a = new ConsoleRenderer(null);
-    a.render();
   }
 
   /** load menu character in a variable once from a file in resource directory */
@@ -424,8 +419,8 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
    * @param boardRepresentation the object used to show characters into terminal
    */
   @Override
-  public void updateBoard(ConsoleRenderer boardRepresentation) {
-    boardRepresentation.render();
+  public void updateBoard(String boardRepresentation) {
+    this.cliWln(boardRepresentation);
   }
 
   @Override
@@ -483,5 +478,18 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     return this.userOptions;
   }
 
-    public AgonRegister<CmdAction> getCmds() { return this.cmds; }
+  /**
+   * atomicBoolean, no set required if the object is modified somewhere it automatically updated
+   * everywhere the reference is (reference passing)
+   *
+   * @return {@link AtomicBoolean}
+   */
+  @Override
+  public AtomicBoolean getDebugMode() {
+    return this.debug;
+  }
+
+  public AgonRegister<CmdAction> getCmds() {
+    return this.cmds;
+  }
 }
