@@ -66,7 +66,7 @@ public class GameLauncher {
     }
     try {
       Terminal terminal = TerminalBuilder.builder().system(true).build(); // IOException
-      AgonShell shell = new AgonShell(terminal);
+      var shell = new AgonShell(terminal);
       var cmds = new AgonRegister<CmdAction>();
       cmds.register("quit", new CmdQuit(shell));
       cmds.register("new", new CmdCreate(shell));

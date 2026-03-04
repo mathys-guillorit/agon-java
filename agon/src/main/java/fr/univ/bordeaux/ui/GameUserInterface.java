@@ -99,14 +99,6 @@ public interface GameUserInterface {
    */
   void showError(String error);
 
-  /**
-   * Asks the user for confirmation (e.g., "Do you really want to quit?").
-   *
-   * @param question The question to ask.
-   * @return {@code true} if the user accepts, {@code false} otherwise.
-   */
-  boolean getUserConfirmation(String question);
-
   void showHelp();
 
   /**

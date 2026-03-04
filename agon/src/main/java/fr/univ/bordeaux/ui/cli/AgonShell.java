@@ -47,11 +47,14 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   /** warn message */
   private final String msgBW;
 
+  /** Body msg for Errors */
+  private final String msgBE;
+
   /** load the menu once display many times */
   private String mainMenuASCII;
 
   /** represent all options available from the menu */
-  private String userPrompt = "#> ";
+  private String userPrompt = "> ";
 
   private AgonRegister<CmdAction> cmds;
 
@@ -72,6 +75,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
         .getKeyMaps()
         .get(LineReader.MAIN)
         .bind(new Reference("show-full-history"), KeyMap.ctrl('R'));
+    this.userPrompt = this.msgHA+"> ";
   }
 
   public AgonShell(Terminal term) {
@@ -80,9 +84,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     // default reader
     this.reader =
         LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
+    // message headers for the app
     this.msgHA = this.cliLayer();
     this.msgBI = this.cliInfo();
     this.msgBW = this.cliWarn();
+    this.msgBE = this.cliError();
     this.mainMenuASCII = "No default Menu set";
     this.init();
   }
@@ -94,9 +100,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     if (initReader)
       this.reader =
           LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
+    // message headers for the app
     this.msgHA = this.cliLayer();
     this.msgBI = this.cliInfo();
     this.msgBW = this.cliWarn();
+    this.msgBE = this.cliError();
     this.mainMenuASCII = "No default Menu set";
     this.init();
   }
@@ -116,6 +124,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     // this.showMainMenu();
     this.cliWln(this.mainMenuASCII);
     if (this.cmds.isEmpty()) {
+      // error in commands, no commands registered (dev side problems)
       this.cliErr(
           String.format(
               "%s%s",
@@ -151,7 +160,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
       return true;
     }
     if (line.isEmpty()) return true;
-
     this.reader.getHistory().add(line);
     // tokenized by JLine into words
     ParsedLine parsed = reader.getParser().parse(line, startCursorIdx);
@@ -177,15 +185,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
       return;
     }
     CmdAction cmd = optional.get();
-    try {
-      CommandLineParser parser = new DefaultParser();
-      CommandLine cmdLine = parser.parse(cmd.getOptions(), this.userOptions);
-      cmd.execute();
-    } catch (ParseException e) {
-      cliErr(e.getMessage());
-      ///  WIP: show help for the specific command options (because we have errors on)
-      this.getHelp(cmd);
-    }
+    cmd.execute();
   }
 
   private void safeCloseTerminal() {
@@ -270,16 +270,15 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   /**
    * format the output error to see where is the problem (following maven style)
-   *
-   * @param msg add a message to the error
+   * (must be used once in the constructor to set attr)
    */
-  private void cliErr(String msg) {
+  private String cliError() {
     final String tag = "ERROR";
     AttributedStringBuilder asb = new AttributedStringBuilder();
     asb.append(this.msgHA).append("[");
     asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.RED)).append(tag);
-    asb.style(AttributedStyle.DEFAULT).append("] ").append(msg);
-    this.cliWln(asb.toAnsi());
+    asb.style(AttributedStyle.DEFAULT).append("]");
+    return asb.toAnsi();
   }
 
   /**
@@ -318,6 +317,16 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
   /**
+   * called everytime system needs to show error from the application system
+   * @param msg add a message to the error
+   */
+  private void cliErr(String msg) {
+    this.cliW(this.msgHA);
+    this.cliW(this.msgBE);
+    this.cliWln(" " + msg);
+  }
+
+  /**
    * show message information inline in console (with cli formatting)
    *
    * @param msg message to display
@@ -338,6 +347,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.cliW(this.msgBW);
     this.cliWln(" " + msg);
   }
+
 
   /**
    * show a message in terminal using JLine shortened the code verbose (because used many times and
@@ -454,16 +464,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
 
-  /**
-   * useless
-   *
-   * @param question
-   * @return
-   */
-  @Override
-  public boolean getUserConfirmation(String question) {
-    return false;
-  }
 
   /**
    * get more help about a command (reduce if verbose is disabled)

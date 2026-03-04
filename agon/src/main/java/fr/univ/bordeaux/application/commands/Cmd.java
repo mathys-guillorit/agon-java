@@ -6,6 +6,8 @@ import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import java.io.IOException;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.help.HelpFormatter;
@@ -22,9 +24,6 @@ public abstract class Cmd implements CmdAction {
 
   private Options options;
   private AbstractGameUI ctx;
-  // may require a GUI delegate here for later (example : IGUIDelegate)
-  // mau require a delegate here for the NETwork for later (or
-  // juste create one without args in the constructor) (example: INETDelegate)
   private static String prompt = null;
 
   /**
@@ -38,16 +37,6 @@ public abstract class Cmd implements CmdAction {
 
   public AbstractGameUI getCtx() {
     return this.ctx;
-  }
-
-  /**
-   * ask to {@link AgonShell} if the command require the user input
-   *
-   * @implNote change const false to a variable that is toggleable
-   * @return boolean false (by default)
-   */
-  public boolean requiresInput() {
-    return false;
   }
 
   /**
@@ -86,23 +75,11 @@ public abstract class Cmd implements CmdAction {
    * @param filePath {@link String} sub file path from "desc/"
    * @return {@link String} text obtained
    */
-  public String loadText(String filePath) {
-    final StringBuilder result = new StringBuilder();
+  @Nullable
+  public String loadText(String filePath) throws IOException, NullPointerException {
     final String finalPath = "/cmdsInformations/desc/" + filePath;
-    try {
-      LoadLocalFile txt = new LoadLocalFile(finalPath);
-      result.append(txt.getContent());
-    } catch (IOException e) {
-      result.append(e.getMessage());
-      this.getCtx().showError(e.getMessage());
-      /// TODO: uncomment this area and replace: "???"
-      // if (???.getDebug())
-      //  e.printStackTrace(); // by default
-    } catch (NullPointerException e) {
-      result.append("no file found");
-      this.getCtx().showError(e.getMessage());
-    }
-    return result.toString();
+    LoadLocalFile txt = new LoadLocalFile(finalPath);
+    return txt.getContent();
   }
 
   public void showHelp() {
@@ -113,7 +90,7 @@ public abstract class Cmd implements CmdAction {
       this.getCtx().showError("help not found for this command");
       this.getCtx().showError(e.getMessage());
       /// TODO: uncomment this area and replace: "???"
-      // if (???.getDebug())
+      // if (???.getDebug()) // when debug mode available to get on a unknown object
       //  e.printStackTrace(); // by default
     }
   }

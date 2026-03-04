@@ -53,12 +53,11 @@ public class OptCompleterAdapter {
    */
   @Nonnull
   public Completer getCompleter(String cmdName) {
-    List<String> followingTxt = new ArrayList<>();
-    // unknown options count
+    List<String> predictOptsNames = new ArrayList<>();
     for (Option o : opts.getOptions()) {
       if (this.isNull(o)) continue;
-      followingTxt.addAll(this.optify(o));
+      predictOptsNames.addAll(this.optify(o));
     }
-    return new ArgumentCompleter(new StringsCompleter(cmdName), new StringsCompleter(followingTxt));
+    return new ArgumentCompleter(new StringsCompleter(cmdName), new StringsCompleter(predictOptsNames));
   }
 }

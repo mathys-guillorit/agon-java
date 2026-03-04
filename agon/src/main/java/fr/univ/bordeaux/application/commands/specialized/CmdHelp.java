@@ -55,5 +55,6 @@ public class CmdHelp extends Cmd {
       }
       ctx.showMessage("\nType 'help [command]' for detailed instructions.\n");
     }
+    ctx.showMessage("use \"ctrl+r\" to show history");
   }
 }

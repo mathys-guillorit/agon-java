@@ -6,6 +6,8 @@ import fr.univ.bordeaux.application.commands.specialized.options.OptValueSpec;
 import fr.univ.bordeaux.application.commands.specialized.options.ValueSuggester;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.cli.*;
@@ -25,7 +27,7 @@ public class CmdSet extends Cmd {
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
    * GUI)
    *
-   * @param uictx
+   * @param uictx {@link AbstractGameUI} UI item to pass
    */
   public CmdSet(AbstractGameUI uictx) {
     super(uictx);
@@ -45,6 +47,7 @@ public class CmdSet extends Cmd {
   }
 
   private void setVerbose() {
+    this.getCtx().showMessage("\nset verbose mode\nto: ");
     this.getCtx().setVerbose(true);
   }
 
@@ -54,10 +57,14 @@ public class CmdSet extends Cmd {
     try {
       return new SetCompleter(this.getOptions());
     } catch (UserInterruptException e) {
+      // need to see this type of error to treat it cleanly
+      e.printStackTrace();
+    } catch (IllegalArgumentException e) {
       ///  TODO : improve error capturing
       this.getCtx().showError("missing \"longOpt\" in one or more of Option returned from: ");
       this.getCtx().showError("CmdSet().getOptions(), constructor must fill all values");
     }
+    // return the bad Completer by default
     return super.getAutoCompleter();
   }
 
@@ -65,6 +72,22 @@ public class CmdSet extends Cmd {
   public String getDescription() {
     /// TODO: add i18n later here (or in constructor)
     return desc;
+  }
+
+  @Override
+  public void showHelp(){
+    final String filepath = "cmdSet.txt";
+    try {
+      this.getCtx().showMessage(this.loadText(filepath));
+    } catch (IOException e){
+      this.getCtx().showError("help for this command is not available (file broken or other problem related to it)");
+      /// TODO: uncomment this area and replace: "???"
+      // if (???.getDebug())
+      //  e.printStackTrace(); // by default
+    } catch (NullPointerException e){
+      this.getCtx().showError("help for this command is not available (file missing)");
+    }
+
   }
 
   @Override
