@@ -30,9 +30,12 @@ public class ConfigSerializer {
      * </p>
      *
      * @param filePath The destination path for the default configuration file.
-     * @throws IOException If an I/O error occurs while creating or writing to the file.
+     * @throws IOException If the file already exists, or if an I/O error occurs while writing.
      */
     public void createDefault(String filePath) throws IOException {
+        if(Files.exists(Paths.get(filePath))) {
+            throw new IOException("File " + filePath + " already exists");
+        }
         GameConfig defaultConfig = new GameConfig();
         save(defaultConfig, filePath);
     }
