@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.application.commands.specialized;
+package fr.univ.bordeaux.application.commands.network;
 
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.Cmd;

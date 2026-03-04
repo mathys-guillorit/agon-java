@@ -35,7 +35,7 @@ import fr.univ.bordeaux.application.commands.ICmd;
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.CmdRegistry;
 
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.commands.network.CmdQuit;
 
 import javax.annotation.Nonnull;
 
