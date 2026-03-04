@@ -13,6 +13,7 @@ public class CmdPing extends Cmd {
 
     /**
      * Constructs a Ping command.
+     *
      * @param context The application context.
      */
     public CmdPing(AppContext context) {
@@ -21,11 +22,12 @@ public class CmdPing extends Cmd {
 
     /**
      * Executes the ping command. Checks connectivity before sending the request.
+     *
      * @param args Command arguments (unused for ping).
      */
     public void execute(String[] args) {
         AgonClient client = context.getClient();
-        if (client == null || !client.isConnected()) {
+        if (!client.isConnected()) {
             System.out.println("[CLIENT] Not connected. Use join first.");
             return;
         }

@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-// TCP game server entry point.
+/**
+  * TCP game server entry point.
+  */
 public class AgonServer {
 
     private final int port;
+    private final String name;
     private ServerSocket serverSocket;
     private Thread acceptClientThread;
     private volatile ClientHandler currentClientHandler;
+    private ServerDiscovery discovery;
     private volatile boolean running = false;
 
     /**
@@ -18,6 +22,7 @@ public class AgonServer {
      */
     public AgonServer() {
         this.port = 12345;
+        this.name = "AgonServer" + this.port;
     }
 
     /**
@@ -27,10 +32,13 @@ public class AgonServer {
      */
     public AgonServer(int port) {
         this.port = port;
+        this.name = "AgonServer" + this.port;
     }
 
     /**
      * Starts the TCP server.
+     *
+     * @return true if the server is running or started successfully, false otherwise
      */
     public boolean start() {
         if (running) {
@@ -38,8 +46,11 @@ public class AgonServer {
             return true;
         }
 
+
         try {
             serverSocket = new ServerSocket(port);
+            discovery = new ServerDiscovery(name, port);
+            discovery.start();
         } catch (IOException e) {
             System.err.println("[SERVER] Failed to start on port " + port);
             System.err.println("[SERVER] " + e.getMessage());
@@ -50,7 +61,6 @@ public class AgonServer {
         acceptClientThread = new Thread(this::acceptClientLoop, "acceptClientThread");
         acceptClientThread.start();
 
-        System.out.println("[SERVER] Started on port " + port);
         return true;
     }
 
@@ -79,7 +89,9 @@ public class AgonServer {
     }
 
     /**
-     * Stops the TCP server.
+     * Stops the server, disconnects the current client (if any), stops UDP broadcast, and closes the server socket.
+     *
+     * @return true if the server was stopped (or already stopped)
      */
     public boolean stop() {
         if (!running) {
@@ -95,15 +107,43 @@ public class AgonServer {
             currentClientHandler = null;
         }
 
-
-        try {
-            serverSocket.close();
-        } catch (IOException e) {
-            System.err.println("[SERVER] Error while closing server socket");
+        if (discovery != null) {
+            discovery.stop();
+            discovery = null;
         }
 
-        System.out.println("[SERVER] Stopped");
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                System.err.println("[SERVER] Error while closing server socket: " + e.getMessage());
+            } finally {
+                serverSocket = null;
+            }
+        }
+
         return true;
     }
+
+    /**
+     * Returns the TCP port used by this server.
+     *
+     * @return TCP port
+     */
+    public int getPort() { return port; }
+
+    /**
+     * Returns the server name used in UDP presence broadcasts.
+     *
+     * @return server name
+     */
+    public String getName() { return name; }
+
+    /**
+     * Indicates if the server is currently running.
+     *
+     * @return true if running
+     */
+    public boolean isRunning() { return running; }
 }
 

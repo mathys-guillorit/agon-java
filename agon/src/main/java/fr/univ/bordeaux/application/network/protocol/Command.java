@@ -21,7 +21,7 @@ public class Command {
     }
 
     /**
-     * Returns the type of this command.
+     * @return the type of this command.
      */
     public CommandType getType() {
         return type;
@@ -31,6 +31,7 @@ public class Command {
      * Returns the value of a given argument.
      *
      * @param key the argument name
+     * @return The value associated with the key
      */
     public String getArg(String key) {
         return args.get(key);

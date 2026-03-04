@@ -21,10 +21,11 @@ public class AgonClient {
     }
 
     /**
-     * Connect to a server. If already connected, returns true.
+     * Connect to a TCP server. If already connected, returns true.
      *
      * @param host server host (e.g. "127.0.0.1")
      * @param port server port (e.g. 12345)
+     * @return true if the connection succeeds (or is already established), false otherwise
      */
     public boolean connect(String host, int port) {
         if (isConnected()) return true;
@@ -43,12 +44,19 @@ public class AgonClient {
         }
     }
 
+    /**
+     * Indicates whether the client is currently connected.
+     *
+     * @return true if the socket is connected and not closed
+     */
     public boolean isConnected() {
         return socket != null && socket.isConnected() && !socket.isClosed();
     }
 
     /**
-     * Sends PING and waits for PONG, returns RTT in ms.
+     * Sends PING to the server and waits for a PONG reply.
+     *
+     * @return a formatted RTT string (in milliseconds) if the server replies correctly, null otherwise
      */
     public String pingRttMs() {
         if (!isConnected()) return null;
@@ -75,7 +83,7 @@ public class AgonClient {
     }
 
     /**
-     * Sends QUIT then closes.
+     * Sends QUIT to the server then closes.
      */
     public void quit() {
         if (!isConnected()) {
@@ -107,8 +115,10 @@ public class AgonClient {
     }
 
     /**
-     * Internal helper to send a line of text followed by a newline character.
-     * * @param msg The message to send.
+     * Writes a single line to the server followed by a newline character.
+     *
+     * @param msg message to send
+     * @throws IOException if the client is not connected or the write fails
      */
     private void sendLine(String msg) throws IOException {
         if (out == null) throw new IOException("Not connected");
@@ -118,9 +128,11 @@ public class AgonClient {
     }
 
     /**
-     * Internal helper to read a single line of text from the server.
-     * * @return The line received from the server.
-     * */
+     * Reads a single text line from the server.
+     *
+     * @return the received line, or null if end-of-stream
+     * @throws IOException if the client is not connected or the read fails
+     */
     private String readLine() throws IOException {
         if (in == null) throw new IOException("Not connected");
         return in.readLine();

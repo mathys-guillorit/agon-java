@@ -16,6 +16,7 @@ public class CmdJoin extends Cmd {
 
     /**
      * Constructs a Join command with the application context.
+     *
      * @param context The application context to retrieve the network client.
      */
     public CmdJoin(AppContext context) {
@@ -24,6 +25,7 @@ public class CmdJoin extends Cmd {
 
     /**
      * Executes the join command. Parses the input arguments and attempts connection.
+     *
      * @param args Command arguments. args[0] can be "host" or "host:port".
      */
     @Override

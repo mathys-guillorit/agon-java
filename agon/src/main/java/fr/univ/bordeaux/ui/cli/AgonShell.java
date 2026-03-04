@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.*;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 
 import java.io.BufferedReader;
@@ -36,7 +36,6 @@ import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.CmdRegistry;
 
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.network.CmdPing;
 
 import javax.annotation.Nonnull;
 
@@ -89,6 +88,9 @@ public class AgonShell extends AbstractGameUI {
     registry.register("ping", new CmdPing(context));
     registry.register("quit", new CmdQuit(context));
     registry.register("join", new CmdJoin(context));
+    registry.register("server start", new CmdServerStart(context));
+    registry.register("server stop",  new CmdServerStop(context));
+    registry.register("server list",  new CmdServerList(context));
   }
 
   /**
@@ -220,32 +222,44 @@ public class AgonShell extends AbstractGameUI {
    */
   public void loop() {
     this.cliW(this.mainMenuASCII);
+
     while (this.running) {
       String line = this.reader.readLine(">> ");
-
       if (line == null || line.trim().isEmpty()) continue;
 
-      // On parse la ligne à chaque fois
       ParsedLine parsed = reader.getParser().parse(line, 0);
       List<String> words = parsed.words();
-
       if (words.isEmpty()) continue;
 
-      // La commande est toujours le premier mot (index 0)
-      this.userCmdName = words.get(0);
+      // --- NEW: support "server start|stop|list ..." ---
+      if (words.size() >= 2 && "server".equalsIgnoreCase(words.get(0))) {
+        // command name becomes: "server start" / "server stop" / "server list"
+        this.userCmdName = "server " + words.get(1).toLowerCase();
 
-      // Les options commencent toujours à l'index 1 jusqu'à la fin
-      if (words.size() > 1) {
-        this.userOptions = words.subList(1, words.size()).toArray(new String[0]);
+        // args are after the 2 words
+        if (words.size() > 2) {
+          this.userOptions = words.subList(2, words.size()).toArray(new String[0]);
+        } else {
+          this.userOptions = new String[0];
+        }
       } else {
-        this.userOptions = new String[0]; // Pas d'arguments
+        // default: single-word commands like ping, join, quit...
+        this.userCmdName = words.get(0).toLowerCase();
+
+        if (words.size() > 1) {
+          this.userOptions = words.subList(1, words.size()).toArray(new String[0]);
+        } else {
+          this.userOptions = new String[0];
+        }
       }
 
       this.running = this.conditionalReturning();
     }
+
     this.cliWln("Bye !");
     this.safeCloseTerminal();
   }
+
 
   /**
    * check if the user want to exit or not

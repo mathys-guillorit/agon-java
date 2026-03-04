@@ -28,6 +28,7 @@ public class ClientHandler implements Runnable {
         this.socket = socket;
     }
 
+
     /**
      * Stops the client handler and closes the client socket.
      */

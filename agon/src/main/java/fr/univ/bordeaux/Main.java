@@ -15,7 +15,6 @@ import java.util.List;
  * (don't require to compile before)<br> - compile program using <code>mvn compile</code> <br> -
  * exec using : <code>mvn exec:java</code> (require to compile before)<br> - create jar package :
  * <code>mvn package</code>
- * @short from "/agon" repertory
  * @version Java 21 (Microsoft OpenJdk 21.0.9)<br>
  * - test programm using <code>mvn test</code> (don't require to compile before)<br>
  * - compile program using <code>mvn compile</code> <br>
@@ -28,15 +27,8 @@ public class Main {
 
   public static void main(String[] arg) throws Exception {
 
-    AgonServer server = new AgonServer(12345);
-    server.start();
-
-    // 2️⃣ Start CLI
     AgonShell shell = new AgonShell();
     shell.start();
-
-    // j3️⃣ Stop server when CLI exits
-    server.stop();
 
     //System.out.println("prog principal OK + ajout JUnit");
 
@@ -47,7 +39,7 @@ public class Main {
     whiteQueen.setBit(62,1L);
     blackQueen.setBit(64,1L);
     blackPawns.setBit(74,1L);
-    whitePawns.setBit(40,1L);
+    whitePaswns.setBit(40,1L);
     blackPawns.setBit(36,1L);
     whitePawns.setBit(37,1L);
     AgonBoardImpl board = new AgonBoardImpl(whiteQueen, blackQueen, whitePawns, blackPawns);

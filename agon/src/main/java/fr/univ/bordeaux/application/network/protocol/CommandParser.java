@@ -3,7 +3,9 @@ package fr.univ.bordeaux.application.network.protocol;
 import java.util.HashMap;
 import java.util.Map;
 
-// Responsible for parsing raw network messages into Command objects
+/**
+ * Responsible for parsing raw network messages into Command objects
+  */
 public class CommandParser {
 
     /**
@@ -12,8 +14,9 @@ public class CommandParser {
      * terminated by a newline character ('\n') on the wire.
      *
      * @param line the raw line received from the network
+     * @return A {@link Command} object containing the identified {@link CommandType} and a map of its arguments.
      */
-    public Command parse(String line) {
+    public static Command parse(String line) {
         if (line == null) {
             return new Command(CommandType.UNKNOWN, Map.of());
         }
