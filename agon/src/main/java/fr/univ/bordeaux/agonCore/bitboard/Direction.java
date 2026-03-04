@@ -2,57 +2,67 @@ package fr.univ.bordeaux.agonCore.bitboard;
 
 /**
  * Represents the six possible movement directions on the Agon hexagonal grid.
- * <p>
- * Each direction is associated with an integer offset (v) used to navigate the 1D array
- * representation of the 2D hexagonal board. These offsets are specifically designed for an
- * 11-column axial coordinate mapping.
- * </p>
+ *
+ * <p>Each direction is associated with an integer offset ({@code v}) used to navigate
+ * the 1D array representation of the hexagonal board. These offsets are calculated
+ * based on an axial coordinate system mapped onto an 11-column grid layout.</p>
+ * *
  */
 public enum Direction {
-  /**
-   * Move one tile to the right (+1 index).
+  /** * Move one tile to the right.
+   * <p>Index offset: {@code +1}.</p>
    */
   East(1),
-  /**
-   * Move one tile to the left (-1 index).
+
+  /** * Move one tile to the left.
+   * <p>Index offset: {@code -1}.</p>
    */
   West(-1),
-  /**
-   * Move to the upper-right neighbor (+12 index).
+
+  /** * Move to the upper-right neighbor.
+   * <p>Index offset: {@code +12}.</p>
    */
   NorthEast(12),
-  /**
-   * Move to the upper-left neighbor (+11 index).
+
+  /** * Move to the upper-left neighbor.
+   * <p>Index offset: {@code +11}.</p>
    */
   NorthWest(11),
-  /**
-   * Move to the lower-right neighbor (-11 index).
+
+  /** * Move to the lower-right neighbor.
+   * <p>Index offset: {@code -11}.</p>
    */
   SouthEast(-11),
-  /**
-   * Move to the lower-left neighbor (-12 index).
+
+  /** * Move to the lower-left neighbor.
+   * <p>Index offset: {@code -12}.</p>
    */
   SouthWest(-12);
 
+  /** The integer shift value applied to a bitboard index. */
   private final int v;
 
   /**
-   * Constructs a direction with its corresponding bitboard index offset. * @param v The integer
-   * value to add to an index to move in this direction.
+   * Constructs a direction with its corresponding bitboard index offset.
+   *
+   * @param v The integer value to add to a 1D index to move in this direction.
    */
   Direction(int v) {
     this.v = v;
   }
 
   /**
-   * Retrieves the direction diametrically opposite to the one provided.
-   * <p>
-   * This is primarily used for capture logic (detecting "sandwiches"), where an enemy piece must be
-   * flanked by two friendly pieces in opposite directions.
-   * </p>
+   * Retrieves the direction diametrically opposite to the current one.
    *
-   * @param d The direction to find the opposite of.
-   * @return The opposite {@link Direction}, or {@code null} if the input is invalid.
+   * <p>This utility is essential for capture detection logic (sandwiches),
+   * where an enemy piece is trapped between two friendly pieces aligned
+   * along an axis.</p>
+   *
+   *
+   *
+   * @param d The {@link Direction} for which to find the counterpart.
+   * @return The opposite {@link Direction}.
+   * @throws java.util.NoSuchElementException if the direction is not handled.
    */
   public static Direction getOpposite(Direction d) {
     return switch (d) {
@@ -66,7 +76,9 @@ public enum Direction {
   }
 
   /**
-   * Returns the integer offset associated with this direction. * @return The index shift value.
+   * Returns the integer offset associated with this direction.
+   *
+   * @return The index shift value (positive or negative).
    */
   public int getValue() {
     return v;

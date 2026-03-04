@@ -1,38 +1,37 @@
 package fr.univ.bordeaux.agonCore.bitboard;
 
-import fr.univ.bordeaux.agonCore.bitboard.Direction;
-
 /**
- * A custom 128-bit bitset implementation using two {@code long} values (low and high).
- * <p>
- * This class provides high-performance bitwise operations tailored for an 11x11 hexagonal grid (121
- * tiles total). It supports logical operations, shifts with carry-over, and morphological
- * operations like dilation.
- * </p>
+ * A high-performance 128-bit bitset implementation optimized for Agon's hexagonal grid.
+ *
+ * <p>Using two {@code long} primitives ({@code low} and {@code high}), this class represents the
+ * 121 tiles of the Agon board as a linear sequence of bits. It provides near-instantaneous
+ * bitwise operations for move generation, adjacency calculations, and pattern matching.</p>
+ *
+ *
  */
 public class BitBoard {
 
-  /**
-   * Bits 0 to 63.
-   */
+  /** Bits 0 to 63 (Lower half of the board). */
   private long low;
-  /**
-   * Bits 64 to 127 (Agon uses up to 120).
-   */
+
+  /** Bits 64 to 127 (Upper half of the board; Agon uses up to index 120). */
   private long high;
 
-  /**
-   * Constructs an empty BitBoard with all bits set to 0.
+  /** * Constructs an empty BitBoard with all bits initialized to zero.
    */
   public BitBoard() {
     this.low = 0L;
     this.high = 0L;
   }
 
+  public BitBoard(long low, long high) {this.low = low; this.high = high;}  public BitBoard copy2() {
+    return new BitBoard(this.low, this.high);
+  }
+
   /**
-   * Constructs a BitBoard with a single bit set at the given index.
+   * Constructs a BitBoard with a single bit set at the specified index.
    *
-   * @param index The bit index to set (0 to 120).
+   * @param index The bit position to set (0 to 120).
    */
   public BitBoard(int index) {
     if (index > 63) {
@@ -43,10 +42,20 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise OR operation with another BitBoard.
+   * Copy constructor. Creates a new BitBoard with the same state as the provided one.
+   *
+   * @param board The {@link BitBoard} to replicate.
+   */
+  public BitBoard(BitBoard board) {
+    this.low = board.low;
+    this.high = board.high;
+  }
+
+  /**
+   * Performs a bitwise OR (Union) operation.
    *
    * @param bitBoard2 The second operand.
-   * @return A new BitBoard representing the union of both boards.
+   * @return A new {@link BitBoard} containing bits set in either board.
    */
   public BitBoard orOperation(BitBoard bitBoard2) {
     BitBoard bitBoard3 = new BitBoard();
@@ -56,10 +65,10 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise AND operation with another BitBoard.
+   * Performs a bitwise AND (Intersection) operation.
    *
    * @param bitBoard2 The second operand.
-   * @return A new BitBoard representing the intersection of both boards.
+   * @return A new {@link BitBoard} containing only bits set in both boards.
    */
   public BitBoard andOperation(BitBoard bitBoard2) {
     BitBoard bitBoard3 = new BitBoard();
@@ -69,9 +78,9 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise NOT operation.
+   * Performs a bitwise NOT (Inversion) operation.
    *
-   * @return A new BitBoard with all bits inverted.
+   * @return A new {@link BitBoard} with all bits flipped.
    */
   public BitBoard complementOperation() {
     BitBoard bitBoard = new BitBoard();
@@ -81,10 +90,10 @@ public class BitBoard {
   }
 
   /**
-   * Sets or clears the bit at a specific index.
+   * Sets or clears the bit at a specific tile index.
    *
    * @param index The bit index (0 to 120).
-   * @param value Use 1L to set the bit to 1, or 0L to clear it to 0.
+   * @param value {@code 1L} to set the bit, {@code 0L} to clear it.
    */
   public void setBit(int index, long value) {
     if (index > 63) {
@@ -104,10 +113,10 @@ public class BitBoard {
   }
 
   /**
-   * Checks if the bit at the given index is set to 1.
+   * Checks the status of the bit at the given index.
    *
-   * @param index The bit index.
-   * @return {@code true} if the bit is 1; {@code false} otherwise.
+   * @param index The bit position to query.
+   * @return {@code true} if the bit is 1, {@code false} if 0.
    */
   public boolean isSet(int index) {
     if (index < 64) {
@@ -118,24 +127,22 @@ public class BitBoard {
   }
 
   /**
-   * Shifts the entire 128-bit structure in a given direction.
-   * <p>
-   * This method handles the carry-over between the {@code low} and {@code high} segments to ensure
-   * bit continuity during shifts.
-   * </p>
+   * Shifts the entire bitboard content in a specific direction.
    *
-   * @param n The shift magnitude (negative for right shift, positive for left shift).
-   * @return A new shifted BitBoard.
+   * <p>This method maintains bit continuity across the 64-bit boundary by
+   * calculating the carry-over between the {@code low} and {@code high} segments.</p>
+   *
+   * @param n The shift offset (corresponds to {@link Direction#getValue()}).
+   * Positive moves bits toward higher indices, negative toward lower.
+   * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(int n) {
     BitBoard shiftedBitBoard = new BitBoard();
     if (n > 0) {
-      // SHIFT UP: Bits move toward higher indices
       shiftedBitBoard.high = (this.high << n) | (this.low >>> (64 - n));
       shiftedBitBoard.low = (this.low << n);
       return shiftedBitBoard;
     } else if (n < 0) {
-      // SHIFT DOWN: Bits move toward lower indices
       int s = -n;
       shiftedBitBoard.low = (this.low >>> s) | (this.high << (64 - s));
       shiftedBitBoard.high = (this.high >>> s);
@@ -145,41 +152,39 @@ public class BitBoard {
   }
 
   /**
-   * Checks if all bits on the board are 0.
+   * Checks if no pieces are present on this bitboard.
    *
-   * @return {@code true} if the board is empty.
+   * @return {@code true} if all bits are 0.
    */
   public boolean isEmpty() {
     return (this.low == 0 && this.high == 0);
   }
 
   /**
-   * Compares this BitBoard with another for equality.
+   * Compares this BitBoard with another object for equality.
    *
    * @param bitBoard The board to compare against.
-   * @return {@code true} if both boards have identical bits set.
+   * @return {@code true} if both boards have the same bits set.
    */
   public boolean equals(BitBoard bitBoard) {
     return this.low == bitBoard.low && this.high == bitBoard.high;
   }
 
   /**
-   * Returns the total number of bits set to 1.
+   * Returns the total count of set bits (Hamming weight).
    *
-   * @return The population count (Hamming weight) of the board.
+   * @return The number of pieces or occupied tiles on this board.
    */
   public int countBits() {
     return Long.bitCount(low) + Long.bitCount(high);
   }
 
   /**
-   * Performs a morphological dilation on the current bitboard.
-   * <p>
-   * This creates a new board where every tile adjacent to an existing piece is set to 1. Useful for
-   * calculating neighbors or influence zones.
-   * </p>
+   * Expands the current bitboard state to include all adjacent hexagonal neighbors.
    *
-   * @return A BitBoard representing the union of shifts in all 6 directions.
+   * <p>Technically, this performs a morphological dilation using a hexagonal
+   * structuring element. It is used to find all reachable or surrounding tiles.</p>
+   * @return A new {@link BitBoard} representing the dilated area.
    */
   public BitBoard dilation() {
     BitBoard dilatedBoard = new BitBoard();
@@ -190,14 +195,13 @@ public class BitBoard {
   }
 
   /**
-   * Efficiently finds the index of the next bit set to 1 after a given position.
-   * <p>
-   * This method uses {@code Long.numberOfTrailingZeros} for high-performance bit scanning, which is
-   * essential for move generation loops.
-   * </p>
+   * Scans the bitboard for the next set bit after a given index.
    *
-   * @param currentBit The index to start scanning from (exclusive). Use -1 to find the first bit.
-   * @return The index of the next set bit, or -1 if no more bits are found.
+   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find
+   * pieces rapidly, which is critical for efficient move generation loops.</p>
+   *
+   * @param currentBit The index to start scanning from (exclusive). Use {@code -1} for the start.
+   * @return The index of the next set bit, or {@code -1} if none remain.
    */
   public int nextSetBit(int currentBit) {
     int start = currentBit + 1;
@@ -205,7 +209,6 @@ public class BitBoard {
       return -1;
     }
 
-    // Check the low part (0-63)
     if (start < 64) {
       long maskLow = low & (-1L << start);
       if (maskLow != 0) {
@@ -214,12 +217,23 @@ public class BitBoard {
       start = 64;
     }
 
-    // Check the high part (64-120)
     long maskHigh = high & (-1L << (start - 64));
     if (maskHigh != 0) {
       return 64 + Long.numberOfTrailingZeros(maskHigh);
     }
 
     return -1;
+  }
+
+  /**
+   * Synchronizes this bitboard's state with another without creating a new object.
+   *
+   * @param bitBoard The source {@link BitBoard}.
+   * @return This {@link BitBoard} after the update.
+   */
+  public BitBoard copy(BitBoard bitBoard) {
+    this.low = bitBoard.low;
+    this.high = bitBoard.high;
+    return this;
   }
 }
