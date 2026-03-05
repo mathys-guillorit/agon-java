@@ -42,6 +42,17 @@ cache:
     - java -version
     - mvn -version
 
+# template for linux distrib' by default
+.linux_test_template:
+  tags:
+    - Boursouflet
+  before_script:
+    - set -e
+    - |
+      if command -v apt-get > /dev/null; then
+        apt-get update
+        apt-get install -y 
+
 # Tests on each distributions
 check-format:
   stage: format-check
