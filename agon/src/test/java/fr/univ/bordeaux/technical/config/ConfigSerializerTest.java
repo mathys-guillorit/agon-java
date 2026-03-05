@@ -34,6 +34,17 @@ class ConfigSerializerTest {
     }
 
     @Test
+    void testCreateDefaultAlreadyExists() throws IOException {
+        Path configFile = tempDir.resolve(".agonrc");
+        Files.createFile(configFile);
+        ConfigSerializer serializer = new ConfigSerializer();
+
+        assertThrows(IOException.class, () -> {
+            serializer.createDefault(configFile.toString());
+        });
+    }
+
+    @Test
     void testSaveCustomConfig() throws IOException {
         Path configFile = tempDir.resolve("custom.agonrc");
 

@@ -23,7 +23,12 @@ class ConfigParserTest {
         String content = "verbose = true\n" +
                 "timeout = 600\n" +
                 "ai_mode = MCTS\n" +
-                "ai_color = BLACK\n";
+                "ai_color = BLACK\n" +
+                "ai_depth = 3\n" +
+                "ai_time_limit = 5\n" +
+                "ai_iterative_deepening = true\n" +
+                "ai_heuristic = centrality\n" +
+                "placement = false";
         Files.writeString(configFile, content);
 
         ConfigParser parser = new ConfigParser();
@@ -109,6 +114,19 @@ class ConfigParserTest {
     void testParseAiActiveWithNoColor() throws IOException {
         Path configFile = tempDir.resolve("ai_active.agonrc");
         String content = "ai = true\n" + "ai_color = NONE\n";
+        Files.writeString(configFile, content);
+
+        ConfigParser parser = new ConfigParser();
+
+        assertThrows(IOException.class, () -> {
+            parser.parse(configFile.toString());
+        });
+    }
+
+    @Test
+    void testParseAiActiveWithInvalidColor() throws IOException {
+        Path configFile = tempDir.resolve("ai_active.agonrc");
+        String content = "ai = true\n" + "ai_color = invalid\n";
         Files.writeString(configFile, content);
 
         ConfigParser parser = new ConfigParser();
