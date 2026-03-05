@@ -11,7 +11,7 @@ import org.jline.reader.impl.completer.ArgumentCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 
 /**
- * transform {@link Options} from Apache Commons Cli into a completer for JLine {@link Completer}
+ * transform {@link Options} from Apache Commons Cli into Reader completer for JLine {@link Completer}
  *
  * @version 1 future improvements : use treemap with the origin as no default completer separated
  *     with 2 branches (first fore commands possibilities next layers for option and final layer for

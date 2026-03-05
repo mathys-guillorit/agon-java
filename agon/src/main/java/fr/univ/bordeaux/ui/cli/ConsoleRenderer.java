@@ -90,7 +90,7 @@ public class ConsoleRenderer {
   }
 
   /**
-   * check if a coordinate is valid or not (coordiante can be invalid example: k3)
+   * check if Reader coordinate is valid or not (coordiante can be invalid example: k3)
    *
    * @return true if it is false else
    */

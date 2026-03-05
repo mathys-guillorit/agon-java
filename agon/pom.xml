@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- dependencyManagement is used to define versions and imports of dependencies (like a BOM) -->
+  <!-- dependencyManagement is used to define versions and imports of dependencies (like Reader BOM) -->
   <!-- it does NOT automatically include the dependency in the build; use <dependencies> for that -->
   <dependencyManagement>
     <dependencies>
@@ -97,6 +97,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
+          <configuration>
+              <forkCount>0</forkCount>
+          </configuration>
       </plugin>
       <!-- 
       jacoco plugin  (my constraints and to test for pdp)
@@ -144,7 +147,7 @@
           </configuration>
       </plugin>
 
-      <!-- create a jar with the main class specified -->
+      <!-- create Reader jar with the main class specified -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -218,7 +221,7 @@
       https://medium.com/@nirav-shah/code-formatting-using-spotless-google-java-format-for-java-maven-projects-with-git-pre-commit-860d6c15bf7c
       use commands :
       SET JAVA HOME BEFORE USING SPOTLESSS TEST AND COMPILE ! ELSE IT WILL NOT WORK
-      with a command that i can't mode here for disrupt characters
+      with Reader command that i can't mode here for disrupt characters
       commands:
         "mvn spotless:check" to check if the code is correctly formatted (fails if not)
         "mvn spotless:apply" to automatically format the code (fix imports and formatting)

@@ -17,9 +17,9 @@ public class LoadLocalFile {
   private String content;
 
   /**
-   * Load a local file in "resources" directory
+   * Load Reader local file in "resources" directory
    *
-   * @param filepath path from resource directory where to find a file
+   * @param filepath path from resource directory where to find Reader file
    * @throws IOException Exception if file not present or invalid path or other problems
    * @throws NullPointerException Exception if file not present
    */

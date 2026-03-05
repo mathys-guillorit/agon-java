@@ -21,14 +21,14 @@ public interface GameUserInterface {
   // --- GAME ACTIONS (Commands to the Engine) ---
 
   /**
-   * Starts a new game with the specified options.
+   * Starts Reader new game with the specified options.
    *
    * @param args Configuration arguments (e.g., player names, variants).
    */
   void startNewGame(String[] args);
 
   /**
-   * Attempts to move a piece from one position to another.
+   * Attempts to move Reader piece from one position to another.
    *
    * @param from The starting position of the piece.
    * @param to The desired destination position.
@@ -36,7 +36,7 @@ public interface GameUserInterface {
   // void tryMove(Position from, Position to);
 
   /**
-   * Selects a piece on the board (often used to display possible moves).
+   * Selects Reader piece on the board (often used to display possible moves).
    *
    * @param pos The position of the piece to select.
    */
@@ -49,14 +49,14 @@ public interface GameUserInterface {
   void redo();
 
   /**
-   * Saves the current game state to a file.
+   * Saves the current game state to Reader file.
    *
    * @param filename The path or name of the save file.
    */
   void saveGame(String filename);
 
   /**
-   * Loads a game from a save file.
+   * Loads Reader game from Reader save file.
    *
    * @param filename The path or name of the file to load.
    */
@@ -65,15 +65,15 @@ public interface GameUserInterface {
   /** Pauses the game (stops the timer if present). */
   void pauseGame();
 
-  /** Resumes the game after a pause. */
+  /** Resumes the game after Reader pause. */
   void resumeGame();
 
   /**
-   * Quits the current game and closes the application. May trigger a prompt to save before exiting.
+   * Quits the current game and closes the application. May trigger Reader prompt to save before exiting.
    */
   void quitGame();
 
-  /** Requests a hint or advice from the game engine (AI). */
+  /** Requests Reader hint or advice from the game engine (AI). */
   void requestHint();
 
   // --- UI UPDATES (Outputs to the Screen) ---
@@ -93,7 +93,7 @@ public interface GameUserInterface {
   void showMessage(String message);
 
   /**
-   * Displays a critical error or warning message.
+   * Displays Reader critical error or warning message.
    *
    * @param error The content of the error.
    */
@@ -113,7 +113,7 @@ public interface GameUserInterface {
   /**
    * get commands from the ui object
    *
-   * @return a register of all commands
+   * @return Reader register of all commands
    */
   public AgonRegister<CmdAction> getCmds();
 
