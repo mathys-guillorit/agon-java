@@ -1,25 +1,23 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.application.commands.specialized.options.OptBooleanSpec;
-import fr.univ.bordeaux.application.commands.specialized.options.OptValueSpec;
-import fr.univ.bordeaux.application.commands.specialized.options.ValueSuggester;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
-
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
-import org.apache.commons.cli.*;
-import org.jline.reader.Candidate;
+import javax.annotation.Nonnull;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 import org.jline.reader.UserInterruptException;
-
-import javax.annotation.Nonnull;
 
 public class CmdSet extends Cmd {
 
   private final String desc;
+
   /** execute commands with its name */
   private HashMap<String, Runnable> optsCorresp;
 
@@ -75,19 +73,20 @@ public class CmdSet extends Cmd {
   }
 
   @Override
-  public void showHelp(){
+  public void showHelp() {
     final String filepath = "cmdSet.txt";
     try {
       this.getCtx().showMessage(this.loadText(filepath));
-    } catch (IOException e){
-      this.getCtx().showError("help for this command is not available (file broken or other problem related to it)");
+    } catch (IOException e) {
+      this.getCtx()
+          .showError(
+              "help for this command is not available (file broken or other problem related to it)");
       /// TODO: uncomment this area and replace: "???"
       // if (???.getDebug())
       //  e.printStackTrace(); // by default
-    } catch (NullPointerException e){
+    } catch (NullPointerException e) {
       this.getCtx().showError("help for this command is not available (file missing)");
     }
-
   }
 
   @Override

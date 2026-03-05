@@ -2,9 +2,8 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import org.apache.commons.cli.Option;
-
 import java.io.IOException;
+import org.apache.commons.cli.Option;
 
 /** Create a new game. Command representation in cli : "new [ARGS]" */
 public class CmdCreate extends Cmd {
@@ -33,16 +32,16 @@ public class CmdCreate extends Cmd {
     final String filename = "CmdCreate.txt";
     try {
       this.desc = this.loadText(filename);
-    } catch (IOException e){
+    } catch (IOException e) {
       this.desc = "description cannot be loaded for more info type: \"set debug=true\"";
       // if (someobjet.getDebug())
-      // this.getCtx().showError("problem when reading description file: \""+filename+"\" for loading description");
-    } catch (NullPointerException e){
+      // this.getCtx().showError("problem when reading description file: \""+filename+"\" for
+      // loading description");
+    } catch (NullPointerException e) {
       this.desc = "description cannot be loaded for more info: \"set debug=true\"";
       // if (someobjet.getDebug())
       // this.getCtx().showError("missing file at: \""+filename+"\" for loading description");
     }
-
   }
 
   @Override

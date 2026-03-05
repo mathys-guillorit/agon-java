@@ -69,7 +69,8 @@ public interface GameUserInterface {
   void resumeGame();
 
   /**
-   * Quits the current game and closes the application. May trigger Reader prompt to save before exiting.
+   * Quits the current game and closes the application. May trigger Reader prompt to save before
+   * exiting.
    */
   void quitGame();
 

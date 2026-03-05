@@ -1,13 +1,11 @@
 package fr.univ.bordeaux.application.commands;
 
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.help.HelpFormatter;

@@ -1,6 +1,12 @@
 package fr.univ.bordeaux.ui.cli.tools;
 
-
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Binding;
 import org.jline.reader.Buffer;
@@ -19,14 +25,6 @@ import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.MouseEvent;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
-
-import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 public class FakeLineReader implements LineReader {
 
@@ -60,22 +58,27 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public String readLine(String prompt, Character mask) throws UserInterruptException, EndOfFileException {
+  public String readLine(String prompt, Character mask)
+      throws UserInterruptException, EndOfFileException {
     return "";
   }
 
   @Override
-  public String readLine(String prompt, Character mask, String buffer) throws UserInterruptException, EndOfFileException {
+  public String readLine(String prompt, Character mask, String buffer)
+      throws UserInterruptException, EndOfFileException {
     return "";
   }
 
   @Override
-  public String readLine(String prompt, String rightPrompt, Character mask, String buffer) throws UserInterruptException, EndOfFileException {
+  public String readLine(String prompt, String rightPrompt, Character mask, String buffer)
+      throws UserInterruptException, EndOfFileException {
     return "";
   }
 
   @Override
-  public String readLine(String prompt, String rightPrompt, MaskingCallback maskingCallback, String buffer) throws UserInterruptException, EndOfFileException {
+  public String readLine(
+      String prompt, String rightPrompt, MaskingCallback maskingCallback, String buffer)
+      throws UserInterruptException, EndOfFileException {
     return "";
   }
 
@@ -100,7 +103,10 @@ public class FakeLineReader implements LineReader {
   }
 
   // Toutes les autres méthodes non utilisées
-  @Override public void callWidget(String name) { throw new UnsupportedOperationException(); }
+  @Override
+  public void callWidget(String name) {
+    throw new UnsupportedOperationException();
+  }
 
   @Override
   public Map<String, Object> getVariables() {
@@ -113,9 +119,7 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public void setVariable(String name, Object value) {
-
-  }
+  public void setVariable(String name, Object value) {}
 
   @Override
   public boolean isSet(Option option) {
@@ -123,28 +127,30 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public void setOpt(Option option) {
-
-  }
+  public void setOpt(Option option) {}
 
   @Override
-  public void unsetOpt(Option option) {
-
-  }
+  public void unsetOpt(Option option) {}
 
   @Override
   public Terminal getTerminal() {
     return null;
   }
 
-  @Override public Map<String, Widget> getWidgets() { return new HashMap<>(); }
+  @Override
+  public Map<String, Widget> getWidgets() {
+    return new HashMap<>();
+  }
 
   @Override
   public Map<String, Widget> getBuiltinWidgets() {
     return Map.of();
   }
 
-  @Override public Map<String, KeyMap<Binding>> getKeyMaps() { return null; }
+  @Override
+  public Map<String, KeyMap<Binding>> getKeyMaps() {
+    return null;
+  }
 
   @Override
   public String getKeyMap() {
@@ -182,14 +188,10 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public void addCommandsInBuffer(Collection<String> commands) {
-
-  }
+  public void addCommandsInBuffer(Collection<String> commands) {}
 
   @Override
-  public void editAndAddInBuffer(Path file) throws Exception {
-
-  }
+  public void editAndAddInBuffer(Path file) throws Exception {}
 
   @Override
   public String getLastBinding() {
@@ -202,14 +204,10 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public void setTailTip(String tailTip) {
-
-  }
+  public void setTailTip(String tailTip) {}
 
   @Override
-  public void setAutosuggestion(SuggestionType type) {
-
-  }
+  public void setAutosuggestion(SuggestionType type) {}
 
   @Override
   public SuggestionType getAutosuggestion() {
@@ -217,30 +215,31 @@ public class FakeLineReader implements LineReader {
   }
 
   @Override
-  public void zeroOut() {
+  public void zeroOut() {}
 
+  @Override
+  public Buffer getBuffer() {
+    return null;
   }
-
-  @Override public Buffer getBuffer() { return null; }
 
   @Override
   public String getAppName() {
     return "";
   }
 
-  @Override public void runMacro(String macro) {}
+  @Override
+  public void runMacro(String macro) {}
 
   @Override
   public MouseEvent readMouseEvent() {
     return null;
   }
 
-  @Override public void printAbove(String str) {}
+  @Override
+  public void printAbove(String str) {}
 
   @Override
-  public void printAbove(AttributedString str) {
-
-  }
+  public void printAbove(AttributedString str) {}
 
   @Override
   public boolean isReading() {
@@ -257,4 +256,3 @@ public class FakeLineReader implements LineReader {
     return null;
   }
 }
-
