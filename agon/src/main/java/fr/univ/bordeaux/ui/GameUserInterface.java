@@ -18,14 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * It serves as the contract between the Presentation layer (UI) and the Application layer (Engine).
  */
 public interface GameUserInterface {
-  // --- GAME ACTIONS (Commands to the Engine) ---
-
-  /**
-   * Starts Reader new game with the specified options.
-   *
-   * @param args Configuration arguments (e.g., player names, variants).
-   */
-  void startNewGame(String[] args);
 
   /**
    * Attempts to move Reader piece from one position to another.
@@ -41,19 +33,6 @@ public interface GameUserInterface {
    * @param pos The position of the piece to select.
    */
   // void selectPiece(Position pos);
-
-  /** Undoes the last move played (if history allows). */
-  void undo();
-
-  /** Redoes the last undone move (if history allows). */
-  void redo();
-
-  /**
-   * Saves the current game state to Reader file.
-   *
-   * @param filename The path or name of the save file.
-   */
-  void saveGame(String filename);
 
   /**
    * Loads Reader game from Reader save file.
@@ -74,9 +53,6 @@ public interface GameUserInterface {
    */
   void quitGame();
 
-  /** Requests Reader hint or advice from the game engine (AI). */
-  void requestHint();
-
   // --- UI UPDATES (Outputs to the Screen) ---
 
   /**
@@ -87,7 +63,7 @@ public interface GameUserInterface {
   void updateBoard(ConsoleRenderer boardRepresentation);
 
   /**
-   * Displays an informational message to the user.
+   * show message to the user.
    *
    * @param message The content of the message.
    */
@@ -100,23 +76,49 @@ public interface GameUserInterface {
    */
   void showError(String error);
 
+  /**
+   * display the help menu into terminal
+   */
   void showHelp();
 
   /**
-   * get options name written by the user
-   *
-   * @return "args" from app EntryPoint
+   * show warning messages into the sub UI object
+   * @param msg
    */
-  public String[] getTxtOptions();
+  void showWarn(String msg);
 
-  public AtomicBoolean getDebugMode();
+  /**
+   * show information into the sub UI object
+   * @param msg
+   */
+  void showInfo(String msg);
+
+  AtomicBoolean getDebugMode();
 
   /**
    * get commands from the ui object
    *
    * @return Reader register of all commands
    */
-  public AgonRegister<CmdAction> getCmds();
+  AgonRegister<CmdAction> getCmds();
 
-  public void setVerbose(boolean state);
+  void setVerbose(boolean state);
+
+  /**
+   * get user prompte (default is "[AGON]> ")
+   * @return {@link String}
+   */
+  String getUserPrompt();
+
+  /**
+   * save the game before leaving
+   */
+  void saveGame();
+
+  /**
+   * get the line entered in the terminal by the user
+   * @return {@link String}
+   */
+  String getLine();
+
 }

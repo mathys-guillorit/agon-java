@@ -5,6 +5,8 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Optional;
+
+import fr.univ.bordeaux.ui.UIPromptParser;
 import org.apache.commons.cli.Option;
 
 public class CmdHelp extends Cmd {
@@ -38,7 +40,8 @@ public class CmdHelp extends Cmd {
   @Override
   public void execute() {
     GameUserInterface ctx = this.getCtx();
-    String[] args = ctx.getTxtOptions();
+    var tmp = new UIPromptParser(ctx.getUserPrompt());
+    String[] args = tmp.getTxtOptions();
     if (args != null && args.length > 0) {
       String targetCmd = args[0].toLowerCase();
       Optional<CmdAction> cmd = ctx.getCmds().get(targetCmd);

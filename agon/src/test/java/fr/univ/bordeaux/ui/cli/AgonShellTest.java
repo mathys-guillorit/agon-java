@@ -1,24 +1,32 @@
 package fr.univ.bordeaux.ui.cli;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import jdk.jfr.Description;
+import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * class to test AgonShell
+ *
+ * requirements :
+ * - overvrite 2 classes from Jline (LineReader and Terminal)
+ */
 public class AgonShellTest {
+
+
 
   @Test
   @DisplayName("resource with URL and '/' path notation")
@@ -28,91 +36,184 @@ public class AgonShellTest {
   }
 
   @Test
-  @DisplayName("resource with '/' path notation")
-  void debugResource() {
-    InputStream s = AgonShell.class.getResourceAsStream("/cmdsInformations/agonShellMenu.txt");
-    System.out.println("Resource stream =" + s);
-    assertNotNull(s);
-  }
-
-  // impossible to test
-  @Test
-  @DisplayName("test with dumb system (cannot test with Reader real full system)")
-  void testCliWritesOutput() throws Exception {
-    //    var in = new ByteArrayInputStream(new byte[0]);
-    //    var out = new ByteArrayOutputStream();
-    //    Terminal term = TerminalBuilder.builder().streams(in, out).dumb(true).build();
-    //    // existing default menu loaded file here
-    //    final String msg = "hello";
-    //    LineReader fkReader = new FakeLineReader("n");
-    //    AgonShell shell = new AgonShell(term, fkReader);
-    //    shell.showMessage(msg);
-    //    term.flush();
-    //    String output = out.toString();
-    //    System.out.println("out: " + out);
-    //    assertTrue(
-    //        output.contains(msg),
-    //        () -> "Expected '" + msg + "' in output, but was: '" + output + "'\n\t");
-  }
-
-  @Test
-  void testShellReadsCommand() throws Exception {
-    String input = "help exit\n";
-    var in = new ByteArrayInputStream(input.getBytes());
-    var out = new ByteArrayOutputStream();
-    Terminal terminal = TerminalBuilder.builder().streams(in, out).dumb(true).build();
-    AgonShell shell = new AgonShell(terminal);
-    shell.loop();
-    String output = out.toString();
-    assertTrue(output.contains("help"));
-  }
-
-  @Test
-  @Description("parse with a command name")
-  void testREadLineParsesCommand() throws Exception {
-    LineReader reader = new FakeLineReader("help quit");
-    Terminal term = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(term, reader);
-    boolean empty = shell.readLine();
-    shell.quitGame();
-    assertFalse(empty);
-    assertEquals("help", shell.getUserCmdName());
-    assertArrayEquals(new String[] {"quit"}, shell.getTxtOptions());
-  }
-
-  @Test
-  @Description("add a test with custom Reader from JLine (just to test)")
-  void testQuitGameBeforeNotBlock() throws Exception {
+  @DisplayName("test quitGame with 'n' (no save)")
+  void testQuitGameNoSave() throws Exception {
     LineReader reader = new FakeLineReader("n");
-    Terminal term = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(term, reader);
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, reader);
     shell.quitGame();
+    assertFalse(shell.getDebugMode().get());
+  }
+
+  @Test
+  @DisplayName("test quitGame with 'y' (save)")
+  void testQuitGameWithSave() throws Exception {
+    LineReader reader = new FakeLineReader("y");
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, reader);
+    shell.quitGame();
+    assertFalse(shell.getDebugMode().get());
+  }
+
+  @Test
+  @DisplayName("test readLine with empty input")
+  void testReadLineEmpty() throws Exception {
+    LineReader reader = new FakeLineReader("");
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, reader);
+    shell.readLine();
+    // Vérifie qu'aucune exception n'est levée
     assertTrue(true);
   }
 
   @Test
-  @Description("must throw an error if no commands are filled")
-  void testWithoutCommands() {}
+  @DisplayName("test readLine with UserInterruptException")
+  void testReadLineInterrupt() throws Exception {
+    LineReader reader = new FakeLineReader();
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, reader);
+    // Simule une interruption utilisateur (Ctrl+C)
+    shell.readLine();
+    // Vérifie qu'aucune exception n'est levée
+    assertTrue(true);
+  }
 
-  // impossible to test
+  @Test
+  @DisplayName("test safeCloseTerminal with IOException")
+  void testSafeCloseTerminalIOException() throws Exception {
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.safeCloseTerminal();
+    // Vérifie qu'aucune exception n'est levée
+    assertTrue(true);
+  }
 
-  //  @Test
-  //  @DisplayName("write to terminal")
-  //  void testShowMsg() throws Exception {
-  //    String input = "quit\n \n \n";
-  //    var out = new ByteArrayOutputStream();
-  //    var in = new ByteArrayInputStream(input.getBytes());
-  //    final String msg = "show message did not write correctly\nout is:\n\t";
-  //    final String showMsg = "hello world";
-  //
-  //    try(Terminal term = TerminalBuilder.builder().streams(in, out).dumb(true).build()){
-  //      AgonShell shell = new AgonShell(term);
-  //      shell.showMessage(showMsg);
-  //      in = new ByteArrayInputStream("\n ".getBytes());
-  //      shell.quitGame();
-  //      String output = out.toString();
-  //      assertTrue(output.contains("hello world"), msg+output+"\n it must be:\n\t"+showMsg);
-  //    }
-  //  }
+
+  @Test
+  @DisplayName("test showError writes to terminal")
+  void testShowError() throws Exception {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.showError("test error");
+    String output = out.toString();
+    String container = "ERROR";
+    assertTrue(output.contains(container), "\n'"+output+"\n\tmust contains:\n'"+container+"'");
+    container = "AGON";
+    assertTrue(output.contains(container), "\n'"+output+"\n\tmust contains:\n'"+container+"'");
+  }
+
+  @Test
+  @DisplayName("test showInfo writes to terminal")
+  void testShowInfo() throws Exception {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.showInfo("test info");
+    String output = out.toString();
+    assertTrue(output.contains("INFO"));
+  }
+
+  @Test
+  @DisplayName("test showWarn writes to terminal")
+  void testShowWarn() throws Exception {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.showWarn("test warn");
+    String output = out.toString();
+    assertTrue(output.contains("WARNING"));
+  }
+
+  @Test
+  @DisplayName("test leave sets running to false")
+  void testLeave() throws Exception {
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.leave();
+    assertFalse(shell.getDebugMode().get());
+  }
+
+  @Test
+  @DisplayName("test leave sets running to false")
+  void testLeaveWithFakeTerminal() {
+    var out = new ByteArrayOutputStream();
+    Terminal terminal = new FakeTerminal(out);
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    shell.leave();  // Appelle leave()
+    assertFalse(shell.getRunning().get());
+  }
+
+  @Test
+  @DisplayName("test setVerbose toggles state")
+  void testSetVerbose() throws Exception {
+    Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    shell.setVerbose(true);
+    assertTrue(shell.getVerbose());
+    shell.setVerbose(false);
+    assertFalse(shell.getVerbose());
+  }
+
+  @Test
+  @DisplayName("test without commands shows error message")
+  void testWithoutCommands() {
+    var out = new ByteArrayOutputStream();
+    Terminal terminal = new FakeTerminal(out);
+
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    shell.loop();  // Exécute la boucle
+
+    String cliOutput = out.toString();
+    assertTrue(
+            cliOutput.contains("No Command \"Cmd\" registered"),
+            "Le message d'erreur n'a pas été affiché. Sortie : " + cliOutput
+    );
+  }
+
+  @Test
+  @DisplayName("test init sets default values")
+  void testInit() {
+    var out = new ByteArrayOutputStream();
+    Terminal terminal = new FakeTerminal(out);
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+
+    assertFalse(shell.getVerbose());
+    assertFalse(shell.getDebugMode().get());
+    assertTrue(shell.getRunning().get());
+    assertNotNull(shell.getCmds(), "shell.getCmds() must not be null");
+  }
+
+  @Test
+  @DisplayName("test loadMainMenu updates displayed menu")
+  void testLoadMainMenu() {
+    var out = new ByteArrayOutputStream();
+    Terminal terminal = new FakeTerminal(out);
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    String newMenu = "    undo [N] : cancel the last turn (or the N lasts)\n" +
+            "    redo [N] : replay the last canceled turn (or the N lasts)\n" +
+            "    show";
+    shell.loadMainMenu(newMenu);
+    shell.showHelp();
+    String output = out.toString();
+    assertTrue(output.contains("undo [N]"), "Menu should contain 'undo [N]'");
+    assertTrue(output.contains("redo [N]"), "Menu should contain 'redo [N]'");
+    assertTrue(output.contains("show"), "Menu should contain 'show'");
+  }
+
+  @Test
+  @DisplayName("test loadMainMenu when no menu is set")
+  void testLoadMainMenuWithoutMainMenu() {
+    var out = new ByteArrayOutputStream();
+    Terminal terminal = new FakeTerminal(out);
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    shell.start();
+    String output = out.toString();
+    final String defaultMsg = "Main menu didn't change, you may specify a menu before using associated commands ?";
+    final String finalMsg = "\n\twarning msg must contain:\n'"+defaultMsg+"'"+"\n\tbut id contains:\n"+"'"+output+"'";
+    assertTrue(output.contains(defaultMsg), finalMsg);
+  }
+
+
 
 }

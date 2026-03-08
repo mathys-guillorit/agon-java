@@ -6,6 +6,8 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.annotation.Nonnull;
+
+import fr.univ.bordeaux.ui.UIPromptParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -99,11 +101,12 @@ public class CmdSet extends Cmd {
     GameUserInterface ctx = this.getCtx();
     CommandLineParser parser = new DefaultParser();
     try {
-      if (ctx.getTxtOptions().length == 0) { // no args
+      final var tmp = new UIPromptParser(ctx.getUserPrompt());
+      if (tmp.getUserOptions().length == 0) { // no args
         this.getCtx().showHelp();
         return;
       }
-      CommandLine cmdOpts = parser.parse(this.getOptions(), ctx.getTxtOptions());
+      CommandLine cmdOpts = parser.parse(this.getOptions(), tmp.getTxtOptions());
       this.optsCorresp
           .keySet()
           .forEach(
