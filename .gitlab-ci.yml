@@ -31,15 +31,11 @@ default:
     - set -e
     - java -version
     - mvn -version
+    # télécharge les dépendances si absentes dans le cache
+    - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
   script:
     - cd agon
-    - mvn clean test
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - agon/target/surefire-reports/*.xml
-  allow_failure: true
+    - mvn test
 
 # Template for all java jobs (avec Microsoft OpenJDK)
 .java_template:
