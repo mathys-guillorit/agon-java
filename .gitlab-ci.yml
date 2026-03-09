@@ -35,7 +35,7 @@ default:
     - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
   script:
     - cd agon
-    - mvn test
+    - mvn test || mvn -o test
 
 # Template for all java jobs (avec Microsoft OpenJDK)
 .java_template:
@@ -119,20 +119,5 @@ test-opensuse:
   extends: .test_java
   stage: testGNU_Linux
   image: opensuse/leap:15.5
-# reinit maven job
-clear-cache:
-  stage: format-check
-  tags:
-    - Boursouflet
-  image: alpine:latest
-  script:
-    - echo "Clearing Maven cache..."
-    - rm -rf .m2/repository
-  cache:
-    key: maven-cache
-    paths:
-      - .m2/repository
-    policy: push
-  when: manual
-  allow_failure: false
+
 # end page
