@@ -124,19 +124,19 @@ test-opensuse:
   stage: testGNU_Linux
   image: opensuse/leap:15.5
 # reinit maven job
-  clear-cache:
-    stage: format-check
-    tags:
-      - Boursouflet
-    image: alpine:latest
-    script:
-      - echo "Clearing Maven cache..."
-      - rm -rf .m2/repository
-    cache:
-      key: maven-cache
-      paths:
-        - .m2/repository
-      policy: push
-    when: manual
-    allow_failure: false
+clear-cache:
+  stage: format-check
+  tags:
+    - Boursouflet
+  image: alpine:latest
+  script:
+    - echo "Clearing Maven cache..."
+    - rm -rf .m2/repository
+  cache:
+    key: maven-cache
+    paths:
+      - .m2/repository
+    policy: push
+  when: manual
+  allow_failure: false
 # end page
