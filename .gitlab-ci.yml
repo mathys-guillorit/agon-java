@@ -7,12 +7,21 @@ stages:
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "-B -ntp -f agon/pom.xml"
   JDK_IMAGE: "mcr.microsoft.com/java/jdk:21-ga"  # Microsoft OpenJDK 21 (projet constraint)
 
 cache:
-  key: "$CI_COMMIT_REF_SLUG"
+  key: maven-cache
   paths:
     - .m2/repository
+
+default:
+  image: $JDK_IMAGE
+  tags:
+    - Boursouflet
+  before_script:
+    - java -version
+    - mvn -version
 
 # same Template to all jobs
 .test_java:
