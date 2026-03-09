@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.commands;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 ///  TODO: test if i add two same pairs ("A", CmdQuit(), "A", CmdQuit())
 ///  into CommandRegister, add this to tests
@@ -17,19 +18,15 @@ public class AgonRegister<T> {
 
   private final HashMap<String, T> correspondences;
   private final boolean caseSensitive;
-  private int size;
 
   /** initialize variables */
   public AgonRegister() {
-    this.correspondences = new HashMap<>();
-    this.caseSensitive = false;
-    this.size = 0;
+    this(false);
   }
 
   public AgonRegister(boolean caseSensitive) {
     this.correspondences = new HashMap<>();
     this.caseSensitive = caseSensitive;
-    this.size = 0;
   }
 
   /**
@@ -40,9 +37,7 @@ public class AgonRegister<T> {
    * @param value {@link T} associated with the key
    */
   public void register(String name, T value) {
-    if (!this.caseSensitive) name = name.toLowerCase();
-    this.correspondences.put(name, value);
-    this.size++;
+    this.correspondences.put(this.normalize(name), value);
   }
 
   /**
@@ -53,8 +48,7 @@ public class AgonRegister<T> {
    * @return the concerned {@link Object} or null
    */
   public Optional<T> get(String key) {
-    if (!this.caseSensitive) key = key.toLowerCase();
-    return Optional.ofNullable(this.correspondences.get(key));
+    return Optional.ofNullable(this.correspondences.get(this.normalize(key)));
   }
 
   public boolean isEmpty() {
@@ -64,7 +58,6 @@ public class AgonRegister<T> {
   /** remove all pairs stored (key and value) */
   public void reset() {
     this.correspondences.clear();
-    this.size = 0;
   }
 
   /**
@@ -73,24 +66,29 @@ public class AgonRegister<T> {
    * @param key associated
    */
   public void remove(String key) {
-    if (!this.caseSensitive) key = key.toLowerCase();
-    this.correspondences.remove(key);
-    this.size--;
+    this.correspondences.remove(this.normalize(key));
   }
 
   /**
    * @return int the number of registered items
    */
   public int size() {
-    return this.size;
+    return this.correspondences.size();
   }
 
   /**
-   * get all keys
+   * get all keys<br>
+   * - duplicate of internal keys
    *
-   * @return keys from pairs
+   * @return only keys from pairs
    */
   public Set<String> getKeys() {
-    return this.correspondences.keySet();
+    return Set.copyOf(this.correspondences.keySet());
+  }
+
+  @Nonnull
+  private String normalize(final @Nonnull String key) {
+    if (key == null) throw new IllegalArgumentException("Key can't be null");
+    return this.caseSensitive ? key : key.toLowerCase();
   }
 }

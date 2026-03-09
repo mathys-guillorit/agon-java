@@ -1,7 +1,5 @@
 package fr.univ.bordeaux.application.commands;
 
-import fr.univ.bordeaux.ui.AbstractGameUI;
-import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;

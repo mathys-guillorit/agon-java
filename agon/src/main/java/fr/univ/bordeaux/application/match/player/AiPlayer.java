@@ -5,13 +5,14 @@ import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.strategy.AgonAI;
 
-public class AiPlayer extends AbstractPlayer{
+public class AiPlayer extends AbstractPlayer {
   AgonBoard board;
   AgonAI ai;
-  public AiPlayer(String name, Color color,AgonBoard board, AgonAI AI){
-    super(name,color);
-    this.board=board;
-    this.ai=AI;
+
+  public AiPlayer(String name, Color color, AgonBoard board, AgonAI AI) {
+    super(name, color);
+    this.board = board;
+    this.ai = AI;
   }
 
   @Override
@@ -29,7 +30,7 @@ public class AiPlayer extends AbstractPlayer{
     return name;
   }
 
-  public Move play(){
+  public Move play() {
     return ai.getBestMove(board);
   }
 }

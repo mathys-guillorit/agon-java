@@ -2,6 +2,7 @@ package fr.univ.bordeaux.ui;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -17,17 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * It serves as the contract between the Presentation layer (UI) and the Application layer (Engine).
  */
 public interface GameUserInterface {
-  // --- GAME ACTIONS (Commands to the Engine) ---
 
   /**
-   * Starts a new game with the specified options.
-   *
-   * @param args Configuration arguments (e.g., player names, variants).
-   */
-  void startNewGame(String[] args);
-
-  /**
-   * Attempts to move a piece from one position to another.
+   * Attempts to move Reader piece from one position to another.
    *
    * @param from The starting position of the piece.
    * @param to The desired destination position.
@@ -35,27 +28,14 @@ public interface GameUserInterface {
   // void tryMove(Position from, Position to);
 
   /**
-   * Selects a piece on the board (often used to display possible moves).
+   * Selects Reader piece on the board (often used to display possible moves).
    *
    * @param pos The position of the piece to select.
    */
   // void selectPiece(Position pos);
 
-  /** Undoes the last move played (if history allows). */
-  void undo();
-
-  /** Redoes the last undone move (if history allows). */
-  void redo();
-
   /**
-   * Saves the current game state to a file.
-   *
-   * @param filename The path or name of the save file.
-   */
-  void saveGame(String filename);
-
-  /**
-   * Loads a game from a save file.
+   * Loads Reader game from Reader save file.
    *
    * @param filename The path or name of the file to load.
    */
@@ -64,16 +44,14 @@ public interface GameUserInterface {
   /** Pauses the game (stops the timer if present). */
   void pauseGame();
 
-  /** Resumes the game after a pause. */
+  /** Resumes the game after Reader pause. */
   void resumeGame();
 
   /**
-   * Quits the current game and closes the application. May trigger a prompt to save before exiting.
+   * Quits the current game and closes the application. May trigger Reader prompt to save before
+   * exiting.
    */
   void quitGame();
-
-  /** Requests a hint or advice from the game engine (AI). */
-  void requestHint();
 
   // --- UI UPDATES (Outputs to the Screen) ---
 
@@ -82,45 +60,64 @@ public interface GameUserInterface {
    *
    * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(String boardRepresentation);
+  void updateBoard(ConsoleRenderer boardRepresentation);
 
   /**
-   * Displays an informational message to the user.
+   * show message to the user.
    *
    * @param message The content of the message.
    */
   void showMessage(String message);
 
   /**
-   * Displays a critical error or warning message.
+   * Displays Reader critical error or warning message.
    *
    * @param error The content of the error.
    */
   void showError(String error);
 
-  /**
-   * Asks the user for confirmation (e.g., "Do you really want to quit?").
-   *
-   * @param question The question to ask.
-   * @return {@code true} if the user accepts, {@code false} otherwise.
-   */
-  boolean getUserConfirmation(String question);
-
+  /** display the help menu into terminal */
   void showHelp();
 
   /**
-   * get options name written by the user
+   * show warning messages into the sub UI object
    *
-   * @return "args" from app EntryPoint
+   * @param msg
    */
-  public String[] getTxtOptions();
+  void showWarn(String msg);
 
-  public AtomicBoolean getDebugMode();
+  /**
+   * show information into the sub UI object
+   *
+   * @param msg
+   */
+  void showInfo(String msg);
+
+  AtomicBoolean getDebugMode();
 
   /**
    * get commands from the ui object
    *
-   * @return a register of all commands
+   * @return Reader register of all commands
    */
-  public AgonRegister<CmdAction> getCmds();
+  AgonRegister<CmdAction> getCmds();
+
+  void setVerbose(boolean state);
+
+  /**
+   * get user prompte (default is "[AGON]> ")
+   *
+   * @return {@link String}
+   */
+  String getUserPrompt();
+
+  /** save the game before leaving */
+  void saveGame();
+
+  /**
+   * get the line entered in the terminal by the user
+   *
+   * @return {@link String}
+   */
+  String getLine();
 }

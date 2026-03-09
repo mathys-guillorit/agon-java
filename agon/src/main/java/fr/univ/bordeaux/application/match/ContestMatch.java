@@ -10,8 +10,7 @@ public class ContestMatch extends Match {
   }
 
   @Override
-  public void startActions() {
-  }
+  public void startActions() {}
 
   @Override
   public void endActions() {

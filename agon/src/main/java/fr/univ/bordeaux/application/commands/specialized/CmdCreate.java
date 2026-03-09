@@ -1,16 +1,12 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
-import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
+import java.io.IOException;
+import org.apache.commons.cli.Option;
 
 /** Create a new game. Command representation in cli : "new [ARGS]" */
 public class CmdCreate extends Cmd {
-
-  private Options opts;
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -20,35 +16,35 @@ public class CmdCreate extends Cmd {
    */
   public CmdCreate(AbstractGameUI uictx) {
     super(uictx);
-    this.opts = new Options();
+    Option aiAndColor =
+        Option.builder("a")
+            .longOpt("ai")
+            .hasArg()
+            .argName("COLOR")
+            .desc("Specify the AI color")
+            .required(false) // optional arg
+            .get();
+    Option invitPlayer = Option.builder("PLAYER_ID").desc("Specify the player ID").get();
+    this.addOption(invitPlayer);
+    this.addOption(aiAndColor);
+    final String filename = "CmdCreate.txt";
+    String desc;
+    try {
+      desc = this.loadText(filename);
+    } catch (IOException e) {
+      desc = "description cannot be loaded for more info type: \"set debug=true\"";
+      // if (someobjet.getDebug())
+      // this.getCtx().showError("problem when reading description file: \""+filename+"\" for
+      // loading description");
+    } catch (NullPointerException e) {
+      desc = "description cannot be loaded for more info: \"set debug=true\"";
+      // if (someobjet.getDebug())
+      // this.getCtx().showError("missing file at: \""+filename+"\" for loading description");
+    }
+    this.setDesc(desc);
+    this.setName("new");
   }
 
-  @Nonnull
   @Override
-  public Completer getAutoCompleter() {
-    return null;
-  }
-
-  @Override
-  public String getName() {
-    return "new";
-  }
-
-  @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
-  @Override
-  public void execute() {
-    this.getCtx().startNewGame(null);
-  }
-
-  @Override
-  public void showHelp() {
-    this.getCtx().showMessage("Usage: new\n");
-    this.getCtx()
-        .showMessage(
-            "Description: Starts a new Agon game session. This will reset the board and timers.\n");
-  }
+  public void execute() {}
 }

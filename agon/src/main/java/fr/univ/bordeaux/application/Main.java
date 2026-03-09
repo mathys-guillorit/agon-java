@@ -1,7 +1,6 @@
 package fr.univ.bordeaux;
 
 import fr.univ.bordeaux.application.GameLauncher;
-import fr.univ.bordeaux.ui.cli.AgonShell;
 
 /**
  * @version Java 21 (Microsoft OpenJdk 21.0.9)<br>
@@ -46,11 +45,5 @@ public class Main {
     a.launch(GUIExample.class, arg);*/
 
     new GameLauncher().launch(arg);
-  }
-
-  /** test using real case and later with junit */
-  public static void testCli() {
-    AgonShell shell = new AgonShell();
-    shell.start();
   }
 }

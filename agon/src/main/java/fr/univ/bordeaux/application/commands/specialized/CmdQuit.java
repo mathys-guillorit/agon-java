@@ -2,9 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdQuit extends Cmd {
   private Options opts;
@@ -18,12 +16,6 @@ public class CmdQuit extends Cmd {
   public CmdQuit(AbstractGameUI uictx) {
     super(uictx);
     this.opts = new Options();
-  }
-
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return null;
   }
 
   @Override

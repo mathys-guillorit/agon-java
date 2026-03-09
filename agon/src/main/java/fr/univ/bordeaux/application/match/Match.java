@@ -16,23 +16,23 @@ public abstract class Match {
   private Player player2;
   private MatchStatus status;
 
-  public Match(AgonBoard agonBoard,Player player1,Player player2) {
+  public Match(AgonBoard agonBoard, Player player1, Player player2) {
     this.agonBoard = agonBoard;
-    this.player1=player1;
-    this.player2=player2;
-    this.currentPlayer=player1;
-    this.status=MatchStatus.RUNNING;
+    this.player1 = player1;
+    this.player2 = player2;
+    this.currentPlayer = player1;
+    this.status = MatchStatus.RUNNING;
   }
 
   public boolean playMove(Move move) {
     this.startActions();
-    PieceType piece=agonBoard.getPieceAt(move.getFrom());
+    PieceType piece = agonBoard.getPieceAt(move.getFrom());
     if (piece == null || piece.getColor() != currentPlayer.getColor()) {
       return false;
     }
     if (agonBoard.applyMove(move)) {
       if (agonBoard.isGameWon(currentPlayer.getColor())) {
-        this.status=MatchStatus.FINISHED;
+        this.status = MatchStatus.FINISHED;
         System.out.println("win");
       }
       this.endActions();
@@ -41,8 +41,11 @@ public abstract class Match {
     }
     return false;
   }
-public abstract void startActions();
+
+  public abstract void startActions();
+
   public abstract void endActions();
+
   public List<MoveDTO> getHistory() {
     List<HistoryInformations> domainHistory = agonBoard.getHistory();
     List<MoveDTO> uiList = new ArrayList<>();
@@ -57,13 +60,15 @@ public abstract void startActions();
     return uiList;
   }
 
-  public MatchStatus getMatchStatus(){
+  public MatchStatus getMatchStatus() {
     return status;
   }
-  protected void setMatchStatus(MatchStatus status){
-    this.status=status;
+
+  protected void setMatchStatus(MatchStatus status) {
+    this.status = status;
   }
-  public Player getCurrentPlayer(){
+
+  public Player getCurrentPlayer() {
     return currentPlayer;
   }
 

@@ -2,9 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdRedo extends Cmd {
   private Options opts;
@@ -18,32 +16,11 @@ public class CmdRedo extends Cmd {
   public CmdRedo(AbstractGameUI uictx) {
     super(uictx);
     this.opts = this.getOptions();
-  }
-
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return null;
-  }
-
-  @Override
-  public String getName() {
-    return "redo";
-  }
-
-  @Override
-  public Options getOptions() {
-    return this.opts;
+    this.setDesc(
+        "Description: Replays the last canceled turn. If a number N is provided, it replays the last N canceled turns.\n");
+    this.setName("redo");
   }
 
   @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-    this.getCtx().showMessage("Usage: redo [N]\n");
-    this.getCtx()
-        .showMessage(
-            "Description: Replays the last canceled turn. If a number N is provided, it replays the last N canceled turns.\n");
-  }
 }

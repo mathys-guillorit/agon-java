@@ -2,9 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
-import org.jline.reader.Completer;
 
 public class CmdPause extends Cmd {
   private Options opts;
@@ -18,32 +16,11 @@ public class CmdPause extends Cmd {
   public CmdPause(AbstractGameUI uictx) {
     super(uictx);
     this.opts = this.getOptions();
-  }
-
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return null;
-  }
-
-  @Override
-  public String getName() {
-    return "pause";
-  }
-
-  @Override
-  public Options getOptions() {
-    return this.opts;
+    this.setName("pause");
+    this.setDesc(
+        "Description: Pauses the passing time. This command is only available when playing in Blitz mode.");
   }
 
   @Override
   public void execute() {}
-
-  @Override
-  public void showHelp() {
-    this.getCtx().showMessage("Usage: pause\n");
-    this.getCtx()
-        .showMessage(
-            "Description: Pauses the passing time. This command is only available when playing in Blitz mode.\n");
-  }
 }

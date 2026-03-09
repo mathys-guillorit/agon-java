@@ -38,6 +38,11 @@ public class CmdLoad extends Cmd {
   }
 
   @Override
+  public String getDescription() {
+    return "";
+  }
+
+  @Override
   public void execute() {}
 
   @Override

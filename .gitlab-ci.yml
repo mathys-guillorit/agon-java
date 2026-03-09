@@ -7,12 +7,21 @@ stages:
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "-B -ntp -f agon/pom.xml"
   JDK_IMAGE: "mcr.microsoft.com/java/jdk:21-ga"  # Microsoft OpenJDK 21 (projet constraint)
 
 cache:
-  key: "$CI_COMMIT_REF_SLUG"
+  key: maven-cache
   paths:
     - .m2/repository
+
+default:
+  image: $JDK_IMAGE
+  tags:
+    - Boursouflet
+  before_script:
+    - java -version
+    - mvn -version
 
 # same Template to all jobs
 .test_java:
@@ -22,15 +31,11 @@ cache:
     - set -e
     - java -version
     - mvn -version
+    # télécharge les dépendances si absentes dans le cache
+    - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
   script:
     - cd agon
-    - mvn clean test
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - agon/target/surefire-reports/*.xml
-  allow_failure: true
+    - mvn test || mvn -o test
 
 # Template for all java jobs (avec Microsoft OpenJDK)
 .java_template:
@@ -41,6 +46,17 @@ cache:
     - set -e
     - java -version
     - mvn -version
+
+# template for linux distrib' by default
+.linux_test_template:
+  tags:
+    - Boursouflet
+  before_script:
+    - set -e
+    - |
+      if command -v apt-get > /dev/null; then
+        apt-get update
+        apt-get install -y 
 
 # Tests on each distributions
 check-format:

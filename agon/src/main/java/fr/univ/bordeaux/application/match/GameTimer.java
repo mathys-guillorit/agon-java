@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.application.match;
 
-
 public class GameTimer {
 
   private long remainingTimeMillis;
@@ -12,9 +11,7 @@ public class GameTimer {
     this.isRunning = false;
   }
 
-  /**
-   * Lance ou reprend le chronomètre.
-   */
+  /** Lance ou reprend le chronomètre. */
   public void start() {
     if (!isRunning) {
       this.lastStartTime = System.currentTimeMillis();
@@ -22,9 +19,7 @@ public class GameTimer {
     }
   }
 
-  /**
-   * Arrête le chronomètre et déduit le temps écoulé.
-   */
+  /** Arrête le chronomètre et déduit le temps écoulé. */
   public void stop() {
     if (isRunning) {
       long elapsed = System.currentTimeMillis() - lastStartTime;
@@ -33,9 +28,7 @@ public class GameTimer {
     }
   }
 
-  /**
-   * Vérifie si le temps est écoulé (même pendant que le chrono tourne).
-   */
+  /** Vérifie si le temps est écoulé (même pendant que le chrono tourne). */
   public boolean isExpired() {
     if (isRunning) {
       long currentElapsed = System.currentTimeMillis() - lastStartTime;
@@ -52,4 +45,3 @@ public class GameTimer {
     return Math.max(0, remainingTimeMillis);
   }
 }
-

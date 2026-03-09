@@ -9,7 +9,12 @@ public class BlitzMatch extends Match {
   private final GameTimer whiteTimer;
   private final GameTimer blackTimer;
 
-  public BlitzMatch(AgonBoard agonBoard, Player player1, Player player2,long initialWhiteTime,long initialBlackTime2) {
+  public BlitzMatch(
+      AgonBoard agonBoard,
+      Player player1,
+      Player player2,
+      long initialWhiteTime,
+      long initialBlackTime2) {
     super(agonBoard, player1, player2);
 
     this.whiteTimer = new GameTimer(initialWhiteTime);

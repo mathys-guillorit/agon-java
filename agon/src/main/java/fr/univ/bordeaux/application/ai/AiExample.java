@@ -1,16 +1,5 @@
 package fr.univ.bordeaux.application.ai;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
-import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
-import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
-import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
-import java.util.List;
-
 /*public class AiExample {
 
   private AgonBoardImpl createCustomBoard(
@@ -184,4 +173,3 @@ import java.util.List;
     aiExample.simulateGameAiVsRandomBot();
   }
 }*/
-

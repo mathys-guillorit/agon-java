@@ -96,7 +96,7 @@ public class AgonRegisterTest {
     AgonRegister<CmdAction> cmdRegister = new AgonRegister<>(true);
     cmdRegister.register(cmdName1, cmd);
     cmdRegister.register(cmdName1, cmd2);
-    assertEquals(2, cmdRegister.size());
+    assertEquals(1, cmdRegister.size());
     cmdRegister.remove("tesT");
     assertEquals(1, cmdRegister.size());
   }
