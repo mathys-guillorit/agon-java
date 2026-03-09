@@ -10,6 +10,7 @@ import java.util.Queue;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Binding;
 import org.jline.reader.Buffer;
+import org.jline.reader.Completer;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.Expander;
 import org.jline.reader.Highlighter;
@@ -31,6 +32,8 @@ public class FakeLineReader implements LineReader {
   private final Queue<String> inputs;
   private final Parser parser = new DefaultParser();
   private final History history = new DefaultHistory();
+
+  private Completer completer;
 
   public FakeLineReader(String... lines) {
     this.inputs = new ArrayDeque<>(List.of(lines));

@@ -1,9 +1,9 @@
 package fr.univ.bordeaux.application.commands;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 ///  TODO: test if i add two same pairs ("A", CmdQuit(), "A", CmdQuit())
 ///  into CommandRegister, add this to tests
@@ -79,6 +79,7 @@ public class AgonRegister<T> {
   /**
    * get all keys<br>
    * - duplicate of internal keys
+   *
    * @return only keys from pairs
    */
   public Set<String> getKeys() {
@@ -86,9 +87,8 @@ public class AgonRegister<T> {
   }
 
   @Nonnull
-  private String normalize(final @Nonnull String key){
-    if(key == null) throw new IllegalArgumentException("Key can't be null");
+  private String normalize(final @Nonnull String key) {
+    if (key == null) throw new IllegalArgumentException("Key can't be null");
     return this.caseSensitive ? key : key.toLowerCase();
   }
-
 }

@@ -4,9 +4,8 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import java.util.Optional;
-
 import fr.univ.bordeaux.ui.UIPromptParser;
+import java.util.Optional;
 import org.apache.commons.cli.Option;
 
 public class CmdHelp extends Cmd {

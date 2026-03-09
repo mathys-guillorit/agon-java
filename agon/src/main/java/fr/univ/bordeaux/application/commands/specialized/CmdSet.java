@@ -3,11 +3,10 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.UIPromptParser;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.annotation.Nonnull;
-
-import fr.univ.bordeaux.ui.UIPromptParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

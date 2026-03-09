@@ -36,6 +36,7 @@ public abstract class AbstractGameUI implements GameUserInterface {
 
   /**
    * save the game configuration into the local machine from the user using current path
+   *
    * @apiNote save the file into the /Downloads repertory with current date (computer's date)
    */
   @Override
@@ -49,7 +50,8 @@ public abstract class AbstractGameUI implements GameUserInterface {
     final Path downDir = Paths.get(userHome, "Downloads"); // save file into /Download directory
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     String currentTime = LocalDateTime.now().format(formatter);
-    Path filepath = downDir.resolve("AgonSave_"+currentTime+".agon"); // where to save the file in
+    Path filepath =
+        downDir.resolve("AgonSave_" + currentTime + ".agon"); // where to save the file in
     ///  TODO: saving here the real file name
     showInfo("saving...");
     // code here (with try-catch if necessary)
@@ -81,5 +83,4 @@ public abstract class AbstractGameUI implements GameUserInterface {
   public void quitGame() {
     getGameEngine().quitGame();
   }
-
 }

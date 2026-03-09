@@ -1,32 +1,25 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.application.commands.AgonRegister;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 /**
  * class to test AgonShell
  *
- * requirements :
- * - overvrite 2 classes from Jline (LineReader and Terminal)
+ * <p>requirements : - overvrite 2 classes from Jline (LineReader and Terminal)
  */
 public class AgonShellTest {
-
-
 
   @Test
   @DisplayName("resource with URL and '/' path notation")
@@ -62,7 +55,7 @@ public class AgonShellTest {
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
     AgonShell shell = new AgonShell(terminal, reader);
     shell.readLine();
-    // Vérifie qu'aucune exception n'est levée
+    // no except thrown
     assertTrue(true);
   }
 
@@ -72,10 +65,8 @@ public class AgonShellTest {
     LineReader reader = new FakeLineReader();
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
     AgonShell shell = new AgonShell(terminal, reader);
-    // Simule une interruption utilisateur (Ctrl+C)
     shell.readLine();
-    // Vérifie qu'aucune exception n'est levée
-    assertTrue(true);
+    assertTrue(true); // no except thrown
   }
 
   @Test
@@ -84,10 +75,8 @@ public class AgonShellTest {
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
     AgonShell shell = new AgonShell(terminal, new FakeLineReader());
     shell.safeCloseTerminal();
-    // Vérifie qu'aucune exception n'est levée
-    assertTrue(true);
+    assertTrue(true); // no throws before
   }
-
 
   @Test
   @DisplayName("test showError writes to terminal")
@@ -98,9 +87,11 @@ public class AgonShellTest {
     shell.showError("test error");
     String output = out.toString();
     String container = "ERROR";
-    assertTrue(output.contains(container), "\n'"+output+"\n\tmust contains:\n'"+container+"'");
+    assertTrue(
+        output.contains(container), "\n'" + output + "\n\tmust contains:\n'" + container + "'");
     container = "AGON";
-    assertTrue(output.contains(container), "\n'"+output+"\n\tmust contains:\n'"+container+"'");
+    assertTrue(
+        output.contains(container), "\n'" + output + "\n\tmust contains:\n'" + container + "'");
   }
 
   @Test
@@ -140,7 +131,7 @@ public class AgonShellTest {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
-    shell.leave();  // Appelle leave()
+    shell.leave();
     assertFalse(shell.getRunning().get());
   }
 
@@ -160,15 +151,12 @@ public class AgonShellTest {
   void testWithoutCommands() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
-    shell.loop();  // Exécute la boucle
-
+    shell.loop();
     String cliOutput = out.toString();
     assertTrue(
-            cliOutput.contains("No Command \"Cmd\" registered"),
-            "Le message d'erreur n'a pas été affiché. Sortie : " + cliOutput
-    );
+        cliOutput.contains("No Command \"Cmd\" registered"),
+        "Le message d'erreur n'a pas été affiché. Sortie : " + cliOutput);
   }
 
   @Test
@@ -190,9 +178,10 @@ public class AgonShellTest {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
-    String newMenu = "    undo [N] : cancel the last turn (or the N lasts)\n" +
-            "    redo [N] : replay the last canceled turn (or the N lasts)\n" +
-            "    show";
+    String newMenu =
+        "    undo [N] : cancel the last turn (or the N lasts)\n"
+            + "    redo [N] : replay the last canceled turn (or the N lasts)\n"
+            + "    show";
     shell.loadMainMenu(newMenu);
     shell.showHelp();
     String output = out.toString();
@@ -209,11 +198,16 @@ public class AgonShellTest {
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
     shell.start();
     String output = out.toString();
-    final String defaultMsg = "Main menu didn't change, you may specify a menu before using associated commands ?";
-    final String finalMsg = "\n\twarning msg must contain:\n'"+defaultMsg+"'"+"\n\tbut id contains:\n"+"'"+output+"'";
+    final String defaultMsg =
+        "Main menu didn't change, you may specify a menu before using associated commands ?";
+    final String finalMsg =
+        "\n\twarning msg must contain:\n'"
+            + defaultMsg
+            + "'"
+            + "\n\tbut id contains:\n"
+            + "'"
+            + output
+            + "'";
     assertTrue(output.contains(defaultMsg), finalMsg);
   }
-
-
-
 }

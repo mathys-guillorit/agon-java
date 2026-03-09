@@ -76,19 +76,19 @@ public interface GameUserInterface {
    */
   void showError(String error);
 
-  /**
-   * display the help menu into terminal
-   */
+  /** display the help menu into terminal */
   void showHelp();
 
   /**
    * show warning messages into the sub UI object
+   *
    * @param msg
    */
   void showWarn(String msg);
 
   /**
    * show information into the sub UI object
+   *
    * @param msg
    */
   void showInfo(String msg);
@@ -106,19 +106,18 @@ public interface GameUserInterface {
 
   /**
    * get user prompte (default is "[AGON]> ")
+   *
    * @return {@link String}
    */
   String getUserPrompt();
 
-  /**
-   * save the game before leaving
-   */
+  /** save the game before leaving */
   void saveGame();
 
   /**
    * get the line entered in the terminal by the user
+   *
    * @return {@link String}
    */
   String getLine();
-
 }

@@ -1,5 +1,11 @@
 package fr.univ.bordeaux.ui.cli.tools;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Cursor;
 import org.jline.terminal.MouseEvent;
@@ -8,14 +14,6 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.ColorPalette;
 import org.jline.utils.InfoCmp;
 import org.jline.utils.NonBlockingReader;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
 
 public class FakeTerminal implements Terminal {
   private final OutputStream outputStream;
@@ -57,9 +55,7 @@ public class FakeTerminal implements Terminal {
   }
 
   @Override
-  public void setSize(Size size) {
-
-  }
+  public void setSize(Size size) {}
 
   @Override
   public int getWidth() {
@@ -82,7 +78,10 @@ public class FakeTerminal implements Terminal {
   }
 
   // Implémente les autres méthodes avec des valeurs par défaut
-  @Override public InputStream input() { return new java.io.ByteArrayInputStream(new byte[0]); }
+  @Override
+  public InputStream input() {
+    return new java.io.ByteArrayInputStream(new byte[0]);
+  }
 
   @Override
   public OutputStream output() {
@@ -95,19 +94,13 @@ public class FakeTerminal implements Terminal {
   }
 
   @Override
-  public void pause() {
-
-  }
+  public void pause() {}
 
   @Override
-  public void pause(boolean wait) throws InterruptedException {
-
-  }
+  public void pause(boolean wait) throws InterruptedException {}
 
   @Override
-  public void resume() {
-
-  }
+  public void resume() {}
 
   @Override
   public boolean paused() {
@@ -119,7 +112,10 @@ public class FakeTerminal implements Terminal {
     return null;
   }
 
-  @Override public String getType() { return "dumb"; }
+  @Override
+  public String getType() {
+    return "dumb";
+  }
 
   @Override
   public boolean puts(InfoCmp.Capability capability, Object... params) {
@@ -146,7 +142,10 @@ public class FakeTerminal implements Terminal {
     return null;
   }
 
-  @Override public boolean hasMouseSupport() { return false; }
+  @Override
+  public boolean hasMouseSupport() {
+    return false;
+  }
 
   @Override
   public boolean trackMouse(MouseTracking tracking) {
@@ -203,13 +202,13 @@ public class FakeTerminal implements Terminal {
     return Terminal.super.getDefaultBackgroundColor();
   }
 
-  @Override public void raise(Terminal.Signal signal) {}
+  @Override
+  public void raise(Terminal.Signal signal) {}
 
   @Override
   public NonBlockingReader reader() {
     return null;
   }
-
 
   @Override
   public boolean echo() {
@@ -227,8 +226,5 @@ public class FakeTerminal implements Terminal {
   }
 
   @Override
-  public void setAttributes(Attributes attr) {
-
-  }
-
+  public void setAttributes(Attributes attr) {}
 }
