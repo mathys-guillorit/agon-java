@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.ui;
 
+import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
@@ -58,9 +59,9 @@ public interface GameUserInterface {
   /**
    * Updates the game board display.
    *
-   * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
+   * @param board A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(ConsoleRenderer boardRepresentation);
+  void updateBoard(RestrictedAgonBoard board);
 
   /**
    * show message to the user.

@@ -13,4 +13,8 @@ public class StandardMatch extends Match {
 
   @Override
   public void endActions() {}
+
+  public void startGame() {
+  super.loopGame();
+  }
 }

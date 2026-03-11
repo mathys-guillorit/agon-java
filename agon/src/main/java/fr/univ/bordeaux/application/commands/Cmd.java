@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application.commands;
 
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import org.jline.reader.Completer;
 public abstract class Cmd implements CmdAction {
 
   private Options options;
-  private AbstractGameUI ctx;
+  private GameUserInterface ui;
   private static String prompt = null;
 
   /** description from sub commands */
@@ -29,15 +30,15 @@ public abstract class Cmd implements CmdAction {
 
   private String name;
 
-  public Cmd(AbstractGameUI uictx) {
-    this.ctx = uictx;
+  public Cmd(GameUserInterface ui) {
+    this.ui = ui;
     this.options = new Options();
     this.desc = "Description: default Command";
     this.name = "cmd";
   }
 
-  public AbstractGameUI getCtx() {
-    return this.ctx;
+  public GameUserInterface getCtx() {
+    return this.ui;
   }
 
   /**

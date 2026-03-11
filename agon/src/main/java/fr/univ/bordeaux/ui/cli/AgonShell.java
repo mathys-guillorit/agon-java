@@ -1,9 +1,14 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
+import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 import fr.univ.bordeaux.application.match.Match;
+import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UIPromptParser;
@@ -62,20 +67,25 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   private AtomicBoolean debug;
 
+  private GameConfig gameConfig;
   private void init() {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
     this.cmds = new AgonRegister<>();
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHA + "> ";
+    this.cmds.register("new", new CmdCreate(this,gameConfig));
+    this.cmds.register("quit", new CmdQuit(this));
+    this.cmds.register("help", new CmdHelp(this));
   }
 
-  public AgonShell(Terminal term, LineReader reader) {
+  public AgonShell(Terminal term, LineReader reader, GameConfig config) {
     super(); // require the work of others
     this.terminal = term;
     // default reader
     this.reader = reader;
     // message headers for the app
+    this.gameConfig = config;
     this.msgHA = this.cliLayer();
     this.msgBI = this.cliInfo();
     this.msgBW = this.cliWarn();
@@ -158,18 +168,43 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     }
     while (this.running.get()) {
       this.readLine();
+      if (this.line == null || this.line.isEmpty()) continue;
+
+      UIPromptParser parser = new UIPromptParser(this.userPrompt);
+      if (parser.parse(this.line)) {
+        String cmdName = parser.getUserCmdName();
+        this.cliWln(cmdName);
+        String[] args = parser.getUserOptions();
+
+        // 3. Chercher et exécuter
+        this.executeCommand(cmdName, args);
+      }
     }
     this.cliWln("\nBye !\n");
     this.safeCloseTerminal();
   }
 
+  private void executeCommand(String name, String[] args) {
+    this.cliWln("je cherche la commande \"" + name + "\"");
+    Optional<CmdAction> proto = this.cmds.get(name);
+
+    if (proto.isPresent()) {
+      this.cliWln("le proto est la \"" + name + "\"");
+      CmdAction action = proto.get().createNew(args);
+      if (action != null) {
+        this.cliWln("action est pas nul \"" + name + "\"");
+        action.execute(null);
+      }
+    } else {
+      this.showError("Unknown command: '" + name + "'");
+    }
+  }
   public String showBE() {
     return this.msgBE;
   }
 
   /** get a line from terminal */
   public void readLine() {
-    final String line;
     try {
       line = this.reader.readLine(this.userPrompt).trim();
     } catch (UserInterruptException e) {
@@ -406,7 +441,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     } // may add catch for other specific Exceptions
     this.running.set(false);
   }
-
   @Override
   public void start() {
     this.loop();
@@ -415,11 +449,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   /**
    * update board display to cli
    *
-   * @param boardRepresentation the object used to show characters into terminal
+   * @param board the object used to show characters into terminal
    */
   @Override
-  public void updateBoard(ConsoleRenderer boardRepresentation) {
-    boardRepresentation.getBoardRepresentation();
+  public void updateBoard(RestrictedAgonBoard board) {
+    this.cliWln(ConsoleRenderer.getBoardRepresentation(board));
   }
 
   @Override
@@ -473,6 +507,8 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   }
 
   public String getLine() {
+    this.readLine();
     return this.line;
   }
+
 }

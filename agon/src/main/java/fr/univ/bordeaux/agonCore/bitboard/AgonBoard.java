@@ -91,5 +91,6 @@ public interface AgonBoard extends RestrictedAgonBoard {
    */
   int getCentrality(int index);
 
+  void initBaseConfiguration();
   List<HistoryInformations> getHistory();
 }

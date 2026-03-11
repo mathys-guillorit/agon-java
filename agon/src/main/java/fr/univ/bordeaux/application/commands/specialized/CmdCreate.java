@@ -1,50 +1,75 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.application.commands.Cmd;
-import fr.univ.bordeaux.ui.AbstractGameUI;
-import java.io.IOException;
-import org.apache.commons.cli.Option;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.Match;
+import fr.univ.bordeaux.application.match.MatchFactory;
+import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
+import javax.annotation.Nonnull;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
 
 /** Create a new game. Command representation in cli : "new [ARGS]" */
 public class CmdCreate extends Cmd {
-
+  private GameConfig gameConfig;
+  private Options opts;
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
    * GUI)
    *
-   * @param uictx context
+   * @param ui context
    */
-  public CmdCreate(AbstractGameUI uictx) {
-    super(uictx);
-    Option aiAndColor =
-        Option.builder("a")
-            .longOpt("ai")
-            .hasArg()
-            .argName("COLOR")
-            .desc("Specify the AI color")
-            .required(false) // optional arg
-            .get();
-    Option invitPlayer = Option.builder("PLAYER_ID").desc("Specify the player ID").get();
-    this.addOption(invitPlayer);
-    this.addOption(aiAndColor);
-    final String filename = "CmdCreate.txt";
-    String desc;
-    try {
-      desc = this.loadText(filename);
-    } catch (IOException e) {
-      desc = "description cannot be loaded for more info type: \"set debug=true\"";
-      // if (someobjet.getDebug())
-      // this.getCtx().showError("problem when reading description file: \""+filename+"\" for
-      // loading description");
-    } catch (NullPointerException e) {
-      desc = "description cannot be loaded for more info: \"set debug=true\"";
-      // if (someobjet.getDebug())
-      // this.getCtx().showError("missing file at: \""+filename+"\" for loading description");
-    }
-    this.setDesc(desc);
-    this.setName("new");
+  public CmdCreate(GameUserInterface ui, GameConfig gameConfig) {
+    super(ui);
+    this.gameConfig = gameConfig;
+    this.opts = new Options();
+  }
+
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return null;
   }
 
   @Override
-  public void execute() {}
+  public String getName() {
+    return "new";
+  }
+
+  @Override
+  public Options getOptions() {
+    return this.opts;
+  }
+
+  @Override
+  public String getDescription() {
+    return "";
+  }
+
+  @Override
+  public void execute(MatchManager matchManager) {
+    super.getCtx().showMessage("j exec la commande \n");
+    Match match=MatchFactory.createMatch(gameConfig,this.getCtx());
+    match.setObserver((MatchObserver) super.getCtx());
+    match.startGame();
+  }
+
+  @Override
+  public CmdAction createNew(String[] args) {
+    return new CmdCreate(super.getCtx(), this.gameConfig);
+  }
+
+  @Override
+  public void showHelp() {
+    this.getCtx().showMessage("Usage: new\n");
+    this.getCtx()
+        .showMessage(
+            "Description: Starts a new Agon game session. This will reset the board and timers.\n");
+  }
 }

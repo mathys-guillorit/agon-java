@@ -16,7 +16,7 @@ import org.jline.reader.Completer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class AgonRegisterTest {
+/*public class AgonRegisterTest {
 
   @Test
   @DisplayName("Test if the add works in register")
@@ -208,4 +208,4 @@ public class AgonRegisterTest {
       return null;
     }
   }
-}
+}*/

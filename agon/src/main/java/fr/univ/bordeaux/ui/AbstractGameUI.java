@@ -1,11 +1,12 @@
 package fr.univ.bordeaux.ui;
 
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class AbstractGameUI implements GameUserInterface {
+public abstract class AbstractGameUI implements GameUserInterface,MatchObserver {
 
   private GameUserInterface gameEngine;
 

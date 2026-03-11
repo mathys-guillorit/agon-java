@@ -1,7 +1,10 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
 public class CmdQuit extends Cmd {
@@ -13,7 +16,7 @@ public class CmdQuit extends Cmd {
    *
    * @param uictx display context
    */
-  public CmdQuit(AbstractGameUI uictx) {
+  public CmdQuit(GameUserInterface uictx) {
     super(uictx);
     this.opts = new Options();
   }
@@ -28,9 +31,22 @@ public class CmdQuit extends Cmd {
     return this.opts;
   }
 
+  @Override
+  public String getDescription() {
+    return "";
+  }
+
   /** to be run with higher levels in code */
   public void execute() {
     this.getCtx().quitGame();
+  }
+
+  public void execute(MatchManager match) {
+
+  }
+
+  public CmdAction createNew(String[] args) {
+    return null;
   }
 
   public void showHelp() {

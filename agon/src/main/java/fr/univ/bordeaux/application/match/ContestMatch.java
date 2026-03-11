@@ -16,4 +16,8 @@ public class ContestMatch extends Match {
   public void endActions() {
     setMatchStatus(MatchStatus.FINISHED);
   }
+
+  public void startGame() {
+
+  }
 }

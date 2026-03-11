@@ -2,6 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized; // Adapte le package 
 
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UIPromptParser;
@@ -24,7 +25,6 @@ public class CmdHelp extends Cmd {
     this.setName("Help");
   }
 
-  @Override
   public void execute() {
     GameUserInterface ctx = this.getCtx();
     var tmp = new UIPromptParser(ctx.getUserPrompt());
@@ -46,5 +46,20 @@ public class CmdHelp extends Cmd {
       ctx.showMessage("\nType 'help [command]' for detailed instructions.\n");
     }
     ctx.showMessage("use \"ctrl+r\" to show history");
+  }
+
+  @Override
+  public String getDescription() {
+    return "";
+  }
+
+  @Override
+  public void execute(MatchManager match) {
+
+  }
+
+  @Override
+  public CmdAction createNew(String[] args) {
+    return null;
   }
 }

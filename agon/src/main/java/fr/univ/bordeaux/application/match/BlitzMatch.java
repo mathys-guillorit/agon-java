@@ -42,4 +42,8 @@ public class BlitzMatch extends Match {
     // Le coup est fini, on arrête le chrono
     getCurrentTimer().stop();
   }
+
+  public void startGame() {
+
+  }
 }

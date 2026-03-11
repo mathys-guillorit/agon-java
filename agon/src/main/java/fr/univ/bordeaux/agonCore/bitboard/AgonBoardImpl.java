@@ -88,6 +88,25 @@ public class AgonBoardImpl implements AgonBoard {
     initAllowedDestinations();
   }
 
+  public void initBaseConfiguration(){
+    this.whitePawns.setBit(CoordinateMapper.toIndex('K',10),1);
+    this.whitePawns.setBit(CoordinateMapper.toIndex('J',5),1);
+    this.whitePawns.setBit(CoordinateMapper.toIndex('H',11),1);
+    this.whitePawns.setBit(CoordinateMapper.toIndex('D',9),1);
+    this.whitePawns.setBit(CoordinateMapper.toIndex('A',5),1);
+    this.whitePawns.setBit(CoordinateMapper.toIndex('B',1),1);
+    this.whiteQueen.setBit(CoordinateMapper.toIndex('F',1),1);
+
+    this.blackPawns.setBit(CoordinateMapper.toIndex('K',7),1);
+    this.blackPawns.setBit(CoordinateMapper.toIndex('J',11),1);
+    this.blackPawns.setBit(CoordinateMapper.toIndex('H',3),1);
+    this.blackPawns.setBit(CoordinateMapper.toIndex('D',1),1);
+    this.blackPawns.setBit(CoordinateMapper.toIndex('A',2),1);
+    this.blackPawns.setBit(CoordinateMapper.toIndex('B',7),1);
+    this.whiteQueen.setBit(CoordinateMapper.toIndex('F',11),1);
+    printBoard();
+  }
+
   /**
    * Determines the distance of a specific tile from the center of the board.
    *
@@ -295,6 +314,7 @@ public class AgonBoardImpl implements AgonBoard {
       type = (color == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
     }
     if (type != null) {
+      System.out.println("le type n'est pas nul");
       moves.add(new Move(-1, move.getTo(), color, type));
       movePieceInBitboard(-1, move.getTo(), color, type);
       if (type.isQueen()) {
@@ -304,18 +324,25 @@ public class AgonBoardImpl implements AgonBoard {
       }
       performCaptures(color, moves);
       history.add(new HistoryInformations(moves, type, color));
+      System.out.println("le coup a été joué");
+      this.printBoard();
       return true;
     }
+    System.out.println("valid ? = "+isValid(move.getFrom(), move.getTo(), color));
     if (isValid(move.getFrom(), move.getTo(), color)) {
+      System.out.println("le coup est valid");
       type = getPieceAt(move.getFrom());
       if (type != null) {
         moves.add(new Move(move.getFrom(), move.getTo(), color, type));
         movePieceInBitboard(move.getFrom(), move.getTo(), color, type);
         performCaptures(color, moves);
         history.add(new HistoryInformations(moves, type, color));
+        System.out.println("le coup a été joué");
+        this.printBoard();
         return true;
       }
     }
+    System.out.println("le coup a eu un probleme");
     return false;
   }
 
@@ -794,9 +821,13 @@ public class AgonBoardImpl implements AgonBoard {
    * @return true if the move follows game rules.
    */
   private boolean isValid(int from, int to, Color color) {
+    System.out.println(from + " " + to + " " + color);
+    System.out.println("is free ? "+isFree(to)+" is adja ? "+isAdjacent(from, to));
     if (isFree(to) && isAdjacent(from, to)) {
       BitBoard maskTo = new BitBoard(to);
+      printMask(maskTo);
       BitBoard legalMoves = generateLegalMovesBitboard(color);
+      printMask(legalMoves);
       return !maskTo.andOperation(legalMoves).isEmpty();
     }
     return false;

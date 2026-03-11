@@ -1,6 +1,8 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
@@ -42,8 +44,13 @@ public class CmdLoad extends Cmd {
     return "";
   }
 
-  @Override
-  public void execute() {}
+  public void execute(MatchManager match) {
+
+  }
+
+  public CmdAction createNew(String[] args) {
+    return null;
+  }
 
   @Override
   public void showHelp() {

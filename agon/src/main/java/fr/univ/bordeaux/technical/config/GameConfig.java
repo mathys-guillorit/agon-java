@@ -2,15 +2,18 @@ package fr.univ.bordeaux.technical.config;
 
 /**
  * Represents the configuration settings for the Agon game.
- *
- * <p>This class acts as a data container for all customizable parameters, including system options
- * (like verbosity and debug modes), game rules (like blitz mode and timeouts), and Artificial
- * Intelligence settings (like algorithms, depths, and heuristics).
+ * <p>
+ * This class acts as a data container for all customizable parameters,
+ * including system options (like verbosity and debug modes), game rules
+ * (like blitz mode and timeouts), and Artificial Intelligence settings
+ * (like algorithms, depths, and heuristics).
+ * </p>
  */
 public class GameConfig {
   private boolean verbose = false;
   private boolean debug = false;
-  private boolean blitzMode = true;
+  private boolean blitzMode = false;
+  private boolean manualPlacement = false;
   private int timeout = 1800;
   private boolean aiActive = true;
   private String aiMode = "MINIMAX";
@@ -20,26 +23,20 @@ public class GameConfig {
   private String aiHeuristic = "MIXED";
   private boolean whiteIsAI = false;
   private boolean blackIsAI = true;
-  private long whiteInitialTimer = 30;
-  private long blackInitialTimer = 30;
 
   /**
    * Sets whether the White player is controlled by an Artificial Intelligence.
    *
    * @param whiteIsAI {@code true} if White is an AI, {@code false} if human.
    */
-  public void setWhiteAI(boolean whiteIsAI) {
-    this.whiteIsAI = whiteIsAI;
-  }
+  public void setWhiteAI(boolean whiteIsAI) { this.whiteIsAI = whiteIsAI; }
 
   /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
    *
    * @param blackIsAI {@code true} if Black is an AI, {@code false} if human.
    */
-  public void setBlackAI(boolean blackIsAI) {
-    this.blackIsAI = blackIsAI;
-  }
+  public void setBlackAI(boolean blackIsAI) { this.blackIsAI = blackIsAI; }
 
   /**
    * Sets the verbosity of the application output.
@@ -47,7 +44,7 @@ public class GameConfig {
    * @param verbose {@code true} to enable verbose output, {@code false} otherwise.
    */
   public void setVerbose(boolean verbose) {
-    this.verbose = verbose;
+    this.verbose=verbose;
   }
 
   /**
@@ -56,7 +53,7 @@ public class GameConfig {
    * @param debug {@code true} to enable debug logs and features, {@code false} otherwise.
    */
   public void setDebug(boolean debug) {
-    this.debug = debug;
+    this.debug=debug;
   }
 
   /**
@@ -65,7 +62,7 @@ public class GameConfig {
    * @param blitzMode {@code true} to enable blitz mode, {@code false} for untimed games.
    */
   public void setBlitzMode(boolean blitzMode) {
-    this.blitzMode = blitzMode;
+    this.blitzMode=blitzMode;
   }
 
   /**
@@ -74,7 +71,7 @@ public class GameConfig {
    * @param timeout The timeout duration in seconds.
    */
   public void setTimeout(int timeout) {
-    this.timeout = timeout;
+    this.timeout=timeout;
   }
 
   /**
@@ -83,7 +80,7 @@ public class GameConfig {
    * @param ai {@code true} to allow AI players, {@code false} to force human-only players.
    */
   public void setAi(boolean ai) {
-    this.aiActive = ai;
+    this.aiActive=ai;
   }
 
   /**
@@ -92,7 +89,7 @@ public class GameConfig {
    * @param mode The name of the AI algorithm (e.g., {@code "MINIMAX"}).
    */
   public void setAiMode(String mode) {
-    this.aiMode = mode;
+    this.aiMode=mode;
   }
 
   /**
@@ -101,7 +98,7 @@ public class GameConfig {
    * @param depth The maximum number of turns ahead the AI should calculate.
    */
   public void setAiDepth(int depth) {
-    this.aiDepth = depth;
+    this.aiDepth=depth;
   }
 
   /**
@@ -110,7 +107,7 @@ public class GameConfig {
    * @param timeLimit The calculation time limit in seconds.
    */
   public void setAiTimeLimit(int timeLimit) {
-    this.aiTimeLimit = timeLimit;
+    this.aiTimeLimit=timeLimit;
   }
 
   /**
@@ -119,7 +116,7 @@ public class GameConfig {
    * @param iterativeDeepening {@code true} to enable Iterative Deepening, {@code false} otherwise.
    */
   public void setAiIterativeDeepening(boolean iterativeDeepening) {
-    this.aiIterativeDeepening = iterativeDeepening;
+    this.aiIterativeDeepening=iterativeDeepening;
   }
 
   /**
@@ -128,7 +125,7 @@ public class GameConfig {
    * @param heuristic The name of the heuristic strategy (e.g., {@code "MIXED"}).
    */
   public void setAiHeuristic(String heuristic) {
-    this.aiHeuristic = heuristic;
+    this.aiHeuristic=heuristic;
   }
 
   /**
@@ -226,24 +223,30 @@ public class GameConfig {
    *
    * @return {@code true} if White is an AI, {@code false} otherwise.
    */
-  public boolean isWhiteAI() {
-    return whiteIsAI;
-  }
+  public boolean isWhiteAI() { return whiteIsAI; }
 
   /**
    * Checks if the Black player is configured to be an AI.
    *
    * @return {@code true} if Black is an AI, {@code false} otherwise.
    */
-  public boolean isBlackAI() {
-    return blackIsAI;
+  public boolean isBlackAI() { return blackIsAI; }
+
+  /**
+   * Checks if the placement is configured to be manual or automatic.
+   *
+   * @return {@code true} if placement is manual, {@code false} otherwise.
+   */
+  public boolean isManualPlacement() {
+    return manualPlacement;
   }
 
-  public long getWhiteInitialTime() {
-    return whiteInitialTimer;
-  }
-
-  public long getBlackInitialTime() {
-    return blackInitialTimer;
+  /**
+   * Enables or disables the manual placement of Pawns and Queens.
+   *
+   * @param manualPlacement {@code true} to allow the players to manually choose the initial placement of their pawns, {@code false} to make it automatic.
+   */
+  public void setManualPlacement(boolean manualPlacement) {
+    this.manualPlacement = manualPlacement;
   }
 }

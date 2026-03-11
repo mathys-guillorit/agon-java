@@ -1,6 +1,8 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 
 public class CmdHint extends Cmd {
@@ -18,5 +20,19 @@ public class CmdHint extends Cmd {
   }
 
   @Override
+  public String getDescription() {
+    return "";
+  }
+
   public void execute() {}
+
+  @Override
+  public void execute(MatchManager match) {
+
+  }
+
+  @Override
+  public CmdAction createNew(String[] args) {
+    return null;
+  }
 }
