@@ -40,7 +40,7 @@ public class AiExample {
         AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
         Heuristic heuristic = new CentralityHeuristic();
-        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 4);
+        MinimaxStrategy ai = new MinimaxStrategy(heuristic, Color.WHITE, 4, false, 10000);
 
         int maxTurns = 40;
         for (int i = 1; i <= maxTurns; i++) {
@@ -94,8 +94,8 @@ public class AiExample {
         AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
         Heuristic heuristic = new MixedHeuristic(10, 1);
-        MinimaxStrategy wAi = new MinimaxStrategy(heuristic, Color.WHITE, 4);
-        MinimaxStrategy bAi = new MinimaxStrategy(heuristic, Color.BLACK, 4);
+        MinimaxStrategy wAi = new MinimaxStrategy(heuristic, Color.WHITE, 4, false, 10000);
+        MinimaxStrategy bAi = new MinimaxStrategy(heuristic, Color.BLACK, 4, false, 10000);
 
         int maxTurns = 40;
         for (int i = 1; i <= maxTurns; i++) {

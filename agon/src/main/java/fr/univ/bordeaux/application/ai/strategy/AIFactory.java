@@ -69,7 +69,7 @@ public class AIFactory {
         String mode = config.getAiMode();
         switch(mode){
             case "minimax"->{
-                return new MinimaxStrategy(heuristic, color, config.getAiDepth());
+                return new MinimaxStrategy(heuristic, color, config.getAiDepth(), config.isAiIterativeDeepening(), config.getAiTimeLimit());
             }
             case "mcts"->{
                 return new MctsStrategy(heuristic, color);
