@@ -16,6 +16,7 @@ public class Main {
 
   /**
    * run main program
+   *
    * @param arg arguments passed from terminal (cli)
    * @throws Exception if resources or initialization items not found or (dev for now) problems
    */

@@ -29,9 +29,8 @@ import org.jline.utils.AttributedStyle;
 
 /**
  * Shell for Agon game<br>
- * used by MatchManager to get characters from the terminal (command names and options).
- * <hr>
- * {@link AbstractGameUI} for bot CLI ang GUI (UI items)
+ * used by MatchManager to get characters from the terminal (command names and options). <hr> {@link
+ * AbstractGameUI} for bot CLI ang GUI (UI items)
  */
 public class AgonShell extends AbstractGameUI {
 
@@ -161,7 +160,9 @@ public class AgonShell extends AbstractGameUI {
     final String shellMenuTxtFile = "cmdsInformations/agonShellMenu.txt";
     final String resourcePath = "/" + shellMenuTxtFile;
     InputStream is = getClass().getResourceAsStream(resourcePath);
-    if (is == null) {return defaultMenu;}
+    if (is == null) {
+      return defaultMenu;
+    }
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       var menu = new StringBuilder();
@@ -254,8 +255,8 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * Create the first bloc to know that we are in agon game to make a difference with maven messages.
-   * (must be used once in the constructor to set attr)
+   * Create the first bloc to know that we are in agon game to make a difference with maven
+   * messages. (must be used once in the constructor to set attr)
    */
   private String cliLayer() {
     final String tag = "AGON";
