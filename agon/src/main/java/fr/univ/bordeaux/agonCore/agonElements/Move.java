@@ -3,20 +3,20 @@ package fr.univ.bordeaux.agonCore.agonElements;
 /**
  * Represents a single action performed by a player on the Agon board.
  *
- * <p>A move is characterized by a starting position (source), a destination position,
- * the player's color, and the specific rank of the piece being moved. This class
- * encapsulates standard displacements, as well as the mandatory relocations that
- * occur after a piece is captured.</p>
- * * <p>In the case of a relocation, the {@code from} index is set to {@code -1},
- * indicating the piece is being moved from the relocation queue (off-board) back
- * onto the board's edge.</p>
+ * <p>A move is characterized by a starting position (source), a destination position, the player's
+ * color, and the specific rank of the piece being moved. This class encapsulates standard
+ * displacements, as well as the mandatory relocations that occur after a piece is captured. *
+ *
+ * <p>In the case of a relocation, the {@code from} index is set to {@code -1}, indicating the piece
+ * is being moved from the relocation queue (off-board) back onto the board's edge.
  */
 public class Move {
 
   /**
    * The starting tile index (0-120).
-   * <p>A value of {@code -1} indicates a "Relocation Move" where a piece
-   * returns to the board from the relocation reserve.</p>
+   *
+   * <p>A value of {@code -1} indicates a "Relocation Move" where a piece returns to the board from
+   * the relocation reserve.
    */
   private final int from;
 
@@ -32,8 +32,8 @@ public class Move {
   /**
    * Constructs a new Move for general displacement.
    *
-   * @param from  The source tile index. Use {@code -1} for relocation from the reserve.
-   * @param to    The destination tile index on the board.
+   * @param from The source tile index. Use {@code -1} for relocation from the reserve.
+   * @param to The destination tile index on the board.
    * @param color The {@link Color} of the player making the move.
    */
   public Move(int from, int to, Color color) {
@@ -46,9 +46,9 @@ public class Move {
   /**
    * Constructs a new Move with explicit piece type identification.
    *
-   * @param from      The source tile index (or {@code -1} for relocation).
-   * @param to        The destination tile index.
-   * @param color     The {@link Color} of the player.
+   * @param from The source tile index (or {@code -1} for relocation).
+   * @param to The destination tile index.
+   * @param color The {@link Color} of the player.
    * @param pieceType The {@link PieceType} rank of the piece.
    */
   public Move(int from, int to, Color color, PieceType pieceType) {
@@ -60,6 +60,7 @@ public class Move {
 
   /**
    * * Get the source of a Move
+   *
    * @return The source tile index. Returns {@code -1} if the move is a relocation.
    */
   public int getFrom() {
@@ -68,6 +69,7 @@ public class Move {
 
   /**
    * Get the destination of a Move
+   *
    * @return The destination tile index (0-120).
    */
   public int getTo() {
@@ -76,6 +78,7 @@ public class Move {
 
   /**
    * Get the color of the piece owner
+   *
    * @return The {@link Color} of the player who owns this move.
    */
   public Color getColor() {
@@ -84,6 +87,7 @@ public class Move {
 
   /**
    * Get the PieceType of the piece that has been moved
+   *
    * @return The {@link PieceType} being moved (Queen or Pawn).
    */
   public PieceType getPieceType() {

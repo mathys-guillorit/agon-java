@@ -27,6 +27,12 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
+/**
+ * Shell for Agon game<br>
+ * used by MatchManager to get characters from the terminal (command names and options).
+ * <hr>
+ * {@link AbstractGameUI} for bot CLI ang GUI (UI items)
+ */
 public class AgonShell extends AbstractGameUI {
 
   private boolean running;
@@ -155,7 +161,7 @@ public class AgonShell extends AbstractGameUI {
     final String shellMenuTxtFile = "cmdsInformations/agonShellMenu.txt";
     final String resourcePath = "/" + shellMenuTxtFile;
     InputStream is = getClass().getResourceAsStream(resourcePath);
-    if (is == null) return defaultMenu;
+    if (is == null) {return defaultMenu;}
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       var menu = new StringBuilder();
@@ -171,7 +177,7 @@ public class AgonShell extends AbstractGameUI {
     return defaultMenu;
   }
 
-  /** run the program to interact with the user */
+  /** Run the program to interact with the user. */
   public void loop() {
     // this.showMainMenu();
     int startCursorIdx = 0;
@@ -194,7 +200,7 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * check if the user want to exit or not
+   * Check if the user want to exit or not.
    *
    * @return boolean : false if the user want to exit, true otherwise
    */
@@ -234,7 +240,7 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * format the output error to see where is the problem (following maven style)
+   * Format the output error to see where is the problem (following maven style).
    *
    * @param msg add a message to the error
    */
@@ -248,7 +254,7 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * create the first bloc to know that we are in agon game to make a difference with maven messages
+   * Create the first bloc to know that we are in agon game to make a difference with maven messages.
    * (must be used once in the constructor to set attr)
    */
   private String cliLayer() {
@@ -261,8 +267,8 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * show a message in terminal using JLine shortened the code verbose (because used many times and
-   * must be changed once for all)
+   * Show a message in terminal using JLine shortened the code verbose (because used many times and
+   * must be changed once for all).
    *
    * @param msg message to send in terminal
    */
@@ -272,7 +278,7 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * show a message in terminal using JLine display inline without jump line ("\n")
+   * Show a message in terminal using JLine display inline without jump line ("\n").
    *
    * @param msg message to send in terminal
    */

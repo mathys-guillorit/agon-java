@@ -3,7 +3,7 @@ package fr.univ.bordeaux.ui;
 /**
  * Unified interface defining possible interactions in the Agon game.
  *
- * <p>This interface aggregates both:
+ * <p>This interface aggregates both:</p>
  *
  * <ul>
  *   <li>Actions the player can perform (e.g., {@code tryMove}, {@code undo}).
