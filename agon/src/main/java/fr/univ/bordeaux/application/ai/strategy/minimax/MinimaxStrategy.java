@@ -23,8 +23,13 @@ import java.util.List;
  */
 public class MinimaxStrategy extends AbstractAgonAI {
 
+    /** The maximum depth limit for the game tree search. */
     private final int maxDepth;
+
+    /** Flag indicating whether to use iterative deepening instead of a single deep search. */
     private final boolean iterativeDeepening;
+
+    /** The maximum allowed computation time per move, in milliseconds. */
     private final long timeLimitMillis;
 
     /** Flag to immediately halt the recursive search when time runs out. */
@@ -46,6 +51,18 @@ public class MinimaxStrategy extends AbstractAgonAI {
         this.timeLimitMillis = timeLimitSeconds * 1000L;
     }
 
+    /**
+     * Computes the best move for the current board state.
+     * <p>
+     * Initializes the search and manages the overall time limit. If Iterative Deepening
+     * is disabled, it performs a single search directly to {@code maxDepth}. If enabled, it loops
+     * through progressively deeper searches, retaining the best fully completed result
+     * before the time runs out.
+     * </p>
+     *
+     * @param board The current game board.
+     * @return The optimal {@link Move} found within the constraints, or {@code null} if no legal moves exist.
+     */
     @Override
     protected Move computeMove(AgonBoard board) {
         this.timeoutReached = false;
@@ -76,6 +93,17 @@ public class MinimaxStrategy extends AbstractAgonAI {
 
     /**
      * Executes the root layer of the Minimax algorithm for a specific target depth.
+     * <p>
+     * Iterates over all initially available legal moves and evaluates them using the
+     * recursive {@link #minimax} method. It keeps track of the best move found and
+     * immediately breaks the evaluation loop if a timeout occurs.
+     * </p>
+     *
+     * @param board       The current game board state.
+     * @param legalMoves  The list of valid moves available from the root position.
+     * @param targetDepth The depth limit for this specific search run.
+     * @param startTime   The system time (in milliseconds) when the entire search began.
+     * @return The best {@link Move} evaluated at the given depth.
      */
     private Move runMinimaxForDepth(AgonBoard board, List<Move> legalMoves, int targetDepth, long startTime) {
         Move bestMove = legalMoves.getFirst();
@@ -110,7 +138,20 @@ public class MinimaxStrategy extends AbstractAgonAI {
     }
 
     /**
-     * Recursive Minimax function with Alpha-Beta pruning.
+     * Recursive Minimax function with Alpha-Beta pruning and timeout checks.
+     * <p>
+     * Explores the game tree by alternating between the maximizing player (the AI) and
+     * the minimizing player (the opponent). It halts early and evaluates the board if a
+     * terminal state is reached (win, loss, depth 0, or no legal moves available).
+     * </p>
+     *
+     * @param board              The simulated game board at the current node.
+     * @param depth              The remaining depth to explore before applying the heuristic.
+     * @param isMaximizingPlayer {@code true} if evaluating the AI's optimal move, {@code false} for the opponent's.
+     * @param alpha              The best guaranteed score for the maximizing player.
+     * @param beta               The best guaranteed score for the minimizing player.
+     * @param startTime          The system time (in milliseconds) when the search began.
+     * @return The heuristic evaluation score of the current branch.
      */
     private long minimax(AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta, long startTime) {
 
@@ -182,7 +223,13 @@ public class MinimaxStrategy extends AbstractAgonAI {
     }
 
     /**
-     * Checks if the allotted time has been exceeded and sets the flag if necessary.
+     * Checks if the allotted calculation time has been exceeded.
+     * <p>
+     * If the elapsed time surpasses {@code timeLimitMillis}, the {@code timeoutReached}
+     * flag is set to {@code true}, triggering an immediate exit from the recursive search.
+     * </p>
+     *
+     * @param startTime The system time (in milliseconds) when the search began.
      */
     private void checkTimeLimit(long startTime) {
         if (!this.timeoutReached && (System.currentTimeMillis() - startTime > this.timeLimitMillis)) {

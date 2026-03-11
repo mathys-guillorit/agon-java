@@ -80,6 +80,19 @@ public class AIFactory {
         }
     }
 
+
+    /**
+     * Creates a pre-configured AI specifically tailored for providing in-game hints.
+     * <p>
+     * This method bypasses the standard configuration to ensure the hint generation
+     * is fast and reliable. It instantiates a {@link MinimaxStrategy} using a
+     * {@link MixedHeuristic}, a fixed depth of 4, Iterative Deepening enabled,
+     * and a strict 5-second time limit.
+     * </p>
+     *
+     * @param color The {@link Color} of the player requesting the hint.
+     * @return A fully configured {@link AbstractAgonAI} ready to calculate a suggested move.
+     */
     public static AbstractAgonAI createHintAi(Color color){
         return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
     }
