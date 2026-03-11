@@ -10,17 +10,15 @@ import org.junit.jupiter.api.Test;
 class ConsoleRendererTest {
 
   private AgonBoardImpl realBoard;
-  private ConsoleRenderer renderer;
 
   @BeforeEach
   void setUp() {
     realBoard = new AgonBoardImpl();
-    renderer = new ConsoleRenderer(realBoard);
   }
 
   @Test
   void testEmptyBoardStructure() {
-    String view = renderer.getBoardRepresentation();
+    String view = ConsoleRenderer.getBoardRepresentation(realBoard);
 
     assertNotNull(view, "Render output must not be null");
     assertFalse(view.isEmpty(), "Render output must not be empty");
@@ -43,7 +41,10 @@ class ConsoleRendererTest {
     int indexBlackQueen = CoordinateMapper.toIndex('K', 6);
     realBoard.getBlackQueen().setBit(indexBlackQueen, 1L);
 
-    String view = renderer.getBoardRepresentation();
+    int indexWhitePawn = CoordinateMapper.toIndex('H', 4);
+    realBoard.getWhitePawns().setBit(indexWhitePawn, 1L);
+
+    String view = ConsoleRenderer.getBoardRepresentation(realBoard);
 
     System.out.println("--- Visual Test Output ---");
     System.out.println(view);
@@ -51,6 +52,7 @@ class ConsoleRendererTest {
     assertTrue(view.contains("Q"), "Render must contain White Queen (Q)");
     assertTrue(view.contains("X"), "Render must contain Black Pawn (X)");
     assertTrue(view.contains("q"), "Render must contain Black Queen (q)");
+    assertTrue(view.contains("O"), "Render must contain White Pawn (O)");
 
     String[] lines = view.split("\n");
     boolean foundQueenOnF = false;
@@ -66,7 +68,29 @@ class ConsoleRendererTest {
   }
 
   @Test
+  void testThroneSymbol() {
+    String emptyView = ConsoleRenderer.getBoardRepresentation(realBoard);
+    assertTrue(emptyView.contains("+"), "An empty board must display the throne (+)");
+    int indexThrone = CoordinateMapper.toIndex('F', 6);
+    realBoard.getWhiteQueen().setBit(indexThrone, 1L);
+    String filledView = ConsoleRenderer.getBoardRepresentation(realBoard);
+    assertFalse(filledView.contains("+"), "The throne (+) must disappear when a piece is on it");
+    assertTrue(filledView.contains("Q"), "The White Queen (Q) must replace the throne");
+  }
+
+  @Test
   void testCoordinatesValidity() {
-    assertDoesNotThrow(() -> renderer.getBoardRepresentation());
+    assertDoesNotThrow(() -> ConsoleRenderer.getBoardRepresentation(realBoard));
+  }
+
+  @Test
+  void testNullBoardHandling() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ConsoleRenderer.getBoardRepresentation(null),
+            "Renderer should explicitly fail when given a null board");
+
+    assertEquals("The game board cannot be null.", exception.getMessage());
   }
 }

@@ -86,6 +86,9 @@ public class ConsoleRenderer {
    * @return A formatted String representing the current game state ready for display.
    */
   public static String getBoardRepresentation(RestrictedAgonBoard board) {
+    if (board == null) {
+      throw new IllegalArgumentException("The game board cannot be null.");
+    }
     ArrayList<Character> arrayLines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
     final short A_Letter = 65; // ASCII A
@@ -138,9 +141,13 @@ public class ConsoleRenderer {
   private static char getSymbolAt(RestrictedAgonBoard board,int x, int y,ArrayList<Character> arrayLines) {
     try {
       char rowChar = arrayLines.get(x);
-      int logicalCol = y + 1;
+      int startCol = (x <= 5) ? (6 - x) : 1;
+      int logicalCol = y + startCol;
       int index = CoordinateMapper.toIndex(rowChar, logicalCol);
       PieceType piece = board.getPieceAt(index);
+      if (piece == null && rowChar == 'F' && logicalCol == 6) {
+        return '+';
+      }
       return getSymbolFromPiece(piece);
     } catch (Exception e) {
       return '.';
