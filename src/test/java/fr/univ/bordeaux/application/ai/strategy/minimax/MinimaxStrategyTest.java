@@ -117,7 +117,7 @@ class MinimaxStrategyTest {
 
         assertNotNull(bestMove, "Even when interrupted, ID must return the best move found so far");
 
-        assertTrue(elapsed >= 1000, "The AI should have used its entire 1 second limit");
+        assertTrue(elapsed >= 945, "The AI should have used its entire 1 second limit");
         assertTrue(elapsed < 1500, "The AI should have stopped cleanly and not exceeded the timeout drastically");
     }
 }

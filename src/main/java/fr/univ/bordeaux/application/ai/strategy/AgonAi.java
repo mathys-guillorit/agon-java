@@ -11,7 +11,7 @@ import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
  * interact with any AI agent interchangeably without knowing the specific algorithm used.
  * </p>
  */
-public interface AgonAI {
+public interface AgonAi {
 
     /**
      * Computes and returns the best possible move for the current game state.

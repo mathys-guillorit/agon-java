@@ -12,9 +12,9 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test suite for the {@link AIFactory} class.
+ * Test suite for the {@link AiFactory} class.
  */
-class AIFactoryTest {
+class AiFactoryTest {
 
     private GameConfig config;
 
@@ -28,7 +28,7 @@ class AIFactoryTest {
         config.setWhiteAI(false);
         config.setBlackAI(false);
 
-        Map<Color, AbstractAgonAI> aiMap = AIFactory.createAiMap(config);
+        Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
         assertNotNull(aiMap);
         assertTrue(aiMap.isEmpty(), "The map should be empty when no AIs are configured.");
@@ -41,7 +41,7 @@ class AIFactoryTest {
         config.setAiMode("minimax");
         config.setAiHeuristic("mixed");
 
-        Map<Color, AbstractAgonAI> aiMap = AIFactory.createAiMap(config);
+        Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
         assertEquals(1, aiMap.size(), "The map should contain exactly one AI.");
         assertTrue(aiMap.containsKey(Color.WHITE), "The map should contain an AI for the White player.");
@@ -55,7 +55,7 @@ class AIFactoryTest {
         config.setAiMode("minimax");
         config.setAiHeuristic("mixed");
 
-        Map<Color, AbstractAgonAI> aiMap = AIFactory.createAiMap(config);
+        Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
         assertEquals(2, aiMap.size(), "The map should contain two AIs.");
         assertTrue(aiMap.containsKey(Color.WHITE));
@@ -68,7 +68,7 @@ class AIFactoryTest {
         config.setAiHeuristic("centrality");
         config.setAiDepth(3);
 
-        AbstractAgonAI ai = AIFactory.createAi(config, Color.BLACK);
+        AbstractAgonAi ai = AiFactory.createAi(config, Color.BLACK);
 
         assertNotNull(ai, "The factory should return an AI instance.");
         assertInstanceOf(MinimaxStrategy.class, ai, "The returned AI should be a MinimaxStrategy.");
@@ -79,7 +79,7 @@ class AIFactoryTest {
         config.setAiMode("mcts");
         config.setAiHeuristic("mobility");
 
-        AbstractAgonAI ai = AIFactory.createAi(config, Color.WHITE);
+        AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
         assertNotNull(ai, "The factory should return an AI instance.");
         assertInstanceOf(MctsStrategy.class, ai, "The returned AI should be an MctsStrategy.");
@@ -90,8 +90,16 @@ class AIFactoryTest {
         config.setAiMode("neural_network");
         config.setAiHeuristic("mixed");
 
-        AbstractAgonAI ai = AIFactory.createAi(config, Color.WHITE);
+        AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
         assertNull(ai, "The factory should return null for an unknown AI mode.");
+    }
+
+    @Test
+    void testCreateHintAi() {
+        AbstractAgonAi hintAi = AiFactory.createHintAi(Color.WHITE);
+
+        assertNotNull(hintAi, "The factory should return a hint AI instance.");
+        assertInstanceOf(MinimaxStrategy.class, hintAi, "The returned hint AI should be a MinimaxStrategy.");
     }
 }

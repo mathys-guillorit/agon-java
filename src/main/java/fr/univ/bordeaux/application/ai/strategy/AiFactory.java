@@ -16,16 +16,16 @@ import java.util.Map;
  * A factory utility class responsible for instantiating Artificial Intelligence strategies.
  * <p>
  * This class reads the parameters provided in a {@link GameConfig} object and
- * creates the corresponding {@link AbstractAgonAI} instances along with their
+ * creates the corresponding {@link AbstractAgonAi} instances along with their
  * required {@link Heuristic} evaluation functions.
  * </p>
  */
-public class AIFactory {
+public class AiFactory {
 
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    private AIFactory(){
+    private AiFactory(){
     }
 
     /**
@@ -37,11 +37,11 @@ public class AIFactory {
      * </p>
      *
      * @param config The {@link GameConfig} containing the game settings and AI preferences.
-     * @return A {@link Map} associating a {@link Color} to an initialized {@link AbstractAgonAI}.
+     * @return A {@link Map} associating a {@link Color} to an initialized {@link AbstractAgonAi}.
      * The map will be empty if no AIs are configured to play.
      */
-    public static Map<Color, AbstractAgonAI> createAiMap(GameConfig config){
-        Map<Color, AbstractAgonAI> aiMap = new HashMap<>();
+    public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config){
+        Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
 
         if(config.isWhiteAI()){
             aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
@@ -61,10 +61,10 @@ public class AIFactory {
      *
      * @param config The {@link GameConfig} containing the AI algorithm and depth parameters.
      * @param color  The {@link Color} that this AI instance will play.
-     * @return An instantiated {@link AbstractAgonAI} ready to compute moves,
+     * @return An instantiated {@link AbstractAgonAi} ready to compute moves,
      * or {@code null} if the requested mode is unknown.
      */
-    public static AbstractAgonAI createAi(GameConfig config, Color color){
+    public static AbstractAgonAi createAi(GameConfig config, Color color){
         Heuristic heuristic = createHeuristic(config.getAiHeuristic());
         String mode = config.getAiMode();
         switch(mode){
@@ -91,9 +91,9 @@ public class AIFactory {
      * </p>
      *
      * @param color The {@link Color} of the player requesting the hint.
-     * @return A fully configured {@link AbstractAgonAI} ready to calculate a suggested move.
+     * @return A fully configured {@link AbstractAgonAi} ready to calculate a suggested move.
      */
-    public static AbstractAgonAI createHintAi(Color color){
+    public static AbstractAgonAi createHintAi(Color color){
         return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
     }
 

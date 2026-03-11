@@ -6,7 +6,7 @@ import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 /**
- * Skeletal implementation of the {@link AgonAI} interface.
+ * Skeletal implementation of the {@link AgonAi} interface.
  * <p>
  * This abstract class handles the common "plumbing" required for any AI strategy,
  * allowing concrete implementations (like Minimax or MCTS) to focus solely on the
@@ -22,7 +22,7 @@ import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
  * <li><b>Performance Metrics:</b> Tracks the number of nodes visited ({@code nodeCount}) for debugging.</li>
  * </ul>
  */
-public abstract class AbstractAgonAI implements AgonAI {
+public abstract class AbstractAgonAi implements AgonAi {
 
     /**
      * The heuristic strategy used to evaluate board positions.
@@ -56,7 +56,7 @@ public abstract class AbstractAgonAI implements AgonAI {
      *
      * @param heuristic The evaluation function to use.
      */
-    public AbstractAgonAI(Heuristic heuristic, Color color) {
+    public AbstractAgonAi(Heuristic heuristic, Color color) {
         this.heuristic = heuristic;
         this.color = color;
     }
