@@ -80,6 +80,10 @@ public class AIFactory {
         }
     }
 
+    public static AbstractAgonAI createHintAi(Color color){
+        return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
+    }
+
     /**
      * Creates the heuristic evaluation function requested by the configuration.
      *
