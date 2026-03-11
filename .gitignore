@@ -1,6 +1,6 @@
 .idea
 *.iml
-agon/target
-agon/.mvn
-agon/.idea
+/target
+/.mvn
+/.idea
 .vscode/settings.json

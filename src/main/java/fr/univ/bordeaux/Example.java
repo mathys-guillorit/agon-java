@@ -1,3 +1,5 @@
+package fr.univ.bordeaux;
+
 public class Example {
 
   private int value;
