@@ -105,12 +105,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.msgBW = this.cliWarn();
     this.msgBE = this.cliError();
     this.init();
-    // shortcut for "ctrl+r" show history
-    reader.getWidgets().put("show-full-history", this::showFullHistory);
-    reader
-        .getKeyMaps()
-        .get(LineReader.MAIN)
-        .bind(new Reference("show-full-history"), KeyMap.ctrl('R'));
+    // shortcut for "ctrl+r" show history with finding pattern
+    reader.getKeyMaps()
+            .get(LineReader.MAIN)
+            .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD),
+                    KeyMap.ctrl('R'));
   }
 
   /**
@@ -244,26 +243,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     }
   }
 
-  /**
-   * display all history
-   *
-   * @return entry for JLine
-   */
-  private boolean showFullHistory() {
-    History history = reader.getHistory();
-    reader.getBuffer().clear();
-    reader.callWidget(LineReader.REDRAW_LINE);
-    reader.callWidget(LineReader.REDISPLAY);
-    this.cliWln("");
-    int i = 1;
-    for (History.Entry entry : history) {
-      System.out.printf("%3d  %s%n", i++, entry.line()); // format is : "LineNumber lastLine"
-    }
-    // redraw prompt
-    reader.callWidget(LineReader.REDRAW_LINE);
-    reader.callWidget(LineReader.REDISPLAY);
-    return true;
-  }
 
   /**
    * completer used by JLine to complete commands and option for all commands. Commands must manage
