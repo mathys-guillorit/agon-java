@@ -1,0 +1,17 @@
+----- Available Commands -----
+
+    agon [OPTIONS] [FILE]
+        -h --help             show current help
+        -V --version          show program version
+        -v --verbose          enable verbose output
+        -d --debug            enable debug mode
+        -g --gui              launch the graphical interface (GUI)
+        -b --blitz            launch a game in blitz mode
+        -t --time TIME        specify the time limit in minutes for blitz (default: 30)
+        -c --contest          launch contest mode (read file and output move)
+        -a --ai [COLOR]       replace a player with AI (Colors: B, W, A)
+        -p --placement        manual placement of guards on the outer circle
+
+    use example : "agon -b -t 15" (launches a 15-minute blitz game)
+    use example : "agon -a W" (AI plays White)
+    use example : "agon -g save.txt" (launches GUI and loads save.txt)

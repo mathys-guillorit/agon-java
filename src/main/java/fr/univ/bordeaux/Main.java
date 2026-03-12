@@ -1,5 +1,7 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.application.GameLauncher;
+
 /**
  * Run the whole java application.
  *
@@ -66,5 +68,7 @@ public class Main {
     //    if(a.setLocale(Locale.FRENCH))
     //      System.out.println("lang found");
     //    System.out.println(a.translate("no"));
+      GameLauncher launcher = new GameLauncher();
+      launcher.launch(arg);
   }
 }
