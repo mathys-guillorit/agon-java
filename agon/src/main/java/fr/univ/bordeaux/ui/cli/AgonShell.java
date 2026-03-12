@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.ui.cli;
 
 import fr.univ.bordeaux.application.commands.ICmd;
+import fr.univ.bordeaux.application.commands.network.*;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,14 +28,10 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
-import fr.univ.bordeaux.application.commands.ICmd;
-
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.CmdRegistry;
 
-import fr.univ.bordeaux.application.commands.network.CmdQuit;
-
-import javax.annotation.Nonnull;
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 
 public class AgonShell extends AbstractGameUI {
 

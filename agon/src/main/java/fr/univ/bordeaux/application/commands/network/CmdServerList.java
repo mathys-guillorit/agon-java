@@ -23,6 +23,11 @@ public class CmdServerList extends Cmd {
         this.context = context;
     }
 
+    @Override
+    public void execute() {
+    }
+
+
     /**
      * Executes the server list command.
      *

@@ -22,6 +22,11 @@ public class CmdServerStop extends Cmd {
         this.context = context;
     }
 
+    @Override
+    public void execute() {
+    }
+
+
     /**
      * Executes the server stop command.
      *

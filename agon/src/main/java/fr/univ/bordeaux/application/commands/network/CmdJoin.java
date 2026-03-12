@@ -23,6 +23,11 @@ public class CmdJoin extends Cmd {
         this.context = context;
     }
 
+
+    @Override
+    public void execute() {
+    }
+
     /**
      * Executes the join command. Parses the input arguments and attempts connection.
      *

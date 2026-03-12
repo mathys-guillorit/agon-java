@@ -11,4 +11,5 @@ public interface ICmd {
 
   /** execute specific actions */
   void execute();
+  void execute(String[] args);
 }

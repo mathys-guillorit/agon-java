@@ -5,6 +5,7 @@ import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.gui.controllers.GUIExample;
 import java.util.List;
 

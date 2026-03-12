@@ -20,6 +20,10 @@ public class CmdPing extends Cmd {
         this.context = context;
     }
 
+    @Override
+    public void execute() {
+    }
+
     /**
      * Executes the ping command. Checks connectivity before sending the request.
      *

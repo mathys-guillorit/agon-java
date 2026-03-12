@@ -25,6 +25,11 @@ public class CmdServerStart extends Cmd {
         this.context = context;
     }
 
+    @Override
+    public void execute() {
+    }
+
+
     /**
      * Executes the server start command.
      *
