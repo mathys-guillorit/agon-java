@@ -1,0 +1,20 @@
+{ Fichier de test pour le mode Contest }
+# C'est au joueur Noir (X) de jouer
+
+[game]
+X
+      O . . . . .
+     . . Q . . . .
+    . . . . . . . .
+   . . . . . . . . .
+  . . . . . . . . . .
+ . . . . . q . . . . .
+  . . . . . . . . . .
+   . . . . X . . . .
+    . . . . . . . .
+     . . X . . . .
+      . . . . . .
+
+[history]
+move A1-B2
+move G9-F8
