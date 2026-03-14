@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
+import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
@@ -32,10 +33,12 @@ public class ContestMatch {
      */
     public static void executeContest(String filePath) throws Exception {
         SaveParser.GameState state = SaveParser.loadGame(filePath);
-        AbstractAgonAi aiStrategy = AiFactory.createHintAi(state.currentPlayer());
+        Color playerColor = state.currentPlayer();
+        char playerChar  = (playerColor == Color.BLACK) ? 'X' : 'O';
+        AbstractAgonAi aiStrategy = AiFactory.createHintAi(playerColor);
         Move bestMove = aiStrategy.getBestMove(state.board());
         if (bestMove != null) {
-            String move = indexToCoordinate(bestMove.getFrom()) + "-" + indexToCoordinate(bestMove.getTo());
+            String move = playerChar + " " + indexToCoordinate(bestMove.getFrom()) + " " + indexToCoordinate(bestMove.getTo());
             System.out.println(move);
         } else {
             System.err.println("[ERROR] The AI could not find any valid move.");

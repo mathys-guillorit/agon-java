@@ -1,3 +1,10 @@
-#!/bin/bash
-# Launch script for Linux and macOS
-java -jar target/agon-1.0-SNAPSHOT-jar-with-dependencies.jar "$@"
+#!/bin/sh
+
+JAR=target/agon-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+if [ ! -f $JAR ]; then
+    echo "$0: jar not found!"
+    exit 1
+fi
+
+java -jar $JAR $@
