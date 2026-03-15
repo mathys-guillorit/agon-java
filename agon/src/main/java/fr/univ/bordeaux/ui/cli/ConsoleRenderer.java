@@ -1,8 +1,8 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import java.util.ArrayList;
 
 /**
@@ -79,7 +79,7 @@ public class ConsoleRenderer {
    * <ul>
    *   <li>Indentation (using {@link #coneReversed(int, int, int)})
    *   <li>Left borders and Row identifiers (e.g., "K /")
-   *   <li>Cell content (using {@link #getSymbolAt(RestrictedAgonBoard,int, int,ArrayList)})
+   *   <li>Cell content (using {@link #getSymbolAt(RestrictedAgonBoard, int, int, ArrayList)})
    *   <li>Right borders and Row numbers
    * </ul>
    *
@@ -92,7 +92,9 @@ public class ConsoleRenderer {
     ArrayList<Character> arrayLines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
     final short A_Letter = 65; // ASCII A
-    for (short c = K_Letter; c >= A_Letter; c--) arrayLines.add((char) c);
+    for (short c = K_Letter; c >= A_Letter; c--) {
+      arrayLines.add((char) c);
+    }
     StringBuilder sb = new StringBuilder();
     sb.append('\n');
     int idxContent, spaceCount;
@@ -100,16 +102,21 @@ public class ConsoleRenderer {
     final int midLine = (linesCount - 1) / 2;
 
     for (int lines = 0; lines < linesCount; lines++) {
-      for (spaceCount = 0; spaceCount < coneReversed(lines, 0, 5); spaceCount++)
+      for (spaceCount = 0; spaceCount < coneReversed(lines, 0, 5); spaceCount++) {
         sb.append(' ');
+      }
 
-      if (lines > midLine) sb.append(arrayLines.get(lines)).append(" \\");
-      else if (lines == midLine) sb.append("F |");
-      else sb.append(arrayLines.get(lines)).append(" /");
+      if (lines > midLine) {
+        sb.append(arrayLines.get(lines)).append(" \\");
+      } else if (lines == midLine) {
+        sb.append("F |");
+      } else {
+        sb.append(arrayLines.get(lines)).append(" /");
+      }
 
       int width = 6 + cone(lines, midLine, -10);
       for (idxContent = 0; idxContent < width; idxContent++) {
-        char symbol = getSymbolAt(board,lines, idxContent,arrayLines);
+        char symbol = getSymbolAt(board, lines, idxContent, arrayLines);
         sb.append(symbol);
         if (idxContent != width - 1) {
           sb.append(' ');
@@ -138,7 +145,8 @@ public class ConsoleRenderer {
    * @param y The diagonal/logical column index on that line.
    * @return The char representing the piece, or '.' if empty/error.
    */
-  private static char getSymbolAt(RestrictedAgonBoard board,int x, int y,ArrayList<Character> arrayLines) {
+  private static char getSymbolAt(RestrictedAgonBoard board, int x, int y,
+      ArrayList<Character> arrayLines) {
     try {
       char rowChar = arrayLines.get(x);
       int startCol = (x <= 5) ? (6 - x) : 1;
@@ -159,10 +167,12 @@ public class ConsoleRenderer {
    *
    * @param piece The piece to convert.
    * @return 'O' for White Pawn, 'X' for Black Pawn, 'Q' for White Queen, 'q' for Black Queen, '.'
-   *     for empty.
+   * for empty.
    */
   private static char getSymbolFromPiece(PieceType piece) {
-    if (piece == null) return '.';
+    if (piece == null) {
+      return '.';
+    }
     return switch (piece) {
       case WHITE_PAWN -> 'O';
       case BLACK_PAWN -> 'X';

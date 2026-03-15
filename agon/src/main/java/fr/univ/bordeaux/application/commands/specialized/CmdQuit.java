@@ -8,6 +8,7 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
 public class CmdQuit extends Cmd {
+
   private Options opts;
 
   /**
@@ -33,26 +34,27 @@ public class CmdQuit extends Cmd {
 
   @Override
   public String getDescription() {
-    return "";
+    return "Usage: quit (or Ctrl+C)\n"+"Description: Exits the game. You will be prompted to save your current progress before leaving.\n";
   }
 
-  /** to be run with higher levels in code */
-  public void execute() {
-    this.getCtx().quitGame();
-  }
-
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    System.out.println("j'ai bien appeler quit");
+    if (match!=null){
+      match.quit();
+    }
+    this.getCtx().quit();
+    System.out.println("j ai demandé au shell de s'arreter");
+    return true;
   }
 
   public CmdAction createNew(String[] args) {
-    return null;
+    return new CmdQuit(super.getCtx());
   }
 
-  public void showHelp() {
+ /* public void getDescription() {
     this.getCtx().showMessage("Usage: quit (or Ctrl+C)\n");
     this.getCtx()
         .showMessage(
             "Description: Exits the game. You will be prompted to save your current progress before leaving.\n");
-  }
+  }*/
 }

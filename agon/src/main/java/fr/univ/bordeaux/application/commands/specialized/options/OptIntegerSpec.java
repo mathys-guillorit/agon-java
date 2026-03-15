@@ -2,7 +2,9 @@ package fr.univ.bordeaux.application.commands.specialized.options;
 
 import java.util.List;
 
-/** Integer option */
+/**
+ * Integer option
+ */
 public class OptIntegerSpec extends OptTypeSpec {
 
   public OptIntegerSpec() {

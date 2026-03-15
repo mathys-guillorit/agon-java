@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class AbstractGameUI implements GameUserInterface,MatchObserver {
+public abstract class AbstractGameUI implements GameUserInterface, MatchObserver {
 
   private GameUserInterface gameEngine;
 
@@ -37,8 +37,7 @@ public abstract class AbstractGameUI implements GameUserInterface,MatchObserver 
 
   /**
    * save the game configuration into the local machine from the user using current path
-   *
-   * @apiNote save the file into the /Downloads repertory with current date (computer's date)
+   *  save the file into the /Downloads repertory with current date (computer's date)
    */
   @Override
   public void saveGame() {
@@ -46,8 +45,9 @@ public abstract class AbstractGameUI implements GameUserInterface,MatchObserver 
 
     // get download path to save file there :
     final String userHome = System.getProperty("user.home");
-    if (userHome == null || userHome.isEmpty())
+    if (userHome == null || userHome.isEmpty()) {
       throw new IllegalStateException("Cannot determine user home directory");
+    }
     final Path downDir = Paths.get(userHome, "Downloads"); // save file into /Download directory
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     String currentTime = LocalDateTime.now().format(formatter);
@@ -81,7 +81,7 @@ public abstract class AbstractGameUI implements GameUserInterface,MatchObserver 
   }
 
   @Override
-  public void quitGame() {
-    getGameEngine().quitGame();
+  public void quit() {
+    getGameEngine().quit();
   }
 }

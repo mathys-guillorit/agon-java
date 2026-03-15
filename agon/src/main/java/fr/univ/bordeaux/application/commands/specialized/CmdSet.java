@@ -4,11 +4,12 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-public class CmdSet extends Cmd {
+public final class CmdSet extends Cmd {
 
   private Options opts;
 
@@ -18,7 +19,7 @@ public class CmdSet extends Cmd {
    *
    * @param uictx
    */
-  public CmdSet(AbstractGameUI uictx) {
+  public CmdSet(GameUserInterface uictx) {
     super(uictx);
     this.opts = this.getOptions();
   }
@@ -41,22 +42,21 @@ public class CmdSet extends Cmd {
 
   @Override
   public String getDescription() {
-    return "";
+    return "Usage: set PARAM=VALUE\n"+"Description: Changes the current game configuration dynamically during the session.\n";
   }
 
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    return true;
   }
 
   public CmdAction createNew(String[] args) {
-    return null;
+    return new CmdSave(super.getCtx());
   }
 
-  @Override
-  public void showHelp() {
+  /*public void getDescription() {
     this.getCtx().showMessage("Usage: set PARAM=VALUE\n");
     this.getCtx()
         .showMessage(
             "Description: Changes the current game configuration dynamically during the session.\n");
-  }
+  }*/
 }

@@ -1,8 +1,8 @@
 package fr.univ.bordeaux.application.ai.heuristics;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 
 /**
  * Base abstract class for all heuristic evaluations in the Agon game AI.
@@ -16,7 +16,9 @@ import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
  */
 public abstract class AbstractHeuristic implements Heuristic {
 
-  /** The weight multiplier applied to the raw factor for Pawn pieces. */
+  /**
+   * The weight multiplier applied to the raw factor for Pawn pieces.
+   */
   protected int pawnWeight;
 
   /**
@@ -28,7 +30,7 @@ public abstract class AbstractHeuristic implements Heuristic {
   /**
    * Constructs a new heuristic with specific weights for pieces.
    *
-   * @param pawnWeight The importance of the heuristic factor for a Pawn.
+   * @param pawnWeight  The importance of the heuristic factor for a Pawn.
    * @param queenWeight The importance of the heuristic factor for the Queen.
    */
   public AbstractHeuristic(int pawnWeight, int queenWeight) {
@@ -60,15 +62,17 @@ public abstract class AbstractHeuristic implements Heuristic {
    * {@inheritDoc}
    *
    * <p><b>Implementation Note:</b> This implementation uses the <b>Template Method</b> pattern. It
-   * iterates over all 91 cells of the board, calculates a specific factor using {@link
-   * #getFactor(AgonBoard, int)}, and applies the corresponding weight (Queen or Pawn).
+   * iterates over all 91 cells of the board, calculates a specific factor using
+   * {@link #getFactor(AgonBoard, int)}, and applies the corresponding weight (Queen or Pawn).
    */
   @Override
   public long evaluate(AgonBoard board, Color aiColor) {
     long score = 0;
     for (int i = 0; i <= 120; i++) {
       PieceType piece = board.getPieceAt(i);
-      if (piece == null) continue;
+      if (piece == null) {
+        continue;
+      }
       long factor = getFactor(board, i);
       long pieceValue = 0;
       if (piece == PieceType.WHITE_QUEEN || piece == PieceType.BLACK_QUEEN) {

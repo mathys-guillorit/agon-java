@@ -1,18 +1,22 @@
 package fr.univ.bordeaux.application.match;
 
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.agonCore.history.HistoryInformations;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
+import fr.univ.bordeaux.application.ai.strategy.AIFactory;
+import fr.univ.bordeaux.application.ai.strategy.AgonAI;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.player.Player;
-import  fr.univ.bordeaux.ui.ObservableMatch;
-import  fr.univ.bordeaux.ui.MatchObserver;
+import fr.univ.bordeaux.ui.ObservableMatch;
+import fr.univ.bordeaux.ui.MatchObserver;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Match implements MatchManager,ObservableMatch{
+public abstract class Match implements MatchManager, ObservableMatch {
+
   private AgonBoard agonBoard;
   private Player currentPlayer;
   private Player player1;
@@ -28,25 +32,23 @@ public abstract class Match implements MatchManager,ObservableMatch{
     this.status = MatchStatus.RUNNING;
   }
 
-  public void loopGame(){
-    while(this.status!=MatchStatus.FINISHED){
+  public void loopGame() {
+    while (this.status != MatchStatus.FINISHED) {
       this.observer.updateBoard(agonBoard);
-      CmdAction cmd=currentPlayer.getAction();
-      cmd.execute(this);
-      switchPlayer();
+      CmdAction cmd = currentPlayer.getAction();
+      if (cmd.execute(this)) {
+        switchPlayer();
+      }
     }
-    this.observer.updateBoard(agonBoard);
   }
 
   public boolean move(Move move) {
-    System.out.println("je suis dans move de match");
     //this.startActions();
     PieceType piece = agonBoard.getPieceAt(move.getFrom());
     if (piece == null || piece.getColor() != currentPlayer.getColor()) {
       return false;
     }
     if (agonBoard.applyMove(move)) {
-      System.out.println("le move a marché");
       if (agonBoard.isGameWon(currentPlayer.getColor())) {
         this.status = MatchStatus.FINISHED;
         System.out.println("win");
@@ -54,7 +56,6 @@ public abstract class Match implements MatchManager,ObservableMatch{
       //this.endActions();
       return true;
     }
-    System.out.println("le move a pas marcher");
     return false;
   }
 
@@ -70,11 +71,31 @@ public abstract class Match implements MatchManager,ObservableMatch{
       uiList.add(
           new MoveDTO(
               CoordinateMapper.toAbaPro(mainMove.getFrom()),
-              CoordinateMapper.toAbaPro(mainMove.getTo()),
+              CoordinateMapper.toAbaPro(mainMove.getDestination()),
               mainMove.getPieceType().toString()));
     }
     return uiList;
   }
+
+  public void quit() {
+    this.setMatchStatus(MatchStatus.FINISHED);
+  }
+
+  public boolean redo() {
+    return agonBoard.redoMove();
+  }
+
+  @Override
+  public boolean undo() {
+    return agonBoard.undoMove();
+  }
+
+  public Move hint() {
+    AgonAI ai = AIFactory.createHintAi(currentPlayer.getColor());
+    Move hint = ai.getBestMove(agonBoard);
+    return hint;
+  }
+
 
   public MatchStatus getMatchStatus() {
     return status;
@@ -87,13 +108,14 @@ public abstract class Match implements MatchManager,ObservableMatch{
   public Player getCurrentPlayer() {
     return currentPlayer;
   }
+
   @Override
-  public void setObserver(MatchObserver observer){
+  public void setObserver(MatchObserver observer) {
     this.observer = observer;
   }
-  @Override
-  public void notifyObserver(){
-    this.observer.updateBoard(this.agonBoard);
+
+  public RestrictedAgonBoard getAgonBoard(){
+    return agonBoard;
   }
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;

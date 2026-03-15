@@ -1,8 +1,8 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 /**
@@ -29,13 +29,19 @@ public abstract class AbstractAgonAI implements AgonAI {
    */
   protected final Heuristic heuristic;
 
-  /** The color played by this AI agent (White or Black). */
+  /**
+   * The color played by this AI agent (White or Black).
+   */
   protected Color color;
 
-  /** The maximum time allowed for calculation in milliseconds. Default is 5000ms. */
+  /**
+   * The maximum time allowed for calculation in milliseconds. Default is 5000ms.
+   */
   protected long timeLimit = 5000;
 
-  /** The timestamp (in milliseconds) when the current move calculation started. */
+  /**
+   * The timestamp (in milliseconds) when the current move calculation started.
+   */
   protected long startTime;
 
   /**
@@ -54,7 +60,9 @@ public abstract class AbstractAgonAI implements AgonAI {
     this.color = color;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setTimeLimit(long millis) {
     this.timeLimit = millis;

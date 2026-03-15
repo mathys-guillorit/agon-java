@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +34,7 @@ public class AgonShellTest {
   void testQuitGameNoSave() throws Exception {
     LineReader reader = new FakeLineReader("n");
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, reader);
+    AgonShell shell = new AgonShell(terminal, reader,new GameConfig());
     shell.quitGame();
     assertFalse(shell.getDebugMode().get());
   }
@@ -43,7 +44,7 @@ public class AgonShellTest {
   void testQuitGameWithSave() throws Exception {
     LineReader reader = new FakeLineReader("y");
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, reader);
+    AgonShell shell = new AgonShell(terminal, reader,new GameConfig());
     shell.quitGame();
     assertFalse(shell.getDebugMode().get());
   }
@@ -53,7 +54,7 @@ public class AgonShellTest {
   void testReadLineEmpty() throws Exception {
     LineReader reader = new FakeLineReader("");
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, reader);
+    AgonShell shell = new AgonShell(terminal, reader,new GameConfig());
     shell.readLine();
     // no except thrown
     assertTrue(true);
@@ -64,7 +65,7 @@ public class AgonShellTest {
   void testReadLineInterrupt() throws Exception {
     LineReader reader = new FakeLineReader();
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, reader);
+    AgonShell shell = new AgonShell(terminal, reader,new GameConfig());
     shell.readLine();
     assertTrue(true); // no except thrown
   }
@@ -73,7 +74,7 @@ public class AgonShellTest {
   @DisplayName("test safeCloseTerminal with IOException")
   void testSafeCloseTerminalIOException() throws Exception {
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.safeCloseTerminal();
     assertTrue(true); // no throws before
   }
@@ -83,7 +84,7 @@ public class AgonShellTest {
   void testShowError() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.showError("test error");
     String output = out.toString();
     String container = "ERROR";
@@ -99,7 +100,7 @@ public class AgonShellTest {
   void testShowInfo() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.showInfo("test info");
     String output = out.toString();
     assertTrue(output.contains("INFO"));
@@ -110,7 +111,7 @@ public class AgonShellTest {
   void testShowWarn() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = TerminalBuilder.builder().streams(null, out).dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.showWarn("test warn");
     String output = out.toString();
     assertTrue(output.contains("WARNING"));
@@ -120,7 +121,7 @@ public class AgonShellTest {
   @DisplayName("test leave sets running to false")
   void testLeave() throws Exception {
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.leave();
     assertFalse(shell.getDebugMode().get());
   }
@@ -130,7 +131,7 @@ public class AgonShellTest {
   void testLeaveWithFakeTerminal() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""),new GameConfig());
     shell.leave();
     assertFalse(shell.getRunning().get());
   }
@@ -139,7 +140,7 @@ public class AgonShellTest {
   @DisplayName("test setVerbose toggles state")
   void testSetVerbose() throws Exception {
     Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader());
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(),new GameConfig());
     shell.setVerbose(true);
     assertTrue(shell.getVerbose());
     shell.setVerbose(false);
@@ -151,7 +152,7 @@ public class AgonShellTest {
   void testWithoutCommands() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""),new GameConfig());
     shell.loop();
     String cliOutput = out.toString();
     assertTrue(
@@ -164,7 +165,7 @@ public class AgonShellTest {
   void testInit() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""),new GameConfig());
 
     assertFalse(shell.getVerbose());
     assertFalse(shell.getDebugMode().get());
@@ -177,7 +178,7 @@ public class AgonShellTest {
   void testLoadMainMenu() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""),new GameConfig());
     String newMenu =
         "    undo [N] : cancel the last turn (or the N lasts)\n"
             + "    redo [N] : replay the last canceled turn (or the N lasts)\n"
@@ -195,7 +196,7 @@ public class AgonShellTest {
   void testLoadMainMenuWithoutMainMenu() {
     var out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""));
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""),new GameConfig());
     shell.start();
     String output = out.toString();
     final String defaultMsg =

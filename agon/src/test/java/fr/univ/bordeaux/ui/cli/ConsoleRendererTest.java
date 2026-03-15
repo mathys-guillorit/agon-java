@@ -2,8 +2,8 @@ package fr.univ.bordeaux.ui.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

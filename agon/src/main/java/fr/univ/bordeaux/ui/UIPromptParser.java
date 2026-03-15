@@ -1,87 +1,83 @@
 package fr.univ.bordeaux.ui;
 
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Parser;
 import org.jline.reader.impl.DefaultParser;
 
 /**
- * parse text into commands and options example : "set debug=true" cmdName : "set" options: "debug"
- * and "true"
+ * Utility class to parse text into CmdAction using a command registry.
  */
 public class UIPromptParser {
 
-  private String userPrompt;
-
-  /** where user have written the message in cli */
-  private String userCmdName = "";
-
-  private String[] userOptions;
-  private Parser parser = new DefaultParser();
-
-  public UIPromptParser(String userPrompt) {
-    this.userPrompt = userPrompt;
-    this.userOptions = new String[0]; // default empty
-    this.userCmdName = "";
-  }
+  private static final Parser parser = new DefaultParser();
+  private static final Pattern MOVE_PATTERN =
+      Pattern.compile("^([a-k])(\\d{1,2})([a-k])(\\d{1,2})$");
 
   /**
-   * @param line {@link String} input from terminal
-   * @return boolean true if succeeded else false when an error occurred or input is empty.
+   * Parse a line from the terminal and return the corresponding CmdAction.
+   *
+   * @param line     The input line from the terminal.
+   * @param registry The registry containing available commands.
+   * @return The CmdAction if found and valid, otherwise null.
    */
-  public boolean parse(final String line) {
-    int startCursorIdx = 0;
-    // in restricted mode we know option in advance
-    // but not in game mode
-    if (line.isEmpty()) {
-      this.userCmdName = "";
-      this.userOptions = new String[0];
-      return false;
+  public static CmdAction parse(final String line, AgonRegister<CmdAction> registry) {
+    if (line == null || line.trim().isEmpty()) {
+      return null;
     }
+
     final ParsedLine parsed;
     try {
       parsed = parser.parse(line, 0);
     } catch (Exception e) {
-      return false;
+      return null;
     }
+
     final List<String> words = parsed.words();
-    if (words.isEmpty()) return false;
-    this.userCmdName = words.getFirst().toLowerCase();
-    startCursorIdx++;
-    this.userOptions = words.subList(startCursorIdx, words.size()).toArray(String[]::new);
-    return true;
+    if (words.isEmpty()) {
+      return null;
+    }
+
+    String cmdName = words.get(0).toLowerCase();
+    String[] options = words.subList(1, words.size()).toArray(String[]::new);
+
+    return registry.get(cmdName)
+        .map(action -> action.createNew(options))
+        .orElseGet(()->handleDefault(line));
   }
 
-  /**
-   * @return
-   */
-  public String[] getTxtOptions() {
-    return null;
-  }
+  private static CmdAction handleDefault(String input) {
+    input = input.trim().toUpperCase();
 
-  public String getUserPrompt() {
-    return userPrompt;
-  }
+    Matcher matcher = MOVE_PATTERN.matcher(input);
 
-  /**
-   * get the name of the command entered by the user
-   *
-   * @return {@link String}
-   */
-  public String getUserCmdName() {
-    return userCmdName;
-  }
+    if (!matcher.matches()) {
+      System.out.println("unknown command");
+      return null;
+    }
 
-  /**
-   * get all options sent by the user
-   *
-   * @return {@link String}[]
-   */
-  public String[] getUserOptions() {
-    return userOptions;
-  }
+    char letterFrom = matcher.group(1).charAt(0);
+    int colFrom = Integer.parseInt(matcher.group(2));
 
-  public Parser getParser() {
-    return parser;
+    char letterTo = matcher.group(3).charAt(0);
+    int colTo = Integer.parseInt(matcher.group(4));
+    if (colFrom < 1 || colFrom > 11 || colTo < 1 || colTo > 11) {
+      System.out.println(
+          "Erreur : a Move is create this way : lineFrom (a-k) + colFrom (1-11) + lineDestination (a-k) + colDestination (1-11). For exemple : a1b1, k11j10 are valid while z22aa1 are not.");
+      return null;
+    }
+
+    // 5. Conversion et création de la commande
+    int indexFrom = CoordinateMapper.toIndex(letterFrom, colFrom);
+    int indexTo = CoordinateMapper.toIndex(letterTo, colTo);
+
+    return new CmdMove(indexFrom, indexTo);
   }
 }

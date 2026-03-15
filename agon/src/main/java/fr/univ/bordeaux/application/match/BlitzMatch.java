@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.match;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 
 public class BlitzMatch extends Match {

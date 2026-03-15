@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
@@ -13,7 +13,8 @@ import java.util.Map;
 
 public class AIFactory {
 
-  private AIFactory() {}
+  private AIFactory() {
+  }
 
   public static Map<Color, AbstractAgonAI> createAiMap(GameConfig config) {
     Map<Color, AbstractAgonAI> aiMap = new HashMap<>();
@@ -32,7 +33,8 @@ public class AIFactory {
     String mode = config.getAiMode();
     switch (mode) {
       case "minimax" -> {
-        return new MinimaxStrategy(heuristic, color, config.getAiDepth());
+        return new MinimaxStrategy(heuristic, color, config.getAiDepth(),
+            config.isAiIterativeDeepening(), config.getAiTimeLimit());
       }
       case "mcts" -> {
         return new MctsStrategy(heuristic, color);
@@ -59,4 +61,9 @@ public class AIFactory {
       }
     }
   }
+
+  public static AbstractAgonAI createHintAi(Color color) {
+    return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
+  }
+
 }

@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
  * Defines the two competing sides in the Agon game. *
@@ -7,9 +7,13 @@ package fr.univ.bordeaux.agonCore.agonElements;
  * game states from specific perspectives.
  */
 public enum Color {
-  /** Represents the Black player. */
+  /**
+   * Represents the Black player.
+   */
   BLACK,
 
-  /** Represents the White player. */
+  /**
+   * Represents the White player.
+   */
   WHITE;
 }

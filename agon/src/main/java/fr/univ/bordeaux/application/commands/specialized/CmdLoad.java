@@ -4,11 +4,12 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-public class CmdLoad extends Cmd {
+public final class CmdLoad extends Cmd {
 
   private Options opts;
 
@@ -18,7 +19,7 @@ public class CmdLoad extends Cmd {
    *
    * @param uictx
    */
-  public CmdLoad(AbstractGameUI uictx) {
+  public CmdLoad(GameUserInterface uictx) {
     super(uictx);
     this.opts = this.getOptions();
   }
@@ -41,22 +42,22 @@ public class CmdLoad extends Cmd {
 
   @Override
   public String getDescription() {
-    return "";
+    return "Usage: load [filename]\n"+"Description: Loads a previously saved game from the specified file.\n"+"Example: load my_save.txt\n";
   }
 
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    return true;
   }
 
   public CmdAction createNew(String[] args) {
     return null;
   }
 
-  @Override
-  public void showHelp() {
+  /*@Override
+  public void getDescription() {
     this.getCtx().showMessage("Usage: load [filename]\n");
     this.getCtx()
         .showMessage("Description: Loads a previously saved game from the specified file.\n");
-    this.getCtx().showMessage("Example: load my_save.txt\n");
+    this.getCtx().showMessage("Example: load my_save.txt\n");*/
   }
-}
+

@@ -4,9 +4,11 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
-public class CmdPause extends Cmd {
+public final class CmdPause extends Cmd {
+
   private Options opts;
 
   /**
@@ -15,7 +17,7 @@ public class CmdPause extends Cmd {
    *
    * @param uictx
    */
-  public CmdPause(AbstractGameUI uictx) {
+  public CmdPause(GameUserInterface uictx) {
     super(uictx);
     this.opts = this.getOptions();
     this.setName("pause");
@@ -25,11 +27,11 @@ public class CmdPause extends Cmd {
 
   @Override
   public String getDescription() {
-    return "";
+    return "Pause\n";
   }
 
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    return true;
   }
 
   public CmdAction createNew(String[] args) {

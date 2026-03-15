@@ -7,6 +7,7 @@ import java.util.List;
  * provides controls over it
  */
 public interface OptValueSpec {
+
   List<String> complete(String prefix);
 
   boolean validate(String value);

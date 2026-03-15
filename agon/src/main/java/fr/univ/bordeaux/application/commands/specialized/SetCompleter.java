@@ -10,7 +10,9 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-/** completer for set command (specific args with assignments) */
+/**
+ * completer for set command (specific args with assignments)
+ */
 public class SetCompleter implements Completer {
 
   private Set<String> optNames;
@@ -20,14 +22,16 @@ public class SetCompleter implements Completer {
    *
    * @param opts options to get "longOpt()" as option name
    * @throws IllegalArgumentException all options must have filled "longOpt()" else it will raise an
-   *     error
+   *                                  error
    */
   public SetCompleter(Options opts) throws IllegalArgumentException {
     this.optNames = new HashSet<>();
     String optName;
     for (Option opt : opts.getOptions()) {
       optName = opt.getLongOpt();
-      if (optName == null) throw new IllegalArgumentException("Missing required option");
+      if (optName == null) {
+        throw new IllegalArgumentException("Missing required option");
+      }
       this.optNames.add(optName);
     }
   }
@@ -37,7 +41,9 @@ public class SetCompleter implements Completer {
     String word = line.word();
     int wordIndex = line.wordIndex();
     // after "set" (cmdName)
-    if (wordIndex != 1) return;
+    if (wordIndex != 1) {
+      return;
+    }
     String current = line.word();
     Candidate candidate;
     for (String key : this.optNames) {

@@ -14,10 +14,7 @@ import org.jline.reader.Completer;
 
 /**
  * represent the fixed code for all different Commands
- *
- * @warning little changes require a lot refactor here
- * @apiNote each command knows his options only <br>
- *     (to make easier auto-complete)
+ * each command knows his options only <br> (to make easier auto-complete)
  */
 public abstract class Cmd implements CmdAction {
 
@@ -25,7 +22,9 @@ public abstract class Cmd implements CmdAction {
   private GameUserInterface ui;
   private static String prompt = null;
 
-  /** description from sub commands */
+  /**
+   * description from sub commands
+   */
   private String desc;
 
   private String name;
@@ -77,7 +76,7 @@ public abstract class Cmd implements CmdAction {
     return txt.getContent();
   }
 
-  public void showHelp() {
+ /* public void getDescription() {
     HelpFormatter formatter = HelpFormatter.builder().get();
     try {
       formatter.printHelp(this.getName(), this.getDescription(), this.getOptions(), "", true);
@@ -88,17 +87,17 @@ public abstract class Cmd implements CmdAction {
       // if (???.getDebug()) // when debug mode available to get on a unknown object
       //  e.printStackTrace(); // by default
     }
-  }
+  }*/
 
   /**
    * get a simple description for the helper (linked to Commons Cli)
    *
    * @return a line or more
    */
-  public String getDescription() {
+  /*public String getDescription() {
     /// TODO: add i18n later here (or in constructor)
     return this.desc;
-  }
+  }*/
 
   public void setDesc(String desc) {
     this.desc = desc;

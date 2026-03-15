@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.heuristics;
 
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 
 /**
  * Heuristic strategy that evaluates the board based on the <b>Mobility</b> of pieces.

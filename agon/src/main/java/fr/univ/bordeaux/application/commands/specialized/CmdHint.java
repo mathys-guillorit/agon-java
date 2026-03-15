@@ -1,11 +1,13 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
-import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 
-public class CmdHint extends Cmd {
+public final class CmdHint extends Cmd {
 
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
@@ -13,7 +15,7 @@ public class CmdHint extends Cmd {
    *
    * @param uictx
    */
-  public CmdHint(AbstractGameUI uictx) {
+  public CmdHint(GameUserInterface uictx) {
     super(uictx);
     this.setDesc("Description: show help from ai to the user");
     this.setName("hint");
@@ -24,15 +26,16 @@ public class CmdHint extends Cmd {
     return "";
   }
 
-  public void execute() {}
-
   @Override
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    Move hint = match.hint();
+    super.getCtx().showMessage("Hint : From " + CoordinateMapper.toAbaPro(hint.getFrom()) + " To "
+        + CoordinateMapper.toAbaPro(hint.getDestination()));
+    return false;
   }
 
   @Override
   public CmdAction createNew(String[] args) {
-    return null;
+    return new CmdHint(super.getCtx());
   }
 }

@@ -31,10 +31,15 @@ import org.jline.terminal.TerminalBuilder;
  * @see fr.univ.bordeaux.technical.config.GameConfig
  */
 public class GameLauncher {
-  /** The definitions of all allowed command-line options. */
+
+  /**
+   * The definitions of all allowed command-line options.
+   */
   private final Options options;
 
-  /** The path to the persistent configuration file, located in the user's working directory. */
+  /**
+   * The path to the persistent configuration file, located in the user's working directory.
+   */
   private final String configPath = System.getProperty("user.dir") + File.separator + ".agonrc";
 
   /**
@@ -85,8 +90,8 @@ public class GameLauncher {
    *
    * <p>This method parses the raw arguments. If informational flags (-h, -V) are present, it
    * displays the info and returns. Otherwise, it updates the {@link GameConfig} and proceeds to
-   * start the game engine. If an invalid argument is provided, it catches the {@link
-   * ParseException} and displays the help menu.
+   * start the game engine. If an invalid argument is provided, it catches the
+   * {@link ParseException} and displays the help menu.
    *
    * @param args The raw command-line arguments passed at startup.
    */
@@ -216,7 +221,7 @@ public class GameLauncher {
    * fr.univ.bordeaux.ui.gui}) based on the provided command-line options.
    *
    * @param config The final configuration to be used by the UI and the engine.
-   * @param cmd The parsed command line, used to check for the GUI flag (-g).
+   * @param cmd    The parsed command line, used to check for the GUI flag (-g).
    */
   private void startGame(GameConfig config, CommandLine cmd) {
     System.out.println("Starting Agon Shell...");
@@ -226,12 +231,14 @@ public class GameLauncher {
     } else {
       try {
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-       LineReader reader = LineReaderBuilder.builder()
+        LineReader reader = LineReaderBuilder.builder()
             .terminal(terminal)
             .build();
-        AgonShell agon = new AgonShell(terminal,reader,config);
+        AgonShell agon = new AgonShell(terminal, reader, config);
         agon.start();
-      }catch (Exception e) {};
+      } catch (Exception e) {
+      }
+      ;
 
     }
     // agon.setGameEngine(matchManager);

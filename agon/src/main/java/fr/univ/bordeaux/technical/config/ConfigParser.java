@@ -1,7 +1,5 @@
 package fr.univ.bordeaux.technical.config;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,9 +9,9 @@ import java.nio.file.Paths;
 /**
  * Parses the game configuration file (typically {@code .agonrc}).
  * <p>
- * This class is responsible for reading the configuration file line by line,
- * ignoring comments and section headers, and populating a {@link GameConfig}
- * instance with the extracted key-value pairs.
+ * This class is responsible for reading the configuration file line by line, ignoring comments and
+ * section headers, and populating a {@link GameConfig} instance with the extracted key-value
+ * pairs.
  * </p>
  */
 public class ConfigParser {
@@ -21,14 +19,16 @@ public class ConfigParser {
   /**
    * Constructs a new {@code ConfigParser}.
    */
-  public ConfigParser() {}
+  public ConfigParser() {
+  }
 
   /**
-   * Parses the configuration file located at the specified file path.
-   * * @param filePath The path to the configuration file (e.g., {@code ".agonrc"}).
+   * Parses the configuration file located at the specified file path. * @param filePath The path to
+   * the configuration file (e.g., {@code ".agonrc"}).
+   *
    * @return A newly created {@link GameConfig} object populated with the parsed settings.
-   * @throws IOException If the configuration file does not exist, cannot be read,
-   * or contains malformed data.
+   * @throws IOException If the configuration file does not exist, cannot be read, or contains
+   *                     malformed data.
    */
   public GameConfig parse(String filePath) throws IOException {
 
@@ -51,18 +51,19 @@ public class ConfigParser {
   }
 
   /**
-   * Parses a single line from the configuration file and applies the setting
-   * to the provided {@link GameConfig} object.
+   * Parses a single line from the configuration file and applies the setting to the provided
+   * {@link GameConfig} object.
    * <p>
-   * This method safely ignores empty lines, comments (starting with {@code #}),
-   * and section headers (starting with {@code [}). Valid configuration lines
-   * must strictly follow the {@code key=value} format.
+   * This method safely ignores empty lines, comments (starting with {@code #}), and section headers
+   * (starting with {@code [}). Valid configuration lines must strictly follow the {@code key=value}
+   * format.
    * </p>
    * * @param line   The configuration line to parse.
+   *
    * @param config The {@link GameConfig} instance to update.
-   * @throws IOException If the line is malformed (missing the {@code =} delimiter),
-   * if a value cannot be parsed into its expected data type
-   * (e.g., {@link NumberFormatException}), or if an unknown key is provided.
+   * @throws IOException If the line is malformed (missing the {@code =} delimiter), if a value
+   *                     cannot be parsed into its expected data type (e.g.,
+   *                     {@link NumberFormatException}), or if an unknown key is provided.
    */
   private void parseLine(String line, GameConfig config) throws IOException {
     String cleanLine = line.trim();
@@ -137,7 +138,7 @@ public class ConfigParser {
           config.setAiHeuristic(value);
           break;
         default:
-          throw new IOException("Invalid option : "+key);
+          throw new IOException("Invalid option : " + key);
       }
     } catch (NumberFormatException e) {
       throw new IOException("Invalid value for option '" + key + "' : " + value);

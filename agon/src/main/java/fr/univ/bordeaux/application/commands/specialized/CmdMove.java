@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import fr.univ.bordeaux.agonCore.agonElements.Move;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import javax.annotation.Nonnull;
@@ -8,14 +8,27 @@ import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
 public class CmdMove implements CmdAction {
+
   private Move move;
+  private int from;
+  private int destination;
+
   public CmdMove(Move move) {
-    this.move=move;
+    this.move = move;
+  }
+
+  public CmdMove(int from, int to) {
+    this.from = from;
+    this.destination = to;
   }
 
   @Override
-  public void execute(MatchManager match) {
-     match.move(move);
+  public boolean execute(MatchManager match) {
+    if (this.move == null) {
+      return match.move(new Move(this.from, this.destination, match.getCurrentPlayer().getColor()));
+    }else{
+      return match.move(move);
+    }
   }
 
   @Override
@@ -24,8 +37,8 @@ public class CmdMove implements CmdAction {
   }
 
   @Override
-  public void showHelp() {
-
+  public String getDescription() {
+    return "Move\n";
   }
 
   @Nonnull

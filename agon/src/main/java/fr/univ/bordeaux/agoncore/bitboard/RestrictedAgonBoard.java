@@ -1,8 +1,8 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import java.util.List;
 
 /**
@@ -38,7 +38,7 @@ public interface RestrictedAgonBoard {
    *
    * @param index The tile index (0 to 120) to inspect.
    * @return The {@link PieceType} at the given index, or {@code null} if the tile is empty or the
-   *     index is out of bounds.
+   * index is out of bounds.
    */
   PieceType getPieceAt(int index);
 }

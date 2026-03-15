@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 
 public class ContestMatch extends Match {
@@ -10,7 +10,8 @@ public class ContestMatch extends Match {
   }
 
   @Override
-  public void startActions() {}
+  public void startActions() {
+  }
 
   @Override
   public void endActions() {

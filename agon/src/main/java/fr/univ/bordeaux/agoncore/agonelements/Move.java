@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
  * Represents a single action performed by a player on the Agon board.
@@ -7,8 +7,8 @@ package fr.univ.bordeaux.agonCore.agonElements;
  * color, and the specific rank of the piece being moved. This class encapsulates standard
  * displacements, as well as the mandatory relocations that occur after a piece is captured. *
  *
- * <p>In the case of a relocation, the {@code from} index is set to {@code -1}, indicating the piece
- * is being moved from the relocation queue (off-board) back onto the board's edge.
+ * <p>In the case of a relocation, the {@code from} index is set to {@code -1}, indicating the
+ * piece is being moved from the relocation queue (off-board) back onto the board's edge.
  */
 public class Move {
 
@@ -20,25 +20,31 @@ public class Move {
    */
   private final int from;
 
-  /** The destination tile index on the board (0-120). */
-  private final int to;
+  /**
+   * The destination tile index on the board (0-120).
+   */
+  private final int destination;
 
-  /** The color of the player performing the move. */
+  /**
+   * The color of the player performing the move.
+   */
   private final Color color;
 
-  /** The type of piece (Pawn or Queen) being moved. */
+  /**
+   * The type of piece (Pawn or Queen) being moved.
+   */
   private final PieceType pieceType;
 
   /**
    * Constructs a new Move for general displacement.
    *
-   * @param from The source tile index. Use {@code -1} for relocation from the reserve.
-   * @param to The destination tile index on the board.
-   * @param color The {@link Color} of the player making the move.
+   * @param from        The source tile index. Use {@code -1} for relocation from the reserve.
+   * @param destination The destination tile index on the board.
+   * @param color       The {@link Color} of the player making the move.
    */
-  public Move(int from, int to, Color color) {
+  public Move(final int from, final int destination, final Color color) {
     this.from = from;
-    this.to = to;
+    this.destination = destination;
     this.color = color;
     this.pieceType = null; // Default if not specified
   }
@@ -46,14 +52,14 @@ public class Move {
   /**
    * Constructs a new Move with explicit piece type identification.
    *
-   * @param from The source tile index (or {@code -1} for relocation).
-   * @param to The destination tile index.
-   * @param color The {@link Color} of the player.
-   * @param pieceType The {@link PieceType} rank of the piece.
+   * @param from        The source tile index (or {@code -1} for relocation).
+   * @param destination The destination tile index.
+   * @param color       The {@link Color} of the player.
+   * @param pieceType   The {@link PieceType} rank of the piece.
    */
-  public Move(int from, int to, Color color, PieceType pieceType) {
+  public Move(final int from, final int destination, final Color color, final PieceType pieceType) {
     this.from = from;
-    this.to = to;
+    this.destination = destination;
     this.color = color;
     this.pieceType = pieceType;
   }
@@ -72,8 +78,8 @@ public class Move {
    *
    * @return The destination tile index (0-120).
    */
-  public int getTo() {
-    return to;
+  public int getDestination() {
+    return destination;
   }
 
   /**
@@ -101,6 +107,7 @@ public class Move {
    */
   @Override
   public String toString() {
-    return String.format("Move[from: %d, to: %d, color: %s, type: %s]", from, to, color, pieceType);
+    return String.format("Move[from: %d, to: %d, color: %s, type: %s]", from, destination, color,
+        pieceType);
   }
 }

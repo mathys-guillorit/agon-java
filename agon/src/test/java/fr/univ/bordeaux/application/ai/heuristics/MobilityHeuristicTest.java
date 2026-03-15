@@ -2,10 +2,10 @@ package fr.univ.bordeaux.application.ai.heuristics;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import org.junit.jupiter.api.Test;
 
 class MobilityHeuristicTest {

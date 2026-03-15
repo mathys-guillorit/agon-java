@@ -1,29 +1,43 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
  * Represents the different types of pieces available in the Agon game. *
  *
- * <p>Each piece type is defined by its owning color and its rank (Queen or Pawn). This enum is used
- * throughout the board logic to simplify piece identification and movement rules without manual
- * conditional checks.
+ * <p>Each piece type is defined by its owning color and its rank (Queen or Pawn). This enum is
+ * used throughout the board logic to simplify piece identification and movement rules without
+ * manual conditional checks.
  */
 public enum PieceType {
-  /** The white queen piece. */
+  /**
+   * The white queen piece.
+   */
   WHITE_QUEEN(Color.WHITE, true),
-  /** The black queen piece. */
+  /**
+   * The black queen piece.
+   */
   BLACK_QUEEN(Color.BLACK, true),
-  /** A white pawn piece. */
+  /**
+   * A white pawn piece.
+   */
   WHITE_PAWN(Color.WHITE, false),
-  /** A black pawn piece. */
+  /**
+   * A black pawn piece.
+   */
   BLACK_PAWN(Color.BLACK, false);
 
+  /**
+   * The color of piece
+   */
   private final Color color;
+  /**
+   * Boolean to know if the piece is a queen
+   */
   private final boolean isQueen;
 
   /**
    * Internal constructor for piece type constants.
    *
-   * @param color The owner's color.
+   * @param color   The owner's color.
    * @param isQueen {@code true} if the piece is a queen, {@code false} if it is a pawn.
    */
   PieceType(Color color, boolean isQueen) {
@@ -58,14 +72,16 @@ public enum PieceType {
     return !isQueen;
   }
 
-  /**
-   * Static factory method to retrieve the Queen piece type for a specific color.
-   *
-   * @param color The {@link Color} of the requested Queen.
-   * @return The corresponding {@link PieceType} (WHITE_QUEEN or BLACK_QUEEN).
-   */
-  public static PieceType getQueen(Color color) {
-    return (color == Color.WHITE) ? WHITE_QUEEN : BLACK_QUEEN;
+  public static PieceType getQueen(final Color color) {
+    PieceType queenType; // Variable temporaire pour stocker le résultat
+
+    if (color == Color.WHITE) {
+      queenType = WHITE_QUEEN;
+    } else {
+      queenType = BLACK_QUEEN;
+    }
+
+    return queenType; // Un seul point de sortie à la fin
   }
 
   /**
@@ -74,8 +90,16 @@ public enum PieceType {
    * @param color The {@link Color} of the requested Pawn.
    * @return The corresponding {@link PieceType} (WHITE_PAWN or BLACK_PAWN).
    */
-  public static PieceType getPawn(Color color) {
-    return (color == Color.WHITE) ? WHITE_PAWN : BLACK_PAWN;
+  public static PieceType getPawn(final Color color) {
+    PieceType pawnType;
+
+    if (color == Color.WHITE) {
+      pawnType = WHITE_PAWN;
+    } else {
+      pawnType = BLACK_PAWN;
+    }
+
+    return pawnType;
   }
 
   @Override

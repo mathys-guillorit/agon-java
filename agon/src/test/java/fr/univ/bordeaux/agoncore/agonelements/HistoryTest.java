@@ -1,9 +1,9 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.agonCore.history.History;
-import fr.univ.bordeaux.agonCore.history.HistoryInformations;
+import fr.univ.bordeaux.agoncore.history.History;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +15,7 @@ class HistoryTest {
   private History history;
   private HistoryInformations move1;
   private HistoryInformations move2;
+  private HistoryInformations move3;
 
   @BeforeEach
   void setUp() {
@@ -29,6 +30,10 @@ class HistoryTest {
     List<Move> moves2 = new ArrayList<>();
     moves2.add(new Move(2, 3, Color.BLACK, PieceType.BLACK_QUEEN));
     move2 = new HistoryInformations(moves2, PieceType.BLACK_QUEEN, Color.BLACK);
+
+    List<Move> moves3 = new ArrayList<>();
+    moves3.add(new Move(0, 1, Color.WHITE, PieceType.WHITE_PAWN));
+    move3 = new HistoryInformations(moves1, PieceType.WHITE_PAWN, Color.WHITE);
   }
 
   @Test
@@ -78,14 +83,20 @@ class HistoryTest {
   void testMultipleMoves() {
     history.add(move1);
     history.add(move2);
-
-    // Le dernier ajouté (move2) doit être au sommet de la pile
-    assertEquals(move2, history.getHeadUndo());
+    history.add(move3);
+    assertEquals(move3, history.getHeadUndo());
 
     history.undo();
-    // Après un undo, c'est move1 qui revient au sommet
+    history.undo();
+    history.undo();
+    assertTrue(history.isEmptyUndo());
+    assertFalse(history.isEmptyRedo());
+    history.redo();
     assertEquals(move1, history.getHeadUndo());
-    assertEquals(move2, history.getHeadRedo());
+    history.redo();
+    assertEquals(move2, history.getHeadUndo());
+    history.redo();
+    assertEquals(move3, history.getHeadUndo());
   }
 
   @Test

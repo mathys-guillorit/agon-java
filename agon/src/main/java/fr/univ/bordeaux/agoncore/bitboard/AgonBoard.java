@@ -1,8 +1,8 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.history.HistoryInformations;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.List;
 
 /**
@@ -31,7 +31,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * variables such as relocation counters.
    *
    * @return {@code true} if a move sequence was successfully reverted; {@code false} if the history
-   *     is empty.
+   * is empty.
    */
   boolean undoMove();
 
@@ -53,20 +53,9 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * forward and updating the game state accordingly.
    *
    * @return {@code true} if a move sequence was successfully reapplied; {@code false} if the redo
-   *     stack is empty.
+   * stack is empty.
    */
   boolean redoMove();
-
-  /**
-   * Calculates a heuristic score for the current board state from the perspective of the given
-   * player.
-   *
-   * <p>A higher score indicates a more favorable position for the player.
-   *
-   * @param color The {@link Color} of the player for whom to evaluate the score.
-   * @return An integer representing the board evaluation.
-   */
-  int getScore(Color color);
 
   /**
    * Evaluates the mobility of a piece at a given index.
@@ -76,7 +65,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    *
    * @param index The tile index of the piece.
    * @return The number of legal moves for the piece, or -1 if no piece exists at the specified
-   *     index.
+   * index.
    */
   int getMobility(int index);
 
@@ -91,6 +80,18 @@ public interface AgonBoard extends RestrictedAgonBoard {
    */
   int getCentrality(int index);
 
+  /**
+   * Sets up the board with the standard initial Agon configuration. This method places all pawns
+   * and queens for both players
+   */
   void initBaseConfiguration();
+
+  /**
+   * Provides access to the complete history of moves performed during the game. * <p>The returned
+   * list contains {@link HistoryInformations} objects representing each turn, typically ordered
+   * from the most recent move played to the first one.
+   *
+   * @return A {@link List} containing the sequence of moves in the current game.
+   */
   List<HistoryInformations> getHistory();
 }

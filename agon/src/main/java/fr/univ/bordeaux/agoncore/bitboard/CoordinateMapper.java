@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
 /**
  * Utility class for converting board coordinates between human-readable formats and internal
@@ -9,8 +9,11 @@ package fr.univ.bordeaux.agonCore.bitboard;
  */
 public class CoordinateMapper {
 
-  /** Default constructor for the CoordinateMapper utility. */
-  public CoordinateMapper() {}
+  /**
+   * Default constructor for the CoordinateMapper utility.
+   */
+  public CoordinateMapper() {
+  }
 
   /**
    * Converts a coordinate pair (Letter, Column) into a 1D bitboard index. *
@@ -20,12 +23,12 @@ public class CoordinateMapper {
    * operations and array access. *
    *
    * @param letter The character representing the row (e.g., 'A', 'B', 'C'...).
-   * @param col The integer representing the column (1-indexed).
+   * @param col    The integer representing the column (1-indexed).
    * @return The corresponding 0-indexed position in the 1D bitboard array.
    */
   public static int toIndex(char letter, int col) {
-    int Base = 'A';
-    return (((int) letter - Base) * (11)) + (col - 1);
+    int base = 'A';
+    return (((int) letter - base) * (11)) + (col - 1);
   }
 
   /**

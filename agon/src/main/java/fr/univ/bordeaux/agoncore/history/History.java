@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.history;
+package fr.univ.bordeaux.agoncore.history;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Stack;
  *   <li><b>Undo Stack:</b> Stores the history of moves already played.
  *   <li><b>Redo Stack:</b> Stores moves that were undone and are available to be re-applied.
  * </ul>
- *
+ * <p>
  * *
  *
  * <p>Following standard command patterns, the redo stack is cleared whenever a new, original move
@@ -21,14 +21,21 @@ import java.util.Stack;
  */
 public class History {
 
-  /** Stack containing turns that can be reverted. */
+  /**
+   * Stack containing turns that can be reverted.
+   */
   private final Stack<HistoryInformations> undoStack = new Stack<>();
 
-  /** Stack containing turns that were reverted and can be re-applied. */
+  /**
+   * Stack containing turns that were reverted and can be re-applied.
+   */
   private final Stack<HistoryInformations> redoStack = new Stack<>();
 
-  /** Initializes an empty game history. */
-  public History() {}
+  /**
+   * Initializes an empty game history.
+   */
+  public History() {
+  }
 
   /**
    * Retrieves the most recent turn from the undo stack without removing it.
@@ -69,7 +76,7 @@ public class History {
    * <p>Pops the latest turn from the undo stack and transfers it to the redo stack.
    *
    * @return The {@link HistoryInformations} that was undone, or {@code null} if no moves are
-   *     available to revert.
+   * available to revert.
    */
   public HistoryInformations undo() {
     if (undoStack.isEmpty()) {
@@ -118,7 +125,7 @@ public class History {
    * the first move to the most recent one).
    *
    * @return a {@link List} of {@link HistoryInformations} containing all performed moves in
-   *     chronological order.
+   * chronological order.
    */
   public List<HistoryInformations> toList() {
     return new ArrayList<>(undoStack).reversed();

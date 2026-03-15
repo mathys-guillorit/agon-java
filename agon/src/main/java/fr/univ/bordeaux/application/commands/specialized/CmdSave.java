@@ -4,9 +4,10 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
-public class CmdSave extends Cmd {
+public final class CmdSave extends Cmd {
 
   private Options opts;
 
@@ -16,7 +17,7 @@ public class CmdSave extends Cmd {
    *
    * @param uictx
    */
-  public CmdSave(AbstractGameUI uictx) {
+  public CmdSave(GameUserInterface uictx) {
     super(uictx);
     this.opts = this.getOptions();
     this.setDesc("Description: Saves the current game state and history to the specified file.");
@@ -25,15 +26,15 @@ public class CmdSave extends Cmd {
 
   @Override
   public String getDescription() {
-    return "";
+    return "Save";
   }
 
 
-  public void execute(MatchManager match) {
-
+  public boolean execute(MatchManager match) {
+    return true;
   }
 
   public CmdAction createNew(String[] args) {
-    return null;
+    return new CmdSave(super.getCtx());
   }
 }

@@ -1,9 +1,9 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.agonCore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.ui.cli.ConsoleRenderer;
+import fr.univ.bordeaux.application.match.MatchManager;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -52,7 +52,7 @@ public interface GameUserInterface {
    * Quits the current game and closes the application. May trigger Reader prompt to save before
    * exiting.
    */
-  void quitGame();
+  void quit();
 
   // --- UI UPDATES (Outputs to the Screen) ---
 
@@ -115,10 +115,6 @@ public interface GameUserInterface {
   /** save the game before leaving */
   void saveGame();
 
-  /**
-   * get the line entered in the terminal by the user
-   *
-   * @return {@link String}
-   */
-  String getLine();
+  void setMatchManager(MatchManager matchManager);
+  String getUserInput();
 }

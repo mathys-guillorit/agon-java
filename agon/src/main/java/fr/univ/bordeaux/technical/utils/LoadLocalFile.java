@@ -19,7 +19,9 @@ public class LoadLocalFile {
     final String defaultTxt = "";
     final String resourcePath = "/" + filepath;
     InputStream stream = getClass().getResourceAsStream(resourcePath);
-    if (stream == null) this.content = defaultTxt;
+    if (stream == null) {
+      this.content = defaultTxt;
+    }
     BufferedReader reader =
         new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
     var lines = new StringBuilder();
