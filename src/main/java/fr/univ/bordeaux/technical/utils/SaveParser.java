@@ -3,55 +3,138 @@ package fr.univ.bordeaux.technical.utils;
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * Utility class for parsing Agon game save files.
  * <p>
- * This parser extracts the board state and the current player from a structured
- * text file. It handles comment stripping (both line and block comments) and
- * reconstructs the hexagonal board using bitboard representations.
+ * Refactored to match the design pattern of ConfigParser:
+ * Reads line by line, maintains parsing state, and delegates processing.
  * </p>
  */
 public class SaveParser {
 
     /**
-     * Loads and parses an Agon save file to reconstruct the game state.
-     * <p>
-     * The method identifies the "[game]" section, determines the current player
-     * based on the first character ('X' for Black, others for White), and maps
-     * the character grid to 64-bit BitBoards.
-     * </p>
-     * * <b>Supported characters:</b>
-     * <ul>
-     * <li>'X': Black Pawn</li>
-     * <li>'q': Black Queen</li>
-     * <li>'O': White Pawn</li>
-     * <li>'Q': White Queen</li>
-     * <li>'.': Empty cell</li>
-     * </ul>
-     *
-     * @param filePath Path to the save file.
-     * @return A {@link GameState} object containing the board and active player.
-     * @throws IOException If the file cannot be read.
-     * @throws IllegalArgumentException If the "[game]" section is missing.
+     * Accumulates the parsed characters representing the game board.
      */
-    public static GameState loadGame(String filePath) throws IOException, IllegalArgumentException {
-        String content = new String(Files.readAllBytes(Paths.get(filePath)));
+    private final StringBuilder gameData;
+    /**
+     * Indicates whether the parser is currently reading inside the [game] section.
+     */
+    private boolean inGameSection;
+    /**
+     * Indicates whether the parser is currently ignoring a multi-line block comment.
+     */
+    private boolean inBlockComment;
 
-        content = content.replaceAll("(?s)\\{.*?\\}", "").replaceAll("#.*", "");
+    /**
+     * Constructs a new {@code SaveParser} with initialized default states.
+     */
+    public SaveParser() {
+        this.inGameSection = false;
+        this.inBlockComment = false;
+        this.gameData = new StringBuilder();
+    }
 
-        int gameIdx = content.indexOf("[game]");
-        if (gameIdx == -1) throw new IllegalArgumentException("Missing [game] section in the file.");
+    /**
+     * Parses the save file located at the specified file path.
+     *
+     * @param filePath The path to the save file.
+     * @return A {@link GameState} object containing the parsed board and the active player.
+     * @throws IOException If the file does not exist or cannot be read.
+     * @throws IllegalArgumentException If the "[game]" section is missing or empty.
+     */
+    public GameState parse(String filePath) throws IOException, IllegalArgumentException {
+        Path path = Paths.get(filePath);
 
-        int historyIdx = content.indexOf("[history]");
-        String gameSection = (historyIdx != -1 && historyIdx > gameIdx) ?
-                content.substring(gameIdx + 6, historyIdx) : content.substring(gameIdx + 6);
-        String cleaned = gameSection.replaceAll("\\s+", "");
+        if (!Files.exists(path)) {
+            throw new IOException("Save file does not exist : " + filePath);
+        }
+        this.inGameSection = false;
+        this.inBlockComment = false;
+        this.gameData.setLength(0);
+
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                parseLine(line);
+            }
+        }
+
+        if (gameData.isEmpty()) {
+            throw new IllegalArgumentException("Missing or empty [game] section in the file.");
+        }
+
+        return buildGameState(gameData.toString());
+    }
+
+    /**
+     * Parses a single line, strips comments, and collects game data if within
+     * the valid game section.
+     *
+     * @param line The raw line read from the file to parse.
+     */
+    private void parseLine(String line) {
+        String cleanedLine = removeComments(line).replaceAll("\\s+", "");
+        if (cleanedLine.isEmpty()) {
+            return;
+        }
+        if (cleanedLine.equals("[game]")) {
+            inGameSection = true;
+            return;
+        } else if (cleanedLine.startsWith("[")) {
+            inGameSection = false;
+            return;
+        }
+        if (inGameSection) {
+            gameData.append(cleanedLine);
+        }
+    }
+
+    /**
+     * Removes line comments starting with {@code #} and handles multi-line
+     * block comments enclosed in {@code {}}.
+     * * @param line The string line from which comments should be removed.
+     *
+     * @return A clean string containing no comment characters.
+     */
+    private String removeComments(String line) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (inBlockComment) {
+                if (c == '}') inBlockComment = false;
+                continue;
+            }
+            if (c == '{') {
+                inBlockComment = true;
+                continue;
+            }
+            if (c == '#') {
+                break;
+            }
+
+            result.append(c);
+        }
+        return result.toString();
+    }
+
+    /**
+     * Reconstructs the game state from the accumulated clean characters.
+     * * @param cleaned The contiguous string of parsed characters representing the board state.
+     *
+     * @return A populated {@link GameState} instance.
+     */
+    private GameState buildGameState(String cleaned) {
         char playerChar = cleaned.charAt(0);
         Color currentPlayer = (playerChar == 'X' || playerChar == 'x') ? Color.BLACK : Color.WHITE;
+
         BitBoard wQ = new BitBoard(), bQ = new BitBoard(), wP = new BitBoard(), bP = new BitBoard();
         int charIndex = 1;
 
@@ -75,15 +158,11 @@ public class SaveParser {
     }
 
     /**
-         * Data wrapper representing the state of a game after parsing.
-         */
-        public record GameState(AgonBoardImpl board, Color currentPlayer) {
-        /**
-         * Constructs a GameState.
-         * * @param board The initialized bitboard-based board.
-         * @param currentPlayer The color of the active player.
-         */
-        public GameState {
-        }
-        }
+     * Data wrapper representing the state of a game after parsing.
+     *
+     * @param board         The reconstructed game board.
+     * @param currentPlayer The color of the player whose turn it is to move.
+     */
+    public record GameState(AgonBoardImpl board, Color currentPlayer) {
+    }
 }

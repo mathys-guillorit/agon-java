@@ -19,6 +19,7 @@ import fr.univ.bordeaux.application.GameLauncher;
 public class Main {
 
   public static void main(String[] arg) throws Exception {
+    //System.out.println("prog principal OK + ajout JUnit");
     /*BitBoard whiteQueen=new BitBoard();
     BitBoard blackQueen=new BitBoard();
     BitBoard whitePawns=new BitBoard();
