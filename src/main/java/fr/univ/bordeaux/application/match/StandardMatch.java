@@ -15,6 +15,7 @@ public class StandardMatch extends Match {
 
   @Override
   public void endActions() {
+    super.switchPlayer();
   }
 
   public void startGame() {

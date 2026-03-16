@@ -34,6 +34,7 @@ public class AiPlayer extends AbstractPlayer {
 
   @Override
   public CmdAction getAction() {
+    System.out.println("l'ia a crée un move ");
     return new CmdMove(ai.getBestMove(board));
   }
 }

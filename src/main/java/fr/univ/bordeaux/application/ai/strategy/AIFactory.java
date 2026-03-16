@@ -18,7 +18,7 @@ public class AIFactory {
 
   public static Map<Color, AbstractAgonAI> createAiMap(GameConfig config) {
     Map<Color, AbstractAgonAI> aiMap = new HashMap<>();
-
+    System.out.println("je suis dans la factory et p2isIA : " +config.isBlackAI());
     if (config.isWhiteAI()) {
       aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
     }
@@ -32,7 +32,7 @@ public class AIFactory {
     Heuristic heuristic = createHeuristic(config.getAiHeuristic());
     String mode = config.getAiMode();
     switch (mode) {
-      case "minimax" -> {
+      case "MINIMAX" -> {
         return new MinimaxStrategy(heuristic, color, config.getAiDepth(),
             config.isAiIterativeDeepening(), config.getAiTimeLimit());
       }
@@ -53,7 +53,7 @@ public class AIFactory {
       case "mobility" -> {
         return new MobilityHeuristic();
       }
-      case "mixed" -> {
+      case "MIXED" -> {
         return new MixedHeuristic(10, 1);
       }
       default -> {

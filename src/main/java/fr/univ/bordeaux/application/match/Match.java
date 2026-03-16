@@ -28,6 +28,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
     this.agonBoard = agonBoard;
     this.player1 = player1;
     this.player2 = player2;
+    System.out.println(player1.isAI());
+    System.out.println(player2.isAI());
     this.currentPlayer = player1;
     this.status = MatchStatus.RUNNING;
   }
@@ -53,7 +55,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
         this.status = MatchStatus.FINISHED;
         System.out.println("win");
       }
-      //this.endActions();
+      this.endActions();
       return true;
     }
     return false;

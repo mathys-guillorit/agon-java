@@ -14,6 +14,7 @@ public class CmdMove implements CmdAction {
   private int destination;
 
   public CmdMove(Move move) {
+    System.out.println("j ai crée un move");
     this.move = move;
   }
 

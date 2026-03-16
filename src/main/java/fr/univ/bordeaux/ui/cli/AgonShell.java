@@ -168,7 +168,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   private void gameLoop() {
     while (this.running.get()) {
-      this.cliWln(userPrompt);
       CmdAction action;
 
       if (this.matchManager == null) {
@@ -181,7 +180,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
       } else {
         // 2. ÉTAT JEU : On demande au joueur courant (IA ou Humain)
         Player p = this.matchManager.getCurrentPlayer();
-        this.showMessage("Current Player is " + p.getName() + "("+p.getColor().toString()+")");
+        this.showMessage("Current Player is " + p.getName() + "("+p.getColor().toString()+")\n");
         action = p.getAction(); 
       }
       System.out.println(action==null);
@@ -203,7 +202,7 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
    */
   public String getUserInput() {
     try {
-      line = this.reader.readLine().trim();//readLine(this.userPrompt).trim();
+      line = this.reader.readLine(this.userPrompt).trim();//readLine(this.userPrompt).trim();
     } catch (UserInterruptException e) {
       // if user use "ctrl+c"
       this.quit();
@@ -217,24 +216,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     return line;
   }
 
-  /// TODO: remove here when code is duplicate into MatchManager
-  //  /** apply command action associated with the command name split command logic */
-  //  private void doCommand() {
-  //    // Locked Here need work from the others
-  //    // exit case
-  //    if (this.cmds == null) {
-  //      this.showError("no command added into cli");
-  //      return;
-  //    }
-  //    Optional<CmdAction> optional = this.cmds.get(this.userCmdName.toLowerCase());
-  //    if (optional.isEmpty()) {
-  //      this.showError("Unknown command: '" + this.userCmdName + "'");
-  //      this.showHelp();
-  //      return;
-  //    }
-  //    CmdAction cmd = optional.get();
-  //    cmd.execute();
-  //  }
   public void safeCloseTerminal() {
     try {
       this.cliWln("bye !");
@@ -286,13 +267,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
       // of not all commands implements autoCompleter
       this.showError(e.getMessage());
     }
-  }
-
-  /**
-   * fill options for the cli (done twice internally)
-   */
-  public void initCmds(AgonRegister<CmdAction> cmds) {
-    this.cmds = cmds;
   }
 
   /**
@@ -492,11 +466,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   public AtomicBoolean getRunning() {
     return running;
   }
-
-  /*public String getLine() {
-    this.readLine();
-    return this.line;
-  }*/
 
   public void setMatchManager(MatchManager matchManager) {
     this.matchManager = matchManager;

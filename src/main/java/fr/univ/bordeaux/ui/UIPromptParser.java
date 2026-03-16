@@ -54,8 +54,6 @@ public class UIPromptParser {
   }
 
   private static CmdAction handleDefault(String input) {
-    input = input.trim().toUpperCase();
-
     Matcher matcher = MOVE_PATTERN.matcher(input);
 
     if (!matcher.matches()) {
@@ -75,8 +73,8 @@ public class UIPromptParser {
     }
 
     // 5. Conversion et création de la commande
-    int indexFrom = CoordinateMapper.toIndex(letterFrom, colFrom);
-    int indexTo = CoordinateMapper.toIndex(letterTo, colTo);
+    int indexFrom = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colFrom);
+    int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colTo);
 
     return new CmdMove(indexFrom, indexTo);
   }
