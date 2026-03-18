@@ -5,8 +5,10 @@ import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
 import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.technical.lang.LangService;
 import fr.univ.bordeaux.ui.gui.controllers.GUIExample;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @version Java 21 (Microsoft OpenJdk 21.0.9)<br> - test programm using <code>mvn test</code>
@@ -51,5 +53,9 @@ public class Main {
     board.printBoard();*/
     /*var a = new GUIExample();
     a.launch(GUIExample.class, arg);*/
+    var a = new LangService();
+    a.translate("hello");
+    a = new LangService(Locale.ENGLISH);
+    a.translate("hello");
   }
 }
