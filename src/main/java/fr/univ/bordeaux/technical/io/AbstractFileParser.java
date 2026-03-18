@@ -51,5 +51,5 @@ public abstract class AbstractFileParser<T> implements Parser<T> {
      * @param cleanLines A list of strings guaranteed to be free of comments and empty lines.
      * @return The constructed object of type T.
      */
-    protected abstract T processCleanLines(List<String> cleanLines);
+    protected abstract T processCleanLines(List<String> cleanLines) throws IOException;
 }

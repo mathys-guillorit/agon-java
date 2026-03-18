@@ -25,19 +25,14 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
      * @return A newly created {@link GameConfig} object.
      */
     @Override
-    protected GameConfig processCleanLines(List<String> cleanLines) {
+    protected GameConfig processCleanLines(List<String> cleanLines) throws IOException {
         GameConfig config = new GameConfig();
 
         for (String line : cleanLines) {
             if (line.startsWith("[")) {
                 continue;
             }
-
-            try {
-                parseLine(line, config);
-            } catch (IOException e) {
-                System.err.println("Warning: " + e.getMessage());
-            }
+            parseLine(line, config);
         }
 
         return config;
