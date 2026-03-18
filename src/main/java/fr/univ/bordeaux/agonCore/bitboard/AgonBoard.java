@@ -2,6 +2,9 @@ package fr.univ.bordeaux.agonCore.bitboard;
 
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
+
+import java.util.List;
+
 /**
  * Defines the core operations and state evaluations for an Agon game board.
  * * <p>This interface extends {@link RestrictedAgonBoard} to provide advanced
@@ -81,4 +84,12 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return The circle index (0 to 5) or -1 if the index is invalid.
    */
   int getCentrality(int index);
+
+  /**
+   * Converts the current board state into a list of ASCII strings.
+   * <p>This representation is used for saving the game state to a file.</p>
+   *
+   * @return A list of strings representing the board visually.
+   */
+  List<String> toTextList();
 }

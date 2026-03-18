@@ -199,4 +199,42 @@ class AgonBoardImplTest {
     assertEquals(board.getMobility(61),-1);
     assertEquals(board.getMobility(60),0);
   }
+
+  @Test
+  @DisplayName("Test toTextList: ASCII conversion")
+  void testToTextList() {
+    BitBoard wQueen = new BitBoard(THRONE);
+    BitBoard bPawns = new BitBoard(61);
+    BitBoard wPawns = new BitBoard(59);
+    AgonBoardImpl textBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, bPawns);
+
+    List<String> lines = textBoard.toTextList();
+
+    assertNotNull(lines, "The list of lines should not be null");
+    assertFalse(lines.isEmpty(), "The list of lines should not be empty");
+
+    String fullText = String.join("\n", lines);
+    assertTrue(fullText.contains("Q"), "The text must contain the White Queen (Q)");
+    assertTrue(fullText.contains("X"), "The text must contain the Black Pawn (X)");
+    assertTrue(fullText.contains("O"), "The text must contain the White Pawn (o)");
+    assertTrue(fullText.contains("."), "The text must contain empty tiles (.)");
+  }
+
+  @Test
+  @DisplayName("Test Constructor from Text: Board restoration")
+  void testConstructorFromTextList() {
+    BitBoard wQueen = new BitBoard(THRONE);
+    BitBoard bPawns = new BitBoard(72);
+    BitBoard wPawns = new BitBoard(59);
+    AgonBoardImpl originalBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, bPawns);
+
+    List<String> textRepresentation = originalBoard.toTextList();
+
+    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation);
+
+    assertEquals(PieceType.WHITE_QUEEN, reconstructedBoard.getPieceAt(60), "The White Queen should be at index 60");
+    assertEquals(PieceType.BLACK_PAWN, reconstructedBoard.getPieceAt(72), "The Black Pawn should be at index 72");
+    assertEquals(PieceType.WHITE_PAWN, reconstructedBoard.getPieceAt(59), "The White Pawn should be at index 59");
+    assertNull(reconstructedBoard.getPieceAt(0), "An initially empty tile must remain empty");
+  }
   }
