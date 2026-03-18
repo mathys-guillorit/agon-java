@@ -1,22 +1,17 @@
 package fr.univ.bordeaux.technical.config;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-
-import java.io.BufferedReader;
+import fr.univ.bordeaux.technical.io.AbstractFileParser;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Parses the game configuration file (typically {@code .agonrc}).
  * <p>
- * This class is responsible for reading the configuration file line by line,
- * ignoring comments and section headers, and populating a {@link GameConfig}
- * instance with the extracted key-value pairs.
+ * This class inherits file reading and comment scrubbing from {@link AbstractFileParser}.
+ * It focuses solely on extracting key-value pairs to populate a {@link GameConfig}.
  * </p>
  */
-public class ConfigParser {
+public class ConfigParser extends AbstractFileParser<GameConfig> {
 
     /**
      * Constructs a new {@code ConfigParser}.
@@ -24,26 +19,24 @@ public class ConfigParser {
     public ConfigParser() {}
 
     /**
-     * Parses the configuration file located at the specified file path.
-     * * @param filePath The path to the configuration file (e.g., {@code ".agonrc"}).
-     * @return A newly created {@link GameConfig} object populated with the parsed settings.
-     * @throws IOException If the configuration file does not exist, cannot be read,
-     * or contains malformed data.
+     * Processes the cleaned lines to construct the GameConfig object.
+     *
+     * @param cleanLines A list of strings free of comments and empty lines.
+     * @return A newly created {@link GameConfig} object.
      */
-    public GameConfig parse(String filePath) throws IOException {
-
-        Path path = Paths.get(filePath);
-
-        if (!Files.exists(path)) {
-            throw new IOException("Config file does not exist : " + filePath);
-        }
-
+    @Override
+    protected GameConfig processCleanLines(List<String> cleanLines) {
         GameConfig config = new GameConfig();
 
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        for (String line : cleanLines) {
+            if (line.startsWith("[")) {
+                continue;
+            }
+
+            try {
                 parseLine(line, config);
+            } catch (IOException e) {
+                System.err.println("Warning: " + e.getMessage());
             }
         }
 
@@ -51,30 +44,13 @@ public class ConfigParser {
     }
 
     /**
-     * Parses a single line from the configuration file and applies the setting
-     * to the provided {@link GameConfig} object.
-     * <p>
-     * This method safely ignores empty lines, comments (starting with {@code #}),
-     * and section headers (starting with {@code [}). Valid configuration lines
-     * must strictly follow the {@code key=value} format.
-     * </p>
-     * * @param line   The configuration line to parse.
-     * @param config The {@link GameConfig} instance to update.
-     * @throws IOException If the line is malformed (missing the {@code =} delimiter),
-     * if a value cannot be parsed into its expected data type
-     * (e.g., {@link NumberFormatException}), or if an unknown key is provided.
+     * Parses a single clean line formatted as key=value.
      */
-    private void parseLine(String line, GameConfig config) throws IOException {
-        String cleanLine = line.trim();
-
-        if (cleanLine.isEmpty() || cleanLine.startsWith("#") || cleanLine.startsWith("[")) {
-            return;
-        }
-
+    public void parseLine(String cleanLine, GameConfig config) throws IOException {
         String[] parts = cleanLine.split("=", 2);
 
         if (parts.length != 2) {
-            throw new IOException("Malformed line (no '=') : " + line);
+            throw new IOException("Malformed line (no '=') : " + cleanLine);
         }
 
         String key = parts[0].trim().toLowerCase();
@@ -82,25 +58,13 @@ public class ConfigParser {
 
         try {
             switch (key) {
-                case "verbose":
-                    config.setVerbose(Boolean.parseBoolean(value));
-                    break;
-                case "debug":
-                    config.setDebug(Boolean.parseBoolean(value));
-                    break;
-                case "placement":
-                    config.setManualPlacement(Boolean.parseBoolean(value));
-                    break;
-                case "blitz":
-                    config.setBlitzMode(Boolean.parseBoolean(value));
-                    break;
-                case "timeout":
-                    config.setTimeout(Integer.parseInt(value));
-                    break;
-                case "ai":
-                    config.setAi(Boolean.parseBoolean(value));
-                    break;
-                case "ai_color":
+                case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
+                case "debug" -> config.setDebug(Boolean.parseBoolean(value));
+                case "placement" -> config.setManualPlacement(Boolean.parseBoolean(value));
+                case "blitz" -> config.setBlitzMode(Boolean.parseBoolean(value));
+                case "timeout" -> config.setTimeout(Integer.parseInt(value));
+                case "ai" -> config.setAi(Boolean.parseBoolean(value));
+                case "ai_color" -> {
                     String val = value.toUpperCase();
                     switch (val) {
                         case "ALL" -> {
@@ -116,35 +80,22 @@ public class ConfigParser {
                             config.setBlackAI(true);
                         }
                         case "NONE" -> {
-                            if(config.isAiActive()) {
+                            if (config.isAiActive()) {
                                 throw new IOException("Ai mode is active but is not assigned to any color");
-                            }else{
+                            } else {
                                 config.setWhiteAI(false);
                                 config.setBlackAI(false);
                             }
                         }
-                        default -> {
-                            throw new IOException("Invalid value for option '" + key + "' : " + value);
-                        }
+                        default -> throw new IOException("Invalid value for option '" + key + "' : " + value);
                     }
-                    break;
-                case "ai_mode":
-                    config.setAiMode(value);
-                    break;
-                case "ai_depth":
-                    config.setAiDepth(Integer.parseInt(value));
-                    break;
-                case "ai_time_limit":
-                    config.setAiTimeLimit(Integer.parseInt(value));
-                    break;
-                case "ai_iterative_deepening":
-                    config.setAiIterativeDeepening(Boolean.parseBoolean(value));
-                    break;
-                case "ai_heuristic":
-                    config.setAiHeuristic(value);
-                    break;
-                default:
-                    throw new IOException("Invalid option : "+key);
+                }
+                case "ai_mode" -> config.setAiMode(value);
+                case "ai_depth" -> config.setAiDepth(Integer.parseInt(value));
+                case "ai_time_limit" -> config.setAiTimeLimit(Integer.parseInt(value));
+                case "ai_iterative_deepening" -> config.setAiIterativeDeepening(Boolean.parseBoolean(value));
+                case "ai_heuristic" -> config.setAiHeuristic(value);
+                default -> throw new IOException("Invalid option : " + key);
             }
         } catch (NumberFormatException e) {
             throw new IOException("Invalid value for option '" + key + "' : " + value);

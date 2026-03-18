@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.technical.config;
 
+import fr.univ.bordeaux.technical.io.Serializer;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,7 +17,7 @@ import java.nio.file.Paths;
  * one does not already exist.
  * </p>
  */
-public class ConfigSerializer {
+public class ConfigSerializer implements Serializer<GameConfig> {
 
     /**
      * Constructs a new {@code ConfigSerializer}.
