@@ -22,19 +22,19 @@ public interface GameUserInterface {
    */
   void startNewGame(String[] args);
 
-  /**
-   * Attempts to move a piece from one position to another.
-   *
-   * @param from The starting position of the piece.
-   * @param to The desired destination position.
-   */
+  //  /**
+  //   * Attempts to move a piece from one position to another.
+  //   *
+  //   * @param from The starting position of the piece.
+  //   * @param to The desired destination position.
+  //   */
   // void tryMove(Position from, Position to);
 
-  /**
-   * Selects a piece on the board (often used to display possible moves).
-   *
-   * @param pos The position of the piece to select.
-   */
+  //  /**
+  //   * Selects a piece on the board (often used to display possible moves).
+  //   *
+  //   * @param pos The position of the piece to select.
+  //   */
   // void selectPiece(Position pos);
 
   /** Undoes the last move played (if history allows). */

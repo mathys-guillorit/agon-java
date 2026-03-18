@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.technical.lang;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
@@ -8,8 +7,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
- * Provide translations.
- * usage example :
+ * Provide translations. usage example :
  *
  * <pre>
  *   var a = new LangService(); // load JVM Local if included in our project
@@ -18,13 +16,10 @@ import java.util.ResourceBundle;
  *   (contains lang + country language)
  *   System.out.println(a.translate("hello")); // requires the existing
  *   hello token in property files
- * </code>
+ * </pre>
  *
- * @see
- * <a href="https://medium.com/@medcherrou/understanding-resourcebundle-in-java
- * -a-comprehensive-guide-2cb3b49edf03">
- *   Medium article (jan 14 2025)
- *   </a>
+ * @see <a href="https://medium.com/@medcherrou/understanding-resourcebundle-in-java
+ *     -a-comprehensive-guide-2cb3b49edf03"> Medium article (jan 14 2025) </a>
  */
 public class LangService implements LangTranslationProvider {
 
@@ -34,85 +29,82 @@ public class LangService implements LangTranslationProvider {
   private String lastMessage = "";
 
   /**
-   * to know which {@link Locale} are supported
+   * To know which {@link Locale} are supported.
+   *
    * @return {@link ArrayList} of all available Locale
    */
-  public static ArrayList<Locale> supportedLocales(){
-    return new ArrayList<>(Arrays.asList(
-      Locale.ENGLISH, Locale.UK, Locale.FRENCH, Locale.FRANCE
-    ));
+  public static ArrayList<Locale> supportedLocales() {
+    return new ArrayList<>(Arrays.asList(Locale.ENGLISH, Locale.UK, Locale.FRENCH, Locale.FRANCE));
   }
 
   /**
-   * load detected {@link Locale} on user's machine fallback to English
-   * as default if we don't have his specific {@link Locale}
+   * Load detected {@link Locale} on user's machine fallback to English. as default if we don't have
+   * his specific {@link Locale}
    */
-  public LangService(){
+  public LangService() {
     this.locale = Locale.getDefault();
     this.loadDefaultBundle();
   }
 
   /**
-   * load a language using a Locale
+   * Load a language using a Locale.
    *
    * @param locale {@link Locale}
    */
-  public LangService(Locale locale){
+  public LangService(Locale locale) {
     this.locale = locale;
     this.loadDefaultBundle();
   }
 
-  /**
-   * try to load the bundle fallback to default if the bundle is not found
-   */
-  private void loadDefaultBundle(){
+  /** Try to load the bundle fallback to default if the bundle is not found. */
+  private void loadDefaultBundle() {
     try {
       this.loadBundle();
     } catch (MissingResourceException e) {
       // load default
       this.locale = Locale.ENGLISH;
-      this.resBundle = ResourceBundle.getBundle(
-        this.defaultFilepath, this.locale
-      );
+      this.resBundle = ResourceBundle.getBundle(this.defaultFilepath, this.locale);
       this.lastMessage = "locale not found default English is set instead";
     }
   }
 
   private void loadBundle() throws MissingResourceException {
-    final String finalPath = "lang."+this.locale.toString();
+    final String finalPath = "lang." + this.locale.toString();
     this.resBundle = ResourceBundle.getBundle(finalPath, this.locale);
     // getting the confirmation message outside the class
     this.lastMessage = this.translate("LangService_successLoaded");
   }
 
   /**
-   * translate with a token into different language some text
+   * Translate with a token into different language some text.
+   *
    * @param token index token in the .properties files to get the translation
-   * @return {@link String} translated output of the token is invalid
-   * it throws and Exception ({@link MissingResourceException})
-   * (development side only)
+   * @return {@link String} translated output of the token is invalid it throws and Exception
+   *     ({@link MissingResourceException}) (development side only)
    */
-  public String translate(String token){
+  public String translate(String token) {
     return this.resBundle.getString(token);
   }
 
   ///  GETTERS & SETTERS
 
   /**
-   * get last error message instead of throwing Exceptions everywhere int the
-   * app (add a lot more code to catch them)
+   * Get last error message instead of throwing Exceptions everywhere int the app (add a lot more
+   * code to catch them).
+   *
    * @return {@link String} message as reason of the previous error/exceptions
    */
-  public String getLastMessage(){
+  public String getLastMessage() {
     return this.lastMessage;
   }
 
   /**
-   * load a language to translate displayed text across all the project
+   * Load a language to translate displayed text across all the project.
+   *
    * @param locale {@link Locale}
    * @return true if Language si found else we juste keep the previous one
    */
-  public boolean setLocale(Locale locale){
+  public boolean setLocale(Locale locale) {
     Locale last = this.locale;
     this.locale = locale;
     try {
@@ -125,11 +117,11 @@ public class LangService implements LangTranslationProvider {
   }
 
   /**
-   * get the current Locale
+   * Get the current Locale.
+   *
    * @return {@link Locale}
    */
   public Locale getLocale() {
     return this.locale;
   }
-
 }

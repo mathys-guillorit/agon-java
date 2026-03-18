@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.ui;
 
-public abstract class AbstractGameUI implements GameUserInterface {
+/** Common interface for the UI part (bot CLI and GUI). */
+public abstract class AbstractGameUi implements GameUserInterface {
 
   private GameUserInterface gameEngine;
 

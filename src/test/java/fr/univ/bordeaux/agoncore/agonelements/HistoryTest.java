@@ -1,14 +1,7 @@
-package fr.univ.bordeaux.agonCore.agonElements;
-
-import fr.univ.bordeaux.agonCore.history.History;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 class HistoryTest {
-/*
+  /*
   private History history;
   private Move move1;
   private Move move2;

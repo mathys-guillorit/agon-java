@@ -1,27 +1,33 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
 import java.util.ArrayList;
 
-interface Bitboard {} //  temporary to fix problems
-
-/** delegate display converts bitboard state into String grid */
+/** Delegate display converts bitboard state into String grid. */
 public class ConsoleRenderer {
 
-  private Bitboard board;
+  private BitBoard board;
   private ArrayList<Character> lines;
 
   private static final short numberStartASCII = 48;
 
-  public ConsoleRenderer(Bitboard board) {
+  /**
+   * Object dedicated to show a Bitboard into the UI.
+   *
+   * @param board {@link BitBoard} used to display as chars for the UI
+   */
+  public ConsoleRenderer(BitBoard board) {
     this.board = board;
     this.lines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
     final short A_Letter = 64; // ASCII A
-    for (short c = K_Letter; c > A_Letter; c--) this.lines.add((char) c);
+    for (short c = K_Letter; c > A_Letter; c--) {
+      this.lines.add((char) c);
+    }
   }
 
   /**
-   * do convolution function with integers only int opposite direction (\/)
+   * Do convolution function with integers only int opposite direction (\/).
    *
    * <pre>
    *   \  /
@@ -40,7 +46,7 @@ public class ConsoleRenderer {
   }
 
   /**
-   * do convolution function with integers only (/\)
+   * Do convolution function with integers only (/\).
    *
    * <pre>
    *   /\
@@ -57,34 +63,48 @@ public class ConsoleRenderer {
   }
 
   /**
-   * update board display to terminal no arguments need board in constructor (to be used by
-   * drawHexagon() first)
+   * Update board display to terminal no arguments need board in constructor (to be used by
+   * drawHexagon() first).
    */
   public void renderer() {
-    int idxContent, spaceCount;
+    int idxContent;
+    int spaceCount;
     System.out.println();
     final int linesCount = 11;
     final int midLine = (linesCount - 1) / 2;
     for (int lines = 0; lines < linesCount; lines++) {
-      for (spaceCount = 0; spaceCount < this.coneReversed(lines, 0, 5); spaceCount++)
+      for (spaceCount = 0; spaceCount < this.coneReversed(lines, 0, 5); spaceCount++) {
         System.out.print(' ');
-      if (lines > midLine) System.out.print(this.lines.get(lines) + " \\");
-      else if (lines == midLine) System.out.print("F |");
-      else System.out.print(this.lines.get(lines) + " /");
-      for (idxContent = 0; idxContent < 6 + this.cone(lines, midLine, -10); idxContent++) {
-        if (coordinateValidator(lines, idxContent)) this.drawHexagon(lines, idxContent);
-        if (idxContent != 10 - spaceCount) System.out.print(' ');
       }
-      if (lines > midLine) System.out.print("/ " + (17 - lines));
-      else if (lines == midLine) System.out.print("| ");
-      else System.out.print("\\");
+      if (lines > midLine) {
+        System.out.print(this.lines.get(lines) + " \\");
+      } else if (lines == midLine) {
+        System.out.print("F |");
+      } else {
+        System.out.print(this.lines.get(lines) + " /");
+      }
+      for (idxContent = 0; idxContent < 6 + this.cone(lines, midLine, -10); idxContent++) {
+        if (coordinateValidator(lines, idxContent)) {
+          this.drawHexagon(lines, idxContent);
+        }
+        if (idxContent != 10 - spaceCount) {
+          System.out.print(' ');
+        }
+      }
+      if (lines > midLine) {
+        System.out.print("/ " + (17 - lines));
+      } else if (lines == midLine) {
+        System.out.print("| ");
+      } else {
+        System.out.print("\\");
+      }
       System.out.println();
     }
     System.out.println("        1 2 3 4 5 6");
   }
 
   /**
-   * check if a coordinate is valid or not (coordiante can be invalid example: k3)
+   * Dheck if a coordinate is valid or not (coordiante can be invalid example: k3).
    *
    * @return true if it is false else
    */
@@ -95,9 +115,9 @@ public class ConsoleRenderer {
   }
 
   /**
-   * draw and exagon without jump line example: "c4" where c is 9 lines later (from the first one)
+   * Draw and exagon without jump line example: "c4" where c is 9 lines later (from the first one)
    * with 4 diagonal lines in vertical final coordinates will be : x = 9 (c) and y = 4 (not
-   * converted)
+   * converted).
    *
    * @param x horizontal coordinate
    * @param y diagonal coordinate
