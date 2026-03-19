@@ -14,11 +14,11 @@ public class GameConfig {
   private boolean manualPlacement = false;
   private int timeout = 1800;
   private boolean aiActive = true;
-  private String aiMode = "MINIMAX";
+  private String aiMode = "minimax";
   private int aiDepth = 4;
   private int aiTimeLimit = 5;
   private boolean aiIterativeDeepening = true;
-  private String aiHeuristic = "MIXED";
+  private String aiHeuristic = "mixed";
   private boolean whiteIsAi = false;
   private boolean blackIsAi = true;
 
