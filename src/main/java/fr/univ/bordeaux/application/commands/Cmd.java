@@ -52,6 +52,7 @@ public abstract class Cmd implements CmdAction {
    */
   @Nonnull
   public Completer getAutoCompleter() {
+
     return new OptCompleterAdapter(this.options).getCompleter(this.getName());
   }
 

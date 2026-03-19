@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
@@ -20,7 +19,8 @@ public class UIPromptParser {
   private static final Parser parser = new DefaultParser();
   private static final Pattern MOVE_PATTERN =
       Pattern.compile("^([a-k])(\\d{1,2})([a-k])(\\d{1,2})$");
-
+  private static final Pattern RELOCATION_PATTERN =
+      Pattern.compile("^([a-k])(\\d{1,2})$");
   /**
    * Parse a line from the terminal and return the corresponding CmdAction.
    *
@@ -28,7 +28,7 @@ public class UIPromptParser {
    * @param registry The registry containing available commands.
    * @return The CmdAction if found and valid, otherwise null.
    */
-  public static CmdAction parse(final String line, AgonRegister<CmdAction> registry) {
+  public static CmdAction parse(final String line, AgonRegister<CmdAction> registry,GameUserInterface ui) {
     if (line == null || line.trim().isEmpty()) {
       return null;
     }
@@ -50,14 +50,23 @@ public class UIPromptParser {
 
     return registry.get(cmdName)
         .map(action -> action.createNew(options))
-        .orElseGet(()->handleDefault(line));
+        .orElseGet(()->handleDefault(line,ui));
   }
 
-  private static CmdAction handleDefault(String input) {
+  private static CmdAction handleDefault(String input,GameUserInterface ui) {
     Matcher matcher = MOVE_PATTERN.matcher(input);
-
+    Matcher matcher2 = RELOCATION_PATTERN.matcher(input);
     if (!matcher.matches()) {
-      System.out.println("unknown command");
+      if (matcher2.matches()) {
+        char letterFrom = matcher2.group(1).charAt(0);
+        int colFrom = Integer.parseInt(matcher2.group(2));
+        if (colFrom < 0 || colFrom > 11) {
+          System.out.println(
+              "Erreur : a Relocation Move is created this way : lineFrom (a-k) + colFrom (1-11). For exemple : a1, k11 are valid while j2a1 are not.");
+          return null;
+        }
+        return new CmdMove(-1, CoordinateMapper.toIndex(letterFrom, colFrom),ui);
+      }
       return null;
     }
 
@@ -74,8 +83,8 @@ public class UIPromptParser {
 
     // 5. Conversion et création de la commande
     int indexFrom = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colFrom);
-    int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colTo);
+    int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterTo), colTo);
 
-    return new CmdMove(indexFrom, indexTo);
+    return new CmdMove(indexFrom, indexTo,ui);
   }
 }

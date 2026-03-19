@@ -32,7 +32,7 @@ public class AIFactory {
     Heuristic heuristic = createHeuristic(config.getAiHeuristic());
     String mode = config.getAiMode();
     switch (mode) {
-      case "MINIMAX" -> {
+      case "minimax" -> {
         return new MinimaxStrategy(heuristic, color, config.getAiDepth(),
             config.isAiIterativeDeepening(), config.getAiTimeLimit());
       }
@@ -40,6 +40,8 @@ public class AIFactory {
         return new MctsStrategy(heuristic, color);
       }
       default -> {
+        System.out.println("le mode est : "+mode);
+        System.out.println("mode inconnu dans la factory");
         return null;
       }
     }
@@ -53,7 +55,7 @@ public class AIFactory {
       case "mobility" -> {
         return new MobilityHeuristic();
       }
-      case "MIXED" -> {
+      case "mixed" -> {
         return new MixedHeuristic(10, 1);
       }
       default -> {

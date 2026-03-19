@@ -42,6 +42,7 @@ public class MatchFactory {
       AgonBoard agonBoard,
       GameUserInterface gameUI) {
     AgonAI aiStrategy = aiMap.get(color);
+    System.out.println((aiStrategy==null));
     if (aiStrategy != null) {
       // C'est une IA selon la factory de ton collègue
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);

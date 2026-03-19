@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
@@ -24,6 +25,7 @@ import org.jline.reader.Completer;
 public class CmdCreate extends Cmd {
 
   private GameConfig gameConfig;
+  private GameEngine gameEngine;
   private Options options;
   private String[] args;
 
@@ -33,13 +35,15 @@ public class CmdCreate extends Cmd {
    *
    * @param ui context
    */
-  public CmdCreate(GameUserInterface ui, GameConfig gameConfig) {
-    this(ui, gameConfig, new String[0]);
+  public CmdCreate(GameUserInterface ui, GameConfig gameConfig,GameEngine gameEngine) {
+    this(ui, gameConfig,gameEngine ,new String[0]);
+
   }
 
-  public CmdCreate(GameUserInterface ui, GameConfig gameConfig, String[] args) {
+  public CmdCreate(GameUserInterface ui, GameConfig gameConfig,GameEngine gameEngine, String[] args) {
     super(ui);
     this.gameConfig = gameConfig;
+    this.gameEngine = gameEngine;
     this.args = args;
     this.options = new Options();
     this.options.addOption("p1Ia", "player1IsAi", true, "Define if the player 1 is an AI (true/false)");
@@ -69,9 +73,6 @@ public class CmdCreate extends Cmd {
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine cmd = parser.parse(options, args);
-      for (String arg : args) {
-        arg.toString();
-      }
       Color p1Color = Color.WHITE;
       if (cmd.hasOption("p1Color")) {
         p1Color = Color.valueOf(cmd.getOptionValue("p1Color").toUpperCase());
@@ -107,14 +108,15 @@ public class CmdCreate extends Cmd {
     }
     System.out.println("le noir est ia " +gameConfig.isBlackAI());
     Match match = MatchFactory.createMatch(gameConfig, this.getCtx());
-    match.setObserver((MatchObserver) super.getCtx());
-    super.getCtx().setMatchManager((MatchManager) match);
+    //match.setObserver((MatchObserver) super.getCtx());
+    gameEngine.setMatchManager((MatchManager) match);
+    System.out.println("je vais return ");
     return true;
   }
 
   @Override
   public CmdAction createNew(String[] args) {
-    return new CmdCreate(super.getCtx(), this.gameConfig, args);
+    return new CmdCreate(super.getCtx(), this.gameConfig,this.gameEngine, args);
   }
 
   public String getDescription() {

@@ -56,9 +56,10 @@ public class OptCompleterAdapter {
   public Completer getCompleter(String cmdName) {
     List<String> predictOptsNames = new ArrayList<>();
     for (Option o : opts.getOptions()) {
-      if (this.isNull(o)) {
+      if (o == null || (o.getOpt() == null && o.getLongOpt() == null)) {
         continue;
       }
+
       predictOptsNames.addAll(this.optify(o));
     }
     return new ArgumentCompleter(

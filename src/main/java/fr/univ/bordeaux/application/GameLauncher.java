@@ -1,13 +1,28 @@
 package fr.univ.bordeaux.application;
 
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
+import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
+import fr.univ.bordeaux.application.commands.specialized.CmdHint;
+import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
+import fr.univ.bordeaux.application.commands.specialized.CmdSave;
+import fr.univ.bordeaux.application.commands.specialized.CmdSet;
+import fr.univ.bordeaux.application.commands.specialized.CmdShow;
+import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
+import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.technical.config.ConfigParser;
 import fr.univ.bordeaux.technical.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.cli.*;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
@@ -225,24 +240,46 @@ public class GameLauncher {
    */
   private void startGame(GameConfig config, CommandLine cmd) {
     System.out.println("Starting Agon Shell...");
-    // MatchManager matchManager = new MatchManager(config);
+    AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    GameUserInterface userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
     } else {
       try {
+        final AgonShell[] shellRef = new AgonShell[1];
+
+        Completer strategyCompleter = (reader, line, candidates) -> {
+          if (shellRef[0] != null) {
+            shellRef[0].globalCompleter(reader, line, candidates);
+          }
+        };
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
         LineReader reader = LineReaderBuilder.builder()
             .terminal(terminal)
+            .completer(strategyCompleter)
             .build();
-        AgonShell agon = new AgonShell(terminal, reader, config);
-        agon.start();
+
+        userInterface = new AgonShell(terminal, reader,cmds);
+        shellRef[0] = (AgonShell) userInterface;
+
+        GameEngine gameEngine=new GameEngine(userInterface,cmds);
+        cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
+        cmds.register("quit", new CmdQuit(userInterface));
+        cmds.register("hint", new CmdHint(userInterface));
+        cmds.register("show",new CmdShow(userInterface,config));
+        cmds.register("load",new CmdLoad(userInterface));
+        cmds.register("save",new CmdSave(userInterface));
+        cmds.register("set",new CmdSet(userInterface,config));
+        cmds.register("undo",new CmdUndo(userInterface));
+        cmds.register("redo",new CmdRedo(userInterface));
+        cmds.register("help", new CmdHelp(userInterface,cmds));
+        gameEngine.start();
       } catch (Exception e) {
+        e.printStackTrace();
       }
-      ;
+
 
     }
-    // agon.setGameEngine(matchManager);
-    // agon.start();
   }
 
   /**

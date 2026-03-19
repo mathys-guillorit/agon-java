@@ -100,6 +100,9 @@ public class Move {
     return pieceType;
   }
 
+  public boolean isRelocationMove(){
+    return from==-1;
+  }
   /**
    * Returns a string representation of the move for debugging purposes.
    *

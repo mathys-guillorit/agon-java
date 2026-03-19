@@ -8,14 +8,12 @@ public interface MatchManager {
 
   boolean move(Move move);
 
-  void startGame();
-
   boolean undo();
 
   boolean redo();
   Player getCurrentPlayer();
   RestrictedAgonBoard  getAgonBoard();
   Move hint();
-
+  boolean isMatchOver();
   void quit();
 }

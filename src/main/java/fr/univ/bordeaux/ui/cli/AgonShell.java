@@ -4,36 +4,23 @@ import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
-import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
-import fr.univ.bordeaux.application.commands.specialized.CmdHint;
-import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
-import fr.univ.bordeaux.application.commands.specialized.CmdSave;
-import fr.univ.bordeaux.application.commands.specialized.CmdSet;
-import fr.univ.bordeaux.application.commands.specialized.CmdShow;
-import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
-import fr.univ.bordeaux.application.match.MatchManager;
-import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.UIPromptParser;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.jline.consoleui.prompt.builder.PromptBuilder;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Candidate;
-import org.jline.reader.History;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Reference;
 import org.jline.reader.UserInterruptException;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
@@ -46,8 +33,6 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   private AtomicBoolean running; // copy reference for usage in commands
   private Terminal terminal;
   private LineReader reader;
-  private PromptBuilder promptBuilder;
-  private MatchManager matchManager;
 
   /**
    * get the line entered in the terminal by the user
@@ -93,60 +78,32 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
 
   private AtomicBoolean debug;
 
-  private GameConfig gameConfig;
-
-  private UIPromptParser uiPromptParser;
 
   private void init() {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
-    this.cmds = new AgonRegister<>();
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHA + "> ";
-    this.cmds.register("new", new CmdCreate(this, gameConfig));
-    this.cmds.register("quit", new CmdQuit(this));
-    this.cmds.register("help", new CmdHelp(this));
-    this.cmds.register("hint", new CmdHint(this));
-    this.cmds.register("show",new CmdShow(this));
-    this.cmds.register("load",new CmdLoad(this));
-    this.cmds.register("save",new CmdSave(this));
-    this.cmds.register("set",new CmdSet(this));
-    this.cmds.register("undo",new CmdUndo(this));
-    this.cmds.register("redo",new CmdRedo(this));
   }
 
-  public AgonShell(Terminal term, LineReader reader, GameConfig config) {
+  public AgonShell(Terminal term, LineReader reader,AgonRegister<CmdAction> cmds) {
     super(); // require the work of others
     this.terminal = term;
     // default reader
     this.reader = reader;
     // message headers for the app
-    this.gameConfig = config;
     this.msgHA = this.cliLayer();
     this.msgBI = this.cliInfo();
     this.msgBW = this.cliWarn();
     this.msgBE = this.cliError();
     this.init();
+    this.cmds = cmds;
+    reader.getKeyMaps()
+        .get(LineReader.MAIN)
+        .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD),
+            KeyMap.ctrl('R'));
   }
 
-  public AgonShell(Terminal term) {
-    super(); // require the work of others
-    this.terminal = term;
-    // default reader
-    this.reader =
-        LineReaderBuilder.builder().terminal(terminal).completer(this::globalCompleter).build();
-    // message headers for the app
-    this.msgHA = this.cliLayer();
-    this.msgBI = this.cliInfo();
-    this.msgBW = this.cliWarn();
-    this.msgBE = this.cliError();
-    this.init();
-    // shortcut for "ctrl+r" show history with finding pattern
-    reader.getKeyMaps()
-            .get(LineReader.MAIN)
-            .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD),
-                    KeyMap.ctrl('R'));
-  }
 
   /**
    * load ASCII main menu to shell
@@ -165,44 +122,15 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.running.set(false);
     this.safeCloseTerminal();
   }
-
-  private void gameLoop() {
-    while (this.running.get()) {
-      CmdAction action;
-
-      if (this.matchManager == null) {
-        // 1. ÉTAT MENU : On lit directement sur la console du Shell
-        String userInput=this.getUserInput();
-        if (userInput == null || userInput.isEmpty()) continue;
-        
-        // APPEL STATIC ICI
-        action = UIPromptParser.parse(userInput, this.cmds);
-      } else {
-        // 2. ÉTAT JEU : On demande au joueur courant (IA ou Humain)
-        Player p = this.matchManager.getCurrentPlayer();
-        this.showMessage("Current Player is " + p.getName() + "("+p.getColor().toString()+")\n");
-        action = p.getAction(); 
-      }
-      System.out.println(action==null);
-      // 3. EXÉCUTION COMMUNE
-      if (action != null) {
-        // On exécute l'action sur le manager actuel
-        action.execute(this.matchManager);
-      }
-    }
-    System.out.println("je sors du while");
-  }
-
-  public String showBE() {
-    return this.msgBE;
-  }
-
+public boolean isRunning() {
+    return this.running.get();
+}
   /**
    * get a line from terminal
    */
   public String getUserInput() {
     try {
-      line = this.reader.readLine(this.userPrompt).trim();//readLine(this.userPrompt).trim();
+      line = this.reader.readLine(this.userPrompt).trim();
     } catch (UserInterruptException e) {
       // if user use "ctrl+c"
       this.quit();
@@ -235,11 +163,11 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
    * @param line       filled by Commons Cli
    * @param candidates filled by Commons Cli
    */
-  private void globalCompleter(LineReader reader, ParsedLine line, List<Candidate> candidates) {
+  public void globalCompleter(LineReader reader, ParsedLine line, List<Candidate> candidates) {
     List<String> words = line.words();
     // partial word
-    Cmd cmd;
-    if (words.isEmpty()) {
+    CmdAction cmd;
+    if (words.getFirst().equals("")) {
       for (String cmdKey : this.cmds.getKeys()) {
         if (this.cmds.get(cmdKey).isPresent()) {
           candidates.add(new Candidate(cmdKey));
@@ -258,7 +186,8 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
       }
       return;
     }
-    cmd = (Cmd) this.cmds.get(firstWord).get();
+    cmd =this.cmds.get(firstWord).get();
+
     // delegation for known commands :
     try {
       cmd.getAutoCompleter().complete(reader, line, candidates);
@@ -387,24 +316,19 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
   @Override
   public void quit() {
     this.showWarn("Save the game before quitting ? [y/n]");
-    this.getUserInput();
-    if (this.line == null || this.line.isEmpty()) {
+    String input= this.getUserInput();
+    if (!input.equals("n") && !input.equals("y")) {
       this.running.set(false);
       return;
     }
     
     // On vérifie si l'utilisateur a répondu 'y'
-    if (this.line.trim().equalsIgnoreCase("y")) {
+    if (input.trim().equalsIgnoreCase("y")) {
       this.saveGame(); // Sauvegarde par défaut
     }
     
     this.running.set(false);
     this.safeCloseTerminal();
-  }
-
-  @Override
-  public void start() {
-    this.gameLoop();
   }
 
   /**
@@ -449,25 +373,10 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     return this.debug;
   }
 
-  public AgonRegister<CmdAction> getCmds() {
-    return this.cmds;
-  }
-
-  /**
-   * get user prompte (default is "[AGON]> ")
-   *
-   * @return {@link String}
-   */
-  @Override
-  public String getUserPrompt() {
-    return userPrompt;
-  }
 
   public AtomicBoolean getRunning() {
     return running;
   }
 
-  public void setMatchManager(MatchManager matchManager) {
-    this.matchManager = matchManager;
-  }
+
 }

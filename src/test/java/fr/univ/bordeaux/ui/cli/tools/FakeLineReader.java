@@ -32,11 +32,13 @@ public class FakeLineReader implements LineReader {
   private final Queue<String> inputs;
   private final Parser parser = new DefaultParser();
   private final History history = new DefaultHistory();
+  private final Map<String, KeyMap<Binding>> keyMaps = new HashMap<>();
 
   private Completer completer;
 
   public FakeLineReader(String... lines) {
     this.inputs = new ArrayDeque<>(List.of(lines));
+    this.keyMaps.put(LineReader.MAIN, new KeyMap<>());
   }
 
   @Override
@@ -150,15 +152,6 @@ public class FakeLineReader implements LineReader {
     return Map.of();
   }
 
-  @Override
-  public Map<String, KeyMap<Binding>> getKeyMaps() {
-    return null;
-  }
-
-  @Override
-  public String getKeyMap() {
-    return "";
-  }
 
   @Override
   public boolean setKeyMap(String name) {
@@ -258,4 +251,16 @@ public class FakeLineReader implements LineReader {
   public LineReader option(Option option, boolean value) {
     return null;
   }
+
+  @Override
+  public Map<String, KeyMap<Binding>> getKeyMaps() {
+    return this.keyMaps;
+  }
+
+  @Override
+  public String getKeyMap() {
+    return LineReader.MAIN;
+  }
+
+
 }

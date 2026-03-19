@@ -8,32 +8,6 @@ import java.time.format.DateTimeFormatter;
 
 public abstract class AbstractGameUI implements GameUserInterface, MatchObserver {
 
-  private GameUserInterface gameEngine;
-
-  public void setGameEngine(GameUserInterface gameEngine) {
-    this.gameEngine = gameEngine;
-  }
-
-  protected GameUserInterface getGameEngine() {
-    if (this.gameEngine == null) {
-      throw new IllegalStateException("The game engine is disconnected");
-    }
-    return this.gameEngine;
-  }
-
-  public abstract void start();
-
-  /*
-
-      @Override public void tryMove(Position from, Position to) {
-          getGameEngine().tryMove(from, to);
-      }
-
-      @Override public void selectPiece(Position pos) {
-          getGameEngine().selectPiece(pos);
-      }
-
-  */
 
   /**
    * save the game configuration into the local machine from the user using current path
@@ -65,23 +39,7 @@ public abstract class AbstractGameUI implements GameUserInterface, MatchObserver
     // this.showError(...);
   }
 
-  @Override
-  public void loadGame(String f) {
-    getGameEngine().loadGame(f);
-  }
 
-  @Override
-  public void pauseGame() {
-    getGameEngine().pauseGame();
-  }
 
-  @Override
-  public void resumeGame() {
-    getGameEngine().resumeGame();
-  }
-
-  @Override
-  public void quit() {
-    getGameEngine().quit();
-  }
+  public abstract void quit();
 }

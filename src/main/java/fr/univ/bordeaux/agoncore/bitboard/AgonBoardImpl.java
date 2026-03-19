@@ -810,6 +810,38 @@ public class AgonBoardImpl implements AgonBoard {
     }
   }
 
+  public void printBoard() {
+    for (int r = 10; r >= 0; r--) {
+      int numSpaces = Math.abs(5 - r);
+      for (int s = 0; s < numSpaces; s++) {
+        System.out.print(" ");
+      }
+      for (int c = 0; c < 11; c++) {
+        int idx = r * 11 + c;
+
+        if (!validZoneMask.isSet(idx)) {
+          continue;
+        }
+
+        if (whiteQueen.isSet(idx)) {
+          System.out.print("Q ");
+        } else if (blackQueen.isSet(idx)) {
+          System.out.print("q ");
+        } else if (whitePawns.isSet(idx)) {
+          System.out.print("O ");
+        } else if (blackPawns.isSet(idx)) {
+          System.out.print("X ");
+        } else if (idx == throne) {
+          System.out.print("+ ");
+        } else {
+          System.out.print(". ");
+        }
+      }
+      System.out.println();
+    }
+  }
+
+
   /**
    * Checks if two tiles are adjacent on the hexagonal grid.
    *

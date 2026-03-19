@@ -3,25 +3,31 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.jline.reader.Completer;
 
 public final class CmdShow extends Cmd {
   private final Options options;
   private String target;
+  private GameConfig gameConfig;
   /**
    * load delegate(s) and information to allow commands interact with the system (for the CLI or
    * GUI)
    *
    * @param uictx
    */
-  public CmdShow(GameUserInterface uictx) {
+  public CmdShow(GameUserInterface uictx, GameConfig gameConfig) {
     super(uictx);
+    this.gameConfig = gameConfig;
     this.setDesc("Description: Displays specific information about the current game state.");
     this.setName("Show");
     this.options = new Options();
@@ -41,24 +47,30 @@ public final class CmdShow extends Cmd {
         "  - configuration : Shows the current game settings.\n";
   }
 
-  private CmdShow(GameUserInterface uictx, String target) {
-    this(uictx);
+  private CmdShow(GameUserInterface uictx,GameConfig gameConfig, String target) {
+    this(uictx,gameConfig);
     this.target = target;
   }
 
   @Override
-  public boolean execute(MatchManager match) {
-    if (match == null) {
-      super.getCtx().showMessage("No active match. Create one with 'new'.");
-      return false;
-    }
+  public String getName() {
+    return "show";
+  }
 
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return new OptCompleterAdapter(this.options).getCompleter(this.getName());
+  }
+
+  @Override
+  public boolean execute(MatchManager match) {
     // On aiguille selon la cible stockée dans l'instance
     return switch (target) {
       case "board" ->showBoard(match);
       case "history" -> showHistory(match);
       case "time" -> showTime(match);
-      case "configuration" -> showConfiguration(match);
+      case "configuration" -> showConfiguration();
       default -> false;
     };
   }
@@ -82,7 +94,7 @@ public final class CmdShow extends Cmd {
       else if (line.hasOption("configuration")) selectedTarget = "configuration";
       else if (line.hasOption("board"))    selectedTarget = "board";
 
-      return new CmdShow(super.getCtx(), selectedTarget);
+      return new CmdShow(super.getCtx(), this.gameConfig,selectedTarget);
 
     } catch (ParseException e) {
       super.getCtx().showMessage("Invalid show command. Use 'show -help' for details.");
@@ -90,31 +102,28 @@ public final class CmdShow extends Cmd {
     }
   }
 
-  /*public void getDescription() {
-    this.getCtx().showMessage("Usage: show [target]\n");
-    this.getCtx()
-        .showMessage("Description: Displays specific information about the current game state.\n");
-    this.getCtx().showMessage("Available targets:\n");
-    this.getCtx().showMessage("  - board         : Shows the current hexagonal board state.\n");
-    this.getCtx().showMessage("  - history       : Shows the history of all played turns.\n");
-    this.getCtx().showMessage("  - time          : Shows the remaining time for each player.\n");
-    this.getCtx().showMessage("  - configuration : Shows the current game settings.\n");
-  }*/
-
   private boolean showHistory(MatchManager match) {
+    System.out.println("la commande est bien traité mais pas encore implémenté");
     return true;
   }
 
   private boolean showBoard(MatchManager match){
-    super.getCtx().updateBoard(match.getAgonBoard());
-    return true;
+    if (match==null){
+      super.getCtx().showMessage("Error: Can't display the board because there is no match. Please create a match before using this command\n");
+      return false;
+    }else {
+      super.getCtx().updateBoard(match.getAgonBoard());
+      return true;
+    }
   }
 
   private boolean showTime(MatchManager match){
-    return true;
+    System.out.println("la commande est bien traité mais pas encore implémenté");
+    return false;
   }
 
-  private boolean showConfiguration(MatchManager match){
+  private boolean showConfiguration(){
+    super.getCtx().showMessage(this.gameConfig.toString());
     return true;
   }
 }

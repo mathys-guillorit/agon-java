@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.match.player;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.strategy.AgonAI;
+import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 
@@ -33,8 +34,9 @@ public class AiPlayer extends AbstractPlayer {
   }
 
   @Override
-  public CmdAction getAction() {
+  public CmdAction getAction(AgonRegister<CmdAction> cmds) {
+    CmdAction cmd=new CmdMove(ai.getBestMove(board),null);
     System.out.println("l'ia a crée un move ");
-    return new CmdMove(ai.getBestMove(board));
+    return cmd;
   }
 }

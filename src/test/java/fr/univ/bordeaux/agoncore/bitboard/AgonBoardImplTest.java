@@ -47,7 +47,7 @@ class AgonBoardImplTest {
     assertEquals(1, board.getCentrality(72), "A direct neighbor of the throne must be in circle 1");
 
     // An index on the edges (Circle 5)
-    assertEquals(5, board.getCentrality(0), "Index 0 must be on the outer edge (Circle 5)");
+    assertEquals(5, board.getCentrality(1), "Index 0 must be on the outer edge (Circle 5)");
   }
 
   @Test
@@ -124,6 +124,23 @@ class AgonBoardImplTest {
       assertEquals(-1, m.getFrom(), "While queen is captured only relocation move could be able");
     }
   }
+
+  @Test
+  @DisplayName("Test de relocation : Priorité absolue")
+  void testRelocation() {
+    BitBoard wPawns = new BitBoard(61);
+    wPawns.setBit(64, 1L);
+    BitBoard bPawns = new BitBoard(62);
+    AgonBoardImpl boardReloc = new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns, bPawns);
+    boardReloc.printBoard();
+    boardReloc.applyMove(new Move(64,63,Color.WHITE,PieceType.WHITE_PAWN));
+    boardReloc.printBoard();
+    for  (Move m : boardReloc.generateLegalMoves(Color.BLACK)) {
+      System.out.println(m.toString());
+    }
+    assertTrue(boardReloc.applyMove(new Move(-1,1,Color.BLACK,PieceType.BLACK_PAWN)));
+  }
+
 
   @Test
   @DisplayName("Victory Test: Queen + 6 pawns")

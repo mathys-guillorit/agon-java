@@ -20,33 +20,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public interface GameUserInterface {
 
-  /**
-   * Attempts to move Reader piece from one position to another.
-   *
-   * @param from The starting position of the piece.
-   * @param to The desired destination position.
-   */
-  // void tryMove(Position from, Position to);
 
-  /**
-   * Selects Reader piece on the board (often used to display possible moves).
-   *
-   * @param pos The position of the piece to select.
-   */
-  // void selectPiece(Position pos);
 
-  /**
-   * Loads Reader game from Reader save file.
-   *
-   * @param filename The path or name of the file to load.
-   */
-  void loadGame(String filename);
-
-  /** Pauses the game (stops the timer if present). */
-  void pauseGame();
-
-  /** Resumes the game after Reader pause. */
-  void resumeGame();
+boolean isRunning();
 
   /**
    * Quits the current game and closes the application. May trigger Reader prompt to save before
@@ -96,25 +72,12 @@ public interface GameUserInterface {
 
   AtomicBoolean getDebugMode();
 
-  /**
-   * get commands from the ui object
-   *
-   * @return Reader register of all commands
-   */
-  AgonRegister<CmdAction> getCmds();
 
   void setVerbose(boolean state);
 
-  /**
-   * get user prompte (default is "[AGON]> ")
-   *
-   * @return {@link String}
-   */
-  String getUserPrompt();
 
   /** save the game before leaving */
   void saveGame();
 
-  void setMatchManager(MatchManager matchManager);
   String getUserInput();
 }

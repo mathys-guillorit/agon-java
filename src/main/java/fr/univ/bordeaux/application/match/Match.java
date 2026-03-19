@@ -28,36 +28,30 @@ public abstract class Match implements MatchManager, ObservableMatch {
     this.agonBoard = agonBoard;
     this.player1 = player1;
     this.player2 = player2;
-    System.out.println(player1.isAI());
-    System.out.println(player2.isAI());
     this.currentPlayer = player1;
     this.status = MatchStatus.RUNNING;
   }
 
-  public void loopGame() {
-    while (this.status != MatchStatus.FINISHED) {
-      this.observer.updateBoard(agonBoard);
-      CmdAction cmd = currentPlayer.getAction();
-      if (cmd.execute(this)) {
-        switchPlayer();
-      }
-    }
-  }
-
   public boolean move(Move move) {
-    //this.startActions();
-    PieceType piece = agonBoard.getPieceAt(move.getFrom());
-    if (piece == null || piece.getColor() != currentPlayer.getColor()) {
+    this.startActions();
+    if (this.status == MatchStatus.FINISHED) {
       return false;
     }
-    if (agonBoard.applyMove(move)) {
-      if (agonBoard.isGameWon(currentPlayer.getColor())) {
-        this.status = MatchStatus.FINISHED;
-        System.out.println("win");
+    PieceType piece = agonBoard.getPieceAt(move.getFrom());
+    if (piece!=null) {
+      if (piece.getColor() != currentPlayer.getColor()) {
+        return false;
       }
-      this.endActions();
-      return true;
     }
+      if (agonBoard.applyMove(move)) {
+        if (agonBoard.isGameWon(currentPlayer.getColor())) {
+          this.status = MatchStatus.FINISHED;
+          System.out.println("win");
+        }
+        this.endActions();
+        return true;
+      }
+
     return false;
   }
 
@@ -84,11 +78,13 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   public boolean redo() {
+    agonBoard.redoMove();
     return agonBoard.redoMove();
   }
 
   @Override
   public boolean undo() {
+    agonBoard.undoMove();
     return agonBoard.undoMove();
   }
 
@@ -103,6 +99,9 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return status;
   }
 
+  public boolean isMatchOver(){
+    return this.status==MatchStatus.FINISHED;
+  }
   protected void setMatchStatus(MatchStatus status) {
     this.status = status;
   }

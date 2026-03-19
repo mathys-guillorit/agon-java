@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.technical.config;
 
+import java.util.HashMap;
+
 /**
  * Represents the configuration settings for the Agon game.
  * <p>
@@ -16,11 +18,11 @@ public class GameConfig {
   private boolean manualPlacement = false;
   private int timeout = 1800;
   private boolean aiActive = true;
-  private String aiMode = "MINIMAX";
+  private String aiMode = "minimax";
   private int aiDepth = 4;
   private int aiTimeLimit = 5;
   private boolean aiIterativeDeepening = true;
-  private String aiHeuristic = "MIXED";
+  private String aiHeuristic = "mixed";
   private boolean whiteIsAI = false;
   private boolean blackIsAI = true;
 
@@ -257,5 +259,22 @@ public class GameConfig {
    */
   public void setManualPlacement(boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
+  }
+
+  public String toString() {
+    StringBuilder string=new StringBuilder();
+    string.append("[verbose]=").append(verbose).append("\n");
+    string.append("[debug]=").append(debug).append("\n");
+    string.append("[blitzMode]=").append(blitzMode).append("\n");
+    string.append("[timeout]=").append(timeout).append("\n");
+    string.append("[aiActive]=").append(aiActive).append("\n");
+    string.append("[aiMode]=").append(aiMode).append("\n");
+    string.append("[aiDepth]=").append(aiDepth).append("\n");
+    string.append("[aiIterativeDeepening]=").append(aiIterativeDeepening).append("\n");
+    string.append("[aiTimeLimit]=").append(aiTimeLimit).append("\n");
+    string.append("[aiHeuristique]=").append(aiHeuristic).append("\n");
+    string.append("[whiteIsAI]=").append(whiteIsAI).append("\n");
+    string.append("[blackIsAI]=").append(blackIsAI).append("\n");
+    return string.toString();
   }
 }

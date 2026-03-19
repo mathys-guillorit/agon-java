@@ -18,7 +18,4 @@ public class StandardMatch extends Match {
     super.switchPlayer();
   }
 
-  public void startGame() {
-    super.loopGame();
-  }
 }

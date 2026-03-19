@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.match.player;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -23,13 +24,13 @@ public class HumanPlayer extends AbstractPlayer {
   }
 
   @Override
-  public CmdAction getAction() {
+  public CmdAction getAction(AgonRegister<CmdAction> cmds) {
     String input = ui.getUserInput();
     if (input == null || input.trim().isEmpty()) {
       return null;
     }
     // Utilisation static du parseur
-    return UIPromptParser.parse(input, ui.getCmds());
+    return UIPromptParser.parse(input, cmds,ui);
 
   }
 /*
