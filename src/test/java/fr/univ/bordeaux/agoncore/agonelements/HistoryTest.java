@@ -1,9 +1,9 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.agonCore.history.History;
-import fr.univ.bordeaux.agonCore.history.HistoryInformations;
+import fr.univ.bordeaux.agoncore.history.History;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

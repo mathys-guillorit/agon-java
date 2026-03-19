@@ -1,10 +1,10 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.history.History;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
-import fr.univ.bordeaux.agonCore.history.HistoryInformations;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.history.History;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.ArrayList;
 import java.util.List;
 /**

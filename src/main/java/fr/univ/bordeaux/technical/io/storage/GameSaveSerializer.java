@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.technical.io.storage;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.io.Serializer;
 

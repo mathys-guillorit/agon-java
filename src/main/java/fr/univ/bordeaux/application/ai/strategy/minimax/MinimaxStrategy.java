@@ -1,10 +1,10 @@
 package fr.univ.bordeaux.application.ai.strategy.minimax;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
 
 import java.util.List;
 

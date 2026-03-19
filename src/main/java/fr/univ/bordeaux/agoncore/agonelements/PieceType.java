@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
  * Represents the different types of pieces available in the Agon game.

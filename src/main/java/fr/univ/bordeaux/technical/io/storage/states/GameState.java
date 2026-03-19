@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.technical.io.storage.states;
 
 import fr.univ.bordeaux.technical.io.storage.GameSaveBuilder;
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import java.io.IOException;
 
 /**

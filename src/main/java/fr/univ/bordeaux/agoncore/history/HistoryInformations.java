@@ -1,8 +1,8 @@
-package fr.univ.bordeaux.agonCore.history;
+package fr.univ.bordeaux.agoncore.history;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.agonElements.PieceType;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import java.util.List;
 
 /**
@@ -10,7 +10,7 @@ import java.util.List;
  * * <p>In Agon, a single turn can trigger multiple physical displacements (e.g., a
  * standard move followed by one or more mandatory relocations). This class
  * groups these actions together, along with context about the piece and player,
- * to ensure that the {@link fr.univ.bordeaux.agonCore.bitboard.AgonBoard} can
+ * to ensure that the {@link fr.univ.bordeaux.agoncore.bitboard.AgonBoard} can
  * accurately restore previous states during undo operations.</p>
  */
 public class HistoryInformations {

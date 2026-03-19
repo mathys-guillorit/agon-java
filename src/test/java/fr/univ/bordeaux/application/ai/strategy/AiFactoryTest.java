@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.config.GameConfig;

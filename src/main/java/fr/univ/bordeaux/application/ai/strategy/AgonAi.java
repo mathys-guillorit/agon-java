@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 
 /**
  * Common interface for all Artificial Intelligence strategies in the Agon game.

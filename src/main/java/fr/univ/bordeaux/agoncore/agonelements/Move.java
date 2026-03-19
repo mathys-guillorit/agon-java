@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.agonElements;
+package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
  * Represents a single action performed by a player on the Agon board.

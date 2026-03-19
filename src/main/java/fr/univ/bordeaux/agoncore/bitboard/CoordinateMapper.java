@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
 /**
  * Utility class for converting board coordinates between human-readable formats

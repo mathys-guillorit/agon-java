@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.ai.heuristics;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 
 /**
  * A composite heuristic strategy that combines **Centrality** and **Mobility** evaluations.

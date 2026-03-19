@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.agonCore.bitboard;
+package fr.univ.bordeaux.agoncore.bitboard;
 
 /**
  * A high-performance 128-bit bitset implementation optimized for Agon's hexagonal grid.

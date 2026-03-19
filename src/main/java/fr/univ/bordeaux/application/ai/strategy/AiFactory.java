@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
-import fr.univ.bordeaux.agonCore.agonElements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
