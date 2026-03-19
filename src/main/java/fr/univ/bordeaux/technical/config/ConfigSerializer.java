@@ -1,7 +1,6 @@
 package fr.univ.bordeaux.technical.config;
 
 import fr.univ.bordeaux.technical.io.Serializer;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;

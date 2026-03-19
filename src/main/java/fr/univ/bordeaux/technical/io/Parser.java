@@ -9,12 +9,12 @@ import java.io.IOException;
  */
 public interface Parser<T> {
 
-    /**
-     * Parses the specified file and constructs an object of type T.
-     *
-     * @param filePath The path to the file to parse.
-     * @return The constructed object containing the parsed data.
-     * @throws IOException If an error occurs while reading the file.
-     */
-    T parse(String filePath) throws IOException;
+  /**
+   * Parses the specified file and constructs an object of type T.
+   *
+   * @param filePath The path to the file to parse.
+   * @return The constructed object containing the parsed data.
+   * @throws IOException If an error occurs while reading the file.
+   */
+  T parse(String filePath) throws IOException;
 }

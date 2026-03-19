@@ -9,12 +9,12 @@ import java.io.IOException;
  */
 public interface Serializer<T> {
 
-    /**
-     * Saves the state of the given object to the specified file.
-     *
-     * @param object   The object to serialize.
-     * @param filePath The destination path where the file will be saved.
-     * @throws IOException If an error occurs while writing to the file.
-     */
-    void save(T object, String filePath) throws IOException;
+  /**
+   * Saves the state of the given object to the specified file.
+   *
+   * @param object The object to serialize.
+   * @param filePath The destination path where the file will be saved.
+   * @throws IOException If an error occurs while writing to the file.
+   */
+  void save(T object, String filePath) throws IOException;
 }

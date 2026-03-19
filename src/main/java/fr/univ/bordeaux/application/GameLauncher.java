@@ -133,20 +133,20 @@ public class GameLauncher {
         config.setAi(true);
         String color = cmd.getOptionValue("a", "DEFAULT");
         if ("W".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(false);
+          config.setWhiteAi(true);
+          config.setBlackAi(false);
           System.out.println("[INFO] AI configured to play White.");
         } else if ("B".equalsIgnoreCase(color)) {
-          config.setWhiteAI(false);
-          config.setBlackAI(true);
+          config.setWhiteAi(false);
+          config.setBlackAi(true);
           System.out.println("[INFO] AI configured to play Black.");
         } else if ("A".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(true);
+          config.setWhiteAi(true);
+          config.setBlackAi(true);
           System.out.println("[INFO] AI configured to play Both sides.");
         } else {
-          config.setWhiteAI(false);
-          config.setBlackAI(true);
+          config.setWhiteAi(false);
+          config.setBlackAi(true);
           System.out.println("[INFO] AI defaults configuration (Black).");
         }
       }

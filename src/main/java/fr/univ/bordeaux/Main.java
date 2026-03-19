@@ -19,7 +19,7 @@ import fr.univ.bordeaux.application.GameLauncher;
 public class Main {
 
   public static void main(String[] arg) throws Exception {
-    //System.out.println("prog principal OK + ajout JUnit");
+    // System.out.println("prog principal OK + ajout JUnit");
     /*BitBoard whiteQueen=new BitBoard();
     BitBoard blackQueen=new BitBoard();
     BitBoard whitePawns=new BitBoard();
@@ -69,7 +69,7 @@ public class Main {
     //    if(a.setLocale(Locale.FRENCH))
     //      System.out.println("lang found");
     //    System.out.println(a.translate("no"));
-      GameLauncher launcher = new GameLauncher();
-      launcher.launch(arg);
+    GameLauncher launcher = new GameLauncher();
+    launcher.launch(arg);
   }
 }
