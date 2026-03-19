@@ -26,7 +26,7 @@ class ConfigSerializerTest {
 
     assertTrue(content.contains("verbose = false"));
     assertTrue(content.contains("timeout = 1800"));
-    assertTrue(content.contains("ai_mode = MINIMAX"));
+    assertTrue(content.contains("ai_mode = minimax"));
   }
 
   @Test
