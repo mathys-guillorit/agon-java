@@ -16,5 +16,5 @@ X
       . . . . . .
 
 [history]
-move A1-B2
-move G9-F8
+move A1-B2;
+move G9-F8;

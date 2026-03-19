@@ -5,6 +5,7 @@ import fr.univ.bordeaux.technical.config.ConfigParser;
 import fr.univ.bordeaux.technical.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.cli.*;
@@ -108,6 +109,10 @@ public class GameLauncher {
         config.setDebug(true);
         System.out.println("[DEBUG] Debug mode enabled.");
       }
+      if (cmd.hasOption("p")) {
+        System.out.println("[INFO] Manual guard placement detected.");
+        config.setManualPlacement(true);
+      }
       if (cmd.hasOption("t") && !cmd.hasOption("b")) {
         System.out.println(
             "[WARNING] The '-t' / '--time' option is ignored because blitz mode (-b) is not active");
@@ -124,21 +129,6 @@ public class GameLauncher {
         config.setTimeout(time * 60);
         System.out.println("[INFO] Blitz mode activated: " + time + " minutes");
       }
-      if (cmd.hasOption("c")) {
-        System.out.println("[INFO] Contest mode detected.");
-        String[] fileArg = cmd.getArgs();
-        if (fileArg.length > 0) {
-          try {
-            ContestMatch.executeContest(fileArg[0]);
-          } catch (Exception e) {
-            System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
-          }
-        } else {
-          System.err.println("Contest mode (-c/--contest) requires a save file.");
-          printHelp();
-        }
-        return;
-      }
       if (cmd.hasOption("a")) {
         config.setAi(true);
         String color = cmd.getOptionValue("a", "DEFAULT");
@@ -154,15 +144,17 @@ public class GameLauncher {
           config.setWhiteAI(true);
           config.setBlackAI(true);
           System.out.println("[INFO] AI configured to play Both sides.");
+        } else {
+          config.setWhiteAI(false);
+          config.setBlackAI(true);
+          System.out.println("[INFO] AI defaults configuration (Black).");
         }
       }
-      if (cmd.hasOption("p")) {
-        System.out.println("[INFO] Manual guard placement detected.");
-        config.setManualPlacement(true);
-      }
+
       String[] fileArg = cmd.getArgs();
+      String filePath = null;
       if (fileArg.length > 0) {
-        String filePath = fileArg[0];
+        filePath = fileArg[0];
         File file = new File(filePath);
         if (!file.exists() || file.isDirectory()) {
           System.err.println(
@@ -173,9 +165,23 @@ public class GameLauncher {
           System.out.println(
               "[WARNING] Option '-p' (Manual Placement) is ignored because a save file is loaded.");
         }
+        if (cmd.hasOption("c")) {
+          System.out.println("[INFO] Contest mode detected.");
+          try {
+            ContestMatch.executeContest(fileArg[0]);
+          } catch (Exception e) {
+            System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
+          }
+          return;
+        }
         System.out.println("[INFO] File argument detected: " + filePath);
+
+      } else if (cmd.hasOption("c")) {
+        System.err.println("[ERROR] Contest mode requires a file argument.");
+        printHelp();
+        return;
       }
-      startGame(config, cmd);
+      startGame(config, cmd, filePath);
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
       printHelp();
@@ -220,20 +226,64 @@ public class GameLauncher {
    * Initializes the application layers and starts the selected user interface.
    *
    * <p>Chooses between the CLI ({@link fr.univ.bordeaux.ui.cli.AgonShell}) and the GUI ({@link
-   * fr.univ.bordeaux.ui.gui.AgonGUI}) based on the provided command-line options.
+   * fr.univ.bordeaux.ui.gui.AgonGUI}) based on the provided command-line options. If a file path is
+   * provided, it simulates the execution of the load command immediately after engine startup.
    *
    * @param config The final configuration to be used by the UI and the engine.
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
+   * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
-  private void startGame(GameConfig config, CommandLine cmd) {
-    // MatchManager matchManager = new MatchManager(config);
+  private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
+    // AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    GameUserInterface userInterface;
     if (cmd.hasOption("g")) {
-      // AgonGUI agon = new  AgonGUI(config);
-    } else {
-      // AgonShell agon = new AgonShell(config);
+      // AgonGUI agon = new AgonGUI(config);
+      /*} else {
+      try {
+        final AgonShell[] shellRef = new AgonShell[1];
+        Completer strategyCompleter =
+            (reader, line, candidates) -> {
+              if (shellRef[0] != null) shellRef[0].globalCompleter(reader, line, candidates);
+            };
+        Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+        LineReader reader =
+            LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
+
+        userInterface = new AgonShell(terminal, reader, cmds);
+        shellRef[0] = (AgonShell) userInterface;
+        GameEngine gameEngine = new GameEngine(userInterface, cmds);
+
+        cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
+
+        cmds.register("quit", new CmdQuit(userInterface));
+
+        cmds.register("hint", new CmdHint(userInterface));
+
+        cmds.register("show", new CmdShow(userInterface, config));
+
+        CmdLoad loadCmd = new CmdLoad(userInterface);
+        cmds.register("load", loadCmd);
+
+        cmds.register("save", new CmdSave(userInterface));
+
+        cmds.register("set", new CmdSet(userInterface, config));
+
+        cmds.register("undo", new CmdUndo(userInterface));
+
+        cmds.register("redo", new CmdRedo(userInterface));
+
+        cmds.register("help", new CmdHelp(userInterface, cmds));
+
+        if (filePathToLoad != null) {
+            loadCmd.execute();
+        }
+
+        gameEngine.start();
+
+      } catch (Exception e) {
+        e.printStackTrace();
+      }*/
     }
-    // agon.setGameEngine(matchManager);
-    // agon.start();
   }
 
   /**

@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -102,38 +101,43 @@ public class GameLauncherTest {
    */
   @Test
   public void testContestOption() throws IOException {
-      File dummyFile = new File("dummy_contest_valid.txt");
-      Files.writeString(dummyFile.toPath(), "[game]\nX\nq" + ".".repeat(125));
+    File dummyFile = new File("dummy_contest_valid.txt");
+    Files.writeString(dummyFile.toPath(), "[game]\nX\nq" + ".".repeat(120));
 
-      try {
-          GameLauncher launcher = new GameLauncher();
-          String[] args = {"-c", dummyFile.getName()};
-          assertDoesNotThrow(() -> launcher.launch(args),
-                  "Launcher should not throw exceptions for a valid contest file.");
-          assertFalse(errContent.toString().contains("[ERROR]"),
-                  "There should be no execution error printed to System.err.");
+    try {
+      GameLauncher launcher = new GameLauncher();
+      String[] args = {"-c", dummyFile.getName()};
+      assertDoesNotThrow(
+          () -> launcher.launch(args),
+          "Launcher should not throw exceptions for a valid contest file.");
+      assertFalse(
+          errContent.toString().contains("[ERROR]"),
+          "There should be no execution error printed to System.err.");
     } finally {
       dummyFile.delete();
-          }
+    }
   }
 
-    /**
-     * Tests that the Contest mode handles the absence of a file argument gracefully.
-     * Covers the 'else' branch of 'if (fileArg.length > 0)' where it prints an error and help.
-     */
-    @Test
-    public void testContestModeWithoutFile() {
-        GameLauncher launcher = new GameLauncher();
-        String[] args = {"-c"};
-        assertDoesNotThrow(() -> launcher.launch(args),
-                "Launcher should not crash when the file argument is missing.");
-        String errorOutput = errContent.toString();
-        assertTrue(errorOutput.contains("requires a save file"),
-                "Should print an error message indicating the missing save file.");
-        String allOutput = getOutput().toLowerCase() + errorOutput.toLowerCase();
-        assertTrue(allOutput.contains("usage") || allOutput.contains("available"),
-                "Should print the help menu when the file argument is missing.");
-    }
+  /**
+   * Tests that the Contest mode handles the absence of a file argument gracefully. Covers the
+   * 'else' branch of 'if (fileArg.length > 0)' where it prints an error and help.
+   */
+  @Test
+  public void testContestModeWithoutFile() {
+    GameLauncher launcher = new GameLauncher();
+    String[] args = {"-c"};
+    assertDoesNotThrow(
+        () -> launcher.launch(args),
+        "Launcher should not crash when the file argument is missing.");
+    String errorOutput = errContent.toString();
+    assertTrue(
+        errorOutput.contains("Contest mode requires a file argument."),
+        "Should print an error message indicating the missing save file.");
+    String allOutput = getOutput().toLowerCase() + errorOutput.toLowerCase();
+    assertTrue(
+        allOutput.contains("usage") || allOutput.contains("available"),
+        "Should print the help menu when the file argument is missing.");
+  }
 
   /**
    * Tests that the GUI mode (-g) is correctly detected. This covers the 'if (cmd.hasOption("g"))'
@@ -380,18 +384,26 @@ public class GameLauncherTest {
     }
   }
 
-    /**
-     * Tests that the application correctly handles and logs a failure
-     * when Contest mode is initiated with an invalid or missing save file.
-     */
-    @Test
-    public void testContestModeExecutionFailure() {
-        String[] args = {"-c", "non_existent_file.txt"};
-        GameLauncher launcher = new GameLauncher();
-        launcher.launch(args);
-        assertTrue(errContent.toString().contains("[ERROR] Contest mode failed"),
-                "The contest executor error should be displayed in System.err");
+  /**
+   * Tests that the application correctly handles and logs a failure when Contest mode is initiated
+   * with an invalid or missing save file.
+   */
+  @Test
+  public void testContestModeExecutionFailure() throws IOException {
+    File invalidFile = new File("invalid_save_for_failure.txt");
+    invalidFile.createNewFile();
+    try {
+      String[] args = {"-c", invalidFile.getName()};
+      GameLauncher launcher = new GameLauncher();
+      launcher.launch(args);
+
+      assertTrue(
+          errContent.toString().contains("[ERROR] Contest mode failed"),
+          "The contest executor error should be displayed in System.err");
+    } finally {
+      invalidFile.delete();
     }
+  }
 
   /**
    * Tests the help display behavior when an IOException occurs during file reading. Uses an
