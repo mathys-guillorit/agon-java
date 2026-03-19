@@ -73,9 +73,9 @@ public class GameSaveSerializer implements Serializer<GameSaveData> {
         writer.write("ai = " + config.isAiActive() + "\n");
 
         String colorStr = "NONE";
-        if (config.isWhiteAI() && config.isBlackAI()) colorStr = "ALL";
-        else if (config.isWhiteAI()) colorStr = "WHITE";
-        else if (config.isBlackAI()) colorStr = "BLACK";
+        if (config.isWhiteAi() && config.isBlackAi()) colorStr = "ALL";
+        else if (config.isWhiteAi()) colorStr = "WHITE";
+        else if (config.isBlackAi()) colorStr = "BLACK";
         writer.write("ai_color = " + colorStr + "\n");
 
         writer.write("ai_mode = " + config.getAiMode() + "\n");

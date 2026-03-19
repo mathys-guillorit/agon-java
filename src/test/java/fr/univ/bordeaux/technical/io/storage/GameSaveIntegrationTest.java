@@ -66,7 +66,7 @@ class GameSaveIntegrationTest {
 
         assertNotNull(loadedSaveData, "The loaded save data should not be null");
 
-        assertEquals("MCTS", loadedSaveData.getConfig().getAiMode(), "AI Mode should match");
+        assertEquals("MCTS", loadedSaveData.getConfig().getAiMode(), "Ai Mode should match");
         assertEquals(300, loadedSaveData.getConfig().getTimeout(), "Timeout should match");
 
         assertEquals(Color.BLACK, loadedSaveData.getCurrentPlayer(), "Current player should be Black");
@@ -136,11 +136,11 @@ class GameSaveIntegrationTest {
     }
 
     @Test
-    @DisplayName("Should serialize White player turn and edge case AI configurations")
+    @DisplayName("Should serialize White player turn and edge case Ai configurations")
     void testSerializerEdgeCases() throws IOException {
         GameConfig config = new GameConfig();
-        config.setWhiteAI(true);
-        config.setBlackAI(true);
+        config.setWhiteAi(true);
+        config.setBlackAi(true);
 
         GameSaveData data = new GameSaveData(config, Color.WHITE, List.of(". X o ."), List.of());
 
@@ -150,9 +150,9 @@ class GameSaveIntegrationTest {
 
         String content = Files.readString(edgeCaseFile);
         assertTrue(content.contains("O\n"), "Should write 'O' for White player");
-        assertTrue(content.contains("ai_color = ALL\n"), "Should write 'ALL' for AI color");
+        assertTrue(content.contains("ai_color = ALL\n"), "Should write 'ALL' for Ai color");
 
-        config.setBlackAI(false);
+        config.setBlackAi(false);
         serializer.save(data, edgeCaseFile.toString());
         assertTrue(Files.readString(edgeCaseFile).contains("ai_color = WHITE\n"));
     }
@@ -172,11 +172,11 @@ class GameSaveIntegrationTest {
     }
 
     @Test
-    @DisplayName("Should serialize White player, AI variations, and parse empty moves")
+    @DisplayName("Should serialize White player, Ai variations, and parse empty moves")
     void testSerializerAndStateEdgeCases() throws IOException {
         GameConfig config = new GameConfig();
-        config.setWhiteAI(true);
-        config.setBlackAI(true);
+        config.setWhiteAi(true);
+        config.setBlackAi(true);
 
         GameSaveData data = new GameSaveData(config, Color.WHITE, List.of(". X o ."), List.of("O a1 a2"));
 
@@ -186,10 +186,10 @@ class GameSaveIntegrationTest {
 
         String content = Files.readString(edgeCaseFile);
         assertTrue(content.contains("O\n"), "Should write 'O' for White player");
-        assertTrue(content.contains("ai_color = ALL\n"), "Should write 'ALL' for AI color");
+        assertTrue(content.contains("ai_color = ALL\n"), "Should write 'ALL' for Ai color");
         assertTrue(content.endsWith("O a1 a2;\n"), "Should correctly terminate an odd number of moves");
 
-        config.setBlackAI(false);
+        config.setBlackAi(false);
         serializer.save(data, edgeCaseFile.toString());
         assertTrue(Files.readString(edgeCaseFile).contains("ai_color = WHITE\n"));
 

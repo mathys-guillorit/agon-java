@@ -6,12 +6,12 @@ package fr.univ.bordeaux.agoncore.agonelements;
  * and evaluate game states from specific perspectives.</p>
  */
 public enum Color {
-  /** * Represents the Black player.
-   */
-  BLACK,
+    /** * Represents the Black player.
+     */
+    BLACK,
 
-  /** * Represents the White player.
-   */
-  WHITE;
+    /** * Represents the White player.
+     */
+    WHITE;
 
 }

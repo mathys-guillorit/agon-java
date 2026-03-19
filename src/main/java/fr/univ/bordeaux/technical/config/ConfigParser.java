@@ -63,23 +63,23 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
                     String val = value.toUpperCase();
                     switch (val) {
                         case "ALL" -> {
-                            config.setWhiteAI(true);
-                            config.setBlackAI(true);
+                            config.setWhiteAi(true);
+                            config.setBlackAi(true);
                         }
                         case "WHITE" -> {
-                            config.setWhiteAI(true);
-                            config.setBlackAI(false);
+                            config.setWhiteAi(true);
+                            config.setBlackAi(false);
                         }
                         case "BLACK" -> {
-                            config.setWhiteAI(false);
-                            config.setBlackAI(true);
+                            config.setWhiteAi(false);
+                            config.setBlackAi(true);
                         }
                         case "NONE" -> {
                             if (config.isAiActive()) {
                                 throw new IOException("Ai mode is active but is not assigned to any color");
                             } else {
-                                config.setWhiteAI(false);
-                                config.setBlackAI(false);
+                                config.setWhiteAi(false);
+                                config.setBlackAi(false);
                             }
                         }
                         default -> throw new IOException("Invalid value for option '" + key + "' : " + value);

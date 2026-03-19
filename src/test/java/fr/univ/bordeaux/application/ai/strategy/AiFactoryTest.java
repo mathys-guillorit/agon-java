@@ -25,39 +25,39 @@ class AiFactoryTest {
 
     @Test
     void testCreateAiMapNoAi() {
-        config.setWhiteAI(false);
-        config.setBlackAI(false);
+        config.setWhiteAi(false);
+        config.setBlackAi(false);
 
         Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
         assertNotNull(aiMap);
-        assertTrue(aiMap.isEmpty(), "The map should be empty when no AIs are configured.");
+        assertTrue(aiMap.isEmpty(), "The map should be empty when no Ais are configured.");
     }
 
     @Test
     void testCreateAiMapSingleAi() {
-        config.setWhiteAI(true);
-        config.setBlackAI(false);
+        config.setWhiteAi(true);
+        config.setBlackAi(false);
         config.setAiMode("minimax");
         config.setAiHeuristic("mixed");
 
         Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
-        assertEquals(1, aiMap.size(), "The map should contain exactly one AI.");
-        assertTrue(aiMap.containsKey(Color.WHITE), "The map should contain an AI for the White player.");
+        assertEquals(1, aiMap.size(), "The map should contain exactly one Ai.");
+        assertTrue(aiMap.containsKey(Color.WHITE), "The map should contain an Ai for the White player.");
         assertFalse(aiMap.containsKey(Color.BLACK));
     }
 
     @Test
     void testCreateAiMapBothAis() {
-        config.setWhiteAI(true);
-        config.setBlackAI(true);
+        config.setWhiteAi(true);
+        config.setBlackAi(true);
         config.setAiMode("minimax");
         config.setAiHeuristic("mixed");
 
         Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
 
-        assertEquals(2, aiMap.size(), "The map should contain two AIs.");
+        assertEquals(2, aiMap.size(), "The map should contain two Ais.");
         assertTrue(aiMap.containsKey(Color.WHITE));
         assertTrue(aiMap.containsKey(Color.BLACK));
     }
@@ -70,8 +70,8 @@ class AiFactoryTest {
 
         AbstractAgonAi ai = AiFactory.createAi(config, Color.BLACK);
 
-        assertNotNull(ai, "The factory should return an AI instance.");
-        assertInstanceOf(MinimaxStrategy.class, ai, "The returned AI should be a MinimaxStrategy.");
+        assertNotNull(ai, "The factory should return an Ai instance.");
+        assertInstanceOf(MinimaxStrategy.class, ai, "The returned Ai should be a MinimaxStrategy.");
     }
 
     @Test
@@ -81,8 +81,8 @@ class AiFactoryTest {
 
         AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
-        assertNotNull(ai, "The factory should return an AI instance.");
-        assertInstanceOf(MctsStrategy.class, ai, "The returned AI should be an MctsStrategy.");
+        assertNotNull(ai, "The factory should return an Ai instance.");
+        assertInstanceOf(MctsStrategy.class, ai, "The returned Ai should be an MctsStrategy.");
     }
 
     @Test
@@ -92,14 +92,14 @@ class AiFactoryTest {
 
         AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
-        assertNull(ai, "The factory should return null for an unknown AI mode.");
+        assertNull(ai, "The factory should return null for an unknown Ai mode.");
     }
 
     @Test
     void testCreateHintAi() {
         AbstractAgonAi hintAi = AiFactory.createHintAi(Color.WHITE);
 
-        assertNotNull(hintAi, "The factory should return a hint AI instance.");
-        assertInstanceOf(MinimaxStrategy.class, hintAi, "The returned hint AI should be a MinimaxStrategy.");
+        assertNotNull(hintAi, "The factory should return a hint Ai instance.");
+        assertInstanceOf(MinimaxStrategy.class, hintAi, "The returned hint Ai should be a MinimaxStrategy.");
     }
 }

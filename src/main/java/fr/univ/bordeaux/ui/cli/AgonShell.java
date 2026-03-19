@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.application.commands.ICmd;
-import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.application.commands.Icmd;
+import fr.univ.bordeaux.ui.AbstractGameUi;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,33 +27,34 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
-public class AgonShell extends AbstractGameUI {
+/** App Shell managing CLI write get history commands etc... */
+public class AgonShell extends AbstractGameUi {
 
   private boolean running;
   private String userCmdName;
   private String[] userOptions; // alias "args"
-  private ICmd command;
+  private Icmd command;
 
   private Terminal terminal;
   private LineReader reader;
   private PromptBuilder promptBuilder;
 
-  /** represent all options available from the menu */
+  /** Represent all options available from the menu. */
   private Options options = null;
 
-  /** Message Header of the cli for the entire App */
-  private final String msgHA;
+  /** Message Header of the cli for the entire App. */
+  private final String msgHa;
 
-  private final String mainMenuASCII;
+  private final String mainMenuAscii;
 
   private ArrayList<String> cmdHistory;
 
-  /** ASCII engine renderer */
+  /** ASCII engine renderer. */
   public AgonShell() {
     super(); // require the work of others
     this.running = true;
-    this.msgHA = this.cliLayer();
-    this.mainMenuASCII = this.loadMainMenu();
+    this.msgHa = this.cliLayer();
+    this.mainMenuAscii = this.loadMainMenu();
     this.cmdHistory = new ArrayList<>();
     this.initOptions();
     try {
@@ -65,9 +66,11 @@ public class AgonShell extends AbstractGameUI {
     }
   }
 
-  /** fill options for the cli (done once internally) */
+  /** Fill options for the cli (done once internally). */
   private void initOptions() {
-    if (this.options != null) return; // done once
+    if (this.options != null) { // done once
+      return;
+    }
     Option help =
         Option.builder("h")
             .longOpt("help")
@@ -83,6 +86,7 @@ public class AgonShell extends AbstractGameUI {
     this.options.addOption("h", "help", true, "show help command");
   }
 
+  /** Test method for ConsoleRenderer. */
   public void test() {
     var a = new ConsoleRenderer(null);
     a.renderer();
@@ -105,8 +109,8 @@ public class AgonShell extends AbstractGameUI {
   @Override
   public void start() {}
 
-  /** test to display a list in terminal */
-  public void advancedTerminal() {
+  /** Test to display a list in terminal. */
+  public void advancedTerminal() { // removed soon
     ConsolePrompt prompt = new ConsolePrompt(terminal);
     this.promptBuilder = prompt.getPromptBuilder();
 
@@ -139,6 +143,7 @@ public class AgonShell extends AbstractGameUI {
     }
   }
 
+  /** Quit the terminal safely with resources de-allocation. */
   private void safeCloseTerminal() {
     try {
       this.terminal.close();
@@ -148,14 +153,16 @@ public class AgonShell extends AbstractGameUI {
     }
   }
 
-  /** load menu character in a variable once */
+  /** Load menu character in a variable once. */
   @Nonnull
   private String loadMainMenu() { // DP Command here
     final String defaultMenu = "Menu not available";
     final String shellMenuTxtFile = "cmdsInformations/agonShellMenu.txt";
     final String resourcePath = "/" + shellMenuTxtFile;
     InputStream is = getClass().getResourceAsStream(resourcePath);
-    if (is == null) return defaultMenu;
+    if (is == null) {
+      return defaultMenu;
+    }
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
       var menu = new StringBuilder();
@@ -171,11 +178,11 @@ public class AgonShell extends AbstractGameUI {
     return defaultMenu;
   }
 
-  /** run the program to interact with the user */
+  /** Run the program to interact with the user. */
   public void loop() {
     // this.showMainMenu();
     int startCursorIdx = 0;
-    this.cliW(this.mainMenuASCII);
+    this.cliW(this.mainMenuAscii);
     String line;
     List<String> words;
     while (this.running) {
@@ -194,11 +201,11 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * check if the user want to exit or not
+   * Check if the user want to exit or not. (will be removed soon).
    *
    * @return boolean : false if the user want to exit, true otherwise
    */
-  private boolean conditionalReturning() { // Locked Here need work from the others
+  private boolean conditionalReturning() {
     // exit case
     if ("quit".equalsIgnoreCase(this.userCmdName)) {
       terminal.writer().println("Save the game before quitting ? [y/n]");
@@ -212,13 +219,14 @@ public class AgonShell extends AbstractGameUI {
     // others cases
     if ("help".equalsIgnoreCase(this.userCmdName)) {
       /// TODO: next version add argument with regex
-      this.cliWln(this.mainMenuASCII);
+      this.cliWln(this.mainMenuAscii);
       return true;
     }
     /// TODO: other cases required
     return true;
   }
 
+  /** Will be removed soon replaced by another method. */
   private void cliActOnOptions() {
     CommandLineParser parser = new DefaultParser();
     try {
@@ -234,22 +242,22 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * format the output error to see where is the problem (following maven style)
+   * Format the output error to see where is the problem (following maven style).
    *
    * @param msg add a message to the error
    */
   private void cliErr(String msg) {
     final String tag = "ERROR";
     AttributedStringBuilder asb = new AttributedStringBuilder();
-    asb.append(this.msgHA).append("[");
+    asb.append(this.msgHa).append("[");
     asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.RED)).append(tag);
     asb.style(AttributedStyle.DEFAULT).append("] ").append(msg);
     this.cliWln(asb.toAnsi());
   }
 
   /**
-   * create the first bloc to know that we are in agon game to make a difference with maven messages
-   * (must be used once in the constructor to set attr)
+   * Create the first bloc to know that we are in agon game to make a difference with maven messages
+   * (must be used once in the constructor to set attr).
    */
   private String cliLayer() {
     final String tag = "AGON";
@@ -261,8 +269,8 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * show a message in terminal using JLine shortened the code verbose (because used many times and
-   * must be changed once for all)
+   * Show a message in terminal using JLine shortened the code verbose (because used many times and
+   * must be changed once for all).
    *
    * @param msg message to send in terminal
    */
@@ -272,7 +280,7 @@ public class AgonShell extends AbstractGameUI {
   }
 
   /**
-   * show a message in terminal using JLine display inline without jump line ("\n")
+   * Show a message in terminal using JLine display inline without jump line ("\n").
    *
    * @param msg message to send in terminal
    */

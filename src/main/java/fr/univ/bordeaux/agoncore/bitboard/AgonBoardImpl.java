@@ -7,50 +7,59 @@ import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Implementation of the Agon board using bitboard.
  *
- * <p>This class manages the game state using several {@link BitBoard} instances for queens and pawns.
- * It handles the core logic of Agon, including the "no-retreating" rule, hexagonal movement,
- * capture processing (sandwiches), and mandatory relocation sequences.</p>
+ * <p>This class manages the game state using several {@link BitBoard} instances for queens and
+ * pawns. It handles the core logic of Agon, including the "no-retreating" rule, hexagonal movement,
+ * capture processing (sandwiches), and mandatory relocation sequences.
  *
- * <p>The board is structured as 121 tiles organized into 6 concentric circles (0 to 5),
- * where Circle 0 is the central "Throne".</p>
- *
- *
+ * <p>The board is structured as 121 tiles organized into 6 concentric circles (0 to 5), where
+ * Circle 0 is the central "Throne".
  */
 public class AgonBoardImpl implements AgonBoard {
 
   /** Bitboard for the white queen. */
   private BitBoard whiteQueen;
+
   /** Bitboard for the black queen. */
   private BitBoard blackQueen;
+
   /** Bitboard for the white pawns. */
   private BitBoard whitePawns;
+
   /** Bitboard for the black pawns. */
   private BitBoard blackPawns;
+
   /** Mask representing all 121 playable tiles on the hexagonal grid. */
   private BitBoard validZoneMask = new BitBoard();
+
   /** Array of 6 bitboards, each representing one concentric ring (0=center, 5=outer). */
   private BitBoard[] circles = new BitBoard[6];
+
   /** Pre-calculated masks defining valid destination circles for a piece in circle [i]. */
   BitBoard[] allowedDestinations = new BitBoard[6];
+
   /** Number of white pawns captured and waiting to return to the board. */
   private int whitePawnsToRelocate = 0;
+
   /** Number of black pawns captured and waiting to return to the board. */
   private int blackPawnsToRelocate = 0;
+
   /** Flag indicating if the white queen is captured and must be relocated. */
   private boolean whiteQueenToRelocate = false;
+
   /** Flag indicating if the black queen is captured and must be relocated. */
   private boolean blackQueenToRelocate = false;
+
   /** Stack-based history manager for undo/redo operations. */
   private History history = new History();
-  /** The constant index of the central tile (Circle 0). */
-  private int THRONE = 60;
 
-  /**
-   * Initializes a new Agon board with empty bitboards and pre-calculated geometry masks.
-   */
+  /** The constant index of the central tile (Circle 0). */
+  private int throne = 60;
+
+  /** Initializes a new Agon board with empty bitboards and pre-calculated geometry masks. */
   public AgonBoardImpl() {
     this.whiteQueen = new BitBoard();
     this.blackQueen = new BitBoard();
@@ -112,8 +121,8 @@ public class AgonBoardImpl implements AgonBoard {
    * @param blackPawns Bitboard for the black pawns.
    * @param whiteQueen Bitboard for the white queen
    */
-  public AgonBoardImpl(BitBoard whiteQueen, BitBoard blackQueen, BitBoard whitePawns,
-      BitBoard blackPawns) {
+  public AgonBoardImpl(
+      BitBoard whiteQueen, BitBoard blackQueen, BitBoard whitePawns, BitBoard blackPawns) {
     this.whiteQueen = whiteQueen;
     this.blackQueen = blackQueen;
     this.whitePawns = whitePawns;
@@ -181,7 +190,7 @@ public class AgonBoardImpl implements AgonBoard {
    * be managed separately.
    *
    * @return {@code true} if the piece was successfully moved back; {@code false} if no friendly
-   * piece was found at the destination.
+   *     piece was found at the destination.
    */
   public boolean undoMove() {
     if (history.isEmptyUndo()) {
@@ -202,30 +211,30 @@ public class AgonBoardImpl implements AgonBoard {
         } else {
           setQueenRelocating(color, true);
         }
-      }
-      else if (move.getTo() == -1) {
+      } else if (move.getTo() == -1) {
         movePieceInBitboard(-1, move.getFrom(), color, type);
         if (type.isPawn()) {
           updatePawnRelocationCount(color, -1);
         } else {
           setQueenRelocating(color, false);
         }
-      }
-      else {
+      } else {
         movePieceInBitboard(move.getTo(), move.getFrom(), color, type);
       }
     }
     return true;
   }
+
   /**
-   * Replays the next move(s) from the redo stack.
-   * * <p>This method identifies the color of the next player in the redo history
-   * and re-applies all consecutive moves belonging to that same player's turn
-   * (e.g., a standard move followed by potential relocations). It updates both
-   * the physical bitboards and the internal relocation counters.</p>
+   * Replays the next move(s) from the redo stack. *
    *
-   * @return {@code true} if at least one move was re-applied;
-   * {@code false} if the redo stack is empty.
+   * <p>This method identifies the color of the next player in the redo history and re-applies all
+   * consecutive moves belonging to that same player's turn (e.g., a standard move followed by
+   * potential relocations). It updates both the physical bitboards and the internal relocation
+   * counters.
+   *
+   * @return {@code true} if at least one move was re-applied; {@code false} if the redo stack is
+   *     empty.
    */
   public boolean redoMove() {
     if (history.isEmptyRedo()) {
@@ -234,7 +243,7 @@ public class AgonBoardImpl implements AgonBoard {
     HistoryInformations historyInformations = history.redo();
     List<Move> moves = historyInformations.getMoves();
     for (Move move : moves) {
-      movePieceInBitboard(move.getFrom(),move.getTo(),move.getColor(),move.getPieceType());
+      movePieceInBitboard(move.getFrom(), move.getTo(), move.getColor(), move.getPieceType());
     }
     return true;
   }
@@ -253,10 +262,11 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Updates the queen's relocation status for a specific player.
-   * * @param color The color of the player.
-   * @param state {@code true} if the queen is captured and pending relocation,
-   * {@code false} otherwise.
+   * Updates the queen's relocation status for a specific player. * @param color The color of the
+   * player.
+   *
+   * @param state {@code true} if the queen is captured and pending relocation, {@code false}
+   *     otherwise.
    */
   private void setQueenRelocating(Color color, boolean state) {
     if (color == Color.WHITE) {
@@ -267,10 +277,11 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Adjusts the count of pawns waiting to be relocated.
-   * * @param color The color of the player who owns the captured pawns.
-   * @param delta The value to add to the counter (positive for a new capture,
-   * negative when a pawn is placed back on the board).
+   * Adjusts the count of pawns waiting to be relocated. * @param color The color of the player who
+   * owns the captured pawns.
+   *
+   * @param delta The value to add to the counter (positive for a new capture, negative when a pawn
+   *     is placed back on the board).
    */
   private void updatePawnRelocationCount(Color color, int delta) {
     if (color == Color.WHITE) {
@@ -281,21 +292,25 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Performs the physical update of piece positions on the bitboards.
-   * * This is a unified method handling three scenarios:
+   * Performs the physical update of piece positions on the bitboards. * This is a unified method
+   * handling three scenarios:
+   *
    * <ul>
-   * <li>Standard move: Updates both {@code from} and {@code to} indices.</li>
-   * <li>Relocation: Only updates {@code to} (set {@code from} to -1).</li>
-   * <li>Capture/Removal: Only updates {@code from} (set {@code to} to -1).</li>
+   *   <li>Standard move: Updates both {@code from} and {@code to} indices.
+   *   <li>Relocation: Only updates {@code to} (set {@code from} to -1).
+   *   <li>Capture/Removal: Only updates {@code from} (set {@code to} to -1).
    * </ul>
-   * * @param from  The starting tile index (use -1 if the piece is coming from the reserve).
-   * @param to    The destination tile index (use -1 if the piece is being removed from the board).
+   *
+   * @param from The starting tile index (use -1 if the piece is coming from the reserve).
+   * @param to The destination tile index (use -1 if the piece is being removed from the board).
    * @param color The color of the piece owner.
-   * @param type  The specific type of the piece (Queen or Pawn).
+   * @param type The specific type of the piece (Queen or Pawn).
    */
   private void movePieceInBitboard(int from, int to, Color color, PieceType type) {
-    BitBoard pieceBoard = (type == PieceType.WHITE_QUEEN || type == PieceType.BLACK_QUEEN)
-        ? getQueenTable(color) : getPawnsTable(color);
+    BitBoard pieceBoard =
+        (type == PieceType.WHITE_QUEEN || type == PieceType.BLACK_QUEEN)
+            ? getQueenTable(color)
+            : getPawnsTable(color);
     if (from != -1) {
       pieceBoard.setBit(from, 0L);
     }
@@ -315,31 +330,31 @@ public class AgonBoardImpl implements AgonBoard {
   public boolean applyMove(Move move) {
     Color color = move.getColor();
     PieceType type = null;
-    List<Move> moves=new ArrayList<>();
+    List<Move> moves = new ArrayList<>();
     if (isQueenRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_QUEEN : PieceType.BLACK_QUEEN;
     } else if (isPawnRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
     }
     if (type != null) {
-      moves.add(new Move(-1,move.getTo(),color,type));
+      moves.add(new Move(-1, move.getTo(), color, type));
       movePieceInBitboard(-1, move.getTo(), color, type);
       if (type.isQueen()) {
         setQueenRelocating(color, false);
       } else {
         updatePawnRelocationCount(color, -1);
       }
-      performCaptures(color,moves);
-      history.add(new HistoryInformations(moves,type,color));
+      performCaptures(color, moves);
+      history.add(new HistoryInformations(moves, type, color));
       return true;
     }
     if (isValid(move.getFrom(), move.getTo(), color)) {
       type = getPieceAt(move.getFrom());
       if (type != null) {
-        moves.add(new Move(move.getFrom(),move.getTo(),color,type));
+        moves.add(new Move(move.getFrom(), move.getTo(), color, type));
         movePieceInBitboard(move.getFrom(), move.getTo(), color, type);
-        performCaptures(color,moves);
-        history.add(new HistoryInformations(moves,type,color));
+        performCaptures(color, moves);
+        history.add(new HistoryInformations(moves, type, color));
         return true;
       }
     }
@@ -366,14 +381,15 @@ public class AgonBoardImpl implements AgonBoard {
    * @param playerColor The color of the player who just moved.
    * @param moves a list of Move where the function add the captured Move.
    */
-  public void performCaptures(Color playerColor,List<Move> moves) {
+  public void performCaptures(Color playerColor, List<Move> moves) {
     Color enemyColor = (playerColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
     BitBoard capturedMask = getSuicideMask(enemyColor);
     BitBoard notCaptured = capturedMask.complementOperation();
     // capture the queen and erase it
     BitBoard queenTable = getQueenTable(enemyColor);
     if (!capturedMask.andOperation(queenTable).isEmpty()) {
-      moves.add(new Move(queenTable.nextSetBit(-1),-1,enemyColor,PieceType.getQueen(enemyColor)));
+      moves.add(
+          new Move(queenTable.nextSetBit(-1), -1, enemyColor, PieceType.getQueen(enemyColor)));
       setQueenRelocating(enemyColor, true);
       queenTable.copy(queenTable.andOperation(notCaptured));
     }
@@ -382,10 +398,9 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard capturedPawns = capturedMask.andOperation(pawnsTable);
     int count = capturedPawns.countBits();
     if (count > 0) {
-      PieceType type=PieceType.getPawn(enemyColor);
+      PieceType type = PieceType.getPawn(enemyColor);
       for (int i = capturedPawns.nextSetBit(-1); i != -1; i = capturedPawns.nextSetBit(i)) {
-        moves.add(
-            new Move(i, -1, enemyColor, type));
+        moves.add(new Move(i, -1, enemyColor, type));
       }
       updatePawnRelocationCount(enemyColor, count);
       pawnsTable.copy(pawnsTable.andOperation(notCaptured));
@@ -427,6 +442,7 @@ public class AgonBoardImpl implements AgonBoard {
   private BitBoard getQueenTable(Color color) {
     return (color == Color.WHITE) ? whiteQueen : blackQueen;
   }
+
   /**
    * Retrieves the bitboard associated with the pawns of the specified color.
    *
@@ -446,7 +462,7 @@ public class AgonBoardImpl implements AgonBoard {
    *
    * @param index The tile index (0 to 120) to check.
    * @return The {@link Color} of the piece at the index; {@code null} if the tile is empty or if
-   * the index is out of the valid board range.
+   *     the index is out of the valid board range.
    */
   private Color getColorWhereIndexIsOn(int index) {
     if (index < 0 || index > 120) {
@@ -496,9 +512,7 @@ public class AgonBoardImpl implements AgonBoard {
     }
   }
 
-  /**
-   * Prints the current state of the board in an hexagonal layout for debugging.
-   */
+  /** Prints the current state of the board in an hexagonal layout for debugging. */
   public void printBoard() {
     for (int r = 10; r >= 0; r--) {
       int numSpaces = Math.abs(5 - r);
@@ -520,7 +534,7 @@ public class AgonBoardImpl implements AgonBoard {
           System.out.print("O ");
         } else if (blackPawns.isSet(idx)) {
           System.out.print("X ");
-        } else if (idx == THRONE) {
+        } else if (idx == throne) {
           System.out.print("+ ");
         } else {
           System.out.print(". ");
@@ -556,7 +570,7 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard freeZones = getFreeZones();
     BitBoard pawns;
     BitBoard queen;
-    BitBoard pOnCircleI;
+    BitBoard paOnCircleI;
     if (color == Color.WHITE) {
       pawns = whitePawns;
       queen = whiteQueen;
@@ -565,9 +579,9 @@ public class AgonBoardImpl implements AgonBoard {
       queen = blackQueen;
     }
     for (int i = 1; i <= 5; i++) {
-      pOnCircleI = pawns.andOperation(circles[i]);
-      if (!pOnCircleI.isEmpty()) {
-        BitBoard neighbors = getAllNeighbors(pOnCircleI);
+      paOnCircleI = pawns.andOperation(circles[i]);
+      if (!paOnCircleI.isEmpty()) {
+        BitBoard neighbors = getAllNeighbors(paOnCircleI);
         BitBoard legal =
             neighbors
                 .andOperation(allowedDestinations[i])
@@ -628,10 +642,10 @@ public class AgonBoardImpl implements AgonBoard {
 
     for (int i = 1; i <= 5; i++) {
       // get every pawns in the circle
-      BitBoard pOnCircleI = myPawns.andOperation(circles[i]);
+      BitBoard paOnCircleI = myPawns.andOperation(circles[i]);
 
       // starting piece index
-      for (int from = pOnCircleI.nextSetBit(-1); from != -1; from = pOnCircleI.nextSetBit(from)) {
+      for (int from = paOnCircleI.nextSetBit(-1); from != -1; from = paOnCircleI.nextSetBit(from)) {
 
         // get every valid position for pawns, a valid position means it can't get on throne can't
         // suicide and can't step away from the center.
@@ -680,7 +694,7 @@ public class AgonBoardImpl implements AgonBoard {
    *
    * @param index The tile index (0 to 120) to inspect.
    * @return The {@link PieceType} present at the index, or {@code null} if the tile is empty or the
-   * index is out of bounds.
+   *     index is out of bounds.
    */
   public PieceType getPieceAt(int index) {
     if (index < 0 || index > 120) {
@@ -711,13 +725,13 @@ public class AgonBoardImpl implements AgonBoard {
   private BitBoard getSuicideMask(Color color) {
     Color enemyColor = (color == Color.WHITE) ? Color.BLACK : Color.WHITE;
     // get every enemy position to projet them in all directions
-    BitBoard Occupied = getOccupiedBy(enemyColor);
+    BitBoard occupied = getOccupiedBy(enemyColor);
     BitBoard totalSuicideMask = new BitBoard();
     // Project the pawns in all directions and it's opposite if a tile is seen in both's shifted
     for (Direction d1 : Direction.values()) {
       Direction d2 = Direction.getOpposite(d1);
-      BitBoard shift1 = Occupied.shiftBitboard(d1.getValue());
-      BitBoard shift2 = Occupied.shiftBitboard(d2.getValue());
+      BitBoard shift1 = occupied.shiftBitboard(d1.getValue());
+      BitBoard shift2 = occupied.shiftBitboard(d2.getValue());
       totalSuicideMask = totalSuicideMask.orOperation(shift1.andOperation(shift2));
     }
     // We clean the result with the validZone
@@ -751,9 +765,9 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Internal logic for calculating legal relocation moves.
    *
-   * @param color       The player color.
+   * @param color The player color.
    * @param allowedZone The geometric zone allowed for relocation (e.g., Circle 5).
-   * @param isQueen     True if calculating for a queen relocation.
+   * @param isQueen True if calculating for a queen relocation.
    * @return A bitboard of legal relocation destinations.
    */
   private BitBoard getRelocationMovesInternal(Color color, BitBoard allowedZone, boolean isQueen) {
@@ -761,13 +775,13 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard legalMoves = new BitBoard(allowedZone);
     BitBoard occupied = getOccupiedTotal();
     BitBoard suicide = getSuicideMask(color);
-    //let free tiles
+    // let free tiles
     legalMoves = legalMoves.andOperation(occupied.complementOperation());
     // erase suicide tiles
     legalMoves = legalMoves.andOperation(suicide.complementOperation());
-    //specific case for the queen she can't go on the throne with a relocation
+    // specific case for the queen she can't go on the throne with a relocation
     if (isQueen) {
-      legalMoves.setBit(THRONE, 0L);
+      legalMoves.setBit(throne, 0L);
     }
     return legalMoves;
   }
@@ -816,8 +830,8 @@ public class AgonBoardImpl implements AgonBoard {
    * Validates if a move is physically possible (in the valid zone, adjacent, free and not moving
    * backwards/outwards).
    *
-   * @param from  Start index.
-   * @param to    Destination index.
+   * @param from Start index.
+   * @param to Destination index.
    * @param color Player color.
    * @return true if the move follows game rules.
    */
@@ -862,7 +876,7 @@ public class AgonBoardImpl implements AgonBoard {
    * Checks if two tiles are adjacent on the hexagonal grid.
    *
    * @param from Start index.
-   * @param to   Target index.
+   * @param to Target index.
    * @return true if they are neighbors.
    */
   private boolean isAdjacent(int from, int to) {
@@ -901,8 +915,8 @@ public class AgonBoardImpl implements AgonBoard {
   /**
    * Pre-calculates the allowed destination masks for each concentric circle.
    *
-   * <p>This implements the "no retreating" rule: a piece can only move to a tile within its
-   * current circle or to a circle closer to the center (Throne).
+   * <p>This implements the "no retreating" rule: a piece can only move to a tile within its current
+   * circle or to a circle closer to the center (Throne).
    */
   private void initAllowedDestinations() {
     // A piece can move only forward or on the sides
@@ -933,8 +947,8 @@ public class AgonBoardImpl implements AgonBoard {
       circles[i] = new BitBoard();
     }
     // Starting with THRONE (center)
-    circles[0] = new BitBoard(THRONE);
-    validZoneMask.setBit(THRONE, 1);
+    circles[0] = new BitBoard(throne);
+    validZoneMask.setBit(throne, 1);
 
     // Create outer circles using the expansion (dilation) method
     for (int i = 1; i < 6; i++) {
@@ -952,12 +966,15 @@ public class AgonBoardImpl implements AgonBoard {
   public BitBoard getWhiteQueen() {
     return whiteQueen;
   }
+
   public BitBoard getBlackQueen() {
     return blackQueen;
   }
+
   public BitBoard getWhitePawns() {
     return whitePawns;
   }
+
   public BitBoard getBlackPawns() {
     return blackPawns;
   }
