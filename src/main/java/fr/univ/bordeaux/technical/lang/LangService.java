@@ -18,8 +18,9 @@ import java.util.ResourceBundle;
  *   hello token in property files
  * </pre>
  *
- * @see <a href="https://medium.com/@medcherrou/understanding-resourcebundle-in-java
- *     -a-comprehensive-guide-2cb3b49edf03"> Medium article (jan 14 2025) </a>
+ * @see <a
+ *     href="https://medium.com/@medcherrou/understanding-resourcebundle-in-java-a-comprehensive-guide-2cb3b49edf03">
+ *     Medium article (jan 14 2025) </a>
  */
 public class LangService implements LangTranslationProvider {
 

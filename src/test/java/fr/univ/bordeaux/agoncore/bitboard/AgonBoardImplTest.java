@@ -234,9 +234,18 @@ class AgonBoardImplTest {
 
     AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation);
 
-    assertEquals(PieceType.WHITE_QUEEN, reconstructedBoard.getPieceAt(60), "The White Queen should be at index 60");
-    assertEquals(PieceType.BLACK_PAWN, reconstructedBoard.getPieceAt(72), "The Black Pawn should be at index 72");
-    assertEquals(PieceType.WHITE_PAWN, reconstructedBoard.getPieceAt(59), "The White Pawn should be at index 59");
+    assertEquals(
+        PieceType.WHITE_QUEEN,
+        reconstructedBoard.getPieceAt(60),
+        "The White Queen should be at index 60");
+    assertEquals(
+        PieceType.BLACK_PAWN,
+        reconstructedBoard.getPieceAt(72),
+        "The Black Pawn should be at index 72");
+    assertEquals(
+        PieceType.WHITE_PAWN,
+        reconstructedBoard.getPieceAt(59),
+        "The White Pawn should be at index 59");
     assertNull(reconstructedBoard.getPieceAt(0), "An initially empty tile must remain empty");
   }
-  }
+}

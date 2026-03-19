@@ -2,7 +2,6 @@ package fr.univ.bordeaux.agoncore.bitboard;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
-
 import java.util.List;
 
 /**
@@ -93,7 +92,8 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   /**
    * Converts the current board state into a list of ASCII strings.
-   * <p>This representation is used for saving the game state to a file.</p>
+   *
+   * <p>This representation is used for saving the game state to a file.
    *
    * @return A list of strings representing the board visually.
    */
