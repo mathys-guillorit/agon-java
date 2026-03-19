@@ -87,6 +87,8 @@ public class AgonShell extends AbstractGameUI {
     registry.register("server start", new CmdServerStart(context));
     registry.register("server stop",  new CmdServerStop(context));
     registry.register("server list",  new CmdServerList(context));
+    registry.register("server status",  new CmdServerStatus(context));
+
   }
 
   /** fill options for the cli (done once internally) */
@@ -202,24 +204,52 @@ public class AgonShell extends AbstractGameUI {
   /**
    * run the program to interact with the user
    */
-  public void loop(){
-    //this.showMainMenu();
-    int startCursorIdx = 0;
+  public void loop() {
     this.cliW(this.mainMenuASCII);
-    String line;
-    List<String> words;
+
     while (this.running) {
-      line = this.reader.readLine(">> ");
-      // tokenized by JLine into words
-      ParsedLine parsed = reader.getParser().parse(line, startCursorIdx);
-      words = parsed.words();
-      this.userCmdName = words.getFirst(); // == word.get(0);
-      startCursorIdx++;
-      // in options, we must get only options not the command name included
-      this.userOptions = words.subList(startCursorIdx, words.size())
-        .toArray(new String[0]);
+      String line = this.reader.readLine(">> ");
+
+      // Sécurité si l'entrée est vide
+      if (line == null || line.trim().isEmpty()) {
+        continue;
+      }
+
+      // On parse la ligne (JLine s'occupe de séparer les mots proprement)
+      ParsedLine parsed = reader.getParser().parse(line, 0);
+      List<String> words = parsed.words();
+
+      if (words.isEmpty()) continue;
+
+      String firstWord = words.get(0).toLowerCase();
+
+      // LOGIQUE POUR COMMANDES COMPOSÉES (ex: server status)
+      if ("server".equals(firstWord) && words.size() > 1) {
+        // On fusionne les deux premiers mots pour le registre
+        this.userCmdName = "server " + words.get(1).toLowerCase();
+
+        // Les options (args) commencent au 3ème mot (index 2)
+        if (words.size() > 2) {
+          this.userOptions = words.subList(2, words.size()).toArray(new String[0]);
+        } else {
+          this.userOptions = new String[0];
+        }
+      } else {
+        // COMMANDE SIMPLE (ex: ping, quit)
+        this.userCmdName = firstWord;
+
+        // Les options commencent au 2ème mot (index 1)
+        if (words.size() > 1) {
+          this.userOptions = words.subList(1, words.size()).toArray(new String[0]);
+        } else {
+          this.userOptions = new String[0];
+        }
+      }
+
+      // Exécution de la logique de commande
       this.running = this.conditionalReturning();
     }
+
     this.cliWln("Bye !");
     this.safeCloseTerminal();
   }

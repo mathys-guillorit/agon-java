@@ -33,7 +33,9 @@ public class ClientDiscovery {
 
         running = true;
 
-        socket = new DatagramSocket(UDP_PORT, InetAddress.getByName("0.0.0.0"));
+        socket = new DatagramSocket(null);
+        socket.setReuseAddress(true);
+        socket.bind(new java.net.InetSocketAddress(UDP_PORT));
         socket.setBroadcast(true);
 
         thread = new Thread(() -> {
@@ -59,7 +61,7 @@ public class ClientDiscovery {
                         ServerInfo s = servers.get(key);
                         if (s == null) {
                             s = new ServerInfo(pm.getServerName(), ip, pm.getTcpPort());
-                            servers.put(key, s);
+                            servers.put(s.key(), s);
                         } else {
                             s.lastSeen = System.currentTimeMillis();
                         }

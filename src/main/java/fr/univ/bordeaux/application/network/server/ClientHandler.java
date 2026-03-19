@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 public class ClientHandler implements Runnable {
 
     private final Socket socket;
+    private final AgonServer server;
     private final CommandParser parser = new CommandParser();
     private volatile boolean running = true;
     private BufferedWriter out;
@@ -23,11 +24,12 @@ public class ClientHandler implements Runnable {
      * Creates a new client handler for the given socket.
      *
      * @param socket the TCP socket associated with the connected client
+     * @param server the server instance this handler belongs to
      */
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket, AgonServer server) {
         this.socket = socket;
+        this.server = server;
     }
-
 
     /**
      * Stops the client handler and closes the client socket.
@@ -45,7 +47,7 @@ public class ClientHandler implements Runnable {
         try {
             socket.close();
         } catch (IOException e) {
-            System.err.println("[SERVER] Error while closing server socket");
+            System.err.println("[SERVER] Error while closing client socket");
         }
     }
 
@@ -79,6 +81,11 @@ public class ClientHandler implements Runnable {
                 if (cmd.getType() == CommandType.PING) {
                     send("PONG TIME=0ms");
                 }
+                else if (cmd.getType() == CommandType.STATUS) {
+                    send("STATUS_OK port=" + server.getPort()
+                            + " clients=" + server.getConnectedClientsCount()
+                            + " games=0");
+                }
                 else if (cmd.getType() == CommandType.QUIT) {
                     send("BYE");
                     break;
@@ -90,6 +97,9 @@ public class ClientHandler implements Runnable {
                 System.err.println("[SERVER] ClientHandler error: " + e.getMessage());
             }
         } finally {
+            if (server != null) {
+                server.removeClient(this);
+            }
             stop();
             System.out.println("[SERVER] Client disconnected.");
         }

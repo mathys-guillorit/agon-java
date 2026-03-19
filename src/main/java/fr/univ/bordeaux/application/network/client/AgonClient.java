@@ -54,6 +54,30 @@ public class AgonClient {
     }
 
     /**
+     * Checks whether the connection is still alive by sending a PING.
+     *
+     * @return true if the server replies with PONG, false otherwise
+     */
+    public boolean isAlive() {
+        if (!isConnected()) return false;
+
+        try {
+            sendLine("PING");
+            String resp = readLine();
+
+            if (resp == null || !resp.startsWith("PONG")) {
+                disconnectSilently();
+                return false;
+            }
+            return true;
+
+        } catch (IOException e) {
+            disconnectSilently();
+            return false;
+        }
+    }
+
+    /**
      * Sends PING to the server and waits for a PONG reply.
      *
      * @return a formatted RTT string (in milliseconds) if the server replies correctly, null otherwise
@@ -75,6 +99,31 @@ public class AgonClient {
             String response = "[SERVER] PONG TIME=" + rtt + "ms";
 
             return response;
+
+        } catch (IOException e) {
+            disconnectSilently();
+            return null;
+        }
+    }
+
+    /**
+     * Requests the status of the connected remote server.
+     *
+     * @return the raw server response if successful, null otherwise
+     */
+    public String requestServerStatus() {
+        if (!isConnected()) return null;
+
+        try {
+            System.out.println("[CLIENT] STATUS");
+            sendLine("STATUS");
+            String resp = readLine();
+
+            if (resp == null || !resp.startsWith("STATUS_OK")) {
+                return null;
+            }
+
+            return resp;
 
         } catch (IOException e) {
             disconnectSilently();

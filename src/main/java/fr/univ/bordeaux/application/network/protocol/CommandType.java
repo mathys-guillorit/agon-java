@@ -4,7 +4,7 @@ package fr.univ.bordeaux.application.network.protocol;
  * Enumeration of supported network command types.
   */
 public enum CommandType {
-    PING, PONG, QUIT, BYE, UNKNOWN;
+    PING, PONG, QUIT, BYE,  STATUS, STATUS_OK, UNKNOWN;
 
 
     /**

@@ -3,6 +3,9 @@ package fr.univ.bordeaux.application.network.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
   * TCP game server entry point.
@@ -13,7 +16,10 @@ public class AgonServer {
     private final String name;
     private ServerSocket serverSocket;
     private Thread acceptClientThread;
-    private volatile ClientHandler currentClientHandler;
+
+    /* For F39 */
+    private final List<ClientHandler> currentClients = Collections.synchronizedList(new ArrayList<>());;
+
     private ServerDiscovery discovery;
     private volatile boolean running = false;
 
@@ -46,7 +52,6 @@ public class AgonServer {
             return true;
         }
 
-
         try {
             serverSocket = new ServerSocket(port);
             discovery = new ServerDiscovery(name, port);
@@ -73,14 +78,12 @@ public class AgonServer {
         while(running) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                if (currentClientHandler != null) {
-                    clientSocket.close();
-                    continue;
-                }
-                System.out.println("[SERVER] Client connected");
+                System.out.println("[SERVER] Client connected: " + clientSocket.getRemoteSocketAddress());
 
-                currentClientHandler = new ClientHandler(clientSocket);
-                new Thread(currentClientHandler).start();
+                ClientHandler handler = new ClientHandler(clientSocket, this);
+                currentClients.add(handler);
+                new Thread(handler).start();
+
             } catch (IOException e) {
                 break;
             }
@@ -102,9 +105,11 @@ public class AgonServer {
         running = false;
         System.out.println("[SERVER] Stopping...");
 
-        if (currentClientHandler != null) {
-            currentClientHandler.stop();
-            currentClientHandler = null;
+        synchronized(currentClients) {
+            for (ClientHandler handler : currentClients) {
+                handler.stop();
+            }
+            currentClients.clear();
         }
 
         if (discovery != null) {
@@ -145,5 +150,21 @@ public class AgonServer {
      * @return true if running
      */
     public boolean isRunning() { return running; }
+
+    /**
+     * Removes a client from the list when they disconnect.
+     *
+     * @param handler The client handler to be removed
+     */
+    public void removeClient(ClientHandler handler) {
+        currentClients.remove(handler);
+    }
+
+    /**
+     * Returns the number of connected clients.
+     */
+    public int getConnectedClientsCount() {
+        return currentClients.size();
+    }
 }
 

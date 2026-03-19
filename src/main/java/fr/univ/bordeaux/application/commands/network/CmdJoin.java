@@ -38,8 +38,12 @@ public class CmdJoin extends Cmd {
         AgonClient client = context.getClient();
 
         if (client.isConnected()) {
-            System.out.println("[CLIENT] Already connected.");
-            return;
+            if (client.isAlive()) {
+                System.out.println("[CLIENT] Already connected.");
+                return;
+            } else {
+                client.disconnectSilently();
+            }
         }
 
         String host = DEFAULT_HOST;

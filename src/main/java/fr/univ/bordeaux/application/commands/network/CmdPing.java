@@ -40,7 +40,7 @@ public class CmdPing extends Cmd {
         if (response != null) {
             System.out.println(response);
         } else {
-            System.out.println("[CLIENT] Error: Server did not respond to ping.");
+            System.out.println("[CLIENT] Connection lost. Use join to reconnect.");
         }
     }
 }
