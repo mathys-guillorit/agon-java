@@ -16,9 +16,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
  */
 public abstract class AbstractHeuristic implements Heuristic {
 
-  /**
-   * The weight multiplier applied to the raw factor for Pawn pieces.
-   */
+  /** The weight multiplier applied to the raw factor for Pawn pieces. */
   protected int pawnWeight;
 
   /**
@@ -30,7 +28,7 @@ public abstract class AbstractHeuristic implements Heuristic {
   /**
    * Constructs a new heuristic with specific weights for pieces.
    *
-   * @param pawnWeight  The importance of the heuristic factor for a Pawn.
+   * @param pawnWeight The importance of the heuristic factor for a Pawn.
    * @param queenWeight The importance of the heuristic factor for the Queen.
    */
   public AbstractHeuristic(int pawnWeight, int queenWeight) {
@@ -62,8 +60,8 @@ public abstract class AbstractHeuristic implements Heuristic {
    * {@inheritDoc}
    *
    * <p><b>Implementation Note:</b> This implementation uses the <b>Template Method</b> pattern. It
-   * iterates over all 91 cells of the board, calculates a specific factor using
-   * {@link #getFactor(AgonBoard, int)}, and applies the corresponding weight (Queen or Pawn).
+   * iterates over all 91 cells of the board, calculates a specific factor using {@link
+   * #getFactor(AgonBoard, int)}, and applies the corresponding weight (Queen or Pawn).
    */
   @Override
   public long evaluate(AgonBoard board, Color aiColor) {

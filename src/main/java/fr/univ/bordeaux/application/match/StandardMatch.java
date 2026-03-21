@@ -10,12 +10,10 @@ public class StandardMatch extends Match {
   }
 
   @Override
-  public void startActions() {
-  }
+  public void startActions() {}
 
   @Override
   public void endActions() {
     super.switchPlayer();
   }
-
 }

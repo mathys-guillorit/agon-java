@@ -11,9 +11,14 @@ public interface MatchManager {
   boolean undo();
 
   boolean redo();
+
   Player getCurrentPlayer();
-  RestrictedAgonBoard  getAgonBoard();
+
+  RestrictedAgonBoard getAgonBoard();
+
   Move hint();
+
   boolean isMatchOver();
+
   void quit();
 }

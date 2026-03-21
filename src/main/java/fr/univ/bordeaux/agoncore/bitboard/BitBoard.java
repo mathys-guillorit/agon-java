@@ -9,19 +9,13 @@ package fr.univ.bordeaux.agoncore.bitboard;
  */
 public class BitBoard {
 
-  /**
-   * Bits 0 to 63 (Lower half of the board).
-   */
+  /** Bits 0 to 63 (Lower half of the board). */
   private long low;
 
-  /**
-   * Bits 64 to 127 (Upper half of the board; Agon uses up to index 120).
-   */
+  /** Bits 64 to 127 (Upper half of the board; Agon uses up to index 120). */
   private long high;
 
-  /**
-   * Constructs an empty BitBoard with all bits initialized to zero.
-   */
+  /** Constructs an empty BitBoard with all bits initialized to zero. */
   public BitBoard() {
     this.low = 0L;
     this.high = 0L;
@@ -132,7 +126,7 @@ public class BitBoard {
    * carry-over between the {@code low} and {@code high} segments.
    *
    * @param n The shift offset (corresponds to {@link Direction#getValue()}). Positive moves bits
-   *          toward higher indices, negative toward lower.
+   *     toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(final int n) {
@@ -204,8 +198,8 @@ public class BitBoard {
   /**
    * Scans the bitboard for the next set bit after a given index.
    *
-   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find pieces rapidly,
-   * which is critical for efficient move generation loops.
+   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find pieces rapidly, which
+   * is critical for efficient move generation loops.
    *
    * @param currentBit The index to start scanning from (exclusive). Use {@code -1} for the start.
    * @return The index of the next set bit, or {@code -1} if none remain.

@@ -1,9 +1,6 @@
 package fr.univ.bordeaux.ui;
 
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
-import fr.univ.bordeaux.application.commands.AgonRegister;
-import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.match.MatchManager;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -20,9 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public interface GameUserInterface {
 
-
-
-boolean isRunning();
+  boolean isRunning();
 
   /**
    * Quits the current game and closes the application. May trigger Reader prompt to save before
@@ -32,22 +27,23 @@ boolean isRunning();
 
   // --- UI UPDATES (Outputs to the Screen) ---
 
-  /**
+  /*/**
    * Updates the game board display.
    *
-   * @param board A textual (ASCII) or serialized representation of the board.
+   * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(RestrictedAgonBoard board);
+  // void updateBoard(String boardRepresentation);
+  void updateBoard(RestrictedAgonBoard agonBoard);
 
   /**
-   * show message to the user.
+   * Displays an informational message to the user.
    *
    * @param message The content of the message.
    */
   void showMessage(String message);
 
   /**
-   * Displays Reader critical error or warning message.
+   * Displays a critical error or warning message.
    *
    * @param error The content of the error.
    */
@@ -72,12 +68,17 @@ boolean isRunning();
 
   AtomicBoolean getDebugMode();
 
-
   void setVerbose(boolean state);
-
 
   /** save the game before leaving */
   void saveGame();
 
   String getUserInput();
+  /**
+   * Asks the user for confirmation (e.g., "Do you really want to quit?").
+   *
+   * @param question The question to ask.
+   * @return {@code true} if the user accepts, {@code false} otherwise.
+   */
+  // boolean getUserConfirmation(String question);
 }

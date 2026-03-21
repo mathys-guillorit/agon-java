@@ -145,8 +145,8 @@ public class ConsoleRenderer {
    * @param y The diagonal/logical column index on that line.
    * @return The char representing the piece, or '.' if empty/error.
    */
-  private static char getSymbolAt(RestrictedAgonBoard board, int x, int y,
-      ArrayList<Character> arrayLines) {
+  private static char getSymbolAt(
+      RestrictedAgonBoard board, int x, int y, ArrayList<Character> arrayLines) {
     try {
       char rowChar = arrayLines.get(x);
       int startCol = (x <= 5) ? (6 - x) : 1;
@@ -167,7 +167,7 @@ public class ConsoleRenderer {
    *
    * @param piece The piece to convert.
    * @return 'O' for White Pawn, 'X' for Black Pawn, 'Q' for White Queen, 'q' for Black Queen, '.'
-   * for empty.
+   *     for empty.
    */
   private static char getSymbolFromPiece(PieceType piece) {
     if (piece == null) {

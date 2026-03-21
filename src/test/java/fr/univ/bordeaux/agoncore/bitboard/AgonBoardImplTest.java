@@ -32,7 +32,8 @@ class AgonBoardImplTest {
     bQueen.setBit(59, 1L);
     wPawns.setBit(63, 1L);
     board = new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
-    assertTrue(board.applyMove(new Move(59, 60, Color.BLACK)), "La reine noire devrait pouvoir bouger");
+    assertTrue(
+        board.applyMove(new Move(59, 60, Color.BLACK)), "La reine noire devrait pouvoir bouger");
     assertEquals(PieceType.BLACK_QUEEN, board.getPieceAt(60));
     assertTrue(board.applyMove(new Move(63, 62, Color.WHITE)));
   }
@@ -56,25 +57,28 @@ class AgonBoardImplTest {
     BitBoard whitePawns = new BitBoard();
     whitePawns.setBit(THRONE, 1L);
     whitePawns.setBit(82, 1L);
+
     BitBoard blackPawns = new BitBoard(71);
+
     AgonBoardImpl captureBoard =
         new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, blackPawns);
+
     List<Move> moves = new ArrayList<>();
     captureBoard.performCaptures(Color.WHITE, moves);
+
     assertNull(captureBoard.getPieceAt(71), "The black pawn at 71 should be captured");
     assertTrue(
         captureBoard.generateLegalMoves(Color.BLACK).stream().allMatch(m -> m.getFrom() == -1),
         "Black should have relocation moves (from = -1)");
-    BitBoard blackQueen=new BitBoard(62);
+    BitBoard blackQueen = new BitBoard(62);
     whitePawns.setBit(61, 1L);
     whitePawns.setBit(63, 1L);
-    moves=new ArrayList<>();
-    captureBoard.performCaptures(Color.WHITE,moves);
+    moves = new ArrayList<>();
+    captureBoard.performCaptures(Color.WHITE, moves);
     assertNull(captureBoard.getPieceAt(62), "The black queen at 62 should be captured");
     assertTrue(
         captureBoard.generateLegalMoves(Color.BLACK).stream().allMatch(m -> m.getFrom() == -1),
         "Black should have relocation moves (from = -1)");
-
   }
 
   @Test
@@ -132,15 +136,12 @@ class AgonBoardImplTest {
     wPawns.setBit(64, 1L);
     BitBoard bPawns = new BitBoard(62);
     AgonBoardImpl boardReloc = new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns, bPawns);
-    boardReloc.printBoard();
-    boardReloc.applyMove(new Move(64,63,Color.WHITE,PieceType.WHITE_PAWN));
-    boardReloc.printBoard();
-    for  (Move m : boardReloc.generateLegalMoves(Color.BLACK)) {
+    boardReloc.applyMove(new Move(64, 63, Color.WHITE, PieceType.WHITE_PAWN));
+    for (Move m : boardReloc.generateLegalMoves(Color.BLACK)) {
       System.out.println(m.toString());
     }
-    assertTrue(boardReloc.applyMove(new Move(-1,1,Color.BLACK,PieceType.BLACK_PAWN)));
+    assertTrue(boardReloc.applyMove(new Move(-1, 1, Color.BLACK, PieceType.BLACK_PAWN)));
   }
-
 
   @Test
   @DisplayName("Victory Test: Queen + 6 pawns")
@@ -193,6 +194,7 @@ class AgonBoardImplTest {
     assertNull(undoBoard.getPieceAt(1), "index 1 should be empty after undo");
     assertFalse(undoBoard.undoMove());
   }
+
   @Test
   @DisplayName("Test Undo après capture de la Reine Noire")
   void testUndoCaptureQueen() {
@@ -201,36 +203,39 @@ class AgonBoardImplTest {
     whitePawns.setBit(62, 1L);
     whitePawns.setBit(65, 1L);
     BitBoard blackQueen = new BitBoard(63);
-    AgonBoardImpl captureBoard = new AgonBoardImpl(new BitBoard(), blackQueen, whitePawns, new BitBoard());
+    AgonBoardImpl captureBoard =
+        new AgonBoardImpl(new BitBoard(), blackQueen, whitePawns, new BitBoard());
     captureBoard.applyMove(new Move(65, 64, Color.WHITE));
     assertNull(captureBoard.getPieceAt(63), "La reine devrait être capturée avant l'undo");
     assertTrue(captureBoard.undoMove(), "L'undo devrait réussir car un coup a été joué");
     assertEquals(PieceType.BLACK_QUEEN, captureBoard.getPieceAt(63), "La reine doit être revenue");
-    assertEquals(PieceType.WHITE_PAWN, captureBoard.getPieceAt(65), "Le pion blanc doit être revenu à 65");
+    assertEquals(
+        PieceType.WHITE_PAWN, captureBoard.getPieceAt(65), "Le pion blanc doit être revenu à 65");
     assertNull(captureBoard.getPieceAt(64), "La case 64 doit être vide");
   }
 
   @Test
   @DisplayName("Test Undo Relocalisation Reine : déclenche setQueenRelocating(true)")
   void testUndoQueenRelocation() {
-      BitBoard wQueen = new BitBoard(63);
-      BitBoard bPawns = new BitBoard();
-      bPawns.setBit(62, 1L);
-      bPawns.setBit(65, 1L);
-      AgonBoardImpl boardReloc2 = new AgonBoardImpl(wQueen, new BitBoard(), new BitBoard(), bPawns);
-      boardReloc2.applyMove(new Move(65, 64, Color.BLACK));
-      assertNull(boardReloc2.getPieceAt(63), "La reine blanche devrait être capturée");
-      Move relocationMove2 = new Move(-1, 20, Color.WHITE, PieceType.WHITE_QUEEN);
-      boardReloc2.applyMove(relocationMove2);
-      assertEquals(PieceType.WHITE_QUEEN, boardReloc2.getPieceAt(20));
-      boolean undoResult2 = boardReloc2.undoMove();
-      assertTrue(undoResult2, "L'undo doit réussir");
-      assertNull(boardReloc2.getPieceAt(20), "La reine ne doit plus être sur le plateau");
-      List<Move> nextMoves2 = boardReloc2.generateLegalMoves(Color.WHITE);
-      assertFalse(nextMoves2.isEmpty());
-      boolean isRelocating2 = nextMoves2.stream().allMatch(m -> m.getFrom() == -1);
-      assertTrue(isRelocating2, "La reine blanche doit à nouveau être en attente de relocalisation");
+    BitBoard wQueen = new BitBoard(63);
+    BitBoard bPawns = new BitBoard();
+    bPawns.setBit(62, 1L);
+    bPawns.setBit(65, 1L);
+    AgonBoardImpl boardReloc2 = new AgonBoardImpl(wQueen, new BitBoard(), new BitBoard(), bPawns);
+    boardReloc2.applyMove(new Move(65, 64, Color.BLACK));
+    assertNull(boardReloc2.getPieceAt(63), "La reine blanche devrait être capturée");
+    Move relocationMove2 = new Move(-1, 20, Color.WHITE, PieceType.WHITE_QUEEN);
+    boardReloc2.applyMove(relocationMove2);
+    assertEquals(PieceType.WHITE_QUEEN, boardReloc2.getPieceAt(20));
+    boolean undoResult2 = boardReloc2.undoMove();
+    assertTrue(undoResult2, "L'undo doit réussir");
+    assertNull(boardReloc2.getPieceAt(20), "La reine ne doit plus être sur le plateau");
+    List<Move> nextMoves2 = boardReloc2.generateLegalMoves(Color.WHITE);
+    assertFalse(nextMoves2.isEmpty());
+    boolean isRelocating2 = nextMoves2.stream().allMatch(m -> m.getFrom() == -1);
+    assertTrue(isRelocating2, "La reine blanche doit à nouveau être en attente de relocalisation");
   }
+
   @Test
   @DisplayName("Test de la configuration initiale du plateau")
   void testInitBaseConfiguration() {
@@ -253,6 +258,7 @@ class AgonBoardImplTest {
     assertTrue(baseBoard.getPieceAt(CoordinateMapper.toIndex('B', 7)) == PieceType.BLACK_PAWN);
     assertTrue(baseBoard.getPieceAt(CoordinateMapper.toIndex('F', 11)) == PieceType.BLACK_QUEEN);
   }
+
   @Test
   @DisplayName("Test generateLegalMovesBitboard : Cas de relocalisation")
   void testGenerateLegalMovesWithRelocation() {
@@ -264,7 +270,8 @@ class AgonBoardImplTest {
     boardReloc.applyMove(new Move(65, 64, Color.BLACK));
     BitBoard legalDestinations = boardReloc.generateLegalMovesBitboard(Color.WHITE);
     assertNotNull(legalDestinations, "Le BitBoard de destinations ne doit pas être nul");
-    assertFalse(legalDestinations.isEmpty(), "Il doit y avoir des cases de relocalisation possibles");
+    assertFalse(
+        legalDestinations.isEmpty(), "Il doit y avoir des cases de relocalisation possibles");
     assertFalse(legalDestinations.isSet(60), "Une reine ne peut pas être relocalisée sur le trône");
   }
 
@@ -298,5 +305,52 @@ class AgonBoardImplTest {
     board = new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
     assertEquals(board.getMobility(61), -1);
     assertEquals(board.getMobility(60), 0);
+  }
+
+  @Test
+  @DisplayName("Test toTextList: ASCII conversion")
+  void testToTextList() {
+    BitBoard wQueen = new BitBoard(THRONE);
+    BitBoard bPawns = new BitBoard(61);
+    BitBoard wPawns = new BitBoard(59);
+    AgonBoardImpl textBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, bPawns);
+
+    List<String> lines = textBoard.toTextList();
+
+    assertNotNull(lines, "The list of lines should not be null");
+    assertFalse(lines.isEmpty(), "The list of lines should not be empty");
+
+    String fullText = String.join("\n", lines);
+    assertTrue(fullText.contains("Q"), "The text must contain the White Queen (Q)");
+    assertTrue(fullText.contains("X"), "The text must contain the Black Pawn (X)");
+    assertTrue(fullText.contains("O"), "The text must contain the White Pawn (o)");
+    assertTrue(fullText.contains("."), "The text must contain empty tiles (.)");
+  }
+
+  @Test
+  @DisplayName("Test Constructor from Text: Board restoration")
+  void testConstructorFromTextList() {
+    BitBoard wQueen = new BitBoard(THRONE);
+    BitBoard bPawns = new BitBoard(72);
+    BitBoard wPawns = new BitBoard(59);
+    AgonBoardImpl originalBoard = new AgonBoardImpl(wQueen, new BitBoard(), wPawns, bPawns);
+
+    List<String> textRepresentation = originalBoard.toTextList();
+
+    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation);
+
+    assertEquals(
+        PieceType.WHITE_QUEEN,
+        reconstructedBoard.getPieceAt(60),
+        "The White Queen should be at index 60");
+    assertEquals(
+        PieceType.BLACK_PAWN,
+        reconstructedBoard.getPieceAt(72),
+        "The Black Pawn should be at index 72");
+    assertEquals(
+        PieceType.WHITE_PAWN,
+        reconstructedBoard.getPieceAt(59),
+        "The White Pawn should be at index 59");
+    assertNull(reconstructedBoard.getPieceAt(0), "An initially empty tile must remain empty");
   }
 }

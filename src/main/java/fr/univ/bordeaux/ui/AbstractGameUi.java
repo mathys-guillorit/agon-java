@@ -1,17 +1,15 @@
 package fr.univ.bordeaux.ui;
 
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class AbstractGameUI implements GameUserInterface, MatchObserver {
-
+public abstract class AbstractGameUi implements GameUserInterface, MatchObserver {
 
   /**
-   * save the game configuration into the local machine from the user using current path
-   *  save the file into the /Downloads repertory with current date (computer's date)
+   * save the game configuration into the local machine from the user using current path save the
+   * file into the /Downloads repertory with current date (computer's date)
    */
   @Override
   public void saveGame() {
@@ -38,8 +36,6 @@ public abstract class AbstractGameUI implements GameUserInterface, MatchObserver
     // this.showError("cannot safe file for reason : ");
     // this.showError(...);
   }
-
-
 
   public abstract void quit();
 }

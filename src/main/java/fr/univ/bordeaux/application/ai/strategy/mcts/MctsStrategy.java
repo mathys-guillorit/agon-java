@@ -4,11 +4,12 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
-import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
+import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import java.util.List;
 import java.util.Random;
 
-public class MctsStrategy extends AbstractAgonAI {
+/** Implements MCTS. */
+public class MctsStrategy extends AbstractAgonAi {
 
   public MctsStrategy(Heuristic heuristic, Color color) {
     super(heuristic, color);
@@ -28,6 +29,5 @@ public class MctsStrategy extends AbstractAgonAI {
   }
 
   @Override
-  public void setTimeLimit(long millis) {
-  }
+  public void setTimeLimit(long millis) {}
 }

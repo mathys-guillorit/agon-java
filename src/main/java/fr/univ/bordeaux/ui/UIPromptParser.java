@@ -12,23 +12,39 @@ import org.jline.reader.Parser;
 import org.jline.reader.impl.DefaultParser;
 
 /**
- * Utility class to parse text into CmdAction using a command registry.
+ * Utility class to parse terminal input into executable {@link CmdAction} instances. The parser
+ * follows a two-step logic:
+ *
+ * <ol>
+ *   <li>It checks if the input matches a command registered in the {@link AgonRegister} (e.g.,
+ *       "help", "save").
+ *   <li>If no command matches, it attempts to parse the input as a move (e.g., "a1b2") or a
+ *       relocation (e.g., "a1") using Regex patterns.
+ * </ol>
  */
 public class UIPromptParser {
 
+  /** JLine parser used to split input lines into words, handling quotes and escapes. */
   private static final Parser parser = new DefaultParser();
+
+  /** Pattern for standard moves: origin (letter+digit) + destination (letter+digit). Ex: "a1b2" */
   private static final Pattern MOVE_PATTERN =
       Pattern.compile("^([a-k])(\\d{1,2})([a-k])(\\d{1,2})$");
-  private static final Pattern RELOCATION_PATTERN =
-      Pattern.compile("^([a-k])(\\d{1,2})$");
+
+  /** Pattern for relocation moves (one coordinate). Ex: "a1" */
+  private static final Pattern RELOCATION_PATTERN = Pattern.compile("^([a-k])(\\d{1,2})$");
+
   /**
-   * Parse a line from the terminal and return the corresponding CmdAction.
+   * Parses a raw line from the terminal and returns the corresponding {@link CmdAction}.
    *
-   * @param line     The input line from the terminal.
-   * @param registry The registry containing available commands.
-   * @return The CmdAction if found and valid, otherwise null.
+   * @param line The raw string entered by the user.
+   * @param registry The command registry containing available keywords.
+   * @param ui The user interface context to pass to newly created commands.
+   * @return A {@link CmdAction} ready for execution, or {@code null} if the input is invalid or
+   *     empty.
    */
-  public static CmdAction parse(final String line, AgonRegister<CmdAction> registry,GameUserInterface ui) {
+  public static CmdAction parse(
+      final String line, AgonRegister<CmdAction> registry, GameUserInterface ui) {
     if (line == null || line.trim().isEmpty()) {
       return null;
     }
@@ -48,43 +64,67 @@ public class UIPromptParser {
     String cmdName = words.get(0).toLowerCase();
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
-    return registry.get(cmdName)
+    // Try to find the command in the registry, otherwise fallback to move/relocation parsing
+    return registry
+        .get(cmdName)
         .map(action -> action.createNew(options))
-        .orElseGet(()->handleDefault(line,ui));
+        .orElseGet(() -> handleDefault(line, ui));
   }
 
-  private static CmdAction handleDefault(String input,GameUserInterface ui) {
-    Matcher matcher = MOVE_PATTERN.matcher(input);
-    Matcher matcher2 = RELOCATION_PATTERN.matcher(input);
-    if (!matcher.matches()) {
-      if (matcher2.matches()) {
-        char letterFrom = matcher2.group(1).charAt(0);
-        int colFrom = Integer.parseInt(matcher2.group(2));
-        if (colFrom < 0 || colFrom > 11) {
-          System.out.println(
-              "Erreur : a Relocation Move is created this way : lineFrom (a-k) + colFrom (1-11). For exemple : a1, k11 are valid while j2a1 are not.");
-          return null;
-        }
-        return new CmdMove(-1, CoordinateMapper.toIndex(letterFrom, colFrom),ui);
+  /**
+   * Fallback method to handle inputs that are not registered commands.
+   *
+   * <p>Uses {@code MOVE_PATTERN} and {@code RELOCATION_PATTERN} to detect if the user typed raw
+   * coordinates to move a piece.
+   *
+   * @param input The raw input string.
+   * @param ui The UI context.
+   * @return A {@link CmdMove} instance if coordinates are valid, {@code null} otherwise.
+   */
+  private static CmdAction handleDefault(String input, GameUserInterface ui) {
+    Matcher moveMatcher = MOVE_PATTERN.matcher(input.toLowerCase());
+    Matcher relocationMatcher = RELOCATION_PATTERN.matcher(input.toLowerCase());
+
+    // Case 1: Standard Move (e.g., a1b2)
+    if (moveMatcher.matches()) {
+      char letterFrom = moveMatcher.group(1).charAt(0);
+      int colFrom = Integer.parseInt(moveMatcher.group(2));
+      char letterTo = moveMatcher.group(3).charAt(0);
+      int colTo = Integer.parseInt(moveMatcher.group(4));
+
+      if (isValidCoord(colFrom) && isValidCoord(colTo)) {
+        int indexFrom = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colFrom);
+        int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterTo), colTo);
+        return new CmdMove(indexFrom, indexTo, ui);
+      } else {
+        ui.showError("Error: Coordinates out of bounds (1-11). Example: 'a1b1'.\n");
+        return null;
       }
-      return null;
     }
 
-    char letterFrom = matcher.group(1).charAt(0);
-    int colFrom = Integer.parseInt(matcher.group(2));
+    // Case 2: Relocation (e.g., a1)
+    if (relocationMatcher.matches()) {
+      char letter = relocationMatcher.group(1).charAt(0);
+      int col = Integer.parseInt(relocationMatcher.group(2));
 
-    char letterTo = matcher.group(3).charAt(0);
-    int colTo = Integer.parseInt(matcher.group(4));
-    if (colFrom < 1 || colFrom > 11 || colTo < 1 || colTo > 11) {
-      System.out.println(
-          "Erreur : a Move is create this way : lineFrom (a-k) + colFrom (1-11) + lineDestination (a-k) + colDestination (1-11). For exemple : a1b1, k11j10 are valid while z22aa1 are not.");
-      return null;
+      if (isValidCoord(col)) {
+        return new CmdMove(-1, CoordinateMapper.toIndex(Character.toUpperCase(letter), col), ui);
+      } else {
+        ui.showError("Error: Coordinate out of bounds (1-11). Example: 'a1'.\n");
+        return null;
+      }
     }
 
-    // 5. Conversion et création de la commande
-    int indexFrom = CoordinateMapper.toIndex(Character.toUpperCase(letterFrom), colFrom);
-    int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterTo), colTo);
+    return null;
+  }
 
-    return new CmdMove(indexFrom, indexTo,ui);
+  /**
+   * Checks if a column number is within the valid Agon board range.
+   *
+   * @param col The column index to check.
+   * @return true if between 1 and 11 inclusive.
+   */
+  private static boolean isValidCoord(int col) {
+    return col >= 1 && col <= 11;
   }
 }

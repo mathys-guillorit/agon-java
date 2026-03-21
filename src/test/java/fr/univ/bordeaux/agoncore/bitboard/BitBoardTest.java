@@ -125,12 +125,12 @@ class BitBoardTest {
 
     // Check that neighbors (based on Direction offsets) are activated:
     // East(+1), West(-1), NE(+12), NW(+11), SE(-11), SW(-12)
-    assertTrue(dilated.isSet(index + Direction.EAST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.WEST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NORTH_EAST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NORTH_WEST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SOUTH_EAST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SOUTH_WEST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.East.getValue()));
+    assertTrue(dilated.isSet(index + Direction.West.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NorthEast.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NorthWest.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SouthEast.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SouthWest.getValue()));
 
     // The center bit itself should not be activated by dilation alone
     assertFalse(dilated.isSet(index));

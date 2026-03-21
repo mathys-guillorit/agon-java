@@ -8,12 +8,8 @@ package fr.univ.bordeaux.agoncore.bitboard;
  * represented by letters (A-K) and columns by integers (1-11).
  */
 public class CoordinateMapper {
-
-  /**
-   * Default constructor for the CoordinateMapper utility.
-   */
-  public CoordinateMapper() {
-  }
+  /** Default constructor for the CoordinateMapper utility. */
+  public CoordinateMapper() {}
 
   /**
    * Converts a coordinate pair (Letter, Column) into a 1D bitboard index. *
@@ -23,12 +19,12 @@ public class CoordinateMapper {
    * operations and array access. *
    *
    * @param letter The character representing the row (e.g., 'A', 'B', 'C'...).
-   * @param col    The integer representing the column (1-indexed).
+   * @param col The integer representing the column (1-indexed).
    * @return The corresponding 0-indexed position in the 1D bitboard array.
    */
   public static int toIndex(char letter, int col) {
-    int base = 'A';
-    return (((int) letter - base) * (11)) + (col - 1);
+    int Base = 'A';
+    return (((int) letter - Base) * (11)) + (col - 1);
   }
 
   /**
@@ -42,5 +38,33 @@ public class CoordinateMapper {
     char letter = (char) ('A' + (index / 11));
     int col = (index % 11) + 1;
     return "" + letter + col;
+  }
+
+  /**
+   * Converts a 1D bitboard index back into a human-readable coordinate string (e.g., "c3").
+   * * @param index The 0-indexed position in the 1D bitboard array.
+   *
+   * @return The coordinate string in lowercase (as per ABA-pro notation).
+   */
+  public static String toCoordinate(int index) {
+    if (index < 0) return "reloc";
+
+    int rowOffset = index / 11;
+    int col = (index % 11) + 1;
+    char letter = (char) ('a' + rowOffset);
+
+    return "" + letter + col;
+  }
+
+  /**
+   * Helper method to convert a string coordinate directly to an index. * @param coord The
+   * coordinate string (e.g., "c3" or "C3").
+   *
+   * @return The bitboard index.
+   */
+  public static int fromCoordinateString(String coord) {
+    char letter = Character.toUpperCase(coord.charAt(0));
+    int col = Integer.parseInt(coord.substring(1));
+    return toIndex(letter, col);
   }
 }

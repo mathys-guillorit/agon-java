@@ -7,13 +7,9 @@ package fr.univ.bordeaux.agoncore.agonelements;
  * game states from specific perspectives.
  */
 public enum Color {
-  /**
-   * Represents the Black player.
-   */
+  /** Represents the Black player. */
   BLACK,
 
-  /**
-   * Represents the White player.
-   */
+  /** Represents the White player. */
   WHITE;
 }

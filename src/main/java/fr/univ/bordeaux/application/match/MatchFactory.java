@@ -3,9 +3,9 @@ package fr.univ.bordeaux.application.match;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.application.ai.strategy.AIFactory;
-import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAI;
-import fr.univ.bordeaux.application.ai.strategy.AgonAI;
+import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
+import fr.univ.bordeaux.application.ai.strategy.AgonAi;
+import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.AiPlayer;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
@@ -17,7 +17,7 @@ public class MatchFactory {
 
   public static Match createMatch(GameConfig config, GameUserInterface gameUI) {
     // 1. On récupère la map des cerveaux IA (certaines couleurs seront null)
-    Map<Color, AbstractAgonAI> aiMap = AIFactory.createAiMap(config);
+    Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
     AgonBoard agonBoard = new AgonBoardImpl();
     agonBoard.initBaseConfiguration();
 
@@ -38,11 +38,13 @@ public class MatchFactory {
     return new StandardMatch(agonBoard, white, black);
   }
 
-  private static Player createPlayerFromAiMap(Map<Color, AbstractAgonAI> aiMap, Color color,
+  private static Player createPlayerFromAiMap(
+      Map<Color, AbstractAgonAi> aiMap,
+      Color color,
       AgonBoard agonBoard,
       GameUserInterface gameUI) {
-    AgonAI aiStrategy = aiMap.get(color);
-    System.out.println((aiStrategy==null));
+    AgonAi aiStrategy = aiMap.get(color);
+    System.out.println((aiStrategy == null));
     if (aiStrategy != null) {
       // C'est une IA selon la factory de ton collègue
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);

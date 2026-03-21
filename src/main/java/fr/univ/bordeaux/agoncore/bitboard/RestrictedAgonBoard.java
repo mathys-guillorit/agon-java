@@ -38,7 +38,7 @@ public interface RestrictedAgonBoard {
    *
    * @param index The tile index (0 to 120) to inspect.
    * @return The {@link PieceType} at the given index, or {@code null} if the tile is empty or the
-   * index is out of bounds.
+   *     index is out of bounds.
    */
   PieceType getPieceAt(int index);
 }

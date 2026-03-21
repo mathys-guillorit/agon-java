@@ -1,14 +1,9 @@
 package fr.univ.bordeaux.technical.config;
 
-import java.util.HashMap;
-
 /**
- * Represents the configuration settings for the Agon game.
- * <p>
- * This class acts as a data container for all customizable parameters, including system options
- * (like verbosity and debug modes), game rules (like blitz mode and timeouts), and Artificial
- * Intelligence settings (like algorithms, depths, and heuristics).
- * </p>
+ * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
+ * rules (like blitz mode and timeouts), and Artificial Intelligence settings (like algorithms,
+ * depths, and heuristics).
  */
 public class GameConfig {
 
@@ -251,18 +246,34 @@ public class GameConfig {
     return manualPlacement;
   }
 
+  public boolean isWhiteAi() {
+    return whiteIsAI;
+  }
+
+  public boolean isBlackAi() {
+    return blackIsAI;
+  }
+
+  public void setWhiteAi(boolean whiteIsAI) {
+    this.whiteIsAI = whiteIsAI;
+  }
+
+  public void setBlackAi(boolean blackIsAI) {
+    this.blackIsAI = blackIsAI;
+  }
+
   /**
    * Enables or disables the manual placement of Pawns and Queens.
    *
    * @param manualPlacement {@code true} to allow the players to manually choose the initial
-   *                        placement of their pawns, {@code false} to make it automatic.
+   *     placement of their pawns, {@code false} to make it automatic.
    */
   public void setManualPlacement(boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
   }
 
   public String toString() {
-    StringBuilder string=new StringBuilder();
+    StringBuilder string = new StringBuilder();
     string.append("[verbose]=").append(verbose).append("\n");
     string.append("[debug]=").append(debug).append("\n");
     string.append("[blitzMode]=").append(blitzMode).append("\n");

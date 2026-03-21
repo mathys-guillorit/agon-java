@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.application.commands;
 
-import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
@@ -9,26 +8,38 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.help.HelpFormatter;
 import org.jline.reader.Completer;
 
 /**
- * represent the fixed code for all different Commands
- * each command knows his options only <br> (to make easier auto-complete)
+ * Abstract base class for all game commands.
+ *
+ * <p>This class provides common functionality for command management, including CLI options
+ * handling, UI context access, and automatic JLine completer generation. Each sub-command is
+ * responsible for defining its own logic, name, and options.
+ *
+ * @author fr.univ.bordeaux
+ * @version 1.0
  */
 public abstract class Cmd implements CmdAction {
 
+  /** The CLI options associated specifically with this command. */
   private Options options;
-  private GameUserInterface ui;
-  private static String prompt = null;
 
-  /**
-   * description from sub commands
-   */
+  /** The user interface context for command interaction and output. */
+  private GameUserInterface ui;
+
+  /** A brief text description of the command's purpose and usage. */
   private String desc;
 
+  /** The unique trigger name of the command (e.g., "new", "help"). */
   private String name;
 
+  /**
+   * Constructs a new command with a reference to the UI context. Initializes default values for
+   * name, options, and description.
+   *
+   * @param ui The {@link GameUserInterface} context.
+   */
   public Cmd(GameUserInterface ui) {
     this.ui = ui;
     this.options = new Options();
@@ -36,39 +47,54 @@ public abstract class Cmd implements CmdAction {
     this.name = "cmd";
   }
 
+  /**
+   * Provides access to the current UI context. * @return The {@link GameUserInterface} instance.
+   */
   public GameUserInterface getCtx() {
     return this.ui;
   }
 
   /**
-   * auto-completer for commands
+   * Generates a JLine {@link Completer} for this command.
    *
-   * <pre>
-   * - split and transform Options (given by context) from Commons-cli to JLine format
-   * - simple version
-   * </pre>
+   * <p>This implementation uses an {@link OptCompleterAdapter} to bridge Commons-CLI options with
+   * the JLine completion system.
    *
-   * @return (by JLine) with tab, matching command
+   * @return A non-null {@link Completer} adapted to the command's options.
    */
   @Nonnull
+  @Override
   public Completer getAutoCompleter() {
-
     return new OptCompleterAdapter(this.options).getCompleter(this.getName());
   }
 
+  /**
+   * Adds a new CLI option to the command.
+   *
+   * @param option The {@link Option} to register.
+   */
   public void addOption(Option option) {
     this.options.addOption(option);
   }
 
+  /**
+   * Retrieves all CLI options defined for this command.
+   *
+   * @return The {@link Options} container.
+   */
+  @Override
   public Options getOptions() {
     return this.options;
   }
 
   /**
-   * load display content from files directly from path concerned by commands
+   * Loads text content from a local file located in the command information directory. Useful for
+   * loading long descriptions or ASCII art.
    *
-   * @param filePath {@link String} sub file path from "desc/"
-   * @return {@link String} text obtained
+   * @param filePath The sub-path under "/cmdsInformations/desc/".
+   * @return The string content of the file, or {@code null} if loading fails.
+   * @throws IOException If the file cannot be read.
+   * @throws NullPointerException If the file path is invalid.
    */
   @Nullable
   public String loadText(String filePath) throws IOException, NullPointerException {
@@ -77,37 +103,42 @@ public abstract class Cmd implements CmdAction {
     return txt.getContent();
   }
 
- /* public void getDescription() {
-    HelpFormatter formatter = HelpFormatter.builder().get();
-    try {
-      formatter.printHelp(this.getName(), this.getDescription(), this.getOptions(), "", true);
-    } catch (Exception e) {
-      this.getCtx().showError("help not found for this command");
-      this.getCtx().showError(e.getMessage());
-      /// TODO: uncomment this area and replace: "???"
-      // if (???.getDebug()) // when debug mode available to get on a unknown object
-      //  e.printStackTrace(); // by default
-    }
-  }*/
+  /**
+   * Returns the command's description.
+   *
+   * <p>This string is typically used by the help command to inform the user.
+   *
+   * @return The description string.
+   */
+  @Override
+  public String getDescription() {
+    return this.desc;
+  }
 
   /**
-   * get a simple description for the helper (linked to Commons Cli)
+   * Updates the command's description.
    *
-   * @return a line or more
+   * @param desc The new description string.
    */
-  /*public String getDescription() {
-    /// TODO: add i18n later here (or in constructor)
-    return this.desc;
-  }*/
-
   public void setDesc(String desc) {
     this.desc = desc;
   }
 
+  /**
+   * Updates the command's trigger name.
+   *
+   * @param name The new name string.
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Retrieves the command's trigger name.
+   *
+   * @return The name string (e.g., "load", "quit").
+   */
+  @Override
   public String getName() {
     return this.name;
   }

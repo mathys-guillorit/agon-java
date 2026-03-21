@@ -10,9 +10,7 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-/**
- * completer for set command (specific args with assignments)
- */
+/** completer for set command (specific args with assignments) */
 public class SetCompleter implements Completer {
 
   private Set<String> optNames;
@@ -22,7 +20,7 @@ public class SetCompleter implements Completer {
    *
    * @param opts options to get "longOpt()" as option name
    * @throws IllegalArgumentException all options must have filled "longOpt()" else it will raise an
-   *                                  error
+   *     error
    */
   public SetCompleter(Options opts) throws IllegalArgumentException {
     this.optNames = new HashSet<>();

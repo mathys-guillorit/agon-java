@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -16,7 +17,7 @@ import org.jline.reader.Completer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/*public class AgonRegisterTest {
+public class AgonRegisterTest {
 
   @Test
   @DisplayName("Test if the add works in register")
@@ -155,18 +156,21 @@ import org.junit.jupiter.api.Test;
     assertTrue(cmdRegister.get(cmdName1).isEmpty());
   }
 
-  /// tools to test in AgonRegister only
-
-  /// fake commands to test CANNOT USE EXTERN CONTEXT
-  /// (the only way to test AgonRegister in private static class)
-  /// isolate each part is a better way to test to see where exactly is the problem if we get one
-
   private static class DummyCmd implements CmdAction {
     @Override
-    public void execute() {}
+    public boolean execute(MatchManager match) {
+      return true;
+    }
 
     @Override
-    public void showHelp() {}
+    public CmdAction createNew(String[] args) {
+      return this;
+    }
+
+    @Override
+    public String getDescription() {
+      return "dummy";
+    }
 
     @Nonnull
     @Override
@@ -176,7 +180,7 @@ import org.junit.jupiter.api.Test;
 
     @Override
     public String getName() {
-      return "";
+      return "dummy";
     }
 
     @Override
@@ -187,10 +191,19 @@ import org.junit.jupiter.api.Test;
 
   private static class TestCmd implements CmdAction {
     @Override
-    public void execute() {}
+    public boolean execute(MatchManager match) {
+      return true;
+    }
 
     @Override
-    public void showHelp() {}
+    public CmdAction createNew(String[] args) {
+      return this;
+    }
+
+    @Override
+    public String getDescription() {
+      return "test";
+    }
 
     @Nonnull
     @Override
@@ -200,7 +213,7 @@ import org.junit.jupiter.api.Test;
 
     @Override
     public String getName() {
-      return "";
+      return "test";
     }
 
     @Override
@@ -208,4 +221,4 @@ import org.junit.jupiter.api.Test;
       return null;
     }
   }
-}*/
+}

@@ -3,58 +3,63 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
-import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import org.apache.commons.cli.Options;
 
+/**
+ * Command responsible for safely exiting the Agon application.
+ *
+ * <p>This command triggers the shutdown sequence in both the current match and the user interface,
+ * typically asking for a save confirmation before closing.
+ */
 public class CmdQuit extends Cmd {
 
-  private Options opts;
-
   /**
-   * load delegate(s) and information to allow commands interact with the system (for the CLI or
-   * GUI)
+   * Constructs a new Quit command. Initializes the command name to "quit" and its CLI options.
    *
-   * @param uictx display context
+   * @param uictx The user interface context to close upon execution.
    */
   public CmdQuit(GameUserInterface uictx) {
     super(uictx);
-    this.opts = new Options();
+    this.setName("quit");
   }
 
-  @Override
-  public String getName() {
-    return "quit";
-  }
-
-  @Override
-  public Options getOptions() {
-    return this.opts;
-  }
-
+  /**
+   * Provides the usage and description for the quit command.
+   *
+   * @return A formatted string for the help menu.
+   */
   @Override
   public String getDescription() {
-    return "Usage: quit (or Ctrl+C)\n"+"Description: Exits the game. You will be prompted to save your current progress before leaving.\n";
+    return "Usage: quit (or Ctrl+C)\n"
+        + "Description: Exits the game. You will be prompted to save your current progress before leaving.\n";
   }
 
+  /**
+   * Executes the shutdown sequence.
+   *
+   * <p>Calls the quit method on the {@link MatchManager} (if active) and then signals the {@link
+   * GameUserInterface} to terminate the session.
+   *
+   * @param match The manager for the current game session.
+   * @return true always, as the command successfully initiates the exit.
+   */
+  @Override
   public boolean execute(MatchManager match) {
-    System.out.println("j'ai bien appeler quit");
-    if (match!=null){
+    if (match != null) {
       match.quit();
     }
     this.getCtx().quit();
-    System.out.println("j ai demandé au shell de s'arreter");
     return true;
   }
 
+  /**
+   * Factory method to create an executable instance of the quit command.
+   *
+   * @param args Arguments passed in CLI (ignored for quit).
+   * @return A new {@link CmdQuit} instance.
+   */
+  @Override
   public CmdAction createNew(String[] args) {
     return new CmdQuit(super.getCtx());
   }
-
- /* public void getDescription() {
-    this.getCtx().showMessage("Usage: quit (or Ctrl+C)\n");
-    this.getCtx()
-        .showMessage(
-            "Description: Exits the game. You will be prompted to save your current progress before leaving.\n");
-  }*/
 }

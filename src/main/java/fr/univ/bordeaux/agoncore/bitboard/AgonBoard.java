@@ -31,7 +31,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * variables such as relocation counters.
    *
    * @return {@code true} if a move sequence was successfully reverted; {@code false} if the history
-   * is empty.
+   *     is empty.
    */
   boolean undoMove();
 
@@ -53,7 +53,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * forward and updating the game state accordingly.
    *
    * @return {@code true} if a move sequence was successfully reapplied; {@code false} if the redo
-   * stack is empty.
+   *     stack is empty.
    */
   boolean redoMove();
 
@@ -65,7 +65,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    *
    * @param index The tile index of the piece.
    * @return The number of legal moves for the piece, or -1 if no piece exists at the specified
-   * index.
+   *     index.
    */
   int getMobility(int index);
 
@@ -87,11 +87,21 @@ public interface AgonBoard extends RestrictedAgonBoard {
   void initBaseConfiguration();
 
   /**
-   * Provides access to the complete history of moves performed during the game. * <p>The returned
-   * list contains {@link HistoryInformations} objects representing each turn, typically ordered
-   * from the most recent move played to the first one.
+   * Provides access to the complete history of moves performed during the game. *
+   *
+   * <p>The returned list contains {@link HistoryInformations} objects representing each turn,
+   * typically ordered from the most recent move played to the first one.
    *
    * @return A {@link List} containing the sequence of moves in the current game.
    */
   List<HistoryInformations> getHistory();
+
+  /**
+   * Converts the current board state into a list of ASCII strings.
+   *
+   * <p>This representation is used for saving the game state to a file.
+   *
+   * @return A list of strings representing the board visually.
+   */
+  List<String> toTextList();
 }

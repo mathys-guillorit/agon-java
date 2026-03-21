@@ -43,7 +43,5 @@ public class BlitzMatch extends Match {
     getCurrentTimer().stop();
   }
 
-  public void startGame() {
-
-  }
+  public void startGame() {}
 }

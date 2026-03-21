@@ -27,9 +27,9 @@ public interface Heuristic {
    *   <li><b>Zero (0):</b> The position is neutral or balanced.
    * </ul>
    *
-   * @param board   The current state of the game board to evaluate.
+   * @param board The current state of the game board to evaluate.
    * @param aiColor The color of the player for whom the score is calculated (the Maximizing
-   *                player).
+   *     player).
    * @return A {@code long} integer representing the heuristic score.
    */
   public long evaluate(AgonBoard board, Color aiColor);

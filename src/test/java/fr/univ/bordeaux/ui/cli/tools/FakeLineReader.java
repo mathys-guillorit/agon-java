@@ -152,7 +152,6 @@ public class FakeLineReader implements LineReader {
     return Map.of();
   }
 
-
   @Override
   public boolean setKeyMap(String name) {
     return false;
@@ -261,6 +260,4 @@ public class FakeLineReader implements LineReader {
   public String getKeyMap() {
     return LineReader.MAIN;
   }
-
-
 }

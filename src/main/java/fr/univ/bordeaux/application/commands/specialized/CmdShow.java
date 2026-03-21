@@ -4,7 +4,6 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.config.GameConfig;
-import fr.univ.bordeaux.ui.AbstractGameUI;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import javax.annotation.Nonnull;
@@ -15,21 +14,38 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 
+/**
+ * Command responsible for displaying various game-related information.
+ *
+ * <p>Supported targets include the game board, move history, player timers, and current system
+ * configuration.
+ *
+ * @author fr.univ.bordeaux
+ * @version 1.0
+ */
 public final class CmdShow extends Cmd {
+
+  /** CLI options for identifying the display target. */
   private final Options options;
+
+  /** The specific target to display (e.g., "board", "history"). */
   private String target;
+
+  /** Reference to the global game configuration. */
   private GameConfig gameConfig;
+
   /**
-   * load delegate(s) and information to allow commands interact with the system (for the CLI or
-   * GUI)
+   * Constructs the base Show command for registration. Defines the available flags: -board,
+   * -history, -time, -configuration.
    *
-   * @param uictx
+   * @param uictx The user interface context.
+   * @param gameConfig The current game configuration.
    */
   public CmdShow(GameUserInterface uictx, GameConfig gameConfig) {
     super(uictx);
     this.gameConfig = gameConfig;
     this.setDesc("Description: Displays specific information about the current game state.");
-    this.setName("Show");
+    this.setName("show");
     this.options = new Options();
     this.options.addOption("board", null, false, "Display the Board");
     this.options.addOption("history", null, false, "Display the History");
@@ -37,37 +53,60 @@ public final class CmdShow extends Cmd {
     this.options.addOption("configuration", null, false, "Display the Configuration");
   }
 
-  @Override
-  public String getDescription() {
-    return "Usage: show [target]\n"+"Description: Displays specific information about the current game state.\n"+
-        "Available targets:\\n\");\n"+
-        "  - board         : Shows the current hexagonal board state.\\n\");\n"+
-        "  - history       : Shows the history of all played turns.\\n\");\n"+
-        "  - time          : Shows the remaining time for each player.\n"+
-        "  - configuration : Shows the current game settings.\n";
-  }
-
-  private CmdShow(GameUserInterface uictx,GameConfig gameConfig, String target) {
-    this(uictx,gameConfig);
+  /**
+   * Internal constructor used to create an instance with a specific target.
+   *
+   * @param uictx The user interface context.
+   * @param gameConfig The configuration object.
+   * @param target The identified target string.
+   */
+  private CmdShow(GameUserInterface uictx, GameConfig gameConfig, String target) {
+    this(uictx, gameConfig);
     this.target = target;
   }
 
+  /**
+   * Returns the help description and available targets.
+   *
+   * @return A formatted string for the help menu.
+   */
   @Override
-  public String getName() {
-    return "show";
+  public String getDescription() {
+    return "Usage: show [target]\n"
+        + "Description: Displays specific information about the current game state.\n"
+        + "Available targets:\n"
+        + "  -board         : Shows the current hexagonal board state.\n"
+        + "  -history       : Shows the history of all played turns.\n"
+        + "  -time          : Shows the remaining time for each player.\n"
+        + "  -configuration : Shows the current game settings.\n";
   }
 
+  /**
+   * Provides the autocompleter for show targets based on options.
+   *
+   * @return A {@link Completer} instance.
+   */
   @Nonnull
   @Override
   public Completer getAutoCompleter() {
     return new OptCompleterAdapter(this.options).getCompleter(this.getName());
   }
 
+  /**
+   * Executes the display logic based on the identified target.
+   *
+   * @param match The current match manager.
+   * @return true if the information was displayed, false otherwise.
+   */
   @Override
   public boolean execute(MatchManager match) {
-    // On aiguille selon la cible stockée dans l'instance
+    if (target == null || target.isEmpty()) {
+      this.getCtx().showError("No target specified. Use 'help show' for details.\n");
+      return false;
+    }
+
     return switch (target) {
-      case "board" ->showBoard(match);
+      case "board" -> showBoard(match);
       case "history" -> showHistory(match);
       case "time" -> showTime(match);
       case "configuration" -> showConfiguration();
@@ -75,55 +114,65 @@ public final class CmdShow extends Cmd {
     };
   }
 
+  /**
+   * Factory method to create an executable instance by parsing CLI arguments.
+   *
+   * @param args The flags provided by the user (e.g., ["-board"]).
+   * @return A new specialized {@link CmdShow} instance.
+   */
   @Override
   public CmdAction createNew(String[] args) {
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine line = parser.parse(this.options, args);
 
-      // Vérification : pas plus d'une option
       if (line.getOptions().length > 1) {
-        super.getCtx().showMessage("Error: Please specify only one target (e.g., -board or -history).");
+        this.getCtx()
+            .showError("Error: Please specify only one target (e.g., -board or -history).\n");
         return null;
       }
 
-      // On détermine la cible
-      String selectedTarget="";
-      if (line.hasOption("history"))       selectedTarget = "history";
-      else if (line.hasOption("time"))     selectedTarget = "time";
+      String selectedTarget = "";
+      if (line.hasOption("history")) selectedTarget = "history";
+      else if (line.hasOption("time")) selectedTarget = "time";
       else if (line.hasOption("configuration")) selectedTarget = "configuration";
-      else if (line.hasOption("board"))    selectedTarget = "board";
+      else if (line.hasOption("board")) selectedTarget = "board";
 
-      return new CmdShow(super.getCtx(), this.gameConfig,selectedTarget);
+      return new CmdShow(this.getCtx(), this.gameConfig, selectedTarget);
 
     } catch (ParseException e) {
-      super.getCtx().showMessage("Invalid show command. Use 'show -help' for details.");
+      this.getCtx().showError("Invalid show command. Use 'help show' for details.\n");
       return null;
     }
   }
 
   private boolean showHistory(MatchManager match) {
-    System.out.println("la commande est bien traité mais pas encore implémenté");
+    this.getCtx().showInfo("History command recognized but not yet implemented.\n");
     return true;
   }
 
-  private boolean showBoard(MatchManager match){
-    if (match==null){
-      super.getCtx().showMessage("Error: Can't display the board because there is no match. Please create a match before using this command\n");
+  private boolean showBoard(MatchManager match) {
+    if (match == null) {
+      this.getCtx().showError("Error: No active match. Please create or load a game first.\n");
       return false;
-    }else {
-      super.getCtx().updateBoard(match.getAgonBoard());
+    } else {
+      this.getCtx().updateBoard(match.getAgonBoard());
       return true;
     }
   }
 
-  private boolean showTime(MatchManager match){
-    System.out.println("la commande est bien traité mais pas encore implémenté");
+  private boolean showTime(MatchManager match) {
+    this.getCtx().showInfo("Timer display recognized but not yet implemented.\n");
     return false;
   }
 
-  private boolean showConfiguration(){
-    super.getCtx().showMessage(this.gameConfig.toString());
+  private boolean showConfiguration() {
+    this.getCtx().showMessage(this.gameConfig.toString() + "\n");
     return true;
+  }
+
+  @Override
+  public Options getOptions() {
+    return this.options;
   }
 }

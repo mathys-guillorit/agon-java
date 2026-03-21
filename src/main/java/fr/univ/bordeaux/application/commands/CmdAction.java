@@ -5,21 +5,15 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-/**
- * default for all commands (UI, GUI, etc..)
- */
+/** default for all commands (UI, GUI, etc..) */
 public interface CmdAction {
 
-  /**
-   * execute actions provided by the specific command
-   */
+  /** execute actions provided by the specific command */
   boolean execute(MatchManager match);
 
   CmdAction createNew(String[] args);
 
-  /**
-   * show help for the specific sub (inherited) command
-   */
+  /** show help for the specific sub (inherited) command */
   String getDescription();
 
   /**

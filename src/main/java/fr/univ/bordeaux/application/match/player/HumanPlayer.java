@@ -1,11 +1,8 @@
 package fr.univ.bordeaux.application.match.player;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.agoncore.agonelements.Move;
-import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UIPromptParser;
 
@@ -30,36 +27,36 @@ public class HumanPlayer extends AbstractPlayer {
       return null;
     }
     // Utilisation static du parseur
-    return UIPromptParser.parse(input, cmds,ui);
-
-  }
-/*
-    // Si aucune commande n'est trouvée, on tente de parser un mouvement court (ex: A1B2)
-    return handleDefault(input);
+    return UIPromptParser.parse(input, cmds, ui);
   }
 
-  private CmdAction handleDefault(String input) {
-    input = input.trim().toUpperCase();
-    if (input.length() < 4) {
-      return null;
+  /*
+      // Si aucune commande n'est trouvée, on tente de parser un mouvement court (ex: A1B2)
+      return handleDefault(input);
     }
 
-    try {
-      char letterFrom = input.charAt(0);
-      int colFrom = Character.getNumericValue(input.charAt(1));
+    private CmdAction handleDefault(String input) {
+      input = input.trim().toUpperCase();
+      if (input.length() < 4) {
+        return null;
+      }
 
-      char letterTo = input.charAt(2);
-      int colTo = Character.getNumericValue(input.charAt(3));
+      try {
+        char letterFrom = input.charAt(0);
+        int colFrom = Character.getNumericValue(input.charAt(1));
 
-      int indexFrom = CoordinateMapper.toIndex(letterFrom, colFrom);
-      int indexTo = CoordinateMapper.toIndex(letterTo, colTo);
+        char letterTo = input.charAt(2);
+        int colTo = Character.getNumericValue(input.charAt(3));
 
-      return new CmdMove(new Move(indexFrom, indexTo, this.color));
-    } catch (Exception e) {
-      return null;
+        int indexFrom = CoordinateMapper.toIndex(letterFrom, colFrom);
+        int indexTo = CoordinateMapper.toIndex(letterTo, colTo);
+
+        return new CmdMove(new Move(indexFrom, indexTo, this.color));
+      } catch (Exception e) {
+        return null;
+      }
     }
-  }
-*/
+  */
 
   @Override
   public String getName() {

@@ -111,4 +111,46 @@ class HistoryTest {
     history.undo();
     assertFalse(history.isEmptyRedo());
   }
+
+  @Test
+  @DisplayName("Should correctly export history to ABA-pro text format")
+  void testToTextList() {
+    history.add(move1);
+    history.add(move2);
+
+    List<String> textList = history.toTextList();
+
+    assertNotNull(textList, "The exported list should not be null");
+    assertEquals(2, textList.size(), "The exported list should contain exactly 2 moves");
+
+    assertEquals("O a1 a2", textList.get(0), "First move should be formatted as 'O a1 a2'");
+    assertEquals("X a3 a4", textList.get(1), "Second move should be formatted as 'X a3 a4'");
+  }
+
+  @Test
+  @DisplayName("Should correctly import history from ABA-pro text format")
+  void testConstructorFromTextList() {
+    List<String> savedTextMoves = new ArrayList<>();
+    savedTextMoves.add("O a1 a2");
+    savedTextMoves.add("X c3 c5");
+
+    History loadedHistory = new History(savedTextMoves);
+
+    assertFalse(loadedHistory.isEmptyUndo(), "Undo stack should not be empty after loading");
+
+    HistoryInformations lastMove = loadedHistory.getHeadUndo();
+    assertEquals(Color.BLACK, lastMove.getColor(), "Last move should be played by Black");
+    assertEquals(
+        24, lastMove.getMoves().get(0).getFrom(), "Last move 'from' index should be 24 (c3)");
+    assertEquals(
+        26, lastMove.getMoves().get(0).getDestination(), "Last move 'to' index should be 26 (c5)");
+
+    loadedHistory.undo();
+    HistoryInformations firstMove = loadedHistory.getHeadUndo();
+    assertEquals(Color.WHITE, firstMove.getColor(), "First move should be played by White");
+    assertEquals(
+        0, firstMove.getMoves().get(0).getFrom(), "First move 'from' index should be 0 (a1)");
+    assertEquals(
+        1, firstMove.getMoves().get(0).getDestination(), "First move 'to' index should be 1 (a2)");
+  }
 }

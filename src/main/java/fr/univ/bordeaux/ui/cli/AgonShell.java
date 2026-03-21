@@ -2,83 +2,79 @@ package fr.univ.bordeaux.ui.cli;
 
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
-import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.ui.AbstractGameUI;
+import fr.univ.bordeaux.ui.AbstractGameUi;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Candidate;
-import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.Reference;
 import org.jline.reader.UserInterruptException;
-import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
 /**
- * shell manager
+ * The AgonShell class acts as the primary Command Line Interface (CLI) manager for the Agon game.
+ * It integrates the JLine library to provide advanced terminal features such as command history,
+ * real-time autocompletion (tab-completion), and styled ANSI output.
+ *
+ * <p>This class implements {@link GameUserInterface} to bridge the gap between the core game logic
+ * and the user's terminal session.
+ *
+ * @author fr.univ.bordeaux
+ * @version 1.0
  */
-public class AgonShell extends AbstractGameUI implements GameUserInterface {
+public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
-  private AtomicBoolean running; // copy reference for usage in commands
+  /** Atomic flag used to control the main execution loop of the shell. */
+  private AtomicBoolean running;
+
+  /** The low-level JLine Terminal instance handling I/O streams. */
   private Terminal terminal;
+
+  /** The high-level JLine LineReader responsible for parsing user input and managing history. */
   private LineReader reader;
 
-  /**
-   * get the line entered in the terminal by the user
-   */
+  /** Buffers the last line of input received from the user. */
   private String line;
 
-  /**
-   * Message Header of the cli for the entire App
-   */
+  /** ANSI-styled header for application-wide messages: [AGON]. */
   private final String msgHA;
 
-  /**
-   * Message Body Information on to of app (2 levels max)
-   */
+  /** ANSI-styled tag for informational messages: [INFO]. */
   private final String msgBI;
 
-  /**
-   * warn message
-   */
+  /** ANSI-styled tag for warning alerts: [WARNING]. */
   private final String msgBW;
 
-  /**
-   * Body msg for Errors
-   */
+  /** ANSI-styled tag for critical error reports: [ERROR]. */
   private final String msgBE;
 
-  /**
-   * load the menu once display many times
-   */
+  /** Stores the ASCII art representation of the main menu. */
   private String mainMenuASCII = "No default Menu set";
 
-  /**
-   * represent all options available from the menu
-   */
+  /** The prompt string displayed at the beginning of each input line. */
   private String userPrompt = "> ";
 
+  /** Registry containing all executable commands available in the shell. */
   private AgonRegister<CmdAction> cmds;
 
-  /**
-   * allow only default minimal terminal (agon mode)
-   */
+  /** If true, the shell outputs detailed operational feedback. */
   private boolean verbose;
 
+  /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
   private AtomicBoolean debug;
 
-
+  /**
+   * Internal initialization method. Sets default states for flags and constructs the default user
+   * prompt.
+   */
   private void init() {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
@@ -86,53 +82,67 @@ public class AgonShell extends AbstractGameUI implements GameUserInterface {
     this.userPrompt = this.msgHA + "> ";
   }
 
-  public AgonShell(Terminal term, LineReader reader,AgonRegister<CmdAction> cmds) {
-    super(); // require the work of others
+  /**
+   * Constructs a new AgonShell and configures the JLine environment. Binds "Ctrl+R" for incremental
+   * history search by default.
+   *
+   * @param term The {@link Terminal} to be used for physical I/O.
+   * @param reader The {@link LineReader} used for capturing user input.
+   * @param cmds The {@link AgonRegister} containing the command set.
+   */
+  public AgonShell(Terminal term, LineReader reader, AgonRegister<CmdAction> cmds) {
+    super();
     this.terminal = term;
-    // default reader
     this.reader = reader;
-    // message headers for the app
     this.msgHA = this.cliLayer();
     this.msgBI = this.cliInfo();
     this.msgBW = this.cliWarn();
     this.msgBE = this.cliError();
     this.init();
     this.cmds = cmds;
-    reader.getKeyMaps()
+    reader
+        .getKeyMaps()
         .get(LineReader.MAIN)
-        .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD),
-            KeyMap.ctrl('R'));
+        .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD), KeyMap.ctrl('R'));
   }
 
-
   /**
-   * load ASCII main menu to shell
+   * Updates the main menu ASCII art displayed via the {@link #showHelp()} method.
    *
-   * @param mainMenu file find from the root at main/resources/+<strong>filepath</strong> passed as
-   *                 argument
+   * @param mainMenu The raw ASCII string to be loaded.
    */
   public void loadMainMenu(String mainMenu) {
     this.mainMenuASCII = mainMenu;
   }
 
   /**
-   * leave the shell
+   * Signals the application to terminate the main loop and triggers the terminal's graceful
+   * shutdown.
    */
   public void leave() {
     this.running.set(false);
     this.safeCloseTerminal();
   }
-public boolean isRunning() {
-    return this.running.get();
-}
+
   /**
-   * get a line from terminal
+   * Checks if the shell is currently active and accepting input.
+   *
+   * @return true if the shell's running state is active.
+   */
+  public boolean isRunning() {
+    return this.running.get();
+  }
+
+  /**
+   * Captures a single line of input from the terminal. Intercepts {@link UserInterruptException}
+   * (Ctrl+C) to trigger the quit process.
+   *
+   * @return The trimmed input string, or null if the input is empty or interrupted.
    */
   public String getUserInput() {
     try {
       line = this.reader.readLine(this.userPrompt).trim();
     } catch (UserInterruptException e) {
-      // if user use "ctrl+c"
       this.quit();
       return null;
     }
@@ -144,218 +154,204 @@ public boolean isRunning() {
     return line;
   }
 
+  /**
+   * Closes the terminal and its associated streams. Logs an error if the closing operation fails.
+   */
   public void safeCloseTerminal() {
     try {
-      this.cliWln("bye !");
+      this.cliWln("System: Terminal session closed. Bye!");
       this.terminal.close();
     } catch (IOException e) {
-      this.showError("error closing terminal");
-      this.showError(e.getMessage());
+      this.showError("Failed to close terminal: " + e.getMessage());
     }
   }
 
-
   /**
-   * completer used by JLine to complete commands and option for all commands. Commands must manage
-   * their own options and change here dynamically for autocomplete
+   * Core completion logic for JLine. 1. If input is empty, provides a list of all available
+   * commands. 2. If a partial command is typed, suggests matching command keys. 3. If a command is
+   * fully recognized, delegates completion to the command's own completer.
    *
-   * @param reader     filled by Commons Cli
-   * @param line       filled by Commons Cli
-   * @param candidates filled by Commons Cli
+   * @param reader The current LineReader instance.
+   * @param line The parsed input line containing words and cursor position.
+   * @param candidates The list to be populated with completion suggestions.
    */
   public void globalCompleter(LineReader reader, ParsedLine line, List<Candidate> candidates) {
     List<String> words = line.words();
-    // partial word
-    CmdAction cmd;
-    if (words.getFirst().equals("")) {
-      for (String cmdKey : this.cmds.getKeys()) {
-        if (this.cmds.get(cmdKey).isPresent()) {
-          candidates.add(new Candidate(cmdKey));
-        }
-      }
+    if (words.isEmpty() || words.getFirst().isEmpty()) {
+      this.cmds.getKeys().forEach(key -> candidates.add(new Candidate(key)));
       return;
     }
-    String firstWord = words.getFirst();
-    Optional<CmdAction> cmdName = this.cmds.get(firstWord.toLowerCase());
-    if (cmdName.isEmpty()) {
-      // nothing typed -> all possible commands allowed
-      for (String cmdKey : this.cmds.getKeys()) {
-        if (cmdKey.startsWith(firstWord)) {
-          candidates.add(new Candidate(cmdKey));
-        }
-      }
-      return;
-    }
-    cmd =this.cmds.get(firstWord).get();
 
-    // delegation for known commands :
-    try {
+    String firstWord = words.getFirst();
+    Optional<CmdAction> cmdOpt = this.cmds.get(firstWord.toLowerCase());
+
+    if (cmdOpt.isEmpty()) {
+      this.cmds.getKeys().stream()
+          .filter(key -> key.startsWith(firstWord.toLowerCase()))
+          .forEach(key -> candidates.add(new Candidate(key)));
+      return;
+    }
+
+    // Delegation to the specific command completer
+    CmdAction cmd = cmdOpt.get();
+    if (cmd.getAutoCompleter() != null) {
       cmd.getAutoCompleter().complete(reader, line, candidates);
-    } catch (NullPointerException e) {
-      /// TODO: remove this catch when all commands implements getAutoCompleter() well
-      // of not all commands implements autoCompleter
-      this.showError(e.getMessage());
     }
   }
 
   /**
-   * format the output error to see where is the problem (following maven style) (must be used once
-   * in the constructor to set attr)
+   * Generates a styled [ERROR] tag using ANSI red foreground.
+   *
+   * @return ANSI formatted string.
    */
   private String cliError() {
-    final String tag = "ERROR";
-    AttributedStringBuilder asb = new AttributedStringBuilder();
-    asb.append("[");
-    asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.RED)).append(tag);
-    asb.style(AttributedStyle.DEFAULT).append("]");
-    return asb.toAnsi();
+    return new AttributedStringBuilder()
+        .append("[")
+        .style(AttributedStyle.BOLD.foreground(AttributedStyle.RED))
+        .append("ERROR")
+        .style(AttributedStyle.DEFAULT)
+        .append("]")
+        .toAnsi();
   }
 
   /**
-   * create the first bloc to know that we are in agon game to make Reader difference with maven
-   * messages (must be used once in the constructor to set attr)
+   * Generates a styled [AGON] tag using ANSI magenta foreground.
+   *
+   * @return ANSI formatted string.
    */
   private String cliLayer() {
-    final String tag = "AGON";
-    AttributedStringBuilder asb = new AttributedStringBuilder();
-    asb.style(AttributedStyle.DEFAULT).append("[");
-    asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA)).append(tag);
-    asb.style(AttributedStyle.DEFAULT).append("]");
-    return asb.toAnsi();
+    return new AttributedStringBuilder()
+        .append("[")
+        .style(AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA))
+        .append("AGON")
+        .style(AttributedStyle.DEFAULT)
+        .append("]")
+        .toAnsi();
   }
 
   /**
-   * create information ASCII style for more readability (must be used once in the constructor to
-   * set attr)
+   * Generates a styled [INFO] tag using ANSI blue foreground.
+   *
+   * @return ANSI formatted string.
    */
   private String cliInfo() {
-    final String tag = "INFO";
-    AttributedStringBuilder asb = new AttributedStringBuilder();
-    asb.style(AttributedStyle.DEFAULT).append("[");
-    asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.BLUE)).append(tag);
-    asb.style(AttributedStyle.DEFAULT).append("]");
-    return asb.toAnsi();
-  }
-
-  private String cliWarn() {
-    final String tag = "WARNING";
-    AttributedStringBuilder asb = new AttributedStringBuilder();
-    asb.style(AttributedStyle.DEFAULT).append("[");
-    asb.style(AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW)).append(tag);
-    asb.style(AttributedStyle.DEFAULT).append("]");
-    return asb.toAnsi();
+    return new AttributedStringBuilder()
+        .append("[")
+        .style(AttributedStyle.BOLD.foreground(AttributedStyle.BLUE))
+        .append("INFO")
+        .style(AttributedStyle.DEFAULT)
+        .append("]")
+        .toAnsi();
   }
 
   /**
-   * called everytime system needs to show error from the application system
+   * Generates a styled [WARNING] tag using ANSI yellow foreground.
    *
-   * @param msg add Reader message to the error
+   * @return ANSI formatted string.
    */
+  private String cliWarn() {
+    return new AttributedStringBuilder()
+        .append("[")
+        .style(AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW))
+        .append("WARNING")
+        .style(AttributedStyle.DEFAULT)
+        .append("]")
+        .toAnsi();
+  }
+
   @Override
   public void showError(String msg) {
-    this.cliW(this.msgHA);
-    this.cliW(this.msgBE);
-    this.cliWln(" " + msg);
+    this.cliW(this.msgHA + this.msgBE + " " + msg + "\n");
   }
 
   /**
-   * show message information inline in console (with cli formatting)
+   * Displays an informational message with full CLI branding.
    *
-   * @param msg message to display
+   * @param msg The info content.
    */
   @Override
   public void showInfo(String msg) {
-    this.cliW(this.msgHA);
-    this.cliW(this.msgBI);
-    this.cliWln(" " + msg);
+    this.cliW(this.msgHA + this.msgBI + " " + msg + "\n");
   }
 
   /**
-   * show Reader message in terminal using JLine shortened the code verbose (because used many times
-   * and must be changed once for all) (without header)
+   * Displays a warning message with full CLI branding.
    *
-   * @param msg message to send in terminal
+   * @param msg The warning content.
+   */
+  @Override
+  public void showWarn(String msg) {
+    this.cliW(this.msgHA + this.msgBW + " " + msg + "\n");
+  }
+
+  /**
+   * Internal write method that flushes the terminal buffer immediately.
+   *
+   * @param msg String to print.
    */
   private void cliWln(String msg) {
+    this.terminal.writer().println(msg);
+    this.terminal.flush();
+  }
+
+  /**
+   * Internal write method without an automatic newline.
+   *
+   * @param msg String to print.
+   */
+  private void cliW(String msg) {
     this.terminal.writer().print(msg);
     this.terminal.flush();
   }
 
-  /**
-   * show Reader message in terminal using JLine display inline without jump line ("\n") (without
-   * header)
-   *
-   * @param msg message to send in terminal
-   */
-  private void cliW(String msg) {
-    PrintWriter pw = this.terminal.writer();
-    pw.print(msg);
-    pw.flush();
-    this.terminal.flush();
-  }
-
+  /** Displays the help menu art to the terminal. */
   public void showHelp() {
     this.cliWln(this.mainMenuASCII);
   }
 
   /**
-   * warn user for important decisions or anything more special
-   *
-   * @param msg message to show in cli
-   */
-  @Override
-  public void showWarn(String msg) {
-    this.cliW(this.msgHA);
-    this.cliW(this.msgBW);
-    this.cliWln(" " + msg);
-  }
-
-  /**
-   * clit quit the game
+   * Initiates the shutdown sequence. Asks the user for a save confirmation before flipping the
+   * running state.
    */
   @Override
   public void quit() {
-    this.showWarn("Save the game before quitting ? [y/n]");
-    String input= this.getUserInput();
-    if (!input.equals("n") && !input.equals("y")) {
-      this.running.set(false);
-      return;
+    this.showWarn("Unsaved changes may be lost. Save game now? [y/n]");
+    String input = this.getUserInput();
+    if (input != null && input.equalsIgnoreCase("y")) {
+      this.saveGame();
+      this.showInfo("Game saved successfully.");
     }
-    
-    // On vérifie si l'utilisateur a répondu 'y'
-    if (input.trim().equalsIgnoreCase("y")) {
-      this.saveGame(); // Sauvegarde par défaut
-    }
-    
-    this.running.set(false);
-    this.safeCloseTerminal();
+    this.leave();
   }
 
   /**
-   * update board display to cli
+   * Renders the current state of the game board using the ConsoleRenderer.
    *
-   * @param board the object used to show characters into terminal
+   * @param board The restricted board view to render.
    */
   @Override
   public void updateBoard(RestrictedAgonBoard board) {
     this.cliWln(ConsoleRenderer.getBoardRepresentation(board));
   }
 
+  /**
+   * Prints a raw message to the terminal without specific CLI tags.
+   *
+   * @param message The content to display.
+   */
   @Override
   public void showMessage(String message) {
     this.cliW(message);
   }
 
-  /// ////////////////// GETTERS & SETTERS //////////////////
-
+  /**
+   * Toggles the verbosity of shell output.
+   *
+   * @param state true to enable detailed feedback.
+   */
   public void setVerbose(boolean state) {
-    if (this.verbose == state) {
-      this.showInfo("verbose already set to: " + state);
-      return;
-    }
-    this.showInfo("last verbose mode : " + !state);
     this.verbose = state;
-    this.showInfo("current verbose set to : " + state);
+    this.showInfo("Verbosity is now " + (state ? "ON" : "OFF"));
   }
 
   public boolean getVerbose() {
@@ -363,20 +359,21 @@ public boolean isRunning() {
   }
 
   /**
-   * atomicBoolean, no set required if the object is modified somewhere it automatically updated
-   * everywhere the reference is (reference passing)
+   * Provides access to the debug mode state for external command logic.
    *
-   * @return {@link AtomicBoolean}
+   * @return AtomicBoolean reference.
    */
   @Override
   public AtomicBoolean getDebugMode() {
     return this.debug;
   }
 
-
+  /**
+   * Returns the execution state of the shell.
+   *
+   * @return AtomicBoolean reference.
+   */
   public AtomicBoolean getRunning() {
     return running;
   }
-
-
 }

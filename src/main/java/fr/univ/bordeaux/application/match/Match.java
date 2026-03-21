@@ -6,12 +6,11 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.agoncore.history.HistoryInformations;
-import fr.univ.bordeaux.application.ai.strategy.AIFactory;
-import fr.univ.bordeaux.application.ai.strategy.AgonAI;
-import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.ai.strategy.AgonAi;
+import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.ui.ObservableMatch;
 import fr.univ.bordeaux.ui.MatchObserver;
+import fr.univ.bordeaux.ui.ObservableMatch;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,25 +31,29 @@ public abstract class Match implements MatchManager, ObservableMatch {
     this.status = MatchStatus.RUNNING;
   }
 
+  public boolean isRunning() {
+    return status == MatchStatus.RUNNING;
+  }
+
   public boolean move(Move move) {
     this.startActions();
     if (this.status == MatchStatus.FINISHED) {
       return false;
     }
     PieceType piece = agonBoard.getPieceAt(move.getFrom());
-    if (piece!=null) {
+    if (piece != null) {
       if (piece.getColor() != currentPlayer.getColor()) {
         return false;
       }
     }
-      if (agonBoard.applyMove(move)) {
-        if (agonBoard.isGameWon(currentPlayer.getColor())) {
-          this.status = MatchStatus.FINISHED;
-          System.out.println("win");
-        }
-        this.endActions();
-        return true;
+    if (agonBoard.applyMove(move)) {
+      if (agonBoard.isGameWon(currentPlayer.getColor())) {
+        this.status = MatchStatus.FINISHED;
+        System.out.println("win");
       }
+      this.endActions();
+      return true;
+    }
 
     return false;
   }
@@ -89,19 +92,19 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   public Move hint() {
-    AgonAI ai = AIFactory.createHintAi(currentPlayer.getColor());
+    AgonAi ai = AiFactory.createHintAi(currentPlayer.getColor());
     Move hint = ai.getBestMove(agonBoard);
     return hint;
   }
-
 
   public MatchStatus getMatchStatus() {
     return status;
   }
 
-  public boolean isMatchOver(){
-    return this.status==MatchStatus.FINISHED;
+  public boolean isMatchOver() {
+    return this.status == MatchStatus.FINISHED;
   }
+
   protected void setMatchStatus(MatchStatus status) {
     this.status = status;
   }
@@ -115,9 +118,10 @@ public abstract class Match implements MatchManager, ObservableMatch {
     this.observer = observer;
   }
 
-  public RestrictedAgonBoard getAgonBoard(){
+  public RestrictedAgonBoard getAgonBoard() {
     return agonBoard;
   }
+
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;
   }

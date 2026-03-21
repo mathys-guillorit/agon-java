@@ -21,14 +21,10 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
  */
 public class MixedHeuristic implements Heuristic {
 
-  /**
-   * The internal strategy for evaluating piece freedom.
-   */
+  /** The internal strategy for evaluating piece freedom. */
   private final MobilityHeuristic mobilityHeuristic;
 
-  /**
-   * The internal strategy for evaluating board control.
-   */
+  /** The internal strategy for evaluating board control. */
   private final CentralityHeuristic centralityHeuristic;
 
   /**
@@ -53,7 +49,7 @@ public class MixedHeuristic implements Heuristic {
    * <p>This constructor initializes new instances of {@link MobilityHeuristic} and {@link
    * CentralityHeuristic} with their default internal settings.
    *
-   * @param mobilityWeight   The importance factor for the mobility score (e.g., 5.0).
+   * @param mobilityWeight The importance factor for the mobility score (e.g., 5.0).
    * @param centralityWeight The importance factor for the centrality score (e.g., 1.0).
    */
   public MixedHeuristic(double mobilityWeight, double centralityWeight) {
@@ -74,7 +70,7 @@ public class MixedHeuristic implements Heuristic {
    *
    * <p>The result is cast to a {@code long} to match the {@link Heuristic} interface.
    *
-   * @param board   The current board state.
+   * @param board The current board state.
    * @param aiColor The color of the AI player.
    * @return The combined weighted score.
    */

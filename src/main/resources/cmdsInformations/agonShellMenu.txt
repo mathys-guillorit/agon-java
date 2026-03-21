@@ -1,5 +1,6 @@
 ----- Available Commands -----
 
+<<<<<<< HEAD
     agon [OPTIONS]
         -h --help       to show current help
         -V --version    show program version
@@ -13,6 +14,12 @@
     help [CMD] : show Shell help (if no argument) or CMD's help
         example : "help redo" or "help pause"
     quit : quit the game
+=======
+    new [ARGS] : run a new game
+    help [CMD] : show Shell help (if no argument) or CMD's help
+        example : "help" or "help pause"
+    quit : quit the program
+>>>>>>> main
     load FILE : load a game from a file
     save FILE : save the current game
     pause : stop the passing time in blitz mode
@@ -21,6 +28,7 @@
         example : "undo 6"
     redo [N] : replay the last canceled turn (or the N lasts)
         example : "redo 3"
+<<<<<<< HEAD
     show
         board : show the current board state
         history : show game turns history
@@ -28,3 +36,16 @@
         configuration : "explicit"
     set PARAM=VALUE : change current configuration
         example : "set debug=true"
+=======
+    show board : show the current game state
+    show history : show game turns history
+    show time : show time left for each players
+    show configuration : "explicit"
+    set PARAM=VALUE : change current configuration
+        example : "set debug=true"
+
+----- Available Options -----
+
+    WIP...
+
+>>>>>>> main
