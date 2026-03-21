@@ -18,11 +18,10 @@ public class AiFactory {
 
   public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config) {
     Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
-    System.out.println("je suis dans la factory et p2isIA : " +config.isBlackAI());
-    if (config.isWhiteAI()) {
+    if (config.isWhiteAi()) {
       aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
     }
-    if (config.isBlackAI()) {
+    if (config.isBlackAi()) {
       aiMap.put(Color.BLACK, createAi(config, Color.BLACK));
     }
     return aiMap;
@@ -40,8 +39,6 @@ public class AiFactory {
         return new MctsStrategy(heuristic, color);
       }
       default -> {
-        System.out.println("le mode est : "+mode);
-        System.out.println("mode inconnu dans la factory");
         return null;
       }
     }

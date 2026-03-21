@@ -137,9 +137,6 @@ class AgonBoardImplTest {
     BitBoard bPawns = new BitBoard(62);
     AgonBoardImpl boardReloc = new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns, bPawns);
     boardReloc.applyMove(new Move(64, 63, Color.WHITE, PieceType.WHITE_PAWN));
-    for (Move m : boardReloc.generateLegalMoves(Color.BLACK)) {
-      System.out.println(m.toString());
-    }
     assertTrue(boardReloc.applyMove(new Move(-1, 1, Color.BLACK, PieceType.BLACK_PAWN)));
   }
 

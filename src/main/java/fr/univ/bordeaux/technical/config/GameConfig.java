@@ -24,19 +24,19 @@ public class GameConfig {
   /**
    * Sets whether the White player is controlled by an Artificial Intelligence.
    *
-   * @param whiteIsAI {@code true} if White is an AI, {@code false} if human.
+   * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
    */
-  public void setWhiteAI(boolean whiteIsAI) {
-    this.whiteIsAI = whiteIsAI;
+  public void setWhiteAI(boolean whiteIsAi) {
+    this.whiteIsAi = whiteIsAi;
   }
 
   /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
    *
-   * @param blackIsAI {@code true} if Black is an AI, {@code false} if human.
+   * @param blackIsAi {@code true} if Black is an AI, {@code false} if human.
    */
-  public void setBlackAI(boolean blackIsAI) {
-    this.blackIsAI = blackIsAI;
+  public void setBlackAI(boolean blackIsAi) {
+    this.blackIsAi = blackIsAi;
   }
 
   /**
@@ -224,8 +224,8 @@ public class GameConfig {
    *
    * @return {@code true} if White is an AI, {@code false} otherwise.
    */
-  public boolean isWhiteAI() {
-    return whiteIsAI;
+  public boolean isWhiteAi() {
+    return whiteIsAi;
   }
 
   /**
@@ -233,8 +233,8 @@ public class GameConfig {
    *
    * @return {@code true} if Black is an AI, {@code false} otherwise.
    */
-  public boolean isBlackAI() {
-    return blackIsAI;
+  public boolean isBlackAi() {
+    return blackIsAi;
   }
 
   /**
@@ -246,20 +246,14 @@ public class GameConfig {
     return manualPlacement;
   }
 
-  public boolean isWhiteAi() {
-    return whiteIsAI;
+
+
+  public void setWhiteAi(boolean whiteIsAi) {
+    this.whiteIsAi = whiteIsAi;
   }
 
-  public boolean isBlackAi() {
-    return blackIsAI;
-  }
-
-  public void setWhiteAi(boolean whiteIsAI) {
-    this.whiteIsAI = whiteIsAI;
-  }
-
-  public void setBlackAi(boolean blackIsAI) {
-    this.blackIsAI = blackIsAI;
+  public void setBlackAi(boolean blackIsAi) {
+    this.blackIsAi = blackIsAi;
   }
 
   /**
@@ -284,8 +278,8 @@ public class GameConfig {
     string.append("[aiIterativeDeepening]=").append(aiIterativeDeepening).append("\n");
     string.append("[aiTimeLimit]=").append(aiTimeLimit).append("\n");
     string.append("[aiHeuristique]=").append(aiHeuristic).append("\n");
-    string.append("[whiteIsAI]=").append(whiteIsAI).append("\n");
-    string.append("[blackIsAI]=").append(blackIsAI).append("\n");
+    string.append("[whiteIsAI]=").append(whiteIsAi).append("\n");
+    string.append("[blackIsAI]=").append(blackIsAi).append("\n");
     return string.toString();
   }
 }

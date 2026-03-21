@@ -24,7 +24,6 @@ public class MatchFactory {
     // 2. On crée les vrais objets Player
     Player white = createPlayerFromAiMap(aiMap, Color.WHITE, agonBoard, gameUI);
     Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUI);
-    System.out.println("je suis dans match factory et p2isIA : " + black.isAI());
     /*if (config.isBlitzMode()) {
       // On récupère les deux temps distincts dans la config
       long whiteTime = config.getWhiteInitialTime();
@@ -44,7 +43,6 @@ public class MatchFactory {
       AgonBoard agonBoard,
       GameUserInterface gameUI) {
     AgonAi aiStrategy = aiMap.get(color);
-    System.out.println((aiStrategy == null));
     if (aiStrategy != null) {
       // C'est une IA selon la factory de ton collègue
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);

@@ -118,8 +118,8 @@ public class CmdSetTest {
         cmds.get("set").get().createNew(new String[] {"-whiteIsAI", "true", "-blackIsAI", "false"});
     cmd.execute(null);
 
-    assertTrue(config.isWhiteAI());
-    assertFalse(config.isBlackAI());
+    assertTrue(config.isWhiteAi());
+    assertFalse(config.isBlackAi());
   }
 
   @Test
