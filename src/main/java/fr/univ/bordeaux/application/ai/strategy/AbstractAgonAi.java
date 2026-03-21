@@ -21,7 +21,7 @@ import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
  *       debugging.
  * </ul>
  */
-public abstract class AbstractAgonAI implements AgonAI {
+public abstract class AbstractAgonAi implements AgonAi {
 
   /**
    * The heuristic strategy used to evaluate board positions. This allows for the dynamic injection
@@ -55,7 +55,7 @@ public abstract class AbstractAgonAI implements AgonAI {
    *
    * @param heuristic The evaluation function to use.
    */
-  public AbstractAgonAI(Heuristic heuristic, Color color) {
+  public AbstractAgonAi(Heuristic heuristic, Color color) {
     this.heuristic = heuristic;
     this.color = color;
   }

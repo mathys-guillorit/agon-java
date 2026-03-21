@@ -11,7 +11,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
  * Minimax, MCTS) must follow. It ensures that the game controller can interact with any AI agent
  * interchangeably without knowing the specific algorithm used.
  */
-public interface AgonAI {
+public interface AgonAi {
 
   /**
    * Computes and returns the best possible move for the current game state.

@@ -11,13 +11,13 @@ import fr.univ.bordeaux.technical.config.GameConfig;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AIFactory {
+public class AiFactory {
 
-  private AIFactory() {
+  private AiFactory() {
   }
 
-  public static Map<Color, AbstractAgonAI> createAiMap(GameConfig config) {
-    Map<Color, AbstractAgonAI> aiMap = new HashMap<>();
+  public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config) {
+    Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
     System.out.println("je suis dans la factory et p2isIA : " +config.isBlackAI());
     if (config.isWhiteAI()) {
       aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
@@ -28,7 +28,7 @@ public class AIFactory {
     return aiMap;
   }
 
-  public static AbstractAgonAI createAi(GameConfig config, Color color) {
+  public static AbstractAgonAi createAi(GameConfig config, Color color) {
     Heuristic heuristic = createHeuristic(config.getAiHeuristic());
     String mode = config.getAiMode();
     switch (mode) {
@@ -64,7 +64,7 @@ public class AIFactory {
     }
   }
 
-  public static AbstractAgonAI createHintAi(Color color) {
+  public static AbstractAgonAi createHintAi(Color color) {
     return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
   }
 
