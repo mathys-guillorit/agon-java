@@ -1,5 +1,8 @@
 package fr.univ.bordeaux.ui;
 
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Unified interface defining possible interactions in the Agon game.
  *
@@ -13,72 +16,24 @@ package fr.univ.bordeaux.ui;
  * It serves as the contract between the Presentation layer (UI) and the Application layer (Engine).
  */
 public interface GameUserInterface {
-  // --- GAME ACTIONS (Commands to the Engine) ---
+
+  boolean isRunning();
 
   /**
-   * Starts a new game with the specified options.
-   *
-   * @param args Configuration arguments (e.g., player names, variants).
+   * Quits the current game and closes the application. May trigger Reader prompt to save before
+   * exiting.
    */
-  void startNewGame(String[] args);
-
-  //  /**
-  //   * Attempts to move a piece from one position to another.
-  //   *
-  //   * @param from The starting position of the piece.
-  //   * @param to The desired destination position.
-  //   */
-  // void tryMove(Position from, Position to);
-
-  //  /**
-  //   * Selects a piece on the board (often used to display possible moves).
-  //   *
-  //   * @param pos The position of the piece to select.
-  //   */
-  // void selectPiece(Position pos);
-
-  /** Undoes the last move played (if history allows). */
-  void undo();
-
-  /** Redoes the last undone move (if history allows). */
-  void redo();
-
-  /**
-   * Saves the current game state to a file.
-   *
-   * @param filename The path or name of the save file.
-   */
-  void saveGame(String filename);
-
-  /**
-   * Loads a game from a save file.
-   *
-   * @param filename The path or name of the file to load.
-   */
-  void loadGame(String filename);
-
-  /** Pauses the game (stops the timer if present). */
-  void pauseGame();
-
-  /** Resumes the game after a pause. */
-  void resumeGame();
-
-  /**
-   * Quits the current game and closes the application. May trigger a prompt to save before exiting.
-   */
-  void quitGame();
-
-  /** Requests a hint or advice from the game engine (AI). */
-  void requestHint();
+  void quit();
 
   // --- UI UPDATES (Outputs to the Screen) ---
 
-  /**
+  /*/**
    * Updates the game board display.
    *
    * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
    */
-  void updateBoard(String boardRepresentation);
+  // void updateBoard(String boardRepresentation);
+  void updateBoard(RestrictedAgonBoard agonBoard);
 
   /**
    * Displays an informational message to the user.
@@ -94,11 +49,36 @@ public interface GameUserInterface {
    */
   void showError(String error);
 
+  /** display the help menu into terminal */
+  void showHelp();
+
+  /**
+   * show warning messages into the sub UI object
+   *
+   * @param msg
+   */
+  void showWarn(String msg);
+
+  /**
+   * show information into the sub UI object
+   *
+   * @param msg
+   */
+  void showInfo(String msg);
+
+  AtomicBoolean getDebugMode();
+
+  void setVerbose(boolean state);
+
+  /** save the game before leaving */
+  void saveGame();
+
+  String getUserInput();
   /**
    * Asks the user for confirmation (e.g., "Do you really want to quit?").
    *
    * @param question The question to ask.
    * @return {@code true} if the user accepts, {@code false} otherwise.
    */
-  boolean getUserConfirmation(String question);
+  // boolean getUserConfirmation(String question);
 }

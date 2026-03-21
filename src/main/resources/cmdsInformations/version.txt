@@ -1,3 +1,7 @@
 Agon Game - CLI Launcher
 (c) 2026 University of Bordeaux
+<<<<<<< HEAD
+version 1.0.0 (2026 jan-march)
+=======
 version 1.0.0 (2026)
+>>>>>>> main

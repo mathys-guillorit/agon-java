@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
@@ -16,6 +17,8 @@ import java.util.Stack;
  *   <li><b>Undo Stack:</b> Stores the history of moves already played.
  *   <li><b>Redo Stack:</b> Stores moves that were undone and are available to be re-applied.
  * </ul>
+ *
+ * <p>*
  *
  * <p>Following standard command patterns, the redo stack is cleared whenever a new, original move
  * is added to the history to prevent branching timelines.
@@ -142,6 +145,18 @@ public class History {
   }
 
   /**
+   * Returns a list representation of the move history. This method converts the internal undo stack
+   * into a list, reversing the order so that the moves are presented in chronological order (from
+   * the first move to the most recent one).
+   *
+   * @return a {@link List} of {@link HistoryInformations} containing all performed moves in
+   *     chronological order.
+   */
+  public List<HistoryInformations> toList() {
+    return new ArrayList<>(undoStack).reversed();
+  }
+
+  /**
    * Converts the list of played turns into ABA-pro text format for saving.
    *
    * <p>Iterates through the undo stack chronologically and formats the primary move of each turn.
@@ -157,7 +172,7 @@ public class History {
       Move primaryMove = info.getMoves().get(0);
 
       String start = CoordinateMapper.toCoordinate(primaryMove.getFrom());
-      String end = CoordinateMapper.toCoordinate(primaryMove.getTo());
+      String end = CoordinateMapper.toCoordinate(primaryMove.getDestination());
 
       char pieceChar = (info.getColor() == Color.WHITE) ? 'O' : 'X';
 

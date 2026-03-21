@@ -1,130 +1,184 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import java.util.ArrayList;
 
-/** Delegate display converts bitboard state into String grid. */
+/**
+ * Delegate class responsible for converting the internal BitBoard state into a String grid.
+ *
+ * <p>This class acts as a View component in the architecture, transforming the {@link
+ * RestrictedAgonBoard} data into a visual ASCII-art hexagon suitable for the console.
+ */
 public class ConsoleRenderer {
 
-  private BitBoard board;
+  /*private RestrictedAgonBoard board;
   private ArrayList<Character> lines;
 
-  private static final short numberStartASCII = 48;
-
-  /**
-   * Object dedicated to show a Bitboard into the UI.
+  **
+   * Constructs a new ConsoleRenderer.
    *
-   * @param board {@link BitBoard} used to display as chars for the UI
-   */
-  public ConsoleRenderer(BitBoard board) {
+   * <p>Initializes the list of row identifiers from 'K' (top) down to 'A' (bottom) to match the
+   * visual representation of the Agon board.
+   *
+   * @param board The game board data source (read-only interface).
+   *
+  public ConsoleRenderer(RestrictedAgonBoard board) {
     this.board = board;
     this.lines = new ArrayList<>();
     final short K_Letter = 75; // ASCII K
-    final short A_Letter = 64; // ASCII A
-    for (short c = K_Letter; c > A_Letter; c--) {
-      this.lines.add((char) c);
-    }
-  }
+    final short A_Letter = 65; // ASCII A
+    for (short c = K_Letter; c >= A_Letter; c--) this.lines.add((char) c);
+  }*/
 
   /**
-   * Do convolution function with integers only int opposite direction (\/).
+   * Calculates the indentation (spaces) needed for each line to form the hexagonal shape.
+   *
+   * <p>This corresponds to a convolution function acting in the opposite direction (\/). The
+   * formula approximates: f(x,k) = |-|x-k-b|+k|
    *
    * <pre>
-   *   \  /
-   *    \/
+   * \  /
+   * \/
    * </pre>
    *
-   * (f(x,k) = |-|x-k-b|+k| = |(-|x-k-b|+k)| )
-   *
-   * @param x the variable passed
-   * @param a the height of the "cone"
-   * @param b the horizontal translation of the curve
-   * @return int the result
+   * @param x The current line index (variable).
+   * @param a The height/amplitude of the "cone".
+   * @param b The horizontal translation of the curve.
+   * @return The number of spaces to prepend to the line.
    */
-  private int coneReversed(int x, int a, int b) {
+  private static int coneReversed(int x, int a, int b) {
     return Math.abs(-Math.abs(x - a - b) + a);
   }
 
   /**
-   * Do convolution function with integers only (/\).
+   * Calculates the width (number of cells) of the hexagon at a specific line index.
+   *
+   * <p>This corresponds to a convolution function acting in the standard direction (/\).
    *
    * <pre>
-   *   /\
-   *  /  \
+   * /\
+   * /  \
    * </pre>
    *
-   * @param x the variable passed
-   * @param a the height of the "cone"
-   * @param b the horizontal translation of the curve
-   * @return int the result
+   * @param x The current line index (variable).
+   * @param a The height/amplitude of the "cone".
+   * @param b The horizontal translation of the curve.
+   * @return The number of active cells to draw on this line.
    */
-  private int cone(int x, int a, int b) {
+  private static int cone(int x, int a, int b) {
     return Math.abs(Math.abs(x + a + b) - a);
   }
 
   /**
-   * Update board display to terminal no arguments need board in constructor (to be used by
-   * drawHexagon() first).
+   * Generates the complete string representation of the board.
+   *
+   * <p>This method builds the grid line by line, handling:
+   *
+   * <ul>
+   *   <li>Indentation (using {@link #coneReversed(int, int, int)})
+   *   <li>Left borders and Row identifiers (e.g., "K /")
+   *   <li>Cell content (using {@link #getSymbolAt(RestrictedAgonBoard, int, int, ArrayList)})
+   *   <li>Right borders and Row numbers
+   * </ul>
+   *
+   * @return A formatted String representing the current game state ready for display.
    */
-  public void renderer() {
-    int idxContent;
-    int spaceCount;
-    System.out.println();
+  public static String getBoardRepresentation(RestrictedAgonBoard board) {
+    if (board == null) {
+      throw new IllegalArgumentException("The game board cannot be null.");
+    }
+    ArrayList<Character> arrayLines = new ArrayList<>();
+    final short K_Letter = 75; // ASCII K
+    final short A_Letter = 65; // ASCII A
+    for (short c = K_Letter; c >= A_Letter; c--) {
+      arrayLines.add((char) c);
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append('\n');
+    int idxContent, spaceCount;
     final int linesCount = 11;
     final int midLine = (linesCount - 1) / 2;
+
     for (int lines = 0; lines < linesCount; lines++) {
-      for (spaceCount = 0; spaceCount < this.coneReversed(lines, 0, 5); spaceCount++) {
-        System.out.print(' ');
+      for (spaceCount = 0; spaceCount < coneReversed(lines, 0, 5); spaceCount++) {
+        sb.append(' ');
+      }
+
+      if (lines > midLine) {
+        sb.append(arrayLines.get(lines)).append(" \\");
+      } else if (lines == midLine) {
+        sb.append("F |");
+      } else {
+        sb.append(arrayLines.get(lines)).append(" /");
+      }
+
+      int width = 6 + cone(lines, midLine, -10);
+      for (idxContent = 0; idxContent < width; idxContent++) {
+        char symbol = getSymbolAt(board, lines, idxContent, arrayLines);
+        sb.append(symbol);
+        if (idxContent != width - 1) {
+          sb.append(' ');
+        }
       }
       if (lines > midLine) {
-        System.out.print(this.lines.get(lines) + " \\");
+        sb.append("/ ").append(17 - lines);
       } else if (lines == midLine) {
-        System.out.print("F |");
+        sb.append("| ");
       } else {
-        System.out.print(this.lines.get(lines) + " /");
+        sb.append("\\");
       }
-      for (idxContent = 0; idxContent < 6 + this.cone(lines, midLine, -10); idxContent++) {
-        if (coordinateValidator(lines, idxContent)) {
-          this.drawHexagon(lines, idxContent);
-        }
-        if (idxContent != 10 - spaceCount) {
-          System.out.print(' ');
-        }
-      }
-      if (lines > midLine) {
-        System.out.print("/ " + (17 - lines));
-      } else if (lines == midLine) {
-        System.out.print("| ");
-      } else {
-        System.out.print("\\");
-      }
-      System.out.println();
+      sb.append("\n");
     }
-    System.out.println("        1 2 3 4 5 6");
+    sb.append("        1 2 3 4 5 6\n");
+    return sb.toString();
   }
 
   /**
-   * Dheck if a coordinate is valid or not (coordiante can be invalid example: k3).
+   * Retrieves the character symbol for a piece at a specific visual coordinate.
    *
-   * @return true if it is false else
+   * <p>This method translates the visual grid coordinates (row index, logical column) into the
+   * internal bitboard index using {@link CoordinateMapper}.
+   *
+   * @param x The vertical line index (corresponding to letters K..A).
+   * @param y The diagonal/logical column index on that line.
+   * @return The char representing the piece, or '.' if empty/error.
    */
-  private boolean coordinateValidator(int x, int y) {
-    //    if (x < 0 || x > 10) return false;
-    //    if (y < 0 || y > 10) return false;
-    return true;
+  private static char getSymbolAt(
+      RestrictedAgonBoard board, int x, int y, ArrayList<Character> arrayLines) {
+    try {
+      char rowChar = arrayLines.get(x);
+      int startCol = (x <= 5) ? (6 - x) : 1;
+      int logicalCol = y + startCol;
+      int index = CoordinateMapper.toIndex(rowChar, logicalCol);
+      PieceType piece = board.getPieceAt(index);
+      if (piece == null && rowChar == 'F' && logicalCol == 6) {
+        return '+';
+      }
+      return getSymbolFromPiece(piece);
+    } catch (Exception e) {
+      return '.';
+    }
   }
 
   /**
-   * Draw and exagon without jump line example: "c4" where c is 9 lines later (from the first one)
-   * with 4 diagonal lines in vertical final coordinates will be : x = 9 (c) and y = 4 (not
-   * converted).
+   * Converts a {@link PieceType} enum into a single ASCII character.
    *
-   * @param x horizontal coordinate
-   * @param y diagonal coordinate
+   * @param piece The piece to convert.
+   * @return 'O' for White Pawn, 'X' for Black Pawn, 'Q' for White Queen, 'q' for Black Queen, '.'
+   *     for empty.
    */
-  private void drawHexagon(int x, int y) {
-    ///  TODO: from Bitboard board get
-    ///  the character at the exact x y position and print it
-    System.out.print("" + (x + 6 - y));
+  private static char getSymbolFromPiece(PieceType piece) {
+    if (piece == null) {
+      return '.';
+    }
+    return switch (piece) {
+      case WHITE_PAWN -> 'O';
+      case BLACK_PAWN -> 'X';
+      case WHITE_QUEEN -> 'Q';
+      case BLACK_QUEEN -> 'q';
+      default -> '.';
+    };
   }
 }

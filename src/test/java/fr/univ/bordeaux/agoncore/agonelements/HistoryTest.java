@@ -142,13 +142,15 @@ class HistoryTest {
     assertEquals(Color.BLACK, lastMove.getColor(), "Last move should be played by Black");
     assertEquals(
         24, lastMove.getMoves().get(0).getFrom(), "Last move 'from' index should be 24 (c3)");
-    assertEquals(26, lastMove.getMoves().get(0).getTo(), "Last move 'to' index should be 26 (c5)");
+    assertEquals(
+        26, lastMove.getMoves().get(0).getDestination(), "Last move 'to' index should be 26 (c5)");
 
     loadedHistory.undo();
     HistoryInformations firstMove = loadedHistory.getHeadUndo();
     assertEquals(Color.WHITE, firstMove.getColor(), "First move should be played by White");
     assertEquals(
         0, firstMove.getMoves().get(0).getFrom(), "First move 'from' index should be 0 (a1)");
-    assertEquals(1, firstMove.getMoves().get(0).getTo(), "First move 'to' index should be 1 (a2)");
+    assertEquals(
+        1, firstMove.getMoves().get(0).getDestination(), "First move 'to' index should be 1 (a2)");
   }
 }

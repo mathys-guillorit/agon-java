@@ -1,0 +1,11 @@
+ usage: set <type>=<value>
+
+ change current agon app configuration
+
+     Type            Value                  Description
+
+     verbose         true or false          add more text information if set to true
+     debug           true or false          show more debug messages if set to true
+
+ example :
+     "debug=true"

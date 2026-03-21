@@ -1,13 +1,12 @@
 package fr.univ.bordeaux.technical.config;
 
 /**
- * Represents the configuration settings for the Agon game.
- *
- * <p>This class acts as a data container for all customizable parameters, including system options
- * (like verbosity and debug modes), game rules (like blitz mode and timeouts), and Artificial
- * Intelligence settings (like algorithms, depths, and heuristics).
+ * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
+ * rules (like blitz mode and timeouts), and Artificial Intelligence settings (like algorithms,
+ * depths, and heuristics).
  */
 public class GameConfig {
+
   private boolean verbose = false;
   private boolean debug = false;
   private boolean blitzMode = false;
@@ -27,7 +26,7 @@ public class GameConfig {
    *
    * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
    */
-  public void setWhiteAi(boolean whiteIsAi) {
+  public void setWhiteAI(boolean whiteIsAi) {
     this.whiteIsAi = whiteIsAi;
   }
 
@@ -36,7 +35,7 @@ public class GameConfig {
    *
    * @param blackIsAi {@code true} if Black is an AI, {@code false} if human.
    */
-  public void setBlackAi(boolean blackIsAi) {
+  public void setBlackAI(boolean blackIsAi) {
     this.blackIsAi = blackIsAi;
   }
 
@@ -247,6 +246,16 @@ public class GameConfig {
     return manualPlacement;
   }
 
+
+
+  public void setWhiteAi(boolean whiteIsAi) {
+    this.whiteIsAi = whiteIsAi;
+  }
+
+  public void setBlackAi(boolean blackIsAi) {
+    this.blackIsAi = blackIsAi;
+  }
+
   /**
    * Enables or disables the manual placement of Pawns and Queens.
    *
@@ -255,5 +264,22 @@ public class GameConfig {
    */
   public void setManualPlacement(boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
+  }
+
+  public String toString() {
+    StringBuilder string = new StringBuilder();
+    string.append("[verbose]=").append(verbose).append("\n");
+    string.append("[debug]=").append(debug).append("\n");
+    string.append("[blitzMode]=").append(blitzMode).append("\n");
+    string.append("[timeout]=").append(timeout).append("\n");
+    string.append("[aiActive]=").append(aiActive).append("\n");
+    string.append("[aiMode]=").append(aiMode).append("\n");
+    string.append("[aiDepth]=").append(aiDepth).append("\n");
+    string.append("[aiIterativeDeepening]=").append(aiIterativeDeepening).append("\n");
+    string.append("[aiTimeLimit]=").append(aiTimeLimit).append("\n");
+    string.append("[aiHeuristique]=").append(aiHeuristic).append("\n");
+    string.append("[whiteIsAI]=").append(whiteIsAi).append("\n");
+    string.append("[blackIsAI]=").append(blackIsAi).append("\n");
+    return string.toString();
   }
 }

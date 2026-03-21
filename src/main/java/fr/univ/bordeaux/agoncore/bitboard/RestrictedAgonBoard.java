@@ -12,6 +12,7 @@ import java.util.List;
  * potential actions without having the authority to modify the game state directly.
  */
 public interface RestrictedAgonBoard {
+
   /**
    * Generates a complete list of all legal moves for the specified player.
    *

@@ -1,20 +1,9 @@
 package fr.univ.bordeaux.application.ai;
 
-import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.agoncore.agonelements.Move;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
-import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
-import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
-import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
-import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
-import java.util.List;
-
 /** Run an Example using Ai. */
 public class AiExample {
 
-  private AgonBoardImpl createCustomBoard(
+  /*private AgonBoardImpl createCustomBoard(
       int whiteQueenIdx,
       int blackQueenIdx,
       List<Integer> whitePawnsIdx,
@@ -39,9 +28,9 @@ public class AiExample {
     }
 
     return new AgonBoardImpl(whiteQ, blackQ, whiteP, blackP);
-  }
+  }*/
 
-  /** Explicit nothing to add. */
+  /*/** Explicit nothing to add.
   public void simulateGameAiVsRandomBot() {
     System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs RANDOM (BLACK) ===");
 
@@ -108,9 +97,9 @@ public class AiExample {
       }
     }
     System.out.println("\n=== END ===");
-  }
+  }*/
 
-  /** Explicit name nothing to add. */
+  /*/** Explicit name nothing to add.
   public void simulateGameAiVsAi() {
     System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs AI (BLACK) ===");
 
@@ -188,18 +177,18 @@ public class AiExample {
       }
     }
     System.out.println("\n=== END ===");
-  }
+  }*/
 
-  /**
+  /*/**
    * Run ai.
    *
    * @param args options for setting the Ai (configuration).
-   */
+
   public static void main(String[] args) {
     AiExample aiExample = new AiExample();
 
     aiExample.simulateGameAiVsAi();
 
     aiExample.simulateGameAiVsRandomBot();
-  }
+  }*/
 }

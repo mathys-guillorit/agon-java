@@ -65,7 +65,7 @@ public class ContestMatch {
               + " "
               + indexToCoordinate(bestMove.getFrom())
               + " "
-              + indexToCoordinate(bestMove.getTo());
+              + indexToCoordinate(bestMove.getDestination());
       System.out.println(move);
     } else {
       System.err.println("[ERROR] The AI could not find any valid move.");

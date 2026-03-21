@@ -96,7 +96,7 @@ class MinimaxStrategyTest {
 
     assertEquals(
         CoordinateMapper.toIndex('H', 9),
-        bestMove.getTo(),
+        bestMove.getDestination(),
         "AI should have blocked G7 in order to block the opponent");
   }
 

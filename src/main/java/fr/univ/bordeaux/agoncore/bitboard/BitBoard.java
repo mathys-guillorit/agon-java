@@ -15,19 +15,10 @@ public class BitBoard {
   /** Bits 64 to 127 (Upper half of the board; Agon uses up to index 120). */
   private long high;
 
-  /** * Constructs an empty BitBoard with all bits initialized to zero. */
+  /** Constructs an empty BitBoard with all bits initialized to zero. */
   public BitBoard() {
     this.low = 0L;
     this.high = 0L;
-  }
-
-  public BitBoard(long low, long high) {
-    this.low = low;
-    this.high = high;
-  }
-
-  public BitBoard copy2() {
-    return new BitBoard(this.low, this.high);
   }
 
   /**
@@ -48,7 +39,7 @@ public class BitBoard {
    *
    * @param board The {@link BitBoard} to replicate.
    */
-  public BitBoard(BitBoard board) {
+  public BitBoard(final BitBoard board) {
     this.low = board.low;
     this.high = board.high;
   }
@@ -59,8 +50,8 @@ public class BitBoard {
    * @param bitBoard2 The second operand.
    * @return A new {@link BitBoard} containing bits set in either board.
    */
-  public BitBoard orOperation(BitBoard bitBoard2) {
-    BitBoard bitBoard3 = new BitBoard();
+  public BitBoard orOperation(final BitBoard bitBoard2) {
+    final BitBoard bitBoard3 = new BitBoard();
     bitBoard3.low = this.low | bitBoard2.low;
     bitBoard3.high = this.high | bitBoard2.high;
     return bitBoard3;
@@ -72,8 +63,8 @@ public class BitBoard {
    * @param bitBoard2 The second operand.
    * @return A new {@link BitBoard} containing only bits set in both boards.
    */
-  public BitBoard andOperation(BitBoard bitBoard2) {
-    BitBoard bitBoard3 = new BitBoard();
+  public BitBoard andOperation(final BitBoard bitBoard2) {
+    final BitBoard bitBoard3 = new BitBoard();
     bitBoard3.low = this.low & bitBoard2.low;
     bitBoard3.high = this.high & bitBoard2.high;
     return bitBoard3;
@@ -85,7 +76,7 @@ public class BitBoard {
    * @return A new {@link BitBoard} with all bits flipped.
    */
   public BitBoard complementOperation() {
-    BitBoard bitBoard = new BitBoard();
+    final BitBoard bitBoard = new BitBoard();
     bitBoard.low = ~this.low;
     bitBoard.high = ~this.high;
     return bitBoard;
@@ -97,7 +88,7 @@ public class BitBoard {
    * @param index The bit index (0 to 120).
    * @param value {@code 1L} to set the bit, {@code 0L} to clear it.
    */
-  public void setBit(int index, long value) {
+  public void setBit(final int index, final long value) {
     if (index > 63) {
       int shift = index - 64;
       if (value == 1L) {
@@ -120,7 +111,7 @@ public class BitBoard {
    * @param index The bit position to query.
    * @return {@code true} if the bit is 1, {@code false} if 0.
    */
-  public boolean isSet(int index) {
+  public boolean isSet(final int index) {
     if (index < 64) {
       return (this.low & (1L << index)) != 0;
     } else {
@@ -138,19 +129,19 @@ public class BitBoard {
    *     toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
-  public BitBoard shiftBitboard(int n) {
+  public BitBoard shiftBitboard(final int n) {
     BitBoard shiftedBitBoard = new BitBoard();
     if (n > 0) {
       shiftedBitBoard.high = (this.high << n) | (this.low >>> (64 - n));
       shiftedBitBoard.low = (this.low << n);
-      return shiftedBitBoard;
     } else if (n < 0) {
       int s = -n;
       shiftedBitBoard.low = (this.low >>> s) | (this.high << (64 - s));
       shiftedBitBoard.high = (this.high >>> s);
-      return shiftedBitBoard;
+    } else {
+      shiftedBitBoard = this;
     }
-    return this;
+    return shiftedBitBoard;
   }
 
   /**
@@ -165,11 +156,18 @@ public class BitBoard {
   /**
    * Compares this BitBoard with another object for equality.
    *
-   * @param bitBoard The board to compare against.
+   * @param obj The board to compare against.
    * @return {@code true} if both boards have the same bits set.
    */
-  public boolean equals(BitBoard bitBoard) {
-    return this.low == bitBoard.low && this.high == bitBoard.high;
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    BitBoard other = (BitBoard) obj;
+    return this.low == other.low && this.high == other.high;
   }
 
   /**
@@ -206,7 +204,7 @@ public class BitBoard {
    * @param currentBit The index to start scanning from (exclusive). Use {@code -1} for the start.
    * @return The index of the next set bit, or {@code -1} if none remain.
    */
-  public int nextSetBit(int currentBit) {
+  public int nextSetBit(final int currentBit) {
     int start = currentBit + 1;
     if (start >= 121) {
       return -1;

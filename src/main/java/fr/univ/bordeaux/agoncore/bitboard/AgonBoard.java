@@ -2,6 +2,7 @@ package fr.univ.bordeaux.agoncore.bitboard;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.List;
 
 /**
@@ -57,17 +58,6 @@ public interface AgonBoard extends RestrictedAgonBoard {
   boolean redoMove();
 
   /**
-   * Calculates a heuristic score for the current board state from the perspective of the given
-   * player.
-   *
-   * <p>A higher score indicates a more favorable position for the player.
-   *
-   * @param color The {@link Color} of the player for whom to evaluate the score.
-   * @return An integer representing the board evaluation.
-   */
-  int getScore(Color color);
-
-  /**
    * Evaluates the mobility of a piece at a given index.
    *
    * <p>Mobility is defined by the number of legal destinations available to that specific piece,
@@ -89,6 +79,22 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return The circle index (0 to 5) or -1 if the index is invalid.
    */
   int getCentrality(int index);
+
+  /**
+   * Sets up the board with the standard initial Agon configuration. This method places all pawns
+   * and queens for both players
+   */
+  void initBaseConfiguration();
+
+  /**
+   * Provides access to the complete history of moves performed during the game. *
+   *
+   * <p>The returned list contains {@link HistoryInformations} objects representing each turn,
+   * typically ordered from the most recent move played to the first one.
+   *
+   * @return A {@link List} containing the sequence of moves in the current game.
+   */
+  List<HistoryInformations> getHistory();
 
   /**
    * Converts the current board state into a list of ASCII strings.

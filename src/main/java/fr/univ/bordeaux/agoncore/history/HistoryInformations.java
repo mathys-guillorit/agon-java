@@ -51,7 +51,7 @@ public class HistoryInformations {
   }
 
   /**
-   * Get the PieceType of the piece that has been moved.
+   * Get the PieceType of the piece that has been moved
    *
    * @return The {@link PieceType} that was originally moved.
    */
@@ -60,7 +60,7 @@ public class HistoryInformations {
   }
 
   /**
-   * Get the color of the player who made the move.
+   * Get the color of the player who made the move
    *
    * @return The {@link Color} of the player who made the move.
    */

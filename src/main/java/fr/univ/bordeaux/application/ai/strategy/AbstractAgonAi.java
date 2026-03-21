@@ -6,7 +6,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 /**
- * Skeletal implementation of the {@link AgonAi} interface.
+ * Skeletal implementation of the {@link AgonAI} interface.
  *
  * <p>This abstract class handles the common "plumbing" required for any AI strategy, allowing
  * concrete implementations (like Minimax or MCTS) to focus solely on the decision logic.
@@ -29,13 +29,19 @@ public abstract class AbstractAgonAi implements AgonAi {
    */
   protected final Heuristic heuristic;
 
-  /** The color played by this AI agent (White or Black). */
+  /**
+   * The color played by this AI agent (White or Black).
+   */
   protected Color color;
 
-  /** The maximum time allowed for calculation in milliseconds. Default is 5000ms. */
+  /**
+   * The maximum time allowed for calculation in milliseconds. Default is 5000ms.
+   */
   protected long timeLimit = 5000;
 
-  /** The timestamp (in milliseconds) when the current move calculation started. */
+  /**
+   * The timestamp (in milliseconds) when the current move calculation started.
+   */
   protected long startTime;
 
   /**
@@ -54,7 +60,9 @@ public abstract class AbstractAgonAi implements AgonAi {
     this.color = color;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setTimeLimit(long millis) {
     this.timeLimit = millis;

@@ -1,14 +1,33 @@
 package fr.univ.bordeaux.application;
 
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
+import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
+import fr.univ.bordeaux.application.commands.specialized.CmdHint;
+import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
+import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
+import fr.univ.bordeaux.application.commands.specialized.CmdSave;
+import fr.univ.bordeaux.application.commands.specialized.CmdSet;
+import fr.univ.bordeaux.application.commands.specialized.CmdShow;
+import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.ContestMatch;
+import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.technical.config.ConfigParser;
 import fr.univ.bordeaux.technical.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.cli.*;
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  * The GameLauncher class is the entry point for the Agon application.
@@ -129,20 +148,24 @@ public class GameLauncher {
         config.setTimeout(time * 60);
         System.out.println("[INFO] Blitz mode activated: " + time + " minutes");
       }
+      if (cmd.hasOption("c")) {
+        System.out.println("[INFO] Contest mode detected.");
+        // TODO: Uncomment when GameConfig has setContestMode()
+      }
       if (cmd.hasOption("a")) {
         config.setAi(true);
         String color = cmd.getOptionValue("a", "DEFAULT");
         if ("W".equalsIgnoreCase(color)) {
-          config.setWhiteAi(true);
-          config.setBlackAi(false);
+          config.setWhiteAI(true);
+          config.setBlackAI(false);
           System.out.println("[INFO] AI configured to play White.");
         } else if ("B".equalsIgnoreCase(color)) {
-          config.setWhiteAi(false);
-          config.setBlackAi(true);
+          config.setWhiteAI(false);
+          config.setBlackAI(true);
           System.out.println("[INFO] AI configured to play Black.");
         } else if ("A".equalsIgnoreCase(color)) {
-          config.setWhiteAi(true);
-          config.setBlackAi(true);
+          config.setWhiteAI(true);
+          config.setBlackAI(true);
           System.out.println("[INFO] AI configured to play Both sides.");
         } else {
           config.setWhiteAi(false);
@@ -150,7 +173,6 @@ public class GameLauncher {
           System.out.println("[INFO] AI defaults configuration (Black).");
         }
       }
-
       String[] fileArg = cmd.getArgs();
       String filePath = null;
       if (fileArg.length > 0) {
@@ -226,24 +248,27 @@ public class GameLauncher {
    * Initializes the application layers and starts the selected user interface.
    *
    * <p>Chooses between the CLI ({@link fr.univ.bordeaux.ui.cli.AgonShell}) and the GUI ({@link
-   * fr.univ.bordeaux.ui.gui.AgonGUI}) based on the provided command-line options. If a file path is
-   * provided, it simulates the execution of the load command immediately after engine startup.
+   * fr.univ.bordeaux.ui.gui}) based on the provided command-line options.
    *
    * @param config The final configuration to be used by the UI and the engine.
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
    * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
   private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
-    // AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    System.out.println("Starting Agon Shell...");
+    AgonRegister<CmdAction> cmds = new AgonRegister<>();
     GameUserInterface userInterface;
     if (cmd.hasOption("g")) {
-      // AgonGUI agon = new AgonGUI(config);
-      /*} else {
+      // AgonGUI agon = new  AgonGUI(config);
+    } else {
       try {
         final AgonShell[] shellRef = new AgonShell[1];
+
         Completer strategyCompleter =
             (reader, line, candidates) -> {
-              if (shellRef[0] != null) shellRef[0].globalCompleter(reader, line, candidates);
+              if (shellRef[0] != null) {
+                shellRef[0].globalCompleter(reader, line, candidates);
+              }
             };
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
         LineReader reader =
@@ -261,8 +286,7 @@ public class GameLauncher {
 
         cmds.register("show", new CmdShow(userInterface, config));
 
-        CmdLoad loadCmd = new CmdLoad(userInterface);
-        cmds.register("load", loadCmd);
+        cmds.register("load", new CmdLoad(userInterface));
 
         cmds.register("save", new CmdSave(userInterface));
 
@@ -273,16 +297,14 @@ public class GameLauncher {
         cmds.register("redo", new CmdRedo(userInterface));
 
         cmds.register("help", new CmdHelp(userInterface, cmds));
-
-        if (filePathToLoad != null) {
-            loadCmd.execute();
-        }
+        /*if (filePathToLoad != null) {
+          loadCmd.execute(null);
+        }*/
 
         gameEngine.start();
-
       } catch (Exception e) {
         e.printStackTrace();
-      }*/
+      }
     }
   }
 
