@@ -18,8 +18,8 @@ public class GameConfig {
   private int aiTimeLimit = 5;
   private boolean aiIterativeDeepening = true;
   private String aiHeuristic = "mixed";
-  private boolean whiteIsAI = false;
-  private boolean blackIsAI = true;
+  private boolean whiteIsAi = false;
+  private boolean blackIsAi = true;
 
   /**
    * Sets whether the White player is controlled by an Artificial Intelligence.
