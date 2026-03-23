@@ -246,8 +246,6 @@ public class GameConfig {
     return manualPlacement;
   }
 
-
-
   public void setWhiteAi(boolean whiteIsAi) {
     this.whiteIsAi = whiteIsAi;
   }

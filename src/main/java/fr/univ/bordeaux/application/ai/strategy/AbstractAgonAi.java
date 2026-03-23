@@ -29,19 +29,13 @@ public abstract class AbstractAgonAi implements AgonAi {
    */
   protected final Heuristic heuristic;
 
-  /**
-   * The color played by this AI agent (White or Black).
-   */
+  /** The color played by this AI agent (White or Black). */
   protected Color color;
 
-  /**
-   * The maximum time allowed for calculation in milliseconds. Default is 5000ms.
-   */
+  /** The maximum time allowed for calculation in milliseconds. Default is 5000ms. */
   protected long timeLimit = 5000;
 
-  /**
-   * The timestamp (in milliseconds) when the current move calculation started.
-   */
+  /** The timestamp (in milliseconds) when the current move calculation started. */
   protected long startTime;
 
   /**
@@ -60,9 +54,7 @@ public abstract class AbstractAgonAi implements AgonAi {
     this.color = color;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void setTimeLimit(long millis) {
     this.timeLimit = millis;
