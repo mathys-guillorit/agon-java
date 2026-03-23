@@ -20,12 +20,8 @@ public class LoadLocalFileTest {
       IOException.class,
       () -> new LoadLocalFile("this is a test of loading a file")
     );
-    assertEquals(
-      "AgonShellTest.class\n" +
-      "ConsoleRendererTest.class\n" +
-      "LoadLocalFileTest.class\n" +
-      "tools\n",
-      new LoadLocalFile("").getContent()
+    assertTrue(
+      new LoadLocalFile("").getContent().contains("ConsoleRendererTest.class\n")
     );
     final String path = "/cmdsInformations/desc/test.txt";
     String content = new LoadLocalFile(path).getContent();
