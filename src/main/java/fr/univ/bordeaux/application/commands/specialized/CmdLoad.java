@@ -1,8 +1,15 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.io.storage.GameSaveData;
+import fr.univ.bordeaux.technical.io.storage.GameSaveParser;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
@@ -99,6 +106,23 @@ public final class CmdLoad extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
+    //---------------------------------------
+
+    GameSaveParser parser = new GameSaveParser();
+    try {
+      GameSaveData saveData = parser.parse("save.asv");
+
+      GameConfig loadedConfig = saveData.getConfig();
+      Color playerTurn = saveData.getCurrentPlayer();
+
+      AgonBoard loadedBoard = new AgonBoardImpl(saveData.getBoardLines());
+      History loadedHistory = new History(saveData.getHistoryMoves());
+    }catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+    //------------------------
+
     this.getCtx()
         .showError("Load command recognized but not yet implemented for: " + this.filename + "\n");
     return false;

@@ -3,8 +3,12 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.storage.GameSaveData;
+import fr.univ.bordeaux.technical.io.storage.GameSaveSerializer;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
+
+import java.util.List;
 
 /**
  * Command responsible for saving the current game state to a file.
@@ -72,7 +76,18 @@ public final class CmdSave extends Cmd {
       return false;
     }
 
-    // Logique de sauvegarde à implémenter ici
+    //-------------------------------------------------
+
+    List<String> boardText = board.toTextList();
+    List<String> historyText = history.toTextList();
+
+    GameSaveData saveData = new GameSaveData(config, currentPlayer, boardText, historyText);
+
+    GameSaveSerializer serializer = new GameSaveSerializer();
+    serializer.save(saveData, "save.asv");
+
+
+    //------------------------------------------------
     this.getCtx()
         .showInfo(
             "Save command recognized for file: " + this.filename + " (Implementation pending).\n");
