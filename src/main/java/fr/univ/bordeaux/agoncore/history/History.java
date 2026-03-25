@@ -43,7 +43,21 @@ public class History {
    */
   public History(List<String> textMoves) {
     for (String textMove : textMoves) {
-      String[] parts = textMove.trim().split("\\s+");
+      String cleanMove = textMove.trim();
+      if (cleanMove.isEmpty()) continue;
+
+      String mainPart = cleanMove;
+      String capturePart = null;
+
+      int openParen = cleanMove.indexOf('(');
+      int closeParen = cleanMove.indexOf(')');
+
+      if (openParen != -1 && closeParen != -1 && closeParen > openParen) {
+        mainPart = cleanMove.substring(0, openParen).trim();
+        capturePart = cleanMove.substring(openParen + 1, closeParen).trim();
+      }
+
+      String[] parts = mainPart.split("\\s+");
 
       if (parts.length >= 3) {
         char pieceChar = parts[0].charAt(0);
@@ -51,11 +65,49 @@ public class History {
         int toIdx = CoordinateMapper.fromCoordinateString(parts[2]);
 
         Color moveColor = (pieceChar == 'O' || pieceChar == 'Q') ? Color.WHITE : Color.BLACK;
-        PieceType type = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
+        PieceType type;
+        if (pieceChar == 'Q') {
+          type = PieceType.WHITE_QUEEN;
+        } else if(pieceChar == 'q') {
+          type = PieceType.BLACK_QUEEN;
+        } else {
+          type = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
+        }
 
         Move mainMove = new Move(fromIdx, toIdx, moveColor, type);
         List<Move> turnMoves = new java.util.ArrayList<>();
         turnMoves.add(mainMove);
+
+        if (capturePart != null && !capturePart.isEmpty()) {
+          String[] captures = capturePart.split(",");
+
+          for (String capRaw : captures) {
+            capRaw = capRaw.trim();
+
+            if (!capRaw.isEmpty()) {
+              String[] capParts = capRaw.split("\\s+");
+
+              if (capParts.length >= 2) {
+                char capPieceChar = capParts[0].charAt(0);
+                int capIdx = CoordinateMapper.fromCoordinateString(capParts[1]);
+
+                Color capColor = (capPieceChar == 'O' || capPieceChar == 'Q') ? Color.WHITE : Color.BLACK;
+
+                PieceType capType;
+                if (capPieceChar == 'Q') {
+                  capType = PieceType.WHITE_QUEEN;
+                } else if(capPieceChar == 'q') {
+                  capType = PieceType.BLACK_QUEEN;
+                } else {
+                  capType = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
+                }
+
+                Move capMove = new Move(capIdx, -1, capColor, capType);
+                turnMoves.add(capMove);
+              }
+            }
+          }
+        }
 
         this.undoStack.push(new HistoryInformations(turnMoves, type, moveColor));
       }
@@ -174,10 +226,44 @@ public class History {
       String start = CoordinateMapper.toCoordinate(primaryMove.getFrom());
       String end = CoordinateMapper.toCoordinate(primaryMove.getDestination());
 
-      char pieceChar = (info.getColor() == Color.WHITE) ? 'O' : 'X';
+      char pieceChar;
+      if (info.getColor() == Color.WHITE) {
+        pieceChar = (primaryMove.getPieceType() == PieceType.WHITE_QUEEN) ? 'Q' : 'O';
+      } else {
+        pieceChar = (primaryMove.getPieceType() == PieceType.BLACK_QUEEN) ? 'q' : 'X';
+      }
 
-      textMoves.add(pieceChar + " " + start + " " + end);
+      StringBuilder moveBuilder = new StringBuilder();
+      moveBuilder.append(pieceChar).append(" ").append(start).append(" ").append(end);
+
+      if (info.getMoves().size() > 1) {
+        moveBuilder.append(" (");
+
+        for (int i = 1; i < info.getMoves().size(); i++) {
+          Move capMove = info.getMoves().get(i);
+
+          String capCoord = CoordinateMapper.toCoordinate(capMove.getFrom());
+
+          char capChar;
+          if (capMove.getColor() == Color.WHITE) {
+            capChar = (capMove.getPieceType() == PieceType.WHITE_QUEEN) ? 'Q' : 'O';
+          } else {
+            capChar = (capMove.getPieceType() == PieceType.BLACK_QUEEN) ? 'q' : 'X';
+          }
+
+          moveBuilder.append(capChar).append(" ").append(capCoord);
+
+          if (i < info.getMoves().size() - 1) {
+            moveBuilder.append(", ");
+          }
+        }
+
+        moveBuilder.append(")");
+      }
+
+      textMoves.add(moveBuilder.toString());
     }
+
     return textMoves;
   }
 }

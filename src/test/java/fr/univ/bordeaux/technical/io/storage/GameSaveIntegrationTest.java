@@ -260,4 +260,65 @@ class GameSaveIntegrationTest {
             "The error message should explicitly mention the missing [settings] section"
     );
   }
+
+  @Test
+  @DisplayName("Should correctly serialize and parse history moves containing capture notation")
+  void testHistoryWithCaptures() throws IOException {
+    GameConfig config = new GameConfig();
+    List<String> boardLines = List.of(". . .");
+
+    List<String> complexMoves = Arrays.asList(
+            "X c3 c2 (O c1, q d5)",
+            "Q f5 f6",
+            "O a1 a2 (X c3)"
+    );
+
+    GameSaveData data = new GameSaveData(config, Color.WHITE, boardLines, complexMoves);
+    Path captureFile = tempDir.resolve("captures_save.asv");
+
+    GameSaveSerializer serializer = new GameSaveSerializer();
+    serializer.save(data, captureFile.toString());
+
+    String fileContent = Files.readString(captureFile);
+    assertTrue(fileContent.contains("X c3 c2 (O c1, q d5); Q f5 f6;\nO a1 a2 (X c3);\n"),
+            "Serializer should correctly format complex moves with semicolons and newlines");
+
+    GameSaveParser parser = new GameSaveParser();
+    GameSaveData loadedData = parser.parse(captureFile.toString());
+
+    List<String> loadedMoves = loadedData.getHistoryMoves();
+    assertNotNull(loadedMoves);
+    assertEquals(3, loadedMoves.size(), "Should have exactly 3 moves");
+    assertEquals("X c3 c2 (O c1, q d5)", loadedMoves.get(0), "First move should match exactly");
+    assertEquals("Q f5 f6", loadedMoves.get(1), "Second move should match exactly");
+    assertEquals("O a1 a2 (X c3)", loadedMoves.get(2), "Third move should match exactly");
+  }
+
+  @Test
+  @DisplayName("HistoryState parser should preserve internal spacing in capture parentheses")
+  void testMessyCaptureSpacing() throws IOException {
+    Path messyCaptureFile = tempDir.resolve("messy_captures.asv");
+
+    String content =
+            "[settings]\n" +
+                    "[game]\n" +
+                    "X\n" +
+                    ". .\n" +
+                    "[history]\n" +
+                    "X c3 c2 (  O c1 , q d5 ) ; \n" +
+                    " Q f5 f6 ;  \n" +
+                    "O a1 a2 (X c3);\n";
+
+    Files.writeString(messyCaptureFile, content);
+
+    GameSaveParser parser = new GameSaveParser();
+    GameSaveData loadedData = parser.parse(messyCaptureFile.toString());
+
+    List<String> loadedMoves = loadedData.getHistoryMoves();
+    assertEquals(3, loadedMoves.size());
+
+    assertEquals("X c3 c2 (  O c1 , q d5 )", loadedMoves.get(0), "Should preserve internal spacing");
+    assertEquals("Q f5 f6", loadedMoves.get(1));
+    assertEquals("O a1 a2 (X c3)", loadedMoves.get(2));
+  }
 }

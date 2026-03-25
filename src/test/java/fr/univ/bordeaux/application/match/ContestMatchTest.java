@@ -30,7 +30,7 @@ public class ContestMatchTest {
    */
   @Test
   public void testExecuteContestIntegration() throws Exception {
-    String content = "[game]\nO\nQ" + ".".repeat(120);
+    String content = "[settings]\n[game]\nO\nQ" + ".".repeat(120) + "\n[history]\n";
     Path file = tempDir.resolve("contest_test.txt");
     Files.writeString(file, content);
     ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -55,10 +55,13 @@ public class ContestMatchTest {
   @Test
   public void testExecuteContestNoMoveBranch() throws Exception {
     Path emptyFile = tempDir.resolve("no_move.txt");
-    StringBuilder sb = new StringBuilder("[game]\nO\n");
+
+    StringBuilder sb = new StringBuilder("[settings]\n[game]\nO\n");
     for (int i = 0; i < 11; i++) {
       sb.append("O ".repeat(11)).append("\n");
     }
+    sb.append("[history]\n");
+
     Files.write(emptyFile, sb.toString().getBytes());
     ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     System.setErr(new PrintStream(errContent));
