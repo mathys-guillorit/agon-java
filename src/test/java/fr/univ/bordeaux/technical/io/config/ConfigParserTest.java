@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.technical.config;
+package fr.univ.bordeaux.technical.io.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 

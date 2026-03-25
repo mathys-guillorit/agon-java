@@ -194,7 +194,7 @@ class GameSaveIntegrationTest {
     assertTrue(Files.readString(edgeCaseFile).contains("ai_color = WHITE\n"));
 
     Path emptyMoveFile = tempDir.resolve("empty_move.asv");
-    Files.writeString(emptyMoveFile, "[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
+    Files.writeString(emptyMoveFile, "[settings]\n[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
     GameSaveParser parser = new GameSaveParser();
     GameSaveData loadedData = parser.parse(emptyMoveFile.toString());
 
@@ -213,5 +213,51 @@ class GameSaveIntegrationTest {
           gameState.parseLine("Z", builder);
         },
         "Should throw an IOException for unknown player character like 'Z'");
+  }
+
+  @Test
+  @DisplayName("Should reject save file where an unclosed comment swallows mandatory sections")
+  void testUnclosedBlockCommentSwallowsSection() throws IOException {
+    Path corruptFile = tempDir.resolve("corrupt_save.asv");
+
+    String corruptContent =
+            "[settings]\n"
+                    + "timeout = 120\n"
+                    + "[game]\n"
+                    + "X\n"
+                    + ". X o .\n"
+                    + "{ Oops, I forgot to close this comment\n"
+                    + "[history]\n"
+                    + "O a1 a2;\n";
+
+    Files.writeString(corruptFile, corruptContent);
+
+    GameSaveParser parser = new GameSaveParser();
+    GameSaveData data = parser.parse(corruptFile.toString());
+
+    assertNull(data, "Parser should return null because the [history] section is missing/swallowed");
+  }
+
+  @Test
+  @DisplayName("Builder should enforce the presence of all section flags")
+  void testBuilderMissingSectionFlags() {
+    GameSaveBuilder builder = new GameSaveBuilder();
+
+    builder.markGameSection();
+    builder.markHistorySection();
+
+    builder.setCurrentPlayer(Color.WHITE);
+    builder.addBoardLine(". . .");
+
+    Exception exception = assertThrows(
+            IOException.class,
+            builder::build,
+            "Builder should throw an exception if [settings] section flag is false"
+    );
+
+    assertTrue(
+            exception.getMessage().contains("Settings"),
+            "The error message should explicitly mention the missing [settings] section"
+    );
   }
 }
