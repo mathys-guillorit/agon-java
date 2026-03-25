@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
@@ -63,36 +64,12 @@ public class ContestMatch {
       String move =
           playerChar
               + " "
-              + indexToCoordinate(bestMove.getFrom())
+              + CoordinateMapper.toAbaPro(bestMove.getFrom())
               + " "
-              + indexToCoordinate(bestMove.getDestination());
+              + CoordinateMapper.toAbaPro(bestMove.getDestination());
       System.out.println(move);
     } else {
       System.err.println("[ERROR] The AI could not find any valid move.");
     }
-  }
-
-  /**
-   * Converts a 1D bitboard index into a human-readable board coordinate string.
-   *
-   * <p>This method reverses the linear mapping logic to find the original 2D position on an
-   * 11-column grid. It assumes that:
-   *
-   * <ul>
-   *   <li>Rows are represented by letters starting from 'A' (calculated using integer division:
-   *       {@code index / 11}).
-   *   <li>Columns are represented by 1-based integers (calculated using the modulo operator: {@code
-   *       (index % 11) + 1}).
-   * </ul>
-   *
-   * For example, it translates an internal index back into a format like "F6" or "H5".
-   *
-   * @param index The 0-indexed position within the 1D bitboard array.
-   * @return A string representing the algebraic coordinate on the board.
-   */
-  private static String indexToCoordinate(int index) {
-    char letter = (char) ('A' + (index / 11));
-    int col = (index % 11) + 1;
-    return "" + letter + col;
   }
 }
