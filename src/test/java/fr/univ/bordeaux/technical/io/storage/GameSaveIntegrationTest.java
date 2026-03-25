@@ -3,7 +3,7 @@ package fr.univ.bordeaux.technical.io.storage;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.io.storage.states.GameState;
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.technical.io.storage;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.io.Serializer;
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -7,7 +7,7 @@ import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.MobilityHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.util.HashMap;
 import java.util.Map;
 

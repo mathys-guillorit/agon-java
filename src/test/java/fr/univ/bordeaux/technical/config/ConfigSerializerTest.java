@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
