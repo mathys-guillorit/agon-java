@@ -216,7 +216,7 @@ class GameSaveIntegrationTest {
   }
 
   @Test
-  @DisplayName("Should reject save file where an unclosed comment swallows mandatory sections")
+  @DisplayName("Should violently reject save file and throw IOException if a block comment is unclosed")
   void testUnclosedBlockCommentSwallowsSection() throws IOException {
     Path corruptFile = tempDir.resolve("corrupt_save.asv");
 
@@ -233,9 +233,17 @@ class GameSaveIntegrationTest {
     Files.writeString(corruptFile, corruptContent);
 
     GameSaveParser parser = new GameSaveParser();
-    GameSaveData data = parser.parse(corruptFile.toString());
 
-    assertNull(data, "Parser should return null because the [history] section is missing/swallowed");
+    Exception exception = assertThrows(
+            IOException.class,
+            () -> parser.parse(corruptFile.toString()),
+            "Parser should throw an IOException because the block comment '{' is never closed"
+    );
+
+    assertTrue(
+            exception.getMessage().toLowerCase().contains("closed") || exception.getMessage().toLowerCase().contains("Corrupted"),
+            "The exception message should explain that the comment block wasn't closed"
+    );
   }
 
   @Test
