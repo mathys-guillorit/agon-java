@@ -349,7 +349,7 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getHelpContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/helpGameLauncher.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/helpGameLauncher.txt").getContent();
   }
 
   /**
@@ -363,6 +363,6 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getVersionContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/version.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 }
