@@ -75,6 +75,4 @@ public class ServerDiscovery {
         if (socket != null) socket.close();
     }
 
-
-
 }

@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jline.reader.ParsedLine;
@@ -61,14 +62,26 @@ public class UIPromptParser {
       return null;
     }
 
-    String cmdName = words.get(0).toLowerCase();
+    String firstWord = words.get(0).toLowerCase();
+
+    // 1. Try compound commands such as "server start" -> "server_start"
+    if (words.size() >= 2) {
+      String compoundCmdName = firstWord + "_" + words.get(1).toLowerCase();
+      String[] compoundOptions = words.subList(2, words.size()).toArray(String[]::new);
+
+      Optional<CmdAction> compoundCmd = registry.get(compoundCmdName);
+      if (compoundCmd.isPresent()) {
+        return compoundCmd.get().createNew(compoundOptions);
+      }
+    }
+
+    // 2. Fallback to classic one-word commands such as "join"
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
-    // Try to find the command in the registry, otherwise fallback to move/relocation parsing
     return registry
-        .get(cmdName)
-        .map(action -> action.createNew(options))
-        .orElseGet(() -> handleDefault(line, ui));
+            .get(firstWord)
+            .map(action -> action.createNew(options))
+            .orElseGet(() -> handleDefault(line, ui));
   }
 
   /**

@@ -20,6 +20,12 @@ import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
+import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdPing;
+import fr.univ.bordeaux.application.commands.network.CmdServerList;
+import fr.univ.bordeaux.application.commands.network.CmdServerStart;
+import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
+import fr.univ.bordeaux.application.commands.network.CmdServerStop;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.cli.*;
@@ -257,51 +263,65 @@ public class GameLauncher {
   private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
     System.out.println("Starting Agon Shell...");
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    AppContext context = new AppContext();
     GameUserInterface userInterface;
+
     if (cmd.hasOption("g")) {
-      // AgonGUI agon = new  AgonGUI(config);
+      // AgonGUI agon = new AgonGUI(config);
     } else {
       try {
         final AgonShell[] shellRef = new AgonShell[1];
 
         Completer strategyCompleter =
-            (reader, line, candidates) -> {
-              if (shellRef[0] != null) {
-                shellRef[0].globalCompleter(reader, line, candidates);
-              }
-            };
+                (reader, line, candidates) -> {
+                  if (shellRef[0] != null) {
+                    shellRef[0].globalCompleter(reader, line, candidates);
+                  }
+                };
+
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
         LineReader reader =
-            LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
+                LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
         userInterface = new AgonShell(terminal, reader, cmds);
         shellRef[0] = (AgonShell) userInterface;
+
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
 
+        // =========================
+        // Local / gameplay commands
+        // =========================
         cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-
-        cmds.register("quit", new CmdQuit(userInterface));
-
         cmds.register("hint", new CmdHint(userInterface));
-
         cmds.register("show", new CmdShow(userInterface, config));
-
         cmds.register("load", new CmdLoad(userInterface));
-
         cmds.register("save", new CmdSave(userInterface));
-
         cmds.register("set", new CmdSet(userInterface, config));
-
         cmds.register("undo", new CmdUndo(userInterface));
-
         cmds.register("redo", new CmdRedo(userInterface));
-
         cmds.register("help", new CmdHelp(userInterface, cmds));
-        /*if (filePathToLoad != null) {
-          loadCmd.execute(null);
-        }*/
+
+        // =========================
+        // Network commands
+        // =========================
+        cmds.register("join", new CmdJoin(userInterface, context));
+        cmds.register("ping", new CmdPing(userInterface, context));
+        cmds.register("server_start", new CmdServerStart(userInterface, context));
+        cmds.register("server_stop", new CmdServerStop(userInterface, context));
+        cmds.register("server_list", new CmdServerList(userInterface, context));
+        cmds.register("server_status", new CmdServerStatus(userInterface, context));
+
+        // =========================
+        // Context-aware quit
+        // =========================
+        cmds.register("quit", new CmdQuit(userInterface, context));
+
+      /* if (filePathToLoad != null) {
+        loadCmd.execute(null);
+      } */
 
         gameEngine.start();
+
       } catch (Exception e) {
         e.printStackTrace();
       }

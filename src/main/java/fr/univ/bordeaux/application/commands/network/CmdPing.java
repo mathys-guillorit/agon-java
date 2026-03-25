@@ -2,45 +2,60 @@ package fr.univ.bordeaux.application.commands.network;
 
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.Cmd;
+import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
+import fr.univ.bordeaux.ui.GameUserInterface;
 
 /**
- * Sends "PING" to the connected server and prints the RTT on the client side.
+ * Command used to measure the round-trip time (RTT) between the client and server.
+ *
+ * <p>This command sends a "PING" request and displays the response time.
  */
 public class CmdPing extends Cmd {
 
+    /** Application context */
     private final AppContext context;
 
     /**
-     * Constructs a Ping command.
-     *
-     * @param context The application context.
+     * Constructor.
      */
-    public CmdPing(AppContext context) {
+    public CmdPing(GameUserInterface ui, AppContext context) {
+        super(ui);
         this.context = context;
+        this.setName("ping");
+        this.setDesc(
+                "Usage: ping\n"
+                        + "Description: measures the latency (RTT) with the connected server.\n"
+                        + "Requires an active connection.\n"
+        );
     }
 
     @Override
-    public void execute() {
+    public CmdAction createNew(String[] args) {
+        return new CmdPing(getCtx(), context);
     }
 
-    /**
-     * Executes the ping command. Checks connectivity before sending the request.
-     *
-     * @param args Command arguments (unused for ping).
-     */
-    public void execute(String[] args) {
+    @Override
+    public boolean execute(MatchManager match) {
+
         AgonClient client = context.getClient();
+
+        // Ensure client is connected
         if (!client.isConnected()) {
-            System.out.println("[CLIENT] Not connected. Use join first.");
-            return;
+            getCtx().showWarn("[CLIENT] Not connected. Use join first.");
+            return false;
         }
 
+        // Send ping request
         String response = client.pingRttMs();
+
         if (response != null) {
-            System.out.println(response);
+            getCtx().showMessage(response + "\n");
         } else {
-            System.out.println("[CLIENT] Connection lost. Use join to reconnect.");
+            getCtx().showError("[CLIENT] Connection lost.");
         }
+
+        return true;
     }
 }

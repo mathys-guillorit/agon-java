@@ -1,8 +1,11 @@
 package fr.univ.bordeaux.application.network.client;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -28,14 +31,19 @@ public class AgonClient {
      * @return true if the connection succeeds (or is already established), false otherwise
      */
     public boolean connect(String host, int port) {
-        if (isConnected()) return true;
+        if (isConnected()) {
+            return true;
+        }
 
         try {
             socket = new Socket(host, port);
             socket.setSoTimeout(5000);
 
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
-            out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+            in = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+            out = new BufferedWriter(
+                    new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+
             return true;
 
         } catch (IOException e) {
@@ -59,16 +67,19 @@ public class AgonClient {
      * @return true if the server replies with PONG, false otherwise
      */
     public boolean isAlive() {
-        if (!isConnected()) return false;
+        if (!isConnected()) {
+            return false;
+        }
 
         try {
             sendLine("PING");
-            String resp = readLine();
+            String resp = readProtocolLine();
 
             if (resp == null || !resp.startsWith("PONG")) {
                 disconnectSilently();
                 return false;
             }
+
             return true;
 
         } catch (IOException e) {
@@ -83,22 +94,22 @@ public class AgonClient {
      * @return a formatted RTT string (in milliseconds) if the server replies correctly, null otherwise
      */
     public String pingRttMs() {
-        if (!isConnected()) return null;
+        if (!isConnected()) {
+            return null;
+        }
 
         long t0 = System.currentTimeMillis();
 
         try {
-            System.out.println("[CLIENT] PING");
             sendLine("PING");
-            String resp = readLine();
+            String resp = readProtocolLine();
 
-            if (resp == null || !resp.startsWith("PONG")) return null;
+            if (resp == null || !resp.startsWith("PONG")) {
+                return null;
+            }
 
             long rtt = System.currentTimeMillis() - t0;
-
-            String response = "[SERVER] PONG TIME=" + rtt + "ms";
-
-            return response;
+            return "[SERVER] PONG TIME=" + rtt + "ms";
 
         } catch (IOException e) {
             disconnectSilently();
@@ -112,12 +123,13 @@ public class AgonClient {
      * @return the raw server response if successful, null otherwise
      */
     public String requestServerStatus() {
-        if (!isConnected()) return null;
+        if (!isConnected()) {
+            return null;
+        }
 
         try {
-            System.out.println("[CLIENT] STATUS");
             sendLine("STATUS");
-            String resp = readLine();
+            String resp = readProtocolLine();
 
             if (resp == null || !resp.startsWith("STATUS_OK")) {
                 return null;
@@ -141,12 +153,8 @@ public class AgonClient {
         }
 
         try {
-            System.out.println("[CLIENT] QUIT");
             sendLine("QUIT");
-            String resp = readLine();
-            if (resp != null) {
-                System.out.println("[SERVER] " +resp);
-            }
+            readProtocolLine(); // BYE expected
         } catch (IOException ignored) {
         } finally {
             disconnectSilently();
@@ -157,7 +165,13 @@ public class AgonClient {
      * Close everything without throwing.
      */
     public void disconnectSilently() {
-        try { if (socket != null) socket.close(); } catch (IOException ignored) {}
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (IOException ignored) {
+        }
+
         socket = null;
         in = null;
         out = null;
@@ -170,21 +184,40 @@ public class AgonClient {
      * @throws IOException if the client is not connected or the write fails
      */
     private void sendLine(String msg) throws IOException {
-        if (out == null) throw new IOException("Not connected");
+        if (out == null) {
+            throw new IOException("Not connected");
+        }
+
         out.write(msg);
         out.write('\n');
         out.flush();
     }
 
     /**
-     * Reads a single text line from the server.
+     * Reads a single protocol line from the server.
      *
-     * @return the received line, or null if end-of-stream
+     * <p>If the server sends {@code BYE}, the client disconnects immediately.
+     *
+     * @return the received line, or null if end-of-stream or remote shutdown
      * @throws IOException if the client is not connected or the read fails
      */
-    private String readLine() throws IOException {
-        if (in == null) throw new IOException("Not connected");
-        return in.readLine();
-    }
+    private String readProtocolLine() throws IOException {
+        if (in == null) {
+            throw new IOException("Not connected");
+        }
 
+        String line = in.readLine();
+
+        if (line == null) {
+            disconnectSilently();
+            return null;
+        }
+
+        if ("BYE".equalsIgnoreCase(line.trim())) {
+            disconnectSilently();
+            return "BYE";
+        }
+
+        return line;
+    }
 }

@@ -1,10 +1,10 @@
-package fr.univ.bordeaux.application.player;
+package fr.univ.bordeaux.application.network;
 
 /**
  * Represents a player independently from the game mode.
  * A player may be used in local mode, AI mode, or network mode.
  */
-public class Player {
+public class OnlinePlayer {
 
     private final int id;
     private final String name;
@@ -16,7 +16,7 @@ public class Player {
      * @param id unique player identifier
      * @param name player name
      */
-    public Player(int id, String name) {
+    public OnlinePlayer(int id, String name) {
         this.id = id;
         this.name = name;
         this.status = "idle";
@@ -37,4 +37,4 @@ public class Player {
     public void setStatus(String status) {
         this.status = status;
     }
-}²
+}

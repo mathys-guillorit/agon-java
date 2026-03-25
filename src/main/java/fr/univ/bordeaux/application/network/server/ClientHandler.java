@@ -4,7 +4,11 @@ import fr.univ.bordeaux.application.network.protocol.Command;
 import fr.univ.bordeaux.application.network.protocol.CommandParser;
 import fr.univ.bordeaux.application.network.protocol.CommandType;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
@@ -14,10 +18,19 @@ import java.nio.charset.StandardCharsets;
  */
 public class ClientHandler implements Runnable {
 
+    /** TCP socket associated with the connected client. */
     private final Socket socket;
+
+    /** Server instance owning this client handler. */
     private final AgonServer server;
+
+    /** Protocol parser used to decode client messages. */
     private final CommandParser parser = new CommandParser();
+
+    /** Indicates whether the handler is still running. */
     private volatile boolean running = true;
+
+    /** Output stream used to send messages to the client. */
     private BufferedWriter out;
 
     /**
@@ -32,22 +45,35 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Stops the client handler and closes the client socket.
+     * Stops the client handler gracefully.
+     *
+     * <p>This method:
+     * <ul>
+     *     <li>marks the handler as stopped,</li>
+     *     <li>sends a {@code BYE} message to the client if possible,</li>
+     *     <li>closes the socket.</li>
+     * </ul>
      */
     public void stop() {
-        if (!running) return;
+        if (!running) {
+            return;
+        }
+
         running = false;
 
         try {
-            if (out != null && !socket.isClosed()) {
-                send("BYE"); // Notification demandée par l'énoncé
+            if (out != null && socket != null && !socket.isClosed()) {
+                send("BYE");
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         try {
-            socket.close();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
         } catch (IOException e) {
-            System.err.println("[SERVER] Error while closing client socket");
+            System.err.println("[SERVER] Error while closing client socket: " + e.getMessage());
         }
     }
 
@@ -56,7 +82,6 @@ public class ClientHandler implements Runnable {
      */
     @Override
     public void run() {
-        System.out.println("[SERVER] ClientHandler started for " + socket.getRemoteSocketAddress());
         try {
             socket.setSoTimeout(60_000);
 
@@ -67,27 +92,26 @@ public class ClientHandler implements Runnable {
 
             while (running && !socket.isClosed()) {
                 String line;
+
                 try {
                     line = in.readLine();
                 } catch (SocketTimeoutException e) {
-                    System.out.println("[SERVER] Client timeout (60s).");
                     break;
                 }
 
-                if (line == null) break; // Déconnexion inopinée
+                if (line == null) {
+                    break;
+                }
 
                 Command cmd = parser.parse(line);
 
                 if (cmd.getType() == CommandType.PING) {
                     send("PONG TIME=0ms");
-                }
-                else if (cmd.getType() == CommandType.STATUS) {
+                } else if (cmd.getType() == CommandType.STATUS) {
                     send("STATUS_OK port=" + server.getPort()
                             + " clients=" + server.getConnectedClientsCount()
                             + " games=0");
-                }
-                else if (cmd.getType() == CommandType.QUIT) {
-                    send("BYE");
+                } else if (cmd.getType() == CommandType.QUIT) {
                     break;
                 }
             }
@@ -101,14 +125,14 @@ public class ClientHandler implements Runnable {
                 server.removeClient(this);
             }
             stop();
-            System.out.println("[SERVER] Client disconnected.");
         }
     }
 
     /**
      * Sends a raw message to the client followed by a newline and flushes the buffer.
      *
-     * @param msg The string message to send.
+     * @param msg the string message to send
+     * @throws IOException if the message cannot be written to the socket
      */
     private void send(String msg) throws IOException {
         if (out != null) {

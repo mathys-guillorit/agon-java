@@ -1,65 +1,113 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
 /**
- * Command responsible for safely exiting the Agon application.
+ * Command responsible for handling exit behavior in the application.
  *
- * <p>This command triggers the shutdown sequence in both the current match and the user interface,
- * typically asking for a save confirmation before closing.
+ * <p>This command supports three hierarchical exit levels:
+ * <ul>
+ *     <li><b>Match level:</b> If a game is currently running, it will be terminated.</li>
+ *     <li><b>Network level:</b> If connected to a remote server, the client will disconnect.</li>
+ *     <li><b>Application level:</b> If no match and no connection exist, the application will close.</li>
+ * </ul>
+ *
+ * <p>This ensures a consistent and intuitive user experience across local and network modes.
+ *
+ * <p>Usage:
+ * <ul>
+ *     <li>{@code quit}</li>
+ * </ul>
+ *
+ * <p>Notes:
+ * <ul>
+ *     <li>The command does not require any arguments.</li>
+ *     <li>The behavior adapts dynamically depending on the current state.</li>
+ * </ul>
  */
 public class CmdQuit extends Cmd {
 
+  /** Shared application context (used for network state access) */
+  private final AppContext context;
+
   /**
-   * Constructs a new Quit command. Initializes the command name to "quit" and its CLI options.
+   * Constructs a new Quit command.
    *
-   * @param uictx The user interface context to close upon execution.
+   * @param uictx   The user interface context
+   * @param context The application context (network + global state)
    */
-  public CmdQuit(GameUserInterface uictx) {
+  public CmdQuit(GameUserInterface uictx, AppContext context) {
     super(uictx);
+    this.context = context;
     this.setName("quit");
   }
 
   /**
    * Provides the usage and description for the quit command.
    *
-   * @return A formatted string for the help menu.
+   * @return A formatted help string
    */
   @Override
   public String getDescription() {
-    return "Usage: quit (or Ctrl+C)\n"
-        + "Description: Exits the game. You will be prompted to save your current progress before leaving.\n";
+    return "Usage: quit\n"
+            + "Description:\n"
+            + "- If in a match: quits the current game\n"
+            + "- If connected to a server: disconnects from it\n"
+            + "- Otherwise: exits the application\n";
   }
 
   /**
-   * Executes the shutdown sequence.
+   * Executes the quit command.
    *
-   * <p>Calls the quit method on the {@link MatchManager} (if active) and then signals the {@link
-   * GameUserInterface} to terminate the session.
+   * <p>The behavior depends on the current application state:
+   * <ul>
+   *     <li>If a match is active → quit the match</li>
+   *     <li>Else if connected → disconnect from server</li>
+   *     <li>Else → exit application</li>
+   * </ul>
    *
-   * @param match The manager for the current game session.
-   * @return true always, as the command successfully initiates the exit.
+   * @param match The current match manager (may be null)
+   * @return true if the command executed successfully
    */
   @Override
   public boolean execute(MatchManager match) {
+
+    AgonClient client = context.getClient();
+
+    // ===== CASE 1: A MATCH IS RUNNING =====
     if (match != null) {
-      match.quit();
+      match.quit(); // terminate current game session
+      this.getCtx().showMessage("[GAME] Match ended.\n");
+      return true;
     }
+
+    // ===== CASE 2: CLIENT CONNECTED TO SERVER =====
+    if (client != null && client.isConnected()) {
+      client.quit(); // send disconnection signal to server
+      this.getCtx().showMessage("[CLIENT] Disconnected from server.\n");
+      return true;
+    }
+
+    // ===== CASE 3: EXIT APPLICATION =====
+    this.getCtx().showMessage("[APP] Exiting application.\n");
     this.getCtx().quit();
+
     return true;
   }
 
   /**
-   * Factory method to create an executable instance of the quit command.
+   * Factory method to create a new executable instance of the command.
    *
-   * @param args Arguments passed in CLI (ignored for quit).
-   * @return A new {@link CmdQuit} instance.
+   * @param args CLI arguments (ignored)
+   * @return A new CmdQuit instance
    */
   @Override
   public CmdAction createNew(String[] args) {
-    return new CmdQuit(super.getCtx());
+    return new CmdQuit(super.getCtx(), context);
   }
 }

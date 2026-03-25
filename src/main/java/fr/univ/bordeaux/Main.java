@@ -1,15 +1,13 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.GameLauncher;
-import fr.univ.bordeaux.agonCore.agonElements.Color;
-import fr.univ.bordeaux.agonCore.agonElements.Move;
-import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agonCore.bitboard.BitBoard;
-import fr.univ.bordeaux.agonCore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.ui.cli.AgonShell;
-import fr.univ.bordeaux.ui.gui.controllers.GUIExample;
-import java.util.List;
 
 /**
  * @version Java 21 (Microsoft OpenJdk 21.0.9)<br> - test programm using <code>mvn test</code>
@@ -35,8 +33,9 @@ public class Main {
     // CASE 1: Daemon mode (-d / --daemon)
     // Starts the server without launching the interactive shell.
     // =========================================================
-    if (args != null && args.length > 0 &&
-            ("-d".equals(args[0]) || "--daemon".equals(args[0]))) {
+    if (args != null
+            && args.length > 0
+            && ("-d".equals(args[0]) || "--daemon".equals(args[0]))) {
 
       AgonServer server = new AgonServer(DEFAULT_PORT);
 
@@ -58,8 +57,9 @@ public class Main {
     // CASE 2: Server mode (-s [PORT] / --server [PORT])
     // Starts the server directly on the given port.
     // =========================================================
-    if (args != null && args.length > 0 &&
-            ("-s".equals(args[0]) || "--server".equals(args[0]))) {
+    if (args != null
+            && args.length > 0
+            && ("-s".equals(args[0]) || "--server".equals(args[0]))) {
 
       int port = DEFAULT_PORT;
 
@@ -89,10 +89,10 @@ public class Main {
 
     // =========================================================
     // CASE 3: Normal mode
-    // Starts the interactive CLI shell.
+    // Delegates startup to the GameLauncher.
     // =========================================================
-    AgonShell shell = new AgonShell();
-    shell.start();
+    GameLauncher launcher = new GameLauncher();
+    launcher.launch(args);
 
     //System.out.println("prog principal OK + ajout JUnit");
 
@@ -145,7 +145,5 @@ public class Main {
     //    if(a.setLocale(Locale.FRENCH))
     //      System.out.println("lang found");
     //    System.out.println(a.translate("no"));
-    GameLauncher launcher = new GameLauncher();
-    launcher.launch(arg);
   }
 }

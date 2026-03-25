@@ -8,19 +8,30 @@ import java.util.Collections;
 import java.util.List;
 
 /**
-  * TCP game server entry point.
-  */
+ * TCP game server entry point.
+ */
 public class AgonServer {
 
+    /** TCP port used by the server. */
     private final int port;
+
+    /** Logical server name used by discovery. */
     private final String name;
+
+    /** Main TCP server socket. */
     private ServerSocket serverSocket;
+
+    /** Thread dedicated to accepting incoming client connections. */
     private Thread acceptClientThread;
 
-    /* For F39 */
-    private final List<ClientHandler> currentClients = Collections.synchronizedList(new ArrayList<>());;
+    /** Current connected clients. */
+    private final List<ClientHandler> currentClients =
+            Collections.synchronizedList(new ArrayList<>());
 
+    /** UDP discovery service associated with this server. */
     private ServerDiscovery discovery;
+
+    /** Indicates whether the server is currently running. */
     private volatile boolean running = false;
 
     /**
@@ -48,7 +59,6 @@ public class AgonServer {
      */
     public boolean start() {
         if (running) {
-            System.out.println("[SERVER] is running");
             return true;
         }
 
@@ -71,14 +81,11 @@ public class AgonServer {
 
     /**
      * Main accept loop.
-     * This method runs in acceptClientThread and continuously waits for incoming TCP connections.
      */
     private void acceptClientLoop() {
-        System.out.println("[SERVER] Accept loop started.");
-        while(running) {
+        while (running) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("[SERVER] Client connected: " + clientSocket.getRemoteSocketAddress());
 
                 ClientHandler handler = new ClientHandler(clientSocket, this);
                 currentClients.add(handler);
@@ -88,35 +95,41 @@ public class AgonServer {
                 break;
             }
         }
-        System.out.println("[SERVER] Accept loop ended.");
     }
 
     /**
-     * Stops the server, disconnects the current client (if any), stops UDP broadcast, and closes the server socket.
+     * Stops the server and disconnects all connected clients cleanly.
      *
-     * @return true if the server was stopped (or already stopped)
+     * @return true if the server was stopped successfully (or already stopped)
      */
     public boolean stop() {
         if (!running) {
-            System.out.println("[SERVER] Is off");
             return true;
         }
 
         running = false;
-        System.out.println("[SERVER] Stopping...");
 
-        synchronized(currentClients) {
-            for (ClientHandler handler : currentClients) {
-                handler.stop();
-            }
+        // Stop all connected clients cleanly
+        List<ClientHandler> clientsSnapshot;
+        synchronized (currentClients) {
+            clientsSnapshot = new ArrayList<>(currentClients);
+        }
+
+        for (ClientHandler handler : clientsSnapshot) {
+            handler.stop();
+        }
+
+        synchronized (currentClients) {
             currentClients.clear();
         }
 
+        // Stop discovery service
         if (discovery != null) {
             discovery.stop();
             discovery = null;
         }
 
+        // Close server socket
         if (serverSocket != null) {
             try {
                 serverSocket.close();
@@ -135,26 +148,32 @@ public class AgonServer {
      *
      * @return TCP port
      */
-    public int getPort() { return port; }
+    public int getPort() {
+        return port;
+    }
 
     /**
      * Returns the server name used in UDP presence broadcasts.
      *
      * @return server name
      */
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     /**
      * Indicates if the server is currently running.
      *
      * @return true if running
      */
-    public boolean isRunning() { return running; }
+    public boolean isRunning() {
+        return running;
+    }
 
     /**
      * Removes a client from the list when they disconnect.
      *
-     * @param handler The client handler to be removed
+     * @param handler the client handler to remove
      */
     public void removeClient(ClientHandler handler) {
         currentClients.remove(handler);
@@ -162,9 +181,10 @@ public class AgonServer {
 
     /**
      * Returns the number of connected clients.
+     *
+     * @return number of connected clients
      */
     public int getConnectedClientsCount() {
         return currentClients.size();
     }
 }
-
