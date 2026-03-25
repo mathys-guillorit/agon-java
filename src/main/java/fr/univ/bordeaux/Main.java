@@ -1,5 +1,6 @@
 package fr.univ.bordeaux;
 
+import fr.univ.bordeaux.application.GameLauncher;
 import fr.univ.bordeaux.agonCore.agonElements.Color;
 import fr.univ.bordeaux.agonCore.agonElements.Move;
 import fr.univ.bordeaux.agonCore.bitboard.AgonBoardImpl;
@@ -105,20 +106,46 @@ public class Main {
     whitePawns.setBit(40,1L);
     blackPawns.setBit(36,1L);
     whitePawns.setBit(37,1L);
-    AgonBoardImpl board = new AgonBoardImpl(whiteQueen, blackQueen, whitePawns, blackPawns);
+    AgonBoardImpl board = new AgonBoardImpl(
+      whiteQueen, blackQueen, whitePawns, blackPawns
+    );
     board.printBoard();
-    System.out.println(board.applyMove(new Move(CoordinateMapper.toIndex('G',9),CoordinateMapper.toIndex('F',9),Color.BLACK)));
-    System.out.println(board.applyMove(new Move(CoordinateMapper.toIndex('F',8),CoordinateMapper.toIndex('F',7),Color.WHITE)));
-    System.out.println(board.applyMove(new Move(CoordinateMapper.toIndex('F',9),CoordinateMapper.toIndex('E',8),Color.BLACK)));
+    System.out.println(board.applyMove(new Move(
+      CoordinateMapper.toIndex('G',9),
+      CoordinateMapper.toIndex('F',9),
+      Color.BLACK)
+    ));
+    System.out.println(board.applyMove(new Move(
+      CoordinateMapper.toIndex('F',8),
+      CoordinateMapper.toIndex('F',7),
+      Color.WHITE)
+    ));
+    System.out.println(board.applyMove(new Move(
+      CoordinateMapper.toIndex('F',9),
+      CoordinateMapper.toIndex('E',8),
+      Color.BLACK)
+    ));
     board.printBoard();
     board.undoMove();
     board.printBoard();
     System.out.println("board avant mouvement");
     board.printBoard();
-    board.applyMove(new Move(CoordinateMapper.toIndex('G',9),CoordinateMapper.toIndex('F',8),Color.BLACK));
+    board.applyMove(new Move(
+      CoordinateMapper.toIndex('G',9),
+      CoordinateMapper.toIndex('F',8),
+      Color.BLACK
+    ));
     System.out.println("board après mouvement");
     board.printBoard();*/
     /*var a = new GUIExample();
     a.launch(GUIExample.class, arg);*/
+
+    //    var a = new LangService();
+    //    a.translate("no");
+    //    if(a.setLocale(Locale.FRENCH))
+    //      System.out.println("lang found");
+    //    System.out.println(a.translate("no"));
+    GameLauncher launcher = new GameLauncher();
+    launcher.launch(arg);
   }
 }

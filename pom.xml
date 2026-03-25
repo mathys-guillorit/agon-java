@@ -50,17 +50,17 @@
     </dependency>
     <!-- add JLine, see: https://jline.org/docs/intro  -->
     <dependency>
-        <groupId>org.jline</groupId>
-        <artifactId>jline</artifactId>
-        <version>3.30.0</version>
+      <groupId>org.jline</groupId>
+      <artifactId>jline</artifactId>
+      <version>3.30.0</version>
     </dependency>
     <!-- add Jline dependency (module Console UI )
     see (bottom of following page) : https://jline.org/docs/modules/console-ui
     -->
     <dependency>
-        <groupId>org.jline</groupId>
-        <artifactId>jline-console-ui</artifactId>
-        <version>3.30.0</version>
+      <groupId>org.jline</groupId>
+      <artifactId>jline-console-ui</artifactId>
+      <version>3.30.0</version>
     </dependency>
     <!-- add Jline dependncy -->
     <dependency>
@@ -98,7 +98,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
       </plugin>
-      <!-- 
+      <!--
       jacoco plugin  (my constraints and to test for pdp)
       generated file after doing commands (on this order)
       "mvn test"
@@ -107,41 +107,41 @@
       "mvn jacoco:report" with executing "mvn test" before
       -->
       <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.14</version>
-          <executions>
-              <!-- Préparation de l'agent JaCoCo -->
-              <execution>
-                  <id>prepare-agent</id>
-                  <goals>
-                      <goal>prepare-agent</goal>
-                  </goals>
-              </execution>
-              <!-- Génération du rapport -->
-              <execution>
-                  <id>report</id>
-                  <phase>test</phase>
-                  <goals>
-                      <goal>report</goal>
-                  </goals>
-              </execution>
-          </executions>
-          <!-- Configuration des règles pour jacoco:check -->
-          <configuration>
-              <rules>
-                  <rule>
-                      <element>BUNDLE</element>
-                      <limits>
-                          <limit>
-                              <counter>LINE</counter>
-                              <value>COVEREDRATIO</value>
-                              <minimum>0.85</minimum>
-                          </limit>
-                      </limits>
-                  </rule>
-              </rules>
-          </configuration>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.14</version>
+        <executions>
+          <!-- Préparation de l'agent JaCoCo -->
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <!-- Génération du rapport -->
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+        <!-- Configuration des règles pour jacoco:check -->
+        <configuration>
+          <rules>
+            <rule>
+              <element>BUNDLE</element>
+              <limits>
+                <limit>
+                  <counter>LINE</counter>
+                  <value>COVEREDRATIO</value>
+                  <minimum>0.85</minimum>
+                </limit>
+              </limits>
+            </rule>
+          </rules>
+        </configuration>
       </plugin>
 
       <!-- create a jar with the main class specified -->
@@ -237,9 +237,9 @@
         </configuration>
         <executions>
           <execution>
-              <goals>
-                  <goal>check</goal>
-              </goals>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
           <execution>
             <id>apply-spotless</id>
@@ -249,6 +249,27 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
