@@ -3,6 +3,7 @@ package fr.univ.bordeaux.network;
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.network.*;
 import fr.univ.bordeaux.application.network.client.ClientDiscovery;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.application.network.client.ServerInfo;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -20,7 +21,7 @@ public class Test_NetworkCommands {
     private AgonServer server;
 
     // =========================
-    // Fake UI (OBLIGATOIRE)
+    // Fake UI
     // =========================
     private final GameUserInterface ui = new GameUserInterface() {
         @Override public boolean isRunning() { return true; }
@@ -57,7 +58,7 @@ public class Test_NetworkCommands {
             port = tmp.getLocalPort();
         }
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdServerStart(ui, ctx)
                 .createNew(new String[]{String.valueOf(port)})
@@ -72,7 +73,7 @@ public class Test_NetworkCommands {
     @Test
     void start_invalid_port() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdServerStart(ui, ctx)
                 .createNew(new String[]{"abc"})
@@ -88,7 +89,7 @@ public class Test_NetworkCommands {
 
         try (ServerSocket lock = new ServerSocket(port)) {
 
-            AppContext ctx = new AppContext();
+            AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
             new CmdServerStart(ui, ctx)
                     .createNew(new String[]{String.valueOf(port)})
@@ -101,13 +102,13 @@ public class Test_NetworkCommands {
     @Test
     void start_default_args_cases() {
 
-        AppContext ctx1 = new AppContext();
+        AppContext ctx1 = new AppContext(new LocalProfile("TestPlayer"));
         new CmdServerStart(ui, ctx1).createNew(null).execute(null);
 
-        AppContext ctx2 = new AppContext();
+        AppContext ctx2 = new AppContext(new LocalProfile("TestPlayer"));
         new CmdServerStart(ui, ctx2).createNew(new String[0]).execute(null);
 
-        AppContext ctx3 = new AppContext();
+        AppContext ctx3 = new AppContext(new LocalProfile("TestPlayer"));
         new CmdServerStart(ui, ctx3).createNew(new String[]{""}).execute(null);
 
         if (ctx1.getServer() != null) ctx1.getServer().stop();
@@ -127,10 +128,10 @@ public class Test_NetworkCommands {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         server.start();
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
         ctx.setServer(server);
 
         new CmdServerStop(ui, ctx)
@@ -143,7 +144,7 @@ public class Test_NetworkCommands {
     @Test
     void stop_no_server() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdServerStop(ui, ctx)
                 .createNew(new String[0])
@@ -155,9 +156,9 @@ public class Test_NetworkCommands {
     @Test
     void stop_server_off() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
-        AgonServer s = new AgonServer(12345);
+        AgonServer s = new AgonServer(12345, "TestServer");
         ctx.setServer(s);
 
         new CmdServerStop(ui, ctx)
@@ -179,10 +180,10 @@ public class Test_NetworkCommands {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         server.start();
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdJoin(ui, ctx)
                 .createNew(new String[]{"127.0.0.1:" + port})
@@ -194,7 +195,7 @@ public class Test_NetworkCommands {
     @Test
     void join_bad_port() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdJoin(ui, ctx)
                 .createNew(new String[]{"127.0.0.1:abc"})
@@ -211,10 +212,10 @@ public class Test_NetworkCommands {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         server.start();
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
         ctx.getClient().connect("127.0.0.1", port);
 
         new CmdJoin(ui, ctx)
@@ -231,7 +232,7 @@ public class Test_NetworkCommands {
     @Test
     void ping_not_connected() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdPing(ui, ctx)
                 .createNew(new String[0])
@@ -248,10 +249,10 @@ public class Test_NetworkCommands {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         server.start();
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
         ctx.getClient().connect("127.0.0.1", port);
 
         new CmdPing(ui, ctx)
@@ -268,7 +269,7 @@ public class Test_NetworkCommands {
     @Test
     void list_start_discovery() {
 
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
 
         new CmdServerList(ui, ctx)
                 .createNew(new String[0])
@@ -280,7 +281,7 @@ public class Test_NetworkCommands {
     @Test
     void list_exception() {
 
-        AppContext ctx = new AppContext() {
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer")) {
             @Override
             public void ensureDiscoveryStarted() {
                 throw new RuntimeException("error");
@@ -297,7 +298,7 @@ public class Test_NetworkCommands {
     @Test
     void list_with_servers() {
 
-        AppContext ctx = new AppContext() {
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer")) {
 
             @Override
             public void ensureDiscoveryStarted() {}

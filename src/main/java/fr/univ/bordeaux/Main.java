@@ -37,7 +37,14 @@ public class Main {
             && args.length > 0
             && ("-d".equals(args[0]) || "--daemon".equals(args[0]))) {
 
-      AgonServer server = new AgonServer(DEFAULT_PORT);
+      String owner;
+      try {
+        owner = java.net.InetAddress.getLocalHost().getHostName();
+      } catch (Exception e) {
+        owner = "Server";
+      }
+
+      AgonServer server = new AgonServer(DEFAULT_PORT, owner);
 
       if (server.start()) {
         System.out.println("[SERVER] Daemon mode enabled.");
@@ -71,7 +78,14 @@ public class Main {
         }
       }
 
-      AgonServer server = new AgonServer(port);
+      String owner;
+      try {
+        owner = java.net.InetAddress.getLocalHost().getHostName();
+      } catch (Exception e) {
+        owner = "Server";
+      }
+
+      AgonServer server = new AgonServer(port, owner);
 
       if (server.start()) {
         System.out.println("[SERVER] Server mode enabled.");

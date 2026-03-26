@@ -121,7 +121,9 @@ public class CmdServerStart extends Cmd {
         }
 
         // 3. Create server instance
-        AgonServer server = new AgonServer(port);
+        String profileName = context.getProfile().getName();
+
+        AgonServer server = new AgonServer(port, profileName);
 
         // 4. Attempt to start the server
         if (!server.start()) {

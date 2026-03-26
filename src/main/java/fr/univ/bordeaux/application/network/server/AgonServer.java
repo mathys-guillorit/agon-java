@@ -1,66 +1,74 @@
 package fr.univ.bordeaux.application.network.server;
 
+import fr.univ.bordeaux.application.network.player.OnlinePlayer;
+import fr.univ.bordeaux.application.network.player.PlayerStatus;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * TCP game server entry point.
+ *
+ * <p>This class is responsible for:
+ * <ul>
+ *   <li>accepting incoming client connections,</li>
+ *   <li>managing connected players,</li>
+ *   <li>handling player registration and reconnection,</li>
+ *   <li>providing server discovery information.</li>
+ * </ul>
  */
 public class AgonServer {
 
-    /** TCP port used by the server. */
     private final int port;
-
-    /** Logical server name used by discovery. */
     private final String name;
-
-    /** Main TCP server socket. */
     private ServerSocket serverSocket;
-
-    /** Thread dedicated to accepting incoming client connections. */
     private Thread acceptClientThread;
-
-    /** Current connected clients. */
     private final List<ClientHandler> currentClients =
             Collections.synchronizedList(new ArrayList<>());
-
-    /** UDP discovery service associated with this server. */
     private ServerDiscovery discovery;
-
-    /** Indicates whether the server is currently running. */
     private volatile boolean running = false;
+    private final AtomicInteger nextPlayerId = new AtomicInteger(1);
+
+    /** Active connected players (id -> player). */
+    private final Map<Integer, OnlinePlayer> players = new ConcurrentHashMap<>();
+
+    /** Persistent players (name -> player), used for reconnection. */
+    private final Map<String, OnlinePlayer> playersByName = new ConcurrentHashMap<>();
 
     /**
-     * Default constructor (uses TCP port 12345 as required by the specification).
-     */
-    public AgonServer() {
-        this.port = 12345;
-        this.name = "AgonServer" + this.port;
-    }
-
-    /**
-     * Constructor with a custom TCP port.
+     * Creates a new server with a specified owner name and port.
      *
      * @param port the TCP port to listen on
+     * @param ownerName the name of the local profile owning this server
      */
-    public AgonServer(int port) {
+    public AgonServer(int port, String ownerName) {
         this.port = port;
-        this.name = "AgonServer" + this.port;
+        this.name = "AgonServer_" + ownerName + "_" + port;
     }
 
     /**
-     * Starts the TCP server.
+     * Creates a new server using the default port (12345).
      *
-     * @return true if the server is running or started successfully, false otherwise
+     * @param ownerName the name of the local profile owning this server
+     */
+    public AgonServer(String ownerName) {
+        this(12345, ownerName);
+    }
+
+    /**
+     * Starts the TCP server and initializes the discovery service.
+     *
+     * <p>This method opens the server socket and launches a dedicated thread
+     * to accept incoming client connections.
+     *
+     * @return true if the server started successfully, false otherwise
      */
     public boolean start() {
-        if (running) {
-            return true;
-        }
+        if (running) return true;
 
         try {
             serverSocket = new ServerSocket(port);
@@ -68,7 +76,6 @@ public class AgonServer {
             discovery.start();
         } catch (IOException e) {
             System.err.println("[SERVER] Failed to start on port " + port);
-            System.err.println("[SERVER] " + e.getMessage());
             return false;
         }
 
@@ -80,7 +87,10 @@ public class AgonServer {
     }
 
     /**
-     * Main accept loop.
+     * Main loop responsible for accepting incoming client connections.
+     *
+     * <p>Each accepted socket is associated with a new {@link ClientHandler}
+     * running in its own thread.
      */
     private void acceptClientLoop() {
         while (running) {
@@ -98,80 +108,76 @@ public class AgonServer {
     }
 
     /**
-     * Stops the server and disconnects all connected clients cleanly.
+     * Stops the server and closes all active connections.
      *
-     * @return true if the server was stopped successfully (or already stopped)
+     * <p>This method:
+     * <ul>
+     *   <li>terminates all connected client handlers,</li>
+     *   <li>clears the active players list,</li>
+     *   <li>stops the discovery service,</li>
+     *   <li>closes the server socket.</li>
+     * </ul>
+     *
+     * @return true if the server was stopped successfully
      */
     public boolean stop() {
-        if (!running) {
-            return true;
-        }
+        if (!running) return true;
 
         running = false;
 
-        // Stop all connected clients cleanly
-        List<ClientHandler> clientsSnapshot;
+        List<ClientHandler> clientSnapshot;
         synchronized (currentClients) {
-            clientsSnapshot = new ArrayList<>(currentClients);
+            clientSnapshot = new ArrayList<>(currentClients);
         }
 
-        for (ClientHandler handler : clientsSnapshot) {
+        for (ClientHandler handler : clientSnapshot) {
             handler.stop();
         }
 
-        synchronized (currentClients) {
-            currentClients.clear();
-        }
+        currentClients.clear();
+        players.clear();
 
-        // Stop discovery service
         if (discovery != null) {
             discovery.stop();
             discovery = null;
         }
 
-        // Close server socket
-        if (serverSocket != null) {
-            try {
-                serverSocket.close();
-            } catch (IOException e) {
-                System.err.println("[SERVER] Error while closing server socket: " + e.getMessage());
-            } finally {
-                serverSocket = null;
-            }
-        }
+        try {
+            if (serverSocket != null) serverSocket.close();
+        } catch (IOException ignored) {}
 
         return true;
     }
 
     /**
-     * Returns the TCP port used by this server.
+     * Returns the TCP port used by this server instance.
      *
-     * @return TCP port
+     * @return the TCP port number on which the server is listening
      */
     public int getPort() {
         return port;
     }
 
     /**
-     * Returns the server name used in UDP presence broadcasts.
+     * Returns the logical name of the server used for discovery.
      *
-     * @return server name
+     * @return the server name broadcasted over the network
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Indicates if the server is currently running.
+     * Indicates whether the server is currently running.
      *
-     * @return true if running
+     * @return true if the server is active, false otherwise
      */
     public boolean isRunning() {
         return running;
     }
 
     /**
-     * Removes a client from the list when they disconnect.
+     * Removes a client handler from the active connections list.
      *
      * @param handler the client handler to remove
      */
@@ -180,11 +186,102 @@ public class AgonServer {
     }
 
     /**
-     * Returns the number of connected clients.
+     * Returns the number of currently connected clients.
      *
-     * @return number of connected clients
+     * @return the number of active client connections
      */
     public int getConnectedClientsCount() {
         return currentClients.size();
+    }
+
+    /**
+     * Registers a player on the server or reconnects an existing one.
+     *
+     * <p>If a player with the same name already exists, their previous instance
+     * is reused and associated with the new connection. Otherwise, a new player
+     * is created with a unique identifier.
+     *
+     * @param name the player's display name
+     * @param handler the client handler associated with the connection
+     * @return the registered or reconnected player instance, or null if the name is invalid
+     */
+    public OnlinePlayer registerPlayer(String name, ClientHandler handler) {
+
+        if (name == null || name.isBlank()) return null;
+
+        String cleanName = name.trim().toLowerCase();
+
+        // Existing player → reconnect
+        OnlinePlayer existing = playersByName.get(cleanName);
+
+        if (existing != null) {
+            existing.setHandler(handler);
+            existing.setStatus(PlayerStatus.IDLE);
+            players.put(existing.getId(), existing);
+            return existing;
+        }
+
+        // New player → create
+        int id = nextPlayerId.getAndIncrement();
+
+        OnlinePlayer player =
+                new OnlinePlayer(id, name.trim(), PlayerStatus.IDLE, handler);
+
+        players.put(id, player);
+        playersByName.put(cleanName, player);
+
+        return player;
+    }
+
+    /**
+     * Detaches a player from the server without deleting their data.
+     *
+     * <p>The player remains stored for future reconnections, but is removed
+     * from the list of currently active players.
+     *
+     * @param player the player to disconnect
+     */
+    public void removePlayer(OnlinePlayer player) {
+        if (player != null) {
+            player.setHandler(null);
+            player.setStatus(PlayerStatus.IDLE);
+            players.remove(player.getId());
+        }
+    }
+
+    /**
+     * Returns the formatted list of currently connected players.
+     *
+     * <p>Each player is represented as a single line containing their ID,
+     * name, and status. The response is terminated with an "END" marker.
+     *
+     * @return a multi-line string describing all active players
+     */
+    public String getPlayersList() {
+
+        if (players.isEmpty()) {
+            return "PLAYERS_EMPTY\nEND\n";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (OnlinePlayer p : players.values()) {
+            sb.append("ID=").append(p.getId())
+                    .append(" NAME=").append(p.getName())
+                    .append(" STATUS=").append(p.getStatus().name().toLowerCase())
+                    .append("\n");
+        }
+
+        sb.append("END\n");
+        return sb.toString();
+    }
+
+    /**
+     * Returns the number of currently connected players.
+     *
+     * @return the number of active players
+     */
+    public int getPlayerCount() {
+        return players.size();
     }
 }

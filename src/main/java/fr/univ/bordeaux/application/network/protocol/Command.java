@@ -36,4 +36,13 @@ public class Command {
     public String getArg(String key) {
         return args.get(key);
     }
+
+    /**
+     * Returns the parsed arguments.
+     *
+     * @return arguments map
+     */
+    public Map<String, String> getArgs() {
+        return args;
+    }
 }

@@ -3,6 +3,7 @@ package fr.univ.bordeaux.network;
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.ClientDiscovery;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.application.network.client.ServerInfo;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.application.network.server.ServerDiscovery;
@@ -41,9 +42,9 @@ public class Test_NetworkClient {
         int port;
         try (ServerSocket tmp = new ServerSocket(0)) {
             port = tmp.getLocalPort();
-        } // port free now, no server listening
+        }
 
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         assertFalse(client.connect("127.0.0.1", port));
         assertFalse(client.isConnected());
     }
@@ -56,10 +57,10 @@ public class Test_NetworkClient {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         assertTrue(server.start());
 
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         assertTrue(client.connect("127.0.0.1", port));
         assertTrue(client.isConnected());
 
@@ -74,21 +75,21 @@ public class Test_NetworkClient {
 
     @Test
     void ping_not_connected() {
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         assertNull(client.pingRttMs());
         assertFalse(client.isConnected());
     }
 
     @Test
     void quit_not_connected() {
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         client.quit();
         assertFalse(client.isConnected());
     }
 
     @Test
     void disconnect_safe() {
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         client.disconnectSilently();
         assertFalse(client.isConnected());
     }
@@ -101,10 +102,10 @@ public class Test_NetworkClient {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         assertTrue(server.start());
 
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         assertTrue(client.connect("127.0.0.1", port));
         assertTrue(client.isConnected());
 
@@ -126,10 +127,10 @@ public class Test_NetworkClient {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         assertTrue(server.start());
 
-        AgonClient client = new AgonClient();
+        AgonClient client = new AgonClient(new LocalProfile("TestPlayer"));
         assertTrue(client.connect("127.0.0.1", port));
         assertTrue(client.isConnected());
 
@@ -265,7 +266,7 @@ public class Test_NetworkClient {
 
     @Test
     void ctx_isConnected_false() {
-        AppContext ctx = new AppContext();
+        AppContext ctx = new AppContext(new LocalProfile("TestPlayer"));
         assertFalse(ctx.isConnected());
     }
 }

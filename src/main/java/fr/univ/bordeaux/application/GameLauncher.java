@@ -2,6 +2,13 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdPing;
+import fr.univ.bordeaux.application.commands.network.CmdServerList;
+import fr.univ.bordeaux.application.commands.network.CmdServerStart;
+import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
+import fr.univ.bordeaux.application.commands.network.CmdServerStop;
+import fr.univ.bordeaux.application.commands.network.CmdPlayers;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
@@ -14,21 +21,23 @@ import fr.univ.bordeaux.application.commands.specialized.CmdShow;
 import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.config.ConfigParser;
 import fr.univ.bordeaux.technical.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
-import fr.univ.bordeaux.application.commands.network.CmdJoin;
-import fr.univ.bordeaux.application.commands.network.CmdPing;
-import fr.univ.bordeaux.application.commands.network.CmdServerList;
-import fr.univ.bordeaux.application.commands.network.CmdServerStart;
-import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
-import fr.univ.bordeaux.application.commands.network.CmdServerStop;
 import java.io.File;
 import java.io.IOException;
-import org.apache.commons.cli.*;
+import java.util.Scanner;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -48,11 +57,12 @@ import org.jline.terminal.TerminalBuilder;
  *   <li>Initializing the appropriate User Interface (CLI or GUI).
  * </ul>
  *
- * @author L'équipe de développement (ou ton nom)
+ * @author L'équipe de développement
  * @version 1.0
  * @see GameConfig
  */
 public class GameLauncher {
+
   /** The definitions of all allowed command-line options. */
   private final Options options;
 
@@ -72,8 +82,7 @@ public class GameLauncher {
   /**
    * Configures the available command-line options.
    *
-   * <p>This method defines flags (like -h, -v) and complex arguments (like -t TIME, -a COLOR). It
-   * uses {@link Option.Builder} for complex options to ensure clarity.
+   * <p>This method defines flags (like -h, -v) and complex arguments (like -t TIME, -a COLOR).
    */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
@@ -83,38 +92,34 @@ public class GameLauncher {
     options.addOption("g", "gui", false, "Starts the graphical interface.");
     options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
     options.addOption(
-        "c", "contest", false, "Launches contest mode (reads file and outputs move).");
+            "c", "contest", false, "Launches contest mode (reads file and outputs move).");
     options.addOption("p", "placement", false, "Manual placement of guards.");
     options.addOption(
-        Option.builder("t")
-            .longOpt("time")
-            .hasArg(true)
-            .argName("TIME")
-            .desc("Time limit in minutes for blitz mode (default: 30).")
-            .build());
+            Option.builder("t")
+                    .longOpt("time")
+                    .hasArg(true)
+                    .argName("TIME")
+                    .desc("Time limit in minutes for blitz mode (default: 30).")
+                    .build());
     options.addOption(
-        Option.builder("a")
-            .longOpt("ai")
-            .hasArg(true)
-            .optionalArg(true)
-            .argName("COLOR")
-            .desc("Replaces a player with AI (Colors: B, W, A).")
-            .build());
+            Option.builder("a")
+                    .longOpt("ai")
+                    .hasArg(true)
+                    .optionalArg(true)
+                    .argName("COLOR")
+                    .desc("Replaces a player with AI (Colors: B, W, A).")
+                    .build());
   }
 
   /**
    * Main launch sequence that processes arguments, updates configuration, and starts the game.
-   *
-   * <p>This method parses the raw arguments. If informational flags (-h, -V) are present, it
-   * displays the info and returns. Otherwise, it updates the {@link GameConfig} and proceeds to
-   * start the game engine. If an invalid argument is provided, it catches the {@link
-   * ParseException} and displays the help menu.
    *
    * @param args The raw command-line arguments passed at startup.
    */
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
     CommandLineParser parser = new DefaultParser();
+
     try {
       CommandLine cmd = parser.parse(options, args);
 
@@ -140,7 +145,7 @@ public class GameLauncher {
       }
       if (cmd.hasOption("t") && !cmd.hasOption("b")) {
         System.out.println(
-            "[WARNING] The '-t' / '--time' option is ignored because blitz mode (-b) is not active");
+                "[WARNING] The '-t' / '--time' option is ignored because blitz mode (-b) is not active");
       } else if (cmd.hasOption("b")) {
         config.setBlitzMode(true);
         int time = 30;
@@ -156,7 +161,6 @@ public class GameLauncher {
       }
       if (cmd.hasOption("c")) {
         System.out.println("[INFO] Contest mode detected.");
-        // TODO: Uncomment when GameConfig has setContestMode()
       }
       if (cmd.hasOption("a")) {
         config.setAi(true);
@@ -179,20 +183,25 @@ public class GameLauncher {
           System.out.println("[INFO] AI defaults configuration (Black).");
         }
       }
+
       String[] fileArg = cmd.getArgs();
       String filePath = null;
+
       if (fileArg.length > 0) {
         filePath = fileArg[0];
         File file = new File(filePath);
+
         if (!file.exists() || file.isDirectory()) {
           System.err.println(
-              "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
+                  "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
+
         if (cmd.hasOption("p")) {
           System.out.println(
-              "[WARNING] Option '-p' (Manual Placement) is ignored because a save file is loaded.");
+                  "[WARNING] Option '-p' (Manual Placement) is ignored because a save file is loaded.");
         }
+
         if (cmd.hasOption("c")) {
           System.out.println("[INFO] Contest mode detected.");
           try {
@@ -202,6 +211,7 @@ public class GameLauncher {
           }
           return;
         }
+
         System.out.println("[INFO] File argument detected: " + filePath);
 
       } else if (cmd.hasOption("c")) {
@@ -209,7 +219,9 @@ public class GameLauncher {
         printHelp();
         return;
       }
+
       startGame(config, cmd, filePath);
+
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
       printHelp();
@@ -218,9 +230,6 @@ public class GameLauncher {
 
   /**
    * Loads the initial configuration from the .agonrc file.
-   *
-   * <p>If the file is missing or unreadable, a default configuration file is created and a default
-   * GameConfig object is returned.
    *
    * @return A {@link GameConfig} object populated with file settings or default values.
    */
@@ -236,9 +245,7 @@ public class GameLauncher {
   }
 
   /**
-   * Persists a default configuration to the disk using the Serializer.
-   *
-   * <p>This ensures the user has a base template to modify for future runs.
+   * Persists a default configuration to the disk using the serializer.
    */
   private void createDefaultConfigFile() {
     ConfigSerializer serializer = new ConfigSerializer();
@@ -251,10 +258,26 @@ public class GameLauncher {
   }
 
   /**
-   * Initializes the application layers and starts the selected user interface.
+   * Asks the user for a local player name before starting the application.
    *
-   * <p>Chooses between the CLI ({@link fr.univ.bordeaux.ui.cli.AgonShell}) and the GUI ({@link
-   * fr.univ.bordeaux.ui.gui}) based on the provided command-line options.
+   * @return a non-empty player name
+   */
+  private String askPlayerName() {
+    Scanner scanner = new Scanner(System.in);
+
+    System.out.print("Enter your player name: ");
+    String name = scanner.nextLine().trim();
+
+    while (name.isEmpty()) {
+      System.out.print("Name cannot be empty. Enter your player name: ");
+      name = scanner.nextLine().trim();
+    }
+
+    return name;
+  }
+
+  /**
+   * Initializes the application layers and starts the selected user interface.
    *
    * @param config The final configuration to be used by the UI and the engine.
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
@@ -263,7 +286,11 @@ public class GameLauncher {
   private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
     System.out.println("Starting Agon Shell...");
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
-    AppContext context = new AppContext();
+
+    String playerName = askPlayerName();
+    LocalProfile profile = new LocalProfile(playerName);
+    AppContext context = new AppContext(profile);
+
     GameUserInterface userInterface;
 
     if (cmd.hasOption("g")) {
@@ -310,15 +337,16 @@ public class GameLauncher {
         cmds.register("server_stop", new CmdServerStop(userInterface, context));
         cmds.register("server_list", new CmdServerList(userInterface, context));
         cmds.register("server_status", new CmdServerStatus(userInterface, context));
+        cmds.register("players", new CmdPlayers(userInterface, context));
 
         // =========================
         // Context-aware quit
         // =========================
         cmds.register("quit", new CmdQuit(userInterface, context));
 
-      /* if (filePathToLoad != null) {
-        loadCmd.execute(null);
-      } */
+        /* if (filePathToLoad != null) {
+          loadCmd.execute(null);
+        } */
 
         gameEngine.start();
 
@@ -331,7 +359,7 @@ public class GameLauncher {
   /**
    * Prints the CLI help message.
    *
-   * <p>Attempts to read a custom "helpGameLauncher.txt" file. If not found, falls back to the
+   * <p>Attempts to read a custom help file. If not found, falls back to the
    * standard Apache CLI formatter.
    */
   private void printHelp() {
@@ -346,8 +374,6 @@ public class GameLauncher {
 
   /**
    * Prints the current application version and credits.
-   *
-   * <p>Reads from the "version.txt" file or prints a hardcoded fallback string.
    */
   private void printVersion() {
     try {
@@ -355,15 +381,12 @@ public class GameLauncher {
     } catch (IOException e) {
       System.err.println("[WARNING] version.txt not found.");
       System.out.println(
-          "Agon Game - CLI Launcher\n(c) 2026 University of Bordeaux\nversion 1.0.0");
+              "Agon Game - CLI Launcher\n(c) 2026 University of Bordeaux\nversion 1.0.0");
     }
   }
 
   /**
    * Retrieves the content of the help information file from the local resources.
-   *
-   * <p>This method is marked as {@code protected} to allow for "Extract and Override" in unit
-   * tests, enabling the simulation of {@link IOException} without manipulating physical files.
    *
    * @return The raw String content of the help file.
    * @throws IOException If the file is missing or cannot be accessed.
@@ -374,10 +397,6 @@ public class GameLauncher {
 
   /**
    * Retrieves the application version and credits from the local resources.
-   *
-   * <p>This method is marked as {@code protected} to allow for "Extract and Override" in unit
-   * tests, enabling the simulation of {@link IOException} to verify the application's fallback
-   * behavior.
    *
    * @return The raw String content of the version file.
    * @throws IOException If the file is missing or cannot be accessed.

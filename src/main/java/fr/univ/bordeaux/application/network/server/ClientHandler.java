@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.network.server;
 
+import fr.univ.bordeaux.application.network.player.OnlinePlayer;
 import fr.univ.bordeaux.application.network.protocol.Command;
 import fr.univ.bordeaux.application.network.protocol.CommandParser;
 import fr.univ.bordeaux.application.network.protocol.CommandType;
@@ -18,20 +19,16 @@ import java.nio.charset.StandardCharsets;
  */
 public class ClientHandler implements Runnable {
 
-    /** TCP socket associated with the connected client. */
     private final Socket socket;
-
-    /** Server instance owning this client handler. */
     private final AgonServer server;
-
-    /** Protocol parser used to decode client messages. */
     private final CommandParser parser = new CommandParser();
-
-    /** Indicates whether the handler is still running. */
     private volatile boolean running = true;
 
     /** Output stream used to send messages to the client. */
     private BufferedWriter out;
+
+    /** Player associated with this connection. */
+    private OnlinePlayer player;
 
     /**
      * Creates a new client handler for the given socket.
@@ -106,12 +103,25 @@ public class ClientHandler implements Runnable {
                 Command cmd = parser.parse(line);
 
                 if (cmd.getType() == CommandType.PING) {
+
                     send("PONG TIME=0ms");
+
                 } else if (cmd.getType() == CommandType.STATUS) {
+
                     send("STATUS_OK port=" + server.getPort()
                             + " clients=" + server.getConnectedClientsCount()
+                            + " players=" + server.getPlayerCount()
                             + " games=0");
+
+                } else if (cmd.getType() == CommandType.LOGIN) {
+                    handleLogin(line);
+
+                } else if (cmd.getType() == CommandType.PLAYERS) {
+
+                    send(server.getPlayersList());
+
                 } else if (cmd.getType() == CommandType.QUIT) {
+
                     break;
                 }
             }
@@ -121,6 +131,9 @@ public class ClientHandler implements Runnable {
                 System.err.println("[SERVER] ClientHandler error: " + e.getMessage());
             }
         } finally {
+            if (player != null) {
+                server.removePlayer(player);
+            }
             if (server != null) {
                 server.removeClient(this);
             }
@@ -140,5 +153,36 @@ public class ClientHandler implements Runnable {
             out.write('\n');
             out.flush();
         }
+    }
+
+    /**
+     * Handles LOGIN command.
+     *
+     * @param line raw protocol line
+     */
+    private void handleLogin(String line) throws IOException {
+
+        if (player != null) {
+            send("ERROR ALREADY_LOGGED_IN");
+            return;
+        }
+
+        if (!line.startsWith("LOGIN NAME=")) {
+            send("ERROR LOGIN_FORMAT");
+            return;
+        }
+
+        String name = line.substring("LOGIN NAME=".length()).trim();
+
+        player = server.registerPlayer(name, this);
+
+        if (player == null) {
+            send("ERROR NAME_ALREADY_USED");
+            return;
+        }
+
+        send("WELCOME ID=" + player.getId()
+                + " NAME=" + player.getName()
+                + " STATUS=" + player.getStatus().name().toLowerCase());
     }
 }

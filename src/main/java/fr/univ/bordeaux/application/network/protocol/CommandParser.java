@@ -4,17 +4,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Responsible for parsing raw network messages into Command objects
-  */
+ * Responsible for parsing raw network messages into {@link Command} objects.
+ */
 public class CommandParser {
 
     /**
-     * Parses a raw network line into a Command.
-     * The input line is expected to be composed of ASCII characters and
-     * terminated by a newline character ('\n') on the wire.
+     * Parses a raw network line into a {@link Command}.
+     *
+     * <p>The first token is interpreted as the command type. Remaining tokens are
+     * parsed as {@code key=value} arguments.
      *
      * @param line the raw line received from the network
-     * @return A {@link Command} object containing the identified {@link CommandType} and a map of its arguments.
+     * @return a {@link Command} object containing the identified {@link CommandType}
+     *     and a map of its arguments
      */
     public static Command parse(String line) {
         if (line == null) {
@@ -28,18 +30,20 @@ public class CommandParser {
 
         String[] parts = raw.split("\\s+");
 
-        // First token corresponds to the command type
         CommandType type = CommandType.convertCommandType(parts[0]);
 
-        // Remaining tokens are parsed as key=value arguments
         Map<String, String> args = new HashMap<>();
         for (int i = 1; i < parts.length; i++) {
             String token = parts[i];
             int eq = token.indexOf('=');
-            if (eq <= 0) continue;
+
+            if (eq <= 0) {
+                continue;
+            }
 
             String key = token.substring(0, eq);
             String value = token.substring(eq + 1);
+
             if (!key.isEmpty()) {
                 args.put(key, value);
             }

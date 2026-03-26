@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 
 /**
  * The AgonClient class manages the TCP connection to the game server.
@@ -17,10 +18,16 @@ public class AgonClient {
     private BufferedReader in;
     private BufferedWriter out;
 
+    /** Local profile containing the player's name and server ids. */
+    private final LocalProfile profile;
+
     /**
-     * Default constructor.
+     * Constructor with a local profile.
+     *
+     * @param profile the local profile of the player
      */
-    public AgonClient() {
+    public AgonClient(LocalProfile profile) {
+        this.profile = profile;
     }
 
     /**
@@ -29,6 +36,13 @@ public class AgonClient {
      * @param host server host (e.g. "127.0.0.1")
      * @param port server port (e.g. 12345)
      * @return true if the connection succeeds (or is already established), false otherwise
+     */
+    /**
+     * Connects to a TCP server and logs in using the local profile name.
+     *
+     * @param host server host (e.g. "127.0.0.1")
+     * @param port server port (e.g. 12345)
+     * @return true if the connection and login succeed, false otherwise
      */
     public boolean connect(String host, int port) {
         if (isConnected()) {
@@ -43,6 +57,21 @@ public class AgonClient {
                     new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
             out = new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+
+            sendLine("LOGIN NAME=" + profile.getName());
+
+            String response = readProtocolLine();
+
+            if (response == null || !response.startsWith("WELCOME")) {
+                disconnectSilently();
+                return false;
+            }
+
+            Integer id = extractId(response);
+            if (id != null) {
+                String serverKey = host + ":" + port;
+                profile.setIdForServer(serverKey, id);
+            }
 
             return true;
 
@@ -219,5 +248,63 @@ public class AgonClient {
         }
 
         return line;
+    }
+
+    /**
+     * Extracts the player id from a server response.
+     *
+     * @param response raw server response
+     * @return extracted id, or null if not found
+     */
+    private Integer extractId(String response) {
+        String[] parts = response.split("\\s+");
+
+        for (String part : parts) {
+            if (part.startsWith("ID=")) {
+                try {
+                    return Integer.parseInt(part.substring(3));
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Requests the list of connected players from the server.
+     *
+     * @return the raw players response if successful, null otherwise
+     */
+    public String requestPlayers() {
+        if (!isConnected()) {
+            return null;
+        }
+
+        try {
+            sendLine("PLAYERS");
+
+            StringBuilder sb = new StringBuilder();
+
+            while (true) {
+                String line = readProtocolLine();
+
+                if (line == null) {
+                    return null;
+                }
+
+                if (line.equals("END")) {
+                    break;
+                }
+
+                sb.append(line).append("\n");
+            }
+
+            return sb.toString().trim();
+        } catch (IOException e) {
+            disconnectSilently();
+            return null;
+        }
     }
 }

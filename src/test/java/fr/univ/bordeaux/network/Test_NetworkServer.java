@@ -26,7 +26,7 @@ public class Test_NetworkServer {
 
     @Test
     void server_default_ctor_values() {
-        AgonServer s = new AgonServer();
+        AgonServer s = new AgonServer("TestServer");
         assertEquals(12345, s.getPort());
         assertNotNull(s.getName());
         assertFalse(s.isRunning());
@@ -40,7 +40,7 @@ public class Test_NetworkServer {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         assertTrue(server.start());
         assertTrue(server.isRunning());
 
@@ -53,7 +53,7 @@ public class Test_NetworkServer {
 
         int port = 33111;
         try (ServerSocket lock = new ServerSocket(port)) {
-            AgonServer s = new AgonServer(port);
+            AgonServer s = new AgonServer(port, "TestServer");
             assertFalse(s.start());
             assertFalse(s.isRunning());
         }
@@ -61,7 +61,7 @@ public class Test_NetworkServer {
 
     @Test
     void server_stop_when_off() {
-        AgonServer s = new AgonServer(33222);
+        AgonServer s = new AgonServer(33222, "TestServer");
         assertTrue(s.stop());        // should not crash
         assertFalse(s.isRunning());
     }
@@ -74,7 +74,7 @@ public class Test_NetworkServer {
             port = tmp.getLocalPort();
         }
 
-        server = new AgonServer(port);
+        server = new AgonServer(port, "TestServer");
         assertTrue(server.start());
         assertTrue(server.start());  // running branch
         assertTrue(server.isRunning());
