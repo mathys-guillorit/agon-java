@@ -9,7 +9,7 @@ import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.AiPlayer;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Map;
 

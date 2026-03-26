@@ -4,7 +4,7 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

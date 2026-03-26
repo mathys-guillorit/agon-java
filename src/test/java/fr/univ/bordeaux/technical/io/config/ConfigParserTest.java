@@ -1,10 +1,13 @@
-package fr.univ.bordeaux.technical.config;
+package fr.univ.bordeaux.technical.io.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import fr.univ.bordeaux.technical.io.config.ConfigParser;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

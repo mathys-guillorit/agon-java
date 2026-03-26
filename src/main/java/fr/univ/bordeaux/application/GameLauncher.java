@@ -15,11 +15,10 @@ import fr.univ.bordeaux.application.commands.specialized.CmdShow;
 import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
-import fr.univ.bordeaux.technical.config.ConfigParser;
-import fr.univ.bordeaux.technical.config.ConfigSerializer;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.ConfigParser;
+import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
-import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +42,6 @@ import org.jline.terminal.TerminalBuilder;
  *   <li>Initializing the appropriate User Interface (CLI or GUI).
  * </ul>
  *
- * @author L'équipe de développement (ou ton nom)
  * @version 1.0
  * @see GameConfig
  */
@@ -67,8 +65,8 @@ public class GameLauncher {
   /**
    * Configures the available command-line options.
    *
-   * <p>This method defines flags (like -h, -v) and complex arguments (like -t TIME, -a COLOR). It
-   * uses {@link Option.Builder} for complex options to ensure clarity.
+   * <p>This method defines flags (like -h, -v).
+   * It uses {@link Option.Builder} for complex options to ensure clarity.
    */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
@@ -76,25 +74,8 @@ public class GameLauncher {
     options.addOption("v", "verbose", false, "Enables verbose output.");
     options.addOption("d", "debug", false, "Enables debug mode.");
     options.addOption("g", "gui", false, "Starts the graphical interface.");
-    options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
     options.addOption(
         "c", "contest", false, "Launches contest mode (reads file and outputs move).");
-    options.addOption("p", "placement", false, "Manual placement of guards.");
-    options.addOption(
-        Option.builder("t")
-            .longOpt("time")
-            .hasArg(true)
-            .argName("TIME")
-            .desc("Time limit in minutes for blitz mode (default: 30).")
-            .build());
-    options.addOption(
-        Option.builder("a")
-            .longOpt("ai")
-            .hasArg(true)
-            .optionalArg(true)
-            .argName("COLOR")
-            .desc("Replaces a player with AI (Colors: B, W, A).")
-            .build());
   }
 
   /**
@@ -129,51 +110,6 @@ public class GameLauncher {
         config.setDebug(true);
         System.out.println("[DEBUG] Debug mode enabled.");
       }
-      if (cmd.hasOption("p")) {
-        System.out.println("[INFO] Manual guard placement detected.");
-        config.setManualPlacement(true);
-      }
-      if (cmd.hasOption("t") && !cmd.hasOption("b")) {
-        System.out.println(
-            "[WARNING] The '-t' / '--time' option is ignored because blitz mode (-b) is not active");
-      } else if (cmd.hasOption("b")) {
-        config.setBlitzMode(true);
-        int time = 30;
-        if (cmd.hasOption("t")) {
-          try {
-            time = Integer.parseInt(cmd.getOptionValue("t"));
-          } catch (NumberFormatException e) {
-            System.err.println("[ERROR] Invalid time format. Using default 30 mins.");
-          }
-        }
-        config.setTimeout(time * 60);
-        System.out.println("[INFO] Blitz mode activated: " + time + " minutes");
-      }
-      if (cmd.hasOption("c")) {
-        System.out.println("[INFO] Contest mode detected.");
-        // TODO: Uncomment when GameConfig has setContestMode()
-      }
-      if (cmd.hasOption("a")) {
-        config.setAi(true);
-        String color = cmd.getOptionValue("a", "DEFAULT");
-        if ("W".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(false);
-          System.out.println("[INFO] AI configured to play White.");
-        } else if ("B".equalsIgnoreCase(color)) {
-          config.setWhiteAI(false);
-          config.setBlackAI(true);
-          System.out.println("[INFO] AI configured to play Black.");
-        } else if ("A".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(true);
-          System.out.println("[INFO] AI configured to play Both sides.");
-        } else {
-          config.setWhiteAi(false);
-          config.setBlackAi(true);
-          System.out.println("[INFO] AI defaults configuration (Black).");
-        }
-      }
       String[] fileArg = cmd.getArgs();
       String filePath = null;
       if (fileArg.length > 0) {
@@ -183,10 +119,6 @@ public class GameLauncher {
           System.err.println(
               "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
           return;
-        }
-        if (cmd.hasOption("p")) {
-          System.out.println(
-              "[WARNING] Option '-p' (Manual Placement) is ignored because a save file is loaded.");
         }
         if (cmd.hasOption("c")) {
           System.out.println("[INFO] Contest mode detected.");
@@ -258,7 +190,7 @@ public class GameLauncher {
   private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
     System.out.println("Starting Agon Shell...");
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
-    GameUserInterface userInterface;
+    AgonShell userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
     } else {
@@ -276,7 +208,7 @@ public class GameLauncher {
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
         userInterface = new AgonShell(terminal, reader, cmds);
-        shellRef[0] = (AgonShell) userInterface;
+        shellRef[0] = userInterface;
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
 
         cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
@@ -351,7 +283,7 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getHelpContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/helpGameLauncher.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/helpGameLauncher.txt").getContent();
   }
 
   /**
@@ -365,6 +297,6 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getVersionContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/version.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 }

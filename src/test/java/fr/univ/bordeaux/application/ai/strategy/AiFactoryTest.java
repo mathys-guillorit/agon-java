@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

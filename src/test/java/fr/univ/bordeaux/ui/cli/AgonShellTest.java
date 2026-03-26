@@ -21,7 +21,7 @@ import fr.univ.bordeaux.application.commands.specialized.CmdSet;
 import fr.univ.bordeaux.application.commands.specialized.CmdShow;
 import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.GameEngine;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;

@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.technical.io.storage.states;
 
-import fr.univ.bordeaux.technical.config.ConfigParser;
+import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.storage.GameSaveBuilder;
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.technical.config;
+package fr.univ.bordeaux.technical.io.config;
 
 /**
  * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game

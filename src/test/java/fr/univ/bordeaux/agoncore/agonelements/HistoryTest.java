@@ -113,7 +113,7 @@ class HistoryTest {
   }
 
   @Test
-  @DisplayName("Should correctly export history to ABA-pro text format")
+  @DisplayName("Should correctly export history to ABA-pro text format (including Queens)")
   void testToTextList() {
     history.add(move1);
     history.add(move2);
@@ -123,8 +123,8 @@ class HistoryTest {
     assertNotNull(textList, "The exported list should not be null");
     assertEquals(2, textList.size(), "The exported list should contain exactly 2 moves");
 
-    assertEquals("O a1 a2", textList.get(0), "First move should be formatted as 'O a1 a2'");
-    assertEquals("X a3 a4", textList.get(1), "Second move should be formatted as 'X a3 a4'");
+    assertEquals("Q a1 a2", textList.get(0), "First move should be formatted as 'Q a1 a2'");
+    assertEquals("q a3 a4", textList.get(1), "Second move should be formatted as 'q a3 a4'");
   }
 
   @Test
@@ -152,5 +152,48 @@ class HistoryTest {
         0, firstMove.getMoves().get(0).getFrom(), "First move 'from' index should be 0 (a1)");
     assertEquals(
         1, firstMove.getMoves().get(0).getDestination(), "First move 'to' index should be 1 (a2)");
+  }
+
+  @Test
+  @DisplayName("Should correctly parse history with complex capture notation")
+  void testConstructorFromTextListWithCaptures() {
+    List<String> savedTextMoves = new ArrayList<>();
+    savedTextMoves.add("X c3 c2 (O c1, q d5)");
+
+    History loadedHistory = new History(savedTextMoves);
+    HistoryInformations turn = loadedHistory.getHeadUndo();
+
+    assertNotNull(turn, "Turn should have been parsed");
+    List<Move> parsedMoves = turn.getMoves();
+
+    assertEquals(3, parsedMoves.size(), "Turn should contain 1 main move and 2 captures");
+
+    assertEquals(Color.BLACK, parsedMoves.get(0).getColor());
+
+    assertEquals(Color.WHITE, parsedMoves.get(1).getColor(), "First capture should be White");
+
+    assertEquals(Color.BLACK, parsedMoves.get(2).getColor(), "Second capture should be Black");
+  }
+
+  @Test
+  @DisplayName("Should correctly export a turn with multiple captures to text format")
+  void testToTextListWithCaptures() {
+    History complexHistory = new History();
+
+    List<Move> multiMoves = new ArrayList<>();
+    multiMoves.add(new Move(0, 1, Color.WHITE, PieceType.WHITE_PAWN));
+    multiMoves.add(new Move(24, 99, Color.BLACK, PieceType.BLACK_PAWN));
+
+    HistoryInformations complexTurn = new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
+    complexHistory.add(complexTurn);
+
+    List<String> textList = complexHistory.toTextList();
+
+    assertEquals(1, textList.size(), "Should export 1 turn");
+
+    String exportedMove = textList.get(0);
+    assertTrue(exportedMove.startsWith("O a1 a2 ("), "Should start with main move and open parenthesis");
+    assertTrue(exportedMove.contains("X"), "Should contain the captured black guard 'X'");
+    assertTrue(exportedMove.endsWith(")"), "Should close the parenthesis");
   }
 }

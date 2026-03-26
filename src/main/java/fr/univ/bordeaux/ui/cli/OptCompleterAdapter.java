@@ -1,7 +1,6 @@
 package fr.univ.bordeaux.ui.cli;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.Option;
@@ -11,8 +10,8 @@ import org.jline.reader.impl.completer.ArgumentCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 
 /**
- * transform {@link Options} from Apache Commons Cli into Reader completer for JLine {@link
- * Completer}
+ * Transform {@link Options} from Apache Commons Cli into Reader completer for JLine {@link
+ * Completer}.
  *
  * @version 1 future improvements : use treemap with the origin as no default completer separated
  *     with 2 branches (first fore commands possibilities next layers for option and final layer for
@@ -22,32 +21,34 @@ public class OptCompleterAdapter {
 
   private Options opts;
 
+  /**
+   * Converts {@link Options} into {@link Completer}.
+   *
+   * @param opts options for command (to be converted into string --something)
+   */
   public OptCompleterAdapter(Options opts) {
     this.opts = opts;
   }
 
   /**
-   * check if option is not null
-   *
-   * @param o concerned option
-   * @return boolean is null or not
-   */
-  private boolean isNull(Option o) {
-    return o == null || o.getOpt() == null || o.getLongOpt() == null;
-  }
-
-  /**
-   * transform options to text
+   * Transform options to text.
    *
    * @param o option to turn into string
    * @return possible options
    */
   private ArrayList<String> optify(Option o) {
-    return new ArrayList<>(Arrays.asList("-" + o.getOpt(), "--" + o.getLongOpt()));
+    ArrayList<String> out = new ArrayList<>();
+    if (o.getOpt() != null) {
+      out.add("-" + o.getOpt());
+    }
+    if (o.getLongOpt() != null) {
+      out.add("--" + o.getLongOpt());
+    }
+    return out;
   }
 
   /**
-   * get the completer from possible command available options
+   * Get the completer from possible command available options.
    *
    * @param cmdName name of te command we want to complete
    * @return completer
