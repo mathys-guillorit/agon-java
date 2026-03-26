@@ -2,6 +2,7 @@ package fr.univ.bordeaux.ui.gui.controllers;
 
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.ui.gui.AgonGui;
+import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -20,12 +21,20 @@ public class GameViewController {
 
     private AgonGui agonGui;
 
+    private HexagonCanvas hexCanvas;
+
     public void setAgonGUI(AgonGui agonGui) {
         this.agonGui = agonGui;
     }
 
     @FXML
     public void initialize() {
+        hexCanvas = new HexagonCanvas();
+        boardContainer.getChildren().add(hexCanvas);
+        hexCanvas.widthProperty().bind(boardContainer.widthProperty());
+        hexCanvas.heightProperty().bind(boardContainer.heightProperty());
+        hexCanvas.widthProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
+        hexCanvas.heightProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
     }
 
     public void updateMessage(String message) {
@@ -36,6 +45,9 @@ public class GameViewController {
 
     public void refreshBoard(RestrictedAgonBoard agonBoard) {
         System.out.println("New board received");
+        if (hexCanvas != null) {
+            hexCanvas.updateBoard(agonBoard);
+        }
     }
 
     public void showError(String error) {

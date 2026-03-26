@@ -18,6 +18,7 @@ import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;

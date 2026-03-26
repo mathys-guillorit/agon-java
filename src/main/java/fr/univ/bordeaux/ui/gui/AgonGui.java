@@ -2,7 +2,7 @@ package fr.univ.bordeaux.ui.gui;
 
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.AbstractGameUi;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import javafx.application.Platform;
