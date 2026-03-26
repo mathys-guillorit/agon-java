@@ -5,10 +5,7 @@ import java.util.List;
 /** Integer option. */
 public class OptIntegerSpec extends OptTypeSpec {
 
-
-  /**
-   * Option for specified Integers value.
-   */
+  /** Option for specified Integers value. */
   public OptIntegerSpec() {
     super(List.of());
   }
@@ -17,7 +14,6 @@ public class OptIntegerSpec extends OptTypeSpec {
    * Check if the type input is valid with the completer.
    *
    * @param value user value (terminal)
-   *
    * @return true if it's valid else false
    */
   @Override

@@ -13,18 +13,14 @@ import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Map;
 
-/**
- * Create Match.
- */
+/** Create Match. */
 public class MatchFactory {
 
   /**
    * Explicit.
    *
    * @param config {@link GameConfig}
-   *
    * @param gameUi {@link GameUserInterface} ui part to display the game.
-   *
    * @return {@link Match}
    */
   public static Match createMatch(GameConfig config, GameUserInterface gameUi) {
@@ -48,13 +44,9 @@ public class MatchFactory {
    * TODO: complete here.
    *
    * @param aiMap {@link Map} get players by colors.
-   *
    * @param color {@link Color}
-   *
    * @param agonBoard {@link AgonBoard} Board to play on.
-   *
    * @param gameUi {@link GameUserInterface} ui that display the game.
-   *
    * @return {@link Player}
    */
   private static Player createPlayerFromAiMap(

@@ -2,9 +2,7 @@ package fr.univ.bordeaux.application.commands.specialized.options;
 
 import java.util.List;
 
-/**
- * Typing completer.
- */
+/** Typing completer. */
 public class OptTypeSpec implements OptValueSpec {
 
   private List<String> allowed;
@@ -22,7 +20,6 @@ public class OptTypeSpec implements OptValueSpec {
    * Advanced completer for types.
    *
    * @param prefix prediction text
-   *
    * @return possibilities
    */
   @Override
@@ -34,7 +31,6 @@ public class OptTypeSpec implements OptValueSpec {
    * Check if the content contains the value.
    *
    * @param value to check
-   *
    * @return true is included in the message else false
    */
   @Override

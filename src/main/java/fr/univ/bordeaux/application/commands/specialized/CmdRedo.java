@@ -27,8 +27,7 @@ public final class CmdRedo extends Cmd {
   }
 
   /**
-   * Internal constructor used to create an executable instance
-   * with a specific count.
+   * Internal constructor used to create an executable instance with a specific count.
    *
    * @param uictx The user interface context.
    * @param redoNumber The specific number of moves to restore.
@@ -85,10 +84,7 @@ public final class CmdRedo extends Cmd {
       try {
         count = Integer.parseInt(arg0);
       } catch (NumberFormatException e) {
-        this.getCtx()
-            .showError(
-                  "Invalid number format for redo: " + arg0 + ". Defaulting to 1.\n"
-            );
+        this.getCtx().showError("Invalid number format for redo: " + arg0 + ". Defaulting to 1.\n");
       }
     }
     return new CmdRedo(this.getCtx(), count);

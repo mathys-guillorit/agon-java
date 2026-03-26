@@ -1,8 +1,6 @@
 package fr.univ.bordeaux.ui;
 
-/**
- * Explicit.
- */
+/** Explicit. */
 public interface ObservableMatch {
 
   void setObserver(MatchObserver observer);

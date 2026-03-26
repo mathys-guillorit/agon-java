@@ -6,9 +6,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UiPromptParser;
 
-/**
- * Default class for Human Behavior.
- */
+/** Default class for Human Behavior. */
 public class HumanPlayer extends AbstractPlayer {
 
   GameUserInterface ui;

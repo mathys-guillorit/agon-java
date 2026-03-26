@@ -15,7 +15,6 @@ public interface CmdAction {
    * Create a new Game.
    *
    * @param args user input into the programm from CLI.
-   *
    * @return {@link CmdAction}
    */
   CmdAction createNew(String[] args);
@@ -32,8 +31,7 @@ public interface CmdAction {
   Completer getAutoCompleter();
 
   /**
-   * Get command full name (it's not like options (example: -h --help)
-   * there is no reduced form).
+   * Get command full name (it's not like options (example: -h --help) there is no reduced form).
    *
    * @return String command name
    */

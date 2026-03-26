@@ -15,9 +15,7 @@ import fr.univ.bordeaux.ui.ObservableMatch;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Play an Agon Match between two players.
- */
+/** Play an Agon Match between two players. */
 public abstract class Match implements MatchManager, ObservableMatch {
 
   private AgonBoard agonBoard;
@@ -31,9 +29,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * Play a {@link Match}.
    *
    * @param agonBoard {@link AgonBoard} board to play on
-   *
    * @param player1 {@link Player} first player that plays the party
-   *
    * @param player2 {@link Player} second player that plays the party
    */
   public Match(AgonBoard agonBoard, Player player1, Player player2) {
@@ -57,7 +53,6 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * Move a piece on the board.
    *
    * @param move {@link Move}
-   *
    * @return true succeeded else false
    */
   public boolean move(Move move) {
@@ -83,14 +78,10 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return false;
   }
 
-  /**
-   * Beginning actions when a turn is about to start.
-   */
+  /** Beginning actions when a turn is about to start. */
   public abstract void startActions();
 
-  /**
-   * Actions when a turn is about to end.
-   */
+  /** Actions when a turn is about to end. */
   public abstract void endActions();
 
   /**
@@ -112,9 +103,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return uiList;
   }
 
-  /**
-   * Stop Match.
-   */
+  /** Stop Match. */
   public void quit() {
     this.setMatchStatus(MatchStatus.FINISHED);
   }

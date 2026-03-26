@@ -7,9 +7,7 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 
-/**
- * Default AIPlayer class to play with.
- */
+/** Default AIPlayer class to play with. */
 public class AiPlayer extends AbstractPlayer {
 
   AgonBoard board;
@@ -19,11 +17,8 @@ public class AiPlayer extends AbstractPlayer {
    * Create a AiPlayer.
    *
    * @param name {@link String} AiPlayer's name
-   *
    * @param color {@link Color} AiPlayer's color
-   *
    * @param board {@link AgonBoard} board to play on
-   *
    * @param ai {@link AgonAi}
    */
   public AiPlayer(String name, Color color, AgonBoard board, AgonAi ai) {
@@ -66,7 +61,6 @@ public class AiPlayer extends AbstractPlayer {
    * Get command Behavior.
    *
    * @param cmds {@link AgonRegister}
-   *
    * @return {@link CmdAction}
    */
   @Override

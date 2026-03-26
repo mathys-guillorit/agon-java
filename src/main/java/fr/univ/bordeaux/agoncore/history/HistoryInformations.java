@@ -41,10 +41,8 @@ public class HistoryInformations {
   /**
    * Returns the sequence of moves that occurred during this turn.
    *
-   * <p>This list is ordered chronologically: the first
-   * element is the standard move, followed by
+   * <p>This list is ordered chronologically: the first element is the standard move, followed by
    * any capture-induced relocations.
-   * </p>
    *
    * @return A {@link List} of {@link Move} objects.
    */

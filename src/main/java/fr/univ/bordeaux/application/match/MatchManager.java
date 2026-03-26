@@ -5,16 +5,13 @@ import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 import java.util.List;
 
-/**
- * Represent Match Behavior.
- */
+/** Represent Match Behavior. */
 public interface MatchManager {
 
   /**
    * Move a piece.
    *
    * @param move {@link Move}
-   *
    * @return true | false
    */
   boolean move(Move move);
@@ -82,8 +79,6 @@ public interface MatchManager {
    */
   List<MoveDtO> getHistory();
 
-  /**
-   * Quit the game.
-   */
+  /** Quit the game. */
   void quit();
 }

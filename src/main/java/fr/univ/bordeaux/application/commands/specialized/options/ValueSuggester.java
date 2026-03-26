@@ -11,7 +11,6 @@ public interface ValueSuggester {
    * Predict next characters over the actual pattern.
    *
    * @param token user's actual text pattern.
-   *
    * @param candidates possibles word(s) for completion
    */
   void suggest(String token, List<Candidate> candidates);

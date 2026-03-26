@@ -31,8 +31,7 @@ public final class CmdUndo extends Cmd {
   }
 
   /**
-   * Internal constructor used to create an executable instance with
-   * a specific count.
+   * Internal constructor used to create an executable instance with a specific count.
    *
    * @param uictx The user interface context.
    * @param undoNumber The specific number of moves to revert.

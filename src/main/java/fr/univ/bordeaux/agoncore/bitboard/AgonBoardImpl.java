@@ -112,9 +112,7 @@ public class AgonBoardImpl implements AgonBoard {
               case '.':
                 break;
               default:
-                throw new IllegalArgumentException(
-                    "impossible piece character: (" + piece + ")"
-                );
+                throw new IllegalArgumentException("impossible piece character: (" + piece + ")");
             }
             charIndex++;
           }
@@ -513,29 +511,22 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Generates a single {@link BitBoard} representing all valid destination
-   * tiles for the given
+   * Generates a single {@link BitBoard} representing all valid destination tiles for the given
    * player.
    *
    * <p>This method follows a specific hierarchy of rules:
    *
    * <ol>
-   *   <li><b>Relocation:</b> If pieces are captured, it returns only the
-   *   valid relocation spots.
-   *   <li><b>Movement:</b> If no pieces are captured, it calculates moves
-   *   for pawns and the queen.
-   *   <li><b>Constraints:</b> Pawns cannot enter the Throne, and no piece
-   *   can "retreat" (move to a
+   *   <li><b>Relocation:</b> If pieces are captured, it returns only the valid relocation spots.
+   *   <li><b>Movement:</b> If no pieces are captured, it calculates moves for pawns and the queen.
+   *   <li><b>Constraints:</b> Pawns cannot enter the Throne, and no piece can "retreat" (move to a
    *       circle further from the center).
-   *   <li><b>Suicide Prevention:</b> Destined tiles that would lead to
-   *   immediate capture (sandwich)
+   *   <li><b>Suicide Prevention:</b> Destined tiles that would lead to immediate capture (sandwich)
    *       are filtered out.
    * </ol>
    *
-   * @param color The {@link Color} of the player whose legal moves are
-   *              being generated.
-   * @return A {@link BitBoard} where each set bit corresponds to a legal
-   *        destination tile.
+   * @param color The {@link Color} of the player whose legal moves are being generated.
+   * @return A {@link BitBoard} where each set bit corresponds to a legal destination tile.
    */
   public BitBoard generateLegalMovesBitboard(Color color) {
     if (hasPiecesToRelocate(color)) {
@@ -590,8 +581,8 @@ public class AgonBoardImpl implements AgonBoard {
    *
    * <ul>
    *   <li>If relocation is required, moves will have a source index of {@code -1}.
-   *   <li>Pawn moves are restricted by the current circle's allowed
-   *   destinations and cannot target the central Throne.
+   *   <li>Pawn moves are restricted by the current circle's allowed destinations and cannot target
+   *       the central Throne.
    *   <li>The Queen's moves are restricted by her current circle but include the Throne.
    * </ul>
    *
@@ -605,8 +596,7 @@ public class AgonBoardImpl implements AgonBoard {
     if (hasPiecesToRelocate(color)) {
       BitBoard targets = getRelocationMoves(color);
       // check every bits that is set to 1
-      for (int to = targets.nextSetBit(-1); to != -1;
-           to = targets.nextSetBit(to)) {
+      for (int to = targets.nextSetBit(-1); to != -1; to = targets.nextSetBit(to)) {
         moves.add(new Move(-1, to, color)); // -1 are captured pieces
       }
       return moves;
@@ -621,8 +611,9 @@ public class AgonBoardImpl implements AgonBoard {
       BitBoard pawnOnCircleI = myPawns.andOperation(circles[i]);
 
       // starting piece index
-      for (int from = pawnOnCircleI.nextSetBit(-1); from != -1;
-           from = pawnOnCircleI.nextSetBit(from)) {
+      for (int from = pawnOnCircleI.nextSetBit(-1);
+          from != -1;
+          from = pawnOnCircleI.nextSetBit(from)) {
 
         // get every valid position for pawns, a valid position means it can't
         // get on throne can't suicide and can't step away from the center.
@@ -634,8 +625,7 @@ public class AgonBoardImpl implements AgonBoard {
                 .andOperation(suicideMask.complementOperation());
 
         // ending piece index
-        for (int to = dests.nextSetBit(-1); to != -1;
-             to = dests.nextSetBit(to)) {
+        for (int to = dests.nextSetBit(-1); to != -1; to = dests.nextSetBit(to)) {
           moves.add(new Move(from, to, color));
         }
       }
