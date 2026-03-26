@@ -30,6 +30,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import fr.univ.bordeaux.ui.gui.AgonGui;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -153,7 +154,7 @@ public class GameLauncher {
     }
   }
 
-  /**
+    /**
    * Loads the initial configuration from the .agonrc file.
    *
    * <p>If the file is missing or unreadable, a default configuration file is created and a default
@@ -197,14 +198,20 @@ public class GameLauncher {
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
    * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
-  private void startGame(
-      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad) {
-    System.out.println("Starting Agon Shell...");
-    AgonShell userInterface;
-    if (cmd.hasOption("g")) {
-      // AgonGUI agon = new  AgonGUI(config);
-    } else {
+  protected void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
+    AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    GameUserInterface userInterface;
+    GameEngine gameEngine;
       try {
+          if ( cmd.hasOption("g")) {
+              System.out.println("[INFO] Starting Agon GUI...");
+              AgonGui gui = new AgonGui(config);
+              userInterface = (GameUserInterface) gui;
+              gameEngine = new GameEngine(userInterface, cmds);
+              gui.start();
+      } else {
+        System.out.println("[INFO] Starting Agon Shell...");
+              }
         final AgonShell[] shellRef = new AgonShell[1];
 
         Completer strategyCompleter =
@@ -218,8 +225,8 @@ public class GameLauncher {
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
         userInterface = new AgonShell(terminal, reader, cmds);
-        shellRef[0] = userInterface;
-        GameEngine gameEngine = new GameEngine(userInterface, cmds);
+        shellRef[0] = (AgonShell) userInterface;
+        gameEngine = new GameEngine(userInterface, cmds);
         this.fillRegister(cmds, userInterface, config, gameEngine);
         /*if (filePathToLoad != null) {
           loadCmd.execute(null);
@@ -230,7 +237,6 @@ public class GameLauncher {
         e.printStackTrace();
       }
     }
-  }
 
   private void fillRegister(
       AgonRegister<CmdAction> cmds, GameUserInterface ui, GameConfig config, GameEngine engine) {
