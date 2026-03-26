@@ -2,13 +2,7 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.commands.network.CmdJoin;
-import fr.univ.bordeaux.application.commands.network.CmdPing;
-import fr.univ.bordeaux.application.commands.network.CmdServerList;
-import fr.univ.bordeaux.application.commands.network.CmdServerStart;
-import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
-import fr.univ.bordeaux.application.commands.network.CmdServerStop;
-import fr.univ.bordeaux.application.commands.network.CmdPlayers;
+import fr.univ.bordeaux.application.commands.network.*;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
@@ -338,6 +332,7 @@ public class GameLauncher {
         cmds.register("server_list", new CmdServerList(userInterface, context));
         cmds.register("server_status", new CmdServerStatus(userInterface, context));
         cmds.register("players", new CmdPlayers(userInterface, context));
+        cmds.register("scoreboard", new CmdScoreboard(userInterface, context));
 
         // =========================
         // Context-aware quit

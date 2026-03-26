@@ -13,6 +13,7 @@ public enum CommandType {
     LOGIN,
     WELCOME,
     PLAYERS,
+    SCOREBOARD,
     UNKNOWN;
 
     /**

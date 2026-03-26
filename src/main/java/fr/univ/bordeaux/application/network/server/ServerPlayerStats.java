@@ -1,17 +1,17 @@
 package fr.univ.bordeaux.application.network.server;
 
 /**
- * Stores one player's statistics on the current server.
+ * Stores the persistent statistics of one player on the server.
  */
 public class ServerPlayerStats {
 
     private final String playerName;
     private int wins;
     private int losses;
-    private int played;
+    private int games;
 
     /**
-     * Creates an empty stats entry for one player.
+     * Creates a new scoreboard entry for a player.
      *
      * @param playerName player name
      */
@@ -20,54 +20,54 @@ public class ServerPlayerStats {
     }
 
     /**
-     * @return the player name
+     * Returns the player name associated with this scoreboard entry.
+     *
+     * @return player name
      */
     public String getPlayerName() {
         return playerName;
     }
 
     /**
-     * @return number of wins
+     * Returns the total number of wins.
+     *
+     * @return total wins
      */
     public int getWins() {
         return wins;
     }
 
     /**
-     * @return number of losses
+     * Returns the total number of losses.
+     *
+     * @return total losses
      */
     public int getLosses() {
         return losses;
     }
 
     /**
-     * @return number of played games
+     * Returns the total number of played games.
+     *
+     * @return total games
      */
-    public int getPlayed() {
-        return played;
+    public int getGames() {
+        return games;
     }
 
     /**
-     * Adds one win and one played game.
+     * Records a win and increments the number of played games.
      */
     public void addWin() {
         wins++;
-        played++;
+        games++;
     }
 
     /**
-     * Adds one loss and one played game.
+     * Records a loss and increments the number of played games.
      */
     public void addLoss() {
         losses++;
-        played++;
-    }
-
-    /**
-     * Adds one played game without changing wins/losses.
-     * Useful if you later support draws or unfinished games.
-     */
-    public void addPlayed() {
-        played++;
+        games++;
     }
 }

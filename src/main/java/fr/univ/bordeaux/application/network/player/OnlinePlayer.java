@@ -82,4 +82,5 @@ public class OnlinePlayer {
     public void setHandler(ClientHandler handler) {
         this.handler = handler;
     }
+
 }

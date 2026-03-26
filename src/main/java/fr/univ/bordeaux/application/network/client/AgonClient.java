@@ -307,4 +307,44 @@ public class AgonClient {
             return null;
         }
     }
+
+    /**
+     * Requests the scoreboard from the connected server.
+     *
+     * <p>The server response may contain multiple lines and is terminated
+     * by an "END" marker.
+     *
+     * @return the formatted scoreboard response, or null if the request fails
+     */
+    public String requestScoreboard() {
+        if (!isConnected()) {
+            return null;
+        }
+
+        try {
+            sendLine("SCOREBOARD");
+
+            StringBuilder sb = new StringBuilder();
+
+            while (true) {
+                String line = readProtocolLine();
+
+                if (line == null) {
+                    return null;
+                }
+
+                if ("END".equals(line)) {
+                    break;
+                }
+
+                sb.append(line).append("\n");
+            }
+
+            return sb.toString().trim();
+
+        } catch (IOException e) {
+            disconnectSilently();
+            return null;
+        }
+    }
 }

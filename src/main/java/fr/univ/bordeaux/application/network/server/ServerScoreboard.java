@@ -18,13 +18,45 @@ public class ServerScoreboard {
      * @return stats associated with the player
      */
     public ServerPlayerStats getOrCreateStats(String playerName) {
-        return statsByPlayerName.computeIfAbsent(playerName, ServerPlayerStats::new);
+        return statsByPlayerName.computeIfAbsent(
+                playerName.toLowerCase(),
+                key -> new ServerPlayerStats(playerName)
+        );
     }
 
     /**
+     * Records a win for the given player.
+     *
+     * @param playerName player name
+     */
+    public void recordWin(String playerName) {
+        getOrCreateStats(playerName).addWin();
+    }
+
+    /**
+     * Records a loss for the given player.
+     *
+     * @param playerName player name
+     */
+    public void recordLoss(String playerName) {
+        getOrCreateStats(playerName).addLoss();
+    }
+
+    /**
+     * Returns all scoreboard entries.
+     *
      * @return all scoreboard entries
      */
     public Collection<ServerPlayerStats> getAllStats() {
         return statsByPlayerName.values();
+    }
+
+    /**
+     * Indicates whether the scoreboard is empty.
+     *
+     * @return true if no player stats are stored
+     */
+    public boolean isEmpty() {
+        return statsByPlayerName.isEmpty();
     }
 }

@@ -117,11 +117,12 @@ public class ClientHandler implements Runnable {
                     handleLogin(line);
 
                 } else if (cmd.getType() == CommandType.PLAYERS) {
-
                     send(server.getPlayersList());
 
-                } else if (cmd.getType() == CommandType.QUIT) {
+                } else if (cmd.getType() == CommandType.SCOREBOARD) {
+                    send(server.getScoreboard());
 
+                }  else if (cmd.getType() == CommandType.QUIT) {
                     break;
                 }
             }

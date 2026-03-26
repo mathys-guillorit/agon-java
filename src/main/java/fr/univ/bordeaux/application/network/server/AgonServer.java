@@ -39,6 +39,8 @@ public class AgonServer {
     /** Persistent players (name -> player), used for reconnection. */
     private final Map<String, OnlinePlayer> playersByName = new ConcurrentHashMap<>();
 
+    private final ServerScoreboard scoreboard = new ServerScoreboard();
+
     /**
      * Creates a new server with a specified owner name and port.
      *
@@ -218,6 +220,7 @@ public class AgonServer {
             existing.setHandler(handler);
             existing.setStatus(PlayerStatus.IDLE);
             players.put(existing.getId(), existing);
+            scoreboard.getOrCreateStats(existing.getName());
             return existing;
         }
 
@@ -229,6 +232,7 @@ public class AgonServer {
 
         players.put(id, player);
         playersByName.put(cleanName, player);
+        scoreboard.getOrCreateStats(player.getName());
 
         return player;
     }
@@ -283,5 +287,39 @@ public class AgonServer {
      */
     public int getPlayerCount() {
         return players.size();
+    }
+
+    /**
+     * Returns the scoreboard of all players registered on this server.
+     *
+     * <p>The scoreboard includes each player's number of wins, losses,
+     * and total games played. The response is formatted as multiple lines
+     * and terminated by an "END" marker.
+     *
+     * @return a formatted multi-line scoreboard string
+     */
+    public String getScoreboard() {
+
+        if (scoreboard.isEmpty()) {
+            return "SCOREBOARD_EMPTY\nEND\n";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (ServerPlayerStats stats : scoreboard.getAllStats()) {
+            OnlinePlayer player = playersByName.get(stats.getPlayerName().toLowerCase());
+
+            if (player != null) {
+                sb.append("ID=").append(player.getId())
+                        .append(" NAME=").append(stats.getPlayerName())
+                        .append(" WINS=").append(stats.getWins())
+                        .append(" LOSSES=").append(stats.getLosses())
+                        .append(" GAMES=").append(stats.getGames())
+                        .append("\n");
+            }
+        }
+
+        sb.append("END\n");
+        return sb.toString();
     }
 }
