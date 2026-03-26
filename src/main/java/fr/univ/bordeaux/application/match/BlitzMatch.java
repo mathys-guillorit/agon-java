@@ -4,13 +4,15 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 
-/** Represents a match played in Blitz mode, where each player has a limited amount of time. */
+/** Represents a match played in Blitz mode, where each player
+ * has a limited amount of time.
+ */
 public class BlitzMatch extends Match {
 
-  /** Represents a Timer for the WhitePlayer */
+  /** Represents a Timer for the WhitePlayer. */
   private final GameTimer whiteTimer;
 
-  /** Represents a Timer for the BlackPlayer */
+  /** Represents a Timer for the BlackPlayer. */
   private final GameTimer blackTimer;
 
   /**

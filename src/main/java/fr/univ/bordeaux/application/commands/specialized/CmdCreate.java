@@ -106,11 +106,11 @@ public class CmdCreate extends Cmd {
       }
 
       if (p1Color == Color.WHITE) {
-        gameConfig.setWhiteAI(p1IsAi);
-        gameConfig.setBlackAI(p2IsAi);
+        gameConfig.setWhiteAi(p1IsAi);
+        gameConfig.setBlackAi(p2IsAi);
       } else {
-        gameConfig.setWhiteAI(p2IsAi);
-        gameConfig.setBlackAI(p1IsAi);
+        gameConfig.setWhiteAi(p2IsAi);
+        gameConfig.setBlackAi(p1IsAi);
       }
       this.checkBlitzMode(cmd);
     } catch (ParseException | IllegalArgumentException e) {

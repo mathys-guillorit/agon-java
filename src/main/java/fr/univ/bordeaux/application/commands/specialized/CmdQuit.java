@@ -25,8 +25,12 @@ public class CmdQuit extends Cmd {
    */
   @Override
   public String getDescription() {
-    return "Usage: quit (or Ctrl+C)\n"
-        + "Description: Exits the game. You will be prompted to save your current progress before leaving.\n";
+    final StringBuilder sb = new StringBuilder();
+    sb.append("Usage: quit (or Ctrl+C)\n");
+    sb.append("Description: Exits the game.");
+    sb.append(" You will be prompted to save your current ");
+    sb.append("progress before leaving.\n");
+    return sb.toString();
   }
 
   /**

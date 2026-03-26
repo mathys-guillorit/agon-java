@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.ui;
 
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
-import fr.univ.bordeaux.application.match.MoveDTO;
+import fr.univ.bordeaux.application.match.MoveDtO;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -9,30 +9,33 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Unified interface defining possible interactions in the Agon game.
  *
  * <p>This interface aggregates both:
- *
  * <ul>
  *   <li>Actions the player can perform (e.g., {@code tryMove}, {@code undo}).
  *   <li>Methods for updating the display (e.g., {@code updateBoard}).
  * </ul>
- *
+ * </p>
  * It serves as the contract between the Presentation layer (UI) and the Application layer (Engine).
  */
 public interface GameUserInterface {
 
+  /**
+   * to check if the UI is running and if the Match is running
+   * to close the entire application.
+   *
+   * @return truee | false
+   */
   boolean isRunning();
 
   /**
-   * Quits the current game and closes the application. May trigger Reader prompt to save before
-   * exiting.
+   * Quit the current game and closes the application.
+   * May trigger Reader prompt to save before exiting.
    */
   void quit();
 
-  // --- UI UPDATES (Outputs to the Screen) ---
-
-  /*/**
+  /**
    * Updates the game board display.
    *
-   * @param boardRepresentation A textual (ASCII) or serialized representation of the board.
+   * @param agonBoard A textual (ASCII) or serialized representation of the board.
    */
   // void updateBoard(String boardRepresentation);
   void updateBoard(RestrictedAgonBoard agonBoard);
@@ -51,31 +54,43 @@ public interface GameUserInterface {
    */
   void showError(String error);
 
-  /** display the help menu into terminal */
+  /** Display the help menu into terminal. */
   void showHelp();
 
   /**
-   * show warning messages into the sub UI object
+   * Show warning messages into the sub UI object.
    *
-   * @param msg
+   * @param msg {@link String}
    */
   void showWarn(String msg);
 
   /**
-   * show information into the sub UI object
+   * Show information into the sub UI object.
    *
-   * @param msg
+   * @param msg {@link String}
    */
   void showInfo(String msg);
 
+  /** Explicit. */
   AtomicBoolean getDebugMode();
 
+  /** Explicit. */
   void setVerbose(boolean state);
 
-  /** save the game before leaving */
+  /** Save the game before leaving. */
   void saveGame();
 
+  /**
+   * Retrieve from ui/CLi some text.
+   *
+   * @return {@link String}
+   */
   String getUserInput();
 
-  void displayHistory(List<MoveDTO> moves);
+  /**
+   * To display Moves history.
+   *
+   * @param moves {@link List}
+   */
+  void displayHistory(List<MoveDtO> moves);
 }

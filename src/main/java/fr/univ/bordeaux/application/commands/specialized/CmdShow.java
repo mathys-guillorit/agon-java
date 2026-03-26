@@ -98,21 +98,22 @@ public final class CmdShow extends Cmd {
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine line = parser.parse(super.getOptions(), args);
-
       if (line.getOptions().length > 1) {
-        this.getCtx()
-            .showError("Error: Please specify only one target (e.g., -board or -history).\n");
+        String msg = "Please specify only one target (e.g., -board or -history).\n";
+        this.getCtx().showError(msg);
         return null;
       }
-
       String selectedTarget = "";
-      if (line.hasOption("history")) selectedTarget = "history";
-      else if (line.hasOption("time")) selectedTarget = "time";
-      else if (line.hasOption("configuration")) selectedTarget = "configuration";
-      else if (line.hasOption("board")) selectedTarget = "board";
-
+      if (line.hasOption("history")) {
+        selectedTarget = "history";
+      } else if (line.hasOption("time")) {
+        selectedTarget = "time";
+      } else if (line.hasOption("configuration")) {
+        selectedTarget = "configuration";
+      } else if (line.hasOption("board")) {
+        selectedTarget = "board";
+      }
       return new CmdShow(this.getCtx(), this.gameConfig, selectedTarget);
-
     } catch (ParseException e) {
       this.getCtx().showError("Invalid show command. Use 'help show' for details.\n");
       return null;

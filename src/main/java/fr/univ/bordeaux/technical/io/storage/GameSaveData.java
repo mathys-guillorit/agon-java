@@ -11,6 +11,14 @@ public class GameSaveData {
   private final List<String> boardLines;
   private final List<String> historyMoves;
 
+  /**
+   * Datastructures for saving information about the game.
+   *
+   * @param config {@link GameConfig}
+   * @param currentPlayer {@link Color}
+   * @param boardLines {@link List}
+   * @param historyMoves {@link List}
+   */
   public GameSaveData(
       GameConfig config, Color currentPlayer, List<String> boardLines, List<String> historyMoves) {
     this.config = config;

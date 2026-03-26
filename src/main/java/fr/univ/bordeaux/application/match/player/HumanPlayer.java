@@ -4,8 +4,11 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.UIPromptParser;
+import fr.univ.bordeaux.ui.UiPromptParser;
 
+/**
+ * Default class for Human Behavior.
+ */
 public class HumanPlayer extends AbstractPlayer {
 
   GameUserInterface ui;
@@ -27,7 +30,7 @@ public class HumanPlayer extends AbstractPlayer {
       return null;
     }
     // Utilisation static du parseur
-    return UIPromptParser.parse(input, cmds, ui);
+    return UiPromptParser.parse(input, cmds, ui);
   }
 
   /*
@@ -64,7 +67,7 @@ public class HumanPlayer extends AbstractPlayer {
   }
 
   @Override
-  public boolean isAI() {
+  public boolean isAi() {
     return false;
   }
 }

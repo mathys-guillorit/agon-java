@@ -136,12 +136,12 @@ public final class CmdSet extends Cmd {
 
       if (cmd.hasOption("whiteIsAI")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("whiteIsAI"));
-        gameConfig.setWhiteAI(val);
+        gameConfig.setWhiteAi(val);
         feedback.append("  - White is AI: ").append(val).append("\n");
       }
       if (cmd.hasOption("blackIsAI")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("blackIsAI"));
-        gameConfig.setBlackAI(val);
+        gameConfig.setBlackAi(val);
         feedback.append("  - Black is AI: ").append(val).append("\n");
       }
 

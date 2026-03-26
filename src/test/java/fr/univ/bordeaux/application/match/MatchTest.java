@@ -130,7 +130,7 @@ class MatchTest {
     match.move(
         new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
 
-    List<MoveDTO> history = match.getHistory();
+    List<MoveDtO> history = match.getHistory();
     assertFalse(history.isEmpty());
     assertEquals("b1", history.get(0).from().toLowerCase());
   }

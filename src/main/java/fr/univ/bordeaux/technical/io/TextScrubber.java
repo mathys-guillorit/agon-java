@@ -57,7 +57,8 @@ public class TextScrubber {
     }
 
     if (inBlockComment) {
-      throw new IOException("Corrupted file : Block comment '{' was opened on line " + errorLine + " and was never closed.");
+      final String msgp = "Corrupted file : Block comment '{' was opened on line";
+      throw new IOException(msgp + " " + errorLine + " and was never closed.");
     }
 
     return cleanLines;

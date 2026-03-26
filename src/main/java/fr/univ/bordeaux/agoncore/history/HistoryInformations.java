@@ -39,10 +39,12 @@ public class HistoryInformations {
   }
 
   /**
-   * Returns the sequence of moves that occurred during this turn. *
+   * Returns the sequence of moves that occurred during this turn.
    *
-   * <p>This list is ordered chronologically: the first element is the standard move, followed by
+   * <p>This list is ordered chronologically: the first
+   * element is the standard move, followed by
    * any capture-induced relocations.
+   * </p>
    *
    * @return A {@link List} of {@link Move} objects.
    */
@@ -51,7 +53,7 @@ public class HistoryInformations {
   }
 
   /**
-   * Get the PieceType of the piece that has been moved
+   * Get the PieceType of the piece that has been moved.
    *
    * @return The {@link PieceType} that was originally moved.
    */
@@ -60,7 +62,7 @@ public class HistoryInformations {
   }
 
   /**
-   * Get the color of the player who made the move
+   * Get the color of the player who made the move.
    *
    * @return The {@link Color} of the player who made the move.
    */

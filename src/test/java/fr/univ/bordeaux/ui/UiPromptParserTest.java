@@ -1,19 +1,15 @@
 package fr.univ.bordeaux.ui;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import fr.univ.bordeaux.application.commands.specialized.CmdShow;
-import fr.univ.bordeaux.application.match.MatchManager;
-import fr.univ.bordeaux.application.match.StandardMatch;
-import fr.univ.bordeaux.application.match.player.HumanPlayer;
-import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -25,7 +21,8 @@ import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-public class UIPromptParserTest {
+
+public class UiPromptParserTest {
   private AgonRegister<CmdAction> registry;
   private AgonShell shell;
   private ByteArrayOutputStream outContent;
@@ -42,44 +39,44 @@ public class UIPromptParserTest {
     LineReader reader = new FakeLineReader(""); // Empty reader for init
 
     shell = new AgonShell(terminal, reader, registry);
-    registry.register("show", new CmdShow(shell,config));
+    registry.register("show", new CmdShow(shell, config));
   }
 
   /**
-   * Verifies that the parser correctly identifies a registered command
-   * when running through the real AgonShell context.
+   * Verifies that the parser correctly identifies a registered command when running through the
+   * real AgonShell context.
    */
   @Test
   @DisplayName("Integration: Parse 'show' command through AgonShell")
   void testParseCommandInShell() {
-    CmdAction action = UIPromptParser.parse("show", registry, shell);
+    CmdAction action = UiPromptParser.parse("show", registry, shell);
 
     assertNotNull(action);
     assertTrue(action instanceof CmdShow);
   }
 
   /**
-   * Verifies that the parser correctly handles a standard move string.
-   * Checks if the coordinate mapping works within the shell context.
+   * Verifies that the parser correctly handles a standard move string. Checks if the coordinate
+   * mapping works within the shell context.
    */
   @Test
   @DisplayName("Integration: Parse move 'a1b2' through AgonShell")
   void testParseMoveInShell() {
-    CmdAction action = UIPromptParser.parse("a1b2", registry, shell);
+    CmdAction action = UiPromptParser.parse("a1b2", registry, shell);
 
     assertNotNull(action);
     assertInstanceOf(CmdMove.class, action);
   }
 
   /**
-   * Verifies that an invalid coordinate correctly triggers the styled [ERROR]
-   * output of the real AgonShell.
+   * Verifies that an invalid coordinate correctly triggers the styled [ERROR] output of the real
+   * AgonShell.
    */
   @Test
   @DisplayName("Integration: Out of bounds move triggers AgonShell error styling")
   void testOutOfBoundsErrorInShell() {
     // "k15" is out of bounds (1-11)
-    CmdAction action = UIPromptParser.parse("k15", registry, shell);
+    CmdAction action = UiPromptParser.parse("k15", registry, shell);
 
     assertNull(action);
 
@@ -89,17 +86,16 @@ public class UIPromptParserTest {
     assertTrue(output.contains("out of bounds"));
   }
 
-  /**
-   * Verifies that the parser is case-insensitive when using real shell inputs.
-   */
+  /** Verifies that the parser is case-insensitive when using real shell inputs. */
   @Test
   @DisplayName("Integration: Case insensitivity in AgonShell")
   void testCaseInsensitivityInShell() {
-    assertNotNull(UIPromptParser.parse("SHOW", registry, shell));
-    assertNotNull(UIPromptParser.parse("F1G1", registry, shell));
+    assertNotNull(UiPromptParser.parse("SHOW", registry, shell));
+    assertNotNull(UiPromptParser.parse("F1G1", registry, shell));
   }
+
   @Test
-  void testRelocationMove(){
+  void testRelocationMove() {
     BitBoard whitePawns = new BitBoard();
     whitePawns.setBit(61, 1L);
     whitePawns.setBit(64, 1L);
@@ -107,9 +103,9 @@ public class UIPromptParserTest {
 
     AgonBoardImpl captureBoard =
         new AgonBoardImpl(new BitBoard(), new BitBoard(), whitePawns, blackPawns);
-    captureBoard.applyMove(new Move(64,63,Color.WHITE));
-    captureBoard.performCaptures(Color.WHITE,new ArrayList<>());
-    CmdAction action = UIPromptParser.parse("a1", registry, shell);
+    captureBoard.applyMove(new Move(64, 63, Color.WHITE));
+    captureBoard.performCaptures(Color.WHITE, new ArrayList<>());
+    CmdAction action = UiPromptParser.parse("a1", registry, shell);
 
     assertNotNull(action);
     assertInstanceOf(CmdMove.class, action);

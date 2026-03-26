@@ -44,7 +44,9 @@ public class History {
   public History(List<String> textMoves) {
     for (String textMove : textMoves) {
       String cleanMove = textMove.trim();
-      if (cleanMove.isEmpty()) continue;
+      if (cleanMove.isEmpty()) {
+        continue;
+      }
 
       String mainPart = cleanMove;
       String capturePart = null;
@@ -68,7 +70,7 @@ public class History {
         PieceType type;
         if (pieceChar == 'Q') {
           type = PieceType.WHITE_QUEEN;
-        } else if(pieceChar == 'q') {
+        } else if (pieceChar == 'q') {
           type = PieceType.BLACK_QUEEN;
         } else {
           type = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
@@ -91,15 +93,17 @@ public class History {
                 char capPieceChar = capParts[0].charAt(0);
                 int capIdx = CoordinateMapper.fromCoordinateString(capParts[1]);
 
-                Color capColor = (capPieceChar == 'O' || capPieceChar == 'Q') ? Color.WHITE : Color.BLACK;
+                Color capColor =
+                    (capPieceChar == 'O' || capPieceChar == 'Q') ? Color.WHITE : Color.BLACK;
 
                 PieceType capType;
                 if (capPieceChar == 'Q') {
                   capType = PieceType.WHITE_QUEEN;
-                } else if(capPieceChar == 'q') {
+                } else if (capPieceChar == 'q') {
                   capType = PieceType.BLACK_QUEEN;
                 } else {
-                  capType = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
+                  capType =
+                      (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
                 }
 
                 Move capMove = new Move(capIdx, -1, capColor, capType);
@@ -219,7 +223,9 @@ public class History {
     List<String> textMoves = new java.util.ArrayList<>();
 
     for (HistoryInformations info : this.undoStack) {
-      if (info.getMoves().isEmpty()) continue;
+      if (info.getMoves().isEmpty()) {
+        continue;
+      }
 
       Move primaryMove = info.getMoves().get(0);
 

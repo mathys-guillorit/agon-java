@@ -19,14 +19,16 @@ public final class CmdRedo extends Cmd {
   public CmdRedo(GameUserInterface uictx) {
     super(uictx);
     this.setName("redo");
-    this.setDesc(
-        "Description: Replays the last canceled turn. If a number N is provided, it replays the last N canceled turns.");
+    String msg = "Description: Replays the last canceled turn.";
+    msg += "If a number N is provided, it replays the last N canceled turns.";
+    this.setDesc(msg);
     Options options = super.getOptions();
     options.addOption("n", "number", true, "Number of turns to redo");
   }
 
   /**
-   * Internal constructor used to create an executable instance with a specific count.
+   * Internal constructor used to create an executable instance
+   * with a specific count.
    *
    * @param uictx The user interface context.
    * @param redoNumber The specific number of moves to restore.
@@ -79,11 +81,14 @@ public final class CmdRedo extends Cmd {
   public CmdAction createNew(String[] args) {
     int count = 1;
     if (args.length > 0) {
+      String arg0 = args[0];
       try {
-        count = Integer.parseInt(args[0]);
+        count = Integer.parseInt(arg0);
       } catch (NumberFormatException e) {
         this.getCtx()
-            .showError("Invalid number format for redo: " + args[0] + ". Defaulting to 1.\n");
+            .showError(
+                  "Invalid number format for redo: " + arg0 + ". Defaulting to 1.\n"
+            );
       }
     }
     return new CmdRedo(this.getCtx(), count);

@@ -16,8 +16,10 @@ public final class CmdPause extends Cmd {
   public CmdPause(GameUserInterface uictx) {
     super(uictx);
     this.setName("pause");
-    this.setDesc(
-        "Description: Pauses the passing time. This command is only available when playing in Blitz mode.");
+    String msg;
+    msg = "Description: Pauses the passing time. ";
+    msg += "This command is only available when playing in Blitz mode.";
+    this.setDesc(msg);
   }
 
   /**

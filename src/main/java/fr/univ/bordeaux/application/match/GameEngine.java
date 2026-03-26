@@ -4,7 +4,7 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.UIPromptParser;
+import fr.univ.bordeaux.ui.UiPromptParser;
 
 /**
  * The core engine of the Agon application. This class manages the main execution loop. It switches
@@ -48,7 +48,7 @@ public class GameEngine {
           continue;
         }
 
-        action = UIPromptParser.parse(input, this.cmds, ui);
+        action = UiPromptParser.parse(input, this.cmds, ui);
       } else {
         Player p = matchManager.getCurrentPlayer();
         ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");

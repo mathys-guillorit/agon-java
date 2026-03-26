@@ -194,7 +194,8 @@ class GameSaveIntegrationTest {
     assertTrue(Files.readString(edgeCaseFile).contains("ai_color = WHITE\n"));
 
     Path emptyMoveFile = tempDir.resolve("empty_move.asv");
-    Files.writeString(emptyMoveFile, "[settings]\n[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
+    Files.writeString(
+        emptyMoveFile, "[settings]\n[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
     GameSaveParser parser = new GameSaveParser();
     GameSaveData loadedData = parser.parse(emptyMoveFile.toString());
 
@@ -216,34 +217,35 @@ class GameSaveIntegrationTest {
   }
 
   @Test
-  @DisplayName("Should violently reject save file and throw IOException if a block comment is unclosed")
+  @DisplayName(
+      "Should violently reject save file and throw IOException if a block comment is unclosed")
   void testUnclosedBlockCommentSwallowsSection() throws IOException {
     Path corruptFile = tempDir.resolve("corrupt_save.asv");
 
     String corruptContent =
-            "[settings]\n"
-                    + "timeout = 120\n"
-                    + "[game]\n"
-                    + "X\n"
-                    + ". X o .\n"
-                    + "{ Oops, I forgot to close this comment\n"
-                    + "[history]\n"
-                    + "O a1 a2;\n";
+        "[settings]\n"
+            + "timeout = 120\n"
+            + "[game]\n"
+            + "X\n"
+            + ". X o .\n"
+            + "{ Oops, I forgot to close this comment\n"
+            + "[history]\n"
+            + "O a1 a2;\n";
 
     Files.writeString(corruptFile, corruptContent);
 
     GameSaveParser parser = new GameSaveParser();
 
-    Exception exception = assertThrows(
+    Exception exception =
+        assertThrows(
             IOException.class,
             () -> parser.parse(corruptFile.toString()),
-            "Parser should throw an IOException because the block comment '{' is never closed"
-    );
+            "Parser should throw an IOException because the block comment '{' is never closed");
 
     assertTrue(
-            exception.getMessage().toLowerCase().contains("closed") || exception.getMessage().toLowerCase().contains("Corrupted"),
-            "The exception message should explain that the comment block wasn't closed"
-    );
+        exception.getMessage().toLowerCase().contains("closed")
+            || exception.getMessage().toLowerCase().contains("Corrupted"),
+        "The exception message should explain that the comment block wasn't closed");
   }
 
   @Test
@@ -257,16 +259,15 @@ class GameSaveIntegrationTest {
     builder.setCurrentPlayer(Color.WHITE);
     builder.addBoardLine(". . .");
 
-    Exception exception = assertThrows(
+    Exception exception =
+        assertThrows(
             IOException.class,
             builder::build,
-            "Builder should throw an exception if [settings] section flag is false"
-    );
+            "Builder should throw an exception if [settings] section flag is false");
 
     assertTrue(
-            exception.getMessage().contains("Settings"),
-            "The error message should explicitly mention the missing [settings] section"
-    );
+        exception.getMessage().contains("Settings"),
+        "The error message should explicitly mention the missing [settings] section");
   }
 
   @Test
@@ -275,11 +276,7 @@ class GameSaveIntegrationTest {
     GameConfig config = new GameConfig();
     List<String> boardLines = List.of(". . .");
 
-    List<String> complexMoves = Arrays.asList(
-            "X c3 c2 (O c1, q d5)",
-            "Q f5 f6",
-            "O a1 a2 (X c3)"
-    );
+    List<String> complexMoves = Arrays.asList("X c3 c2 (O c1, q d5)", "Q f5 f6", "O a1 a2 (X c3)");
 
     GameSaveData data = new GameSaveData(config, Color.WHITE, boardLines, complexMoves);
     Path captureFile = tempDir.resolve("captures_save.asv");
@@ -288,8 +285,9 @@ class GameSaveIntegrationTest {
     serializer.save(data, captureFile.toString());
 
     String fileContent = Files.readString(captureFile);
-    assertTrue(fileContent.contains("X c3 c2 (O c1, q d5); Q f5 f6;\nO a1 a2 (X c3);\n"),
-            "Serializer should correctly format complex moves with semicolons and newlines");
+    assertTrue(
+        fileContent.contains("X c3 c2 (O c1, q d5); Q f5 f6;\nO a1 a2 (X c3);\n"),
+        "Serializer should correctly format complex moves with semicolons and newlines");
 
     GameSaveParser parser = new GameSaveParser();
     GameSaveData loadedData = parser.parse(captureFile.toString());
@@ -308,14 +306,14 @@ class GameSaveIntegrationTest {
     Path messyCaptureFile = tempDir.resolve("messy_captures.asv");
 
     String content =
-            "[settings]\n" +
-                    "[game]\n" +
-                    "X\n" +
-                    ". .\n" +
-                    "[history]\n" +
-                    "X c3 c2 (  O c1 , q d5 ) ; \n" +
-                    " Q f5 f6 ;  \n" +
-                    "O a1 a2 (X c3);\n";
+        "[settings]\n"
+            + "[game]\n"
+            + "X\n"
+            + ". .\n"
+            + "[history]\n"
+            + "X c3 c2 (  O c1 , q d5 ) ; \n"
+            + " Q f5 f6 ;  \n"
+            + "O a1 a2 (X c3);\n";
 
     Files.writeString(messyCaptureFile, content);
 
@@ -325,7 +323,8 @@ class GameSaveIntegrationTest {
     List<String> loadedMoves = loadedData.getHistoryMoves();
     assertEquals(3, loadedMoves.size());
 
-    assertEquals("X c3 c2 (  O c1 , q d5 )", loadedMoves.get(0), "Should preserve internal spacing");
+    assertEquals(
+        "X c3 c2 (  O c1 , q d5 )", loadedMoves.get(0), "Should preserve internal spacing");
     assertEquals("Q f5 f6", loadedMoves.get(1));
     assertEquals("O a1 a2 (X c3)", loadedMoves.get(2));
   }

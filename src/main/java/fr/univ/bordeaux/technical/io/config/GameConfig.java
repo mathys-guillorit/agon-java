@@ -22,20 +22,11 @@ public class GameConfig {
   private boolean blackIsAi = true;
 
   /**
-   * Sets whether the White player is controlled by an Artificial Intelligence.
-   *
-   * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
-   */
-  public void setWhiteAI(boolean whiteIsAi) {
-    this.whiteIsAi = whiteIsAi;
-  }
-
-  /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
    *
    * @param blackIsAi {@code true} if Black is an AI, {@code false} if human.
    */
-  public void setBlackAI(boolean blackIsAi) {
+  public void setBlackAi(boolean blackIsAi) {
     this.blackIsAi = blackIsAi;
   }
 
@@ -246,12 +237,13 @@ public class GameConfig {
     return manualPlacement;
   }
 
+  /**
+   * Sets whether the White player is controlled by an Artificial Intelligence.
+   *
+   * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
+   */
   public void setWhiteAi(boolean whiteIsAi) {
     this.whiteIsAi = whiteIsAi;
-  }
-
-  public void setBlackAi(boolean blackIsAi) {
-    this.blackIsAi = blackIsAi;
   }
 
   /**
@@ -264,6 +256,12 @@ public class GameConfig {
     this.manualPlacement = manualPlacement;
   }
 
+  /**
+   * String representation of the object.
+   *
+   * @see Object .toString() method for more infos
+   * @return {@link String}
+   */
   public String toString() {
     StringBuilder string = new StringBuilder();
     string.append("[verbose]=").append(verbose).append("\n");

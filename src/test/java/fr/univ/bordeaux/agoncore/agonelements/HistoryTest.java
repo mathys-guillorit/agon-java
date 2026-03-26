@@ -184,7 +184,8 @@ class HistoryTest {
     multiMoves.add(new Move(0, 1, Color.WHITE, PieceType.WHITE_PAWN));
     multiMoves.add(new Move(24, 99, Color.BLACK, PieceType.BLACK_PAWN));
 
-    HistoryInformations complexTurn = new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
+    HistoryInformations complexTurn =
+        new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
     complexHistory.add(complexTurn);
 
     List<String> textList = complexHistory.toTextList();
@@ -192,7 +193,8 @@ class HistoryTest {
     assertEquals(1, textList.size(), "Should export 1 turn");
 
     String exportedMove = textList.get(0);
-    assertTrue(exportedMove.startsWith("O a1 a2 ("), "Should start with main move and open parenthesis");
+    assertTrue(
+        exportedMove.startsWith("O a1 a2 ("), "Should start with main move and open parenthesis");
     assertTrue(exportedMove.contains("X"), "Should contain the captured black guard 'X'");
     assertTrue(exportedMove.endsWith(")"), "Should close the parenthesis");
   }

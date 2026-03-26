@@ -3,7 +3,7 @@ package fr.univ.bordeaux.ui.cli;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.match.MoveDTO;
+import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.ui.AbstractGameUi;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
@@ -46,19 +46,19 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   private String line;
 
   /** ANSI-styled header for application-wide messages: [AGON]. */
-  private final String msgHA;
+  private final String msgHa;
 
   /** ANSI-styled tag for informational messages: [INFO]. */
-  private final String msgBI;
+  private final String msgBi;
 
   /** ANSI-styled tag for warning alerts: [WARNING]. */
-  private final String msgBW;
+  private final String msgBw;
 
   /** ANSI-styled tag for critical error reports: [ERROR]. */
-  private final String msgBE;
+  private final String msgBe;
 
   /** Stores the ASCII art representation of the main menu. */
-  private String mainMenuASCII = "No default Menu set";
+  private String mainMenuAscii = "No default Menu set";
 
   /** The prompt string displayed at the beginning of each input line. */
   private String userPrompt = "> ";
@@ -80,7 +80,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
-    this.userPrompt = this.msgHA + "> ";
+    this.userPrompt = this.msgHa + "> ";
   }
 
   /**
@@ -95,10 +95,10 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     super();
     this.terminal = term;
     this.reader = reader;
-    this.msgHA = this.cliLayer();
-    this.msgBI = this.cliInfo();
-    this.msgBW = this.cliWarn();
-    this.msgBE = this.cliError();
+    this.msgHa = this.cliLayer();
+    this.msgBi = this.cliInfo();
+    this.msgBw = this.cliWarn();
+    this.msgBe = this.cliError();
     this.init();
     this.cmds = cmds;
     reader
@@ -113,7 +113,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    * @param mainMenu The raw ASCII string to be loaded.
    */
   public void loadMainMenu(String mainMenu) {
-    this.mainMenuASCII = mainMenu;
+    this.mainMenuAscii = mainMenu;
   }
 
   /**
@@ -262,7 +262,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
   @Override
   public void showError(String msg) {
-    this.cliW(this.msgHA + this.msgBE + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBe + " " + msg + "\n");
   }
 
   /**
@@ -272,7 +272,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void showInfo(String msg) {
-    this.cliW(this.msgHA + this.msgBI + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
 
   /**
@@ -282,7 +282,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void showWarn(String msg) {
-    this.cliW(this.msgHA + this.msgBW + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBw + " " + msg + "\n");
   }
 
   /**
@@ -307,7 +307,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
   /** Displays the help menu art to the terminal. */
   public void showHelp() {
-    this.cliWln(this.mainMenuASCII);
+    this.cliWln(this.mainMenuAscii);
   }
 
   /**
@@ -378,8 +378,13 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     return running;
   }
 
-  public void displayHistory(List<MoveDTO> moves) {
-    List<MoveDTO> history = moves;
+  /**
+   * Explicit.
+   *
+   * @param moves {@link List}
+   */
+  public void displayHistory(List<MoveDtO> moves) {
+    List<MoveDtO> history = moves;
 
     if (history.isEmpty()) {
       this.showInfo("The history is currently empty.");
@@ -392,7 +397,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
     for (int i = 0; i < history.size(); i += 2) {
       // Coup du joueur O (Premier joueur du tour)
-      MoveDTO moveO = history.get(i);
+      MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
           .append(" ")
@@ -401,7 +406,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
       // Coup du joueur X (S'il existe déjà dans la liste)
       if (i + 1 < history.size()) {
-        MoveDTO moveX = history.get(i + 1);
+        MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")
             .append(moveX.from().toLowerCase())
             .append(" ")

@@ -5,11 +5,15 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Common interface for UI elements.
+ */
 public abstract class AbstractGameUi implements GameUserInterface, MatchObserver {
 
   /**
-   * save the game configuration into the local machine from the user using current path save the
-   * file into the /Downloads repertory with current date (computer's date)
+   * Save the game configuration into the local machine from the user
+   * using current path save the file into the /Downloads repertory with
+   * current date (computer's date).
    */
   @Override
   public void saveGame() {

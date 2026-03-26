@@ -23,14 +23,16 @@ public final class CmdUndo extends Cmd {
   public CmdUndo(GameUserInterface uictx) {
     super(uictx);
     this.setName("undo");
-    this.setDesc(
-        "Description: Cancels the last played turn. If a number N is provided, it cancels the last N turns.");
+    String msg = "Description: Cancels the last played turn.";
+    msg += " If a number N is provided, it cancels the last N turns.";
+    this.setDesc(msg);
     Options options = super.getOptions();
     options.addOption("n", "number", true, "Number of turns to undo");
   }
 
   /**
-   * Internal constructor used to create an executable instance with a specific count.
+   * Internal constructor used to create an executable instance with
+   * a specific count.
    *
    * @param uictx The user interface context.
    * @param undoNumber The specific number of moves to revert.
@@ -67,7 +69,8 @@ public final class CmdUndo extends Cmd {
 
     for (int i = 0; i < undoNumber; i++) {
       if (!match.undo()) {
-        this.getCtx().showWarn("You can't undo anymore. Please play a move or use redo.\n");
+        String msg = "You can't undo anymore. Please play a move or use redo.";
+        this.getCtx().showWarn(msg + "\n");
         break;
       }
     }
@@ -96,7 +99,9 @@ public final class CmdUndo extends Cmd {
       return new CmdUndo(this.getCtx(), n);
 
     } catch (ParseException | NumberFormatException e) {
-      this.getCtx().showError("Invalid format. Usage: undo [-n <number>] or undo <number>\n");
+      final String msg;
+      msg = "Invalid format. Usage: undo [-n <number>] or undo <number>";
+      this.getCtx().showError(msg + "\n");
       return null;
     }
   }

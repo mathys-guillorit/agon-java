@@ -22,7 +22,13 @@ import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -65,8 +71,8 @@ public class GameLauncher {
   /**
    * Configures the available command-line options.
    *
-   * <p>This method defines flags (like -h, -v).
-   * It uses {@link Option.Builder} for complex options to ensure clarity.
+   * <p>This method defines flags (like -h, -v). It uses {@link Option.Builder} for complex options
+   * to ensure clarity.
    */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");

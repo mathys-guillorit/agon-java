@@ -83,7 +83,9 @@ public class AgonBoardImpl implements AgonBoard {
     int rowIndex = 10;
 
     for (String line : lines) {
-      if (rowIndex < 0) break;
+      if (rowIndex < 0) {
+        break;
+      }
 
       String cleanLine = line.replace(" ", "");
       int charIndex = 0;
@@ -109,6 +111,10 @@ public class AgonBoardImpl implements AgonBoard {
                 break;
               case '.':
                 break;
+              default:
+                throw new IllegalArgumentException(
+                    "impossible piece character: (" + piece + ")"
+                );
             }
             charIndex++;
           }
@@ -507,22 +513,29 @@ public class AgonBoardImpl implements AgonBoard {
   }
 
   /**
-   * Generates a single {@link BitBoard} representing all valid destination tiles for the given
+   * Generates a single {@link BitBoard} representing all valid destination
+   * tiles for the given
    * player.
    *
    * <p>This method follows a specific hierarchy of rules:
    *
    * <ol>
-   *   <li><b>Relocation:</b> If pieces are captured, it returns only the valid relocation spots.
-   *   <li><b>Movement:</b> If no pieces are captured, it calculates moves for pawns and the queen.
-   *   <li><b>Constraints:</b> Pawns cannot enter the Throne, and no piece can "retreat" (move to a
+   *   <li><b>Relocation:</b> If pieces are captured, it returns only the
+   *   valid relocation spots.
+   *   <li><b>Movement:</b> If no pieces are captured, it calculates moves
+   *   for pawns and the queen.
+   *   <li><b>Constraints:</b> Pawns cannot enter the Throne, and no piece
+   *   can "retreat" (move to a
    *       circle further from the center).
-   *   <li><b>Suicide Prevention:</b> Destined tiles that would lead to immediate capture (sandwich)
+   *   <li><b>Suicide Prevention:</b> Destined tiles that would lead to
+   *   immediate capture (sandwich)
    *       are filtered out.
    * </ol>
    *
-   * @param color The {@link Color} of the player whose legal moves are being generated.
-   * @return A {@link BitBoard} where each set bit corresponds to a legal destination tile.
+   * @param color The {@link Color} of the player whose legal moves are
+   *              being generated.
+   * @return A {@link BitBoard} where each set bit corresponds to a legal
+   *        destination tile.
    */
   public BitBoard generateLegalMovesBitboard(Color color) {
     if (hasPiecesToRelocate(color)) {
@@ -532,7 +545,7 @@ public class AgonBoardImpl implements AgonBoard {
     BitBoard freeZones = getFreeZones();
     BitBoard pawns;
     BitBoard queen;
-    BitBoard pOnCircleI;
+    BitBoard pawnOnCircleI;
     if (color == Color.WHITE) {
       pawns = whitePawns;
       queen = whiteQueen;
@@ -541,9 +554,9 @@ public class AgonBoardImpl implements AgonBoard {
       queen = blackQueen;
     }
     for (int i = 1; i <= 5; i++) {
-      pOnCircleI = pawns.andOperation(circles[i]);
-      if (!pOnCircleI.isEmpty()) {
-        BitBoard neighbors = getAllNeighbors(pOnCircleI);
+      pawnOnCircleI = pawns.andOperation(circles[i]);
+      if (!pawnOnCircleI.isEmpty()) {
+        BitBoard neighbors = getAllNeighbors(pawnOnCircleI);
         BitBoard legal =
             neighbors
                 .andOperation(validDestinations[i])
@@ -577,8 +590,8 @@ public class AgonBoardImpl implements AgonBoard {
    *
    * <ul>
    *   <li>If relocation is required, moves will have a source index of {@code -1}.
-   *   <li>Pawn moves are restricted by the current circle's allowed destinations and cannot target
-   *       the central Throne.
+   *   <li>Pawn moves are restricted by the current circle's allowed
+   *   destinations and cannot target the central Throne.
    *   <li>The Queen's moves are restricted by her current circle but include the Throne.
    * </ul>
    *
@@ -592,7 +605,8 @@ public class AgonBoardImpl implements AgonBoard {
     if (hasPiecesToRelocate(color)) {
       BitBoard targets = getRelocationMoves(color);
       // check every bits that is set to 1
-      for (int to = targets.nextSetBit(-1); to != -1; to = targets.nextSetBit(to)) {
+      for (int to = targets.nextSetBit(-1); to != -1;
+           to = targets.nextSetBit(to)) {
         moves.add(new Move(-1, to, color)); // -1 are captured pieces
       }
       return moves;
@@ -604,13 +618,14 @@ public class AgonBoardImpl implements AgonBoard {
 
     for (int i = 1; i <= 5; i++) {
       // get every pawns in the circle
-      BitBoard pOnCircleI = myPawns.andOperation(circles[i]);
+      BitBoard pawnOnCircleI = myPawns.andOperation(circles[i]);
 
       // starting piece index
-      for (int from = pOnCircleI.nextSetBit(-1); from != -1; from = pOnCircleI.nextSetBit(from)) {
+      for (int from = pawnOnCircleI.nextSetBit(-1); from != -1;
+           from = pawnOnCircleI.nextSetBit(from)) {
 
-        // get every valid position for pawns, a valid position means it can't get on throne can't
-        // suicide and can't step away from the center.
+        // get every valid position for pawns, a valid position means it can't
+        // get on throne can't suicide and can't step away from the center.
         BitBoard dests =
             getNeighbors(from)
                 .andOperation(validDestinations[i])
@@ -619,7 +634,8 @@ public class AgonBoardImpl implements AgonBoard {
                 .andOperation(suicideMask.complementOperation());
 
         // ending piece index
-        for (int to = dests.nextSetBit(-1); to != -1; to = dests.nextSetBit(to)) {
+        for (int to = dests.nextSetBit(-1); to != -1;
+             to = dests.nextSetBit(to)) {
           moves.add(new Move(from, to, color));
         }
       }
@@ -960,11 +976,17 @@ public class AgonBoardImpl implements AgonBoard {
           continue;
         }
 
-        if (whiteQueen.isSet(idx)) sb.append("Q ");
-        else if (blackQueen.isSet(idx)) sb.append("q ");
-        else if (whitePawns.isSet(idx)) sb.append("O ");
-        else if (blackPawns.isSet(idx)) sb.append("X ");
-        else sb.append(". ");
+        if (whiteQueen.isSet(idx)) {
+          sb.append("Q ");
+        } else if (blackQueen.isSet(idx)) {
+          sb.append("q ");
+        } else if (whitePawns.isSet(idx)) {
+          sb.append("O ");
+        } else if (blackPawns.isSet(idx)) {
+          sb.append("X ");
+        } else {
+          sb.append(". ");
+        }
       }
 
       String finalLine = sb.toString().replaceAll("\\s+$", "");
