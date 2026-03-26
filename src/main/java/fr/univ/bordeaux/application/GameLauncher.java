@@ -21,6 +21,8 @@ import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
+
+import fr.univ.bordeaux.ui.gui.AgonGui;
 import org.apache.commons.cli.*;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -122,7 +124,7 @@ public class GameLauncher {
         if (cmd.hasOption("c")) {
           System.out.println("[INFO] Contest mode detected.");
           try {
-            ContestMatch.executeContest(fileArg[0]);
+            runContest(fileArg[0]);
           } catch (Exception e) {
             System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
           }
@@ -142,7 +144,7 @@ public class GameLauncher {
     }
   }
 
-  /**
+    /**
    * Loads the initial configuration from the .agonrc file.
    *
    * <p>If the file is missing or unreadable, a default configuration file is created and a default
@@ -186,14 +188,19 @@ public class GameLauncher {
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
    * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
-  private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
-    System.out.println("Starting Agon Shell...");
+  protected void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
-    AgonShell userInterface;
-    if (cmd.hasOption("g")) {
-      // AgonGUI agon = new  AgonGUI(config);
-    } else {
+    GameUserInterface userInterface;
+    GameEngine gameEngine;
       try {
+          if ( cmd.hasOption("g")) {
+              System.out.println("[INFO] Starting Agon GUI...");
+              AgonGui gui = new AgonGui(config);
+              userInterface = gui;
+              gameEngine = new GameEngine(userInterface, cmds);
+              gui.start();
+          } else {
+              System.out.println("[INFO] Starting Agon Shell...");
         final AgonShell[] shellRef = new AgonShell[1];
 
         Completer strategyCompleter =
@@ -207,9 +214,9 @@ public class GameLauncher {
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
         userInterface = new AgonShell(terminal, reader, cmds);
-        shellRef[0] = userInterface;
-        GameEngine gameEngine = new GameEngine(userInterface, cmds);
-
+        shellRef[0] = (AgonShell) userInterface;
+        gameEngine = new GameEngine(userInterface, cmds);
+}
         cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
 
         cmds.register("quit", new CmdQuit(userInterface));
@@ -238,7 +245,6 @@ public class GameLauncher {
         e.printStackTrace();
       }
     }
-  }
 
   /**
    * Prints the CLI help message.
@@ -297,4 +303,13 @@ public class GameLauncher {
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("cmdsInformations/version.txt").getContent();
   }
+
+
+    /**
+     * Protected method to allow overriding in unit tests and prevent infinite loops.
+     */
+    protected void runContest(String filePath) throws Exception {
+        ContestMatch.executeContest(filePath);
+    }
+
 }

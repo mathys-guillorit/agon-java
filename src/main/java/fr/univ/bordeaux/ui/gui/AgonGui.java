@@ -2,6 +2,7 @@ package fr.univ.bordeaux.ui.gui;
 
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.AbstractGameUi;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import javafx.application.Platform;
@@ -16,8 +17,16 @@ public class AgonGui extends AbstractGameUi {
     private final AtomicBoolean debugMode = new AtomicBoolean(false);
     private final AtomicBoolean running = new AtomicBoolean(true);
     private boolean verbose = false;
-
+    private final GameConfig config;
     private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
+
+    public AgonGui(GameConfig config) {
+        this.config = config;
+    }
+
+    public GameConfig getConfig() {
+        return this.config;
+    }
 
     public void sendCommand(String command) {
         commandQueue.offer(command);
@@ -39,6 +48,7 @@ public class AgonGui extends AbstractGameUi {
 
     public void start() {
         AgonApp.setBoard(this.board);
+        AgonApp.setGui(this);
         new Thread(() -> javafx.application.Application.launch(AgonApp.class)).start();
     }
 

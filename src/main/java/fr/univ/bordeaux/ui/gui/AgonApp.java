@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.ui.gui;
 
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ public class AgonApp extends Application {
     private static GameViewController controller;
     private static Scene scene;
     private static AgonBoardImpl agonBoard;
+    private static AgonGui agonGui;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -30,8 +32,7 @@ public class AgonApp extends Application {
         stage.show();
         // temporarily
         AgonApp.controller = loader.getController();
-        AgonGui gui = new AgonGui();
-        AgonApp.controller.setAgonGUI(gui);
+        AgonApp.controller.setAgonGUI(agonGui);
         this.setupShortcuts();
     }
 
@@ -99,6 +100,8 @@ public class AgonApp extends Application {
         return controller;
     }
 
-
+    public static void setGui(AgonGui gui) {
+        agonGui = gui;
+    }
 
 }
