@@ -13,8 +13,7 @@ import java.util.Map;
 
 public class AiFactory {
 
-  private AiFactory() {
-  }
+  private AiFactory() {}
 
   public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config) {
     Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
@@ -32,8 +31,12 @@ public class AiFactory {
     String mode = config.getAiMode();
     switch (mode) {
       case "minimax" -> {
-        return new MinimaxStrategy(heuristic, color, config.getAiDepth(),
-            config.isAiIterativeDeepening(), config.getAiTimeLimit());
+        return new MinimaxStrategy(
+            heuristic,
+            color,
+            config.getAiDepth(),
+            config.isAiIterativeDeepening(),
+            config.getAiTimeLimit());
       }
       case "mcts" -> {
         return new MctsStrategy(heuristic, color);
@@ -64,5 +67,4 @@ public class AiFactory {
   public static AbstractAgonAi createHintAi(Color color) {
     return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
   }
-
 }

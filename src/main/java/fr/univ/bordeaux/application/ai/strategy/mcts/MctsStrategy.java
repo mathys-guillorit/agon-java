@@ -5,15 +5,15 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
-
 import java.util.List;
 import java.util.Random;
 
 /**
  * Implementation of the Monte Carlo Tree Search (MCTS) algorithm.
- * <p>Inherits time management and performance metrics from {@link AbstractAgonAi}.
- * This strategy uses the UCT (Upper Confidence bounds applied to Trees) algorithm
- * to balance exploration and exploitation during the search process.</p>
+ *
+ * <p>Inherits time management and performance metrics from {@link AbstractAgonAi}. This strategy
+ * uses the UCT (Upper Confidence bounds applied to Trees) algorithm to balance exploration and
+ * exploitation during the search process.
  */
 public class MctsStrategy extends AbstractAgonAi {
 
@@ -23,8 +23,9 @@ public class MctsStrategy extends AbstractAgonAi {
   /**
    * Constructs a new MCTS strategy instance.
    *
-   * @param heuristic The heuristic evaluation function (optional for pure MCTS, maintained for architectural consistency).
-   * @param color     The color played by this AI agent.
+   * @param heuristic The heuristic evaluation function (optional for pure MCTS, maintained for
+   *     architectural consistency).
+   * @param color The color played by this AI agent.
    */
   public MctsStrategy(Heuristic heuristic, Color color) {
     super(heuristic, color);
@@ -32,8 +33,9 @@ public class MctsStrategy extends AbstractAgonAi {
 
   /**
    * Computes the best move for the current board state using the MCTS algorithm.
+   *
    * <p>This method iteratively performs the four core phases of MCTS: Selection, Expansion,
-   * Simulation (Rollout), and Backpropagation, until the allocated time limit is exhausted.</p>
+   * Simulation (Rollout), and Backpropagation, until the allocated time limit is exhausted.
    *
    * @param board The current state of the game board.
    * @return The calculated optimal {@link Move}, or {@code null} if no legal moves are available.
@@ -115,7 +117,7 @@ public class MctsStrategy extends AbstractAgonAi {
   /**
    * Evaluates and selects the best child node using the UCB1 (Upper Confidence Bound 1) formula.
    *
-   * @param node             The parent node whose children are to be evaluated.
+   * @param node The parent node whose children are to be evaluated.
    * @param explorationParam The exploration constant (C).
    * @return The child {@link MctsNode} with the highest computed UCB1 value.
    */
@@ -125,7 +127,9 @@ public class MctsStrategy extends AbstractAgonAi {
 
     for (MctsNode child : node.getChildren()) {
       double exploit = child.getWinScore() / (double) child.getVisitCount();
-      double explore = explorationParam * Math.sqrt(Math.log(node.getVisitCount()) / (double) child.getVisitCount());
+      double explore =
+          explorationParam
+              * Math.sqrt(Math.log(node.getVisitCount()) / (double) child.getVisitCount());
       double uctValue = exploit + explore;
 
       if (uctValue > bestValue) {

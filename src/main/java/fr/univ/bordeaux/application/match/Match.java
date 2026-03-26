@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
@@ -27,7 +28,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
     this.agonBoard = agonBoard;
     this.player1 = player1;
     this.player2 = player2;
-    this.currentPlayer = player1;
+    this.currentPlayer = player1.getColor() == Color.WHITE ? player1 : player2;
     this.status = MatchStatus.RUNNING;
   }
 
@@ -81,8 +82,9 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   public boolean redo() {
-    agonBoard.redoMove();
-    return agonBoard.redoMove();
+    boolean res1 = agonBoard.redoMove();
+    boolean res2 = agonBoard.redoMove();
+    return res1 && res2;
   }
 
   @Override
@@ -95,6 +97,14 @@ public abstract class Match implements MatchManager, ObservableMatch {
     AgonAi ai = AiFactory.createHintAi(currentPlayer.getColor());
     Move hint = ai.getBestMove(agonBoard);
     return hint;
+  }
+
+  public boolean pause() {
+    return false;
+  }
+
+  public String getRemainingTime() {
+    return null;
   }
 
   public MatchStatus getMatchStatus() {

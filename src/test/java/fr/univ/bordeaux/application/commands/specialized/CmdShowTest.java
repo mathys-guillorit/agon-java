@@ -3,9 +3,13 @@ package fr.univ.bordeaux.application.commands.specialized;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.BlitzMatch;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
@@ -70,7 +74,7 @@ public class CmdShowTest {
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-board"});
     boolean result = cmd.execute(match);
 
-    assertTrue(result);
+    assertFalse(result);
     // Note : Ici on vérifie que l'UI a reçu l'ordre d'updateBoard.
     // Comme updateBoard dans AgonShell écrit souvent sur le terminal,
     // on peut vérifier si des caractères du plateau apparaissent.
@@ -89,6 +93,17 @@ public class CmdShowTest {
   }
 
   @Test
+  @DisplayName("Vérifier l'erreur si aucun match n'est présent pour le plateau")
+  void testShowNoTarget() {
+    CmdAction cmd = cmds.get("show").get().createNew(new String[] {});
+    boolean result = cmd.execute(null);
+
+    assertFalse(result);
+    assertTrue(
+        outContent.toString().contains("No target specified. Use 'help show' for details.\n"));
+  }
+
+  @Test
   @DisplayName("Vérifier le refus de plusieurs cibles simultanées")
   void testMultipleTargetsError() {
     // show -board -history (ne devrait pas être autorisé selon ton code)
@@ -99,14 +114,64 @@ public class CmdShowTest {
   }
 
   @Test
-  @DisplayName("Vérifier l'affichage de l'historique (cas non implémenté)")
+  @DisplayName("Vérifier l'affichage de l'historique")
   void testShowHistory() {
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-history"});
-    boolean result = cmd.execute(null);
+    AgonBoard board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+    MatchManager match =
+        new BlitzMatch(
+            board,
+            new HumanPlayer("test", Color.WHITE, gameUserInterface),
+            new HumanPlayer("test2", Color.BLACK, gameUserInterface),
+            1);
+    match.move(
+        new Move(
+            CoordinateMapper.toIndex('F', 1),
+            CoordinateMapper.toIndex('F', 2),
+            match.getCurrentPlayer().getColor()));
+    match.move(
+        new Move(
+            CoordinateMapper.toIndex('F', 11),
+            CoordinateMapper.toIndex('F', 10),
+            match.getCurrentPlayer().getColor()));
+    boolean result = cmd.execute(match);
+    assertFalse(result);
+    assertTrue(outContent.toString().contains("[history]\nO f1 f2; X f11 f10;\n"));
+  }
 
-    assertTrue(result);
+  @Test
+  @DisplayName("Vérifier l'option -time (doit renvoyer false pour ne pas passer le tour)")
+  void testShowTimeLogic() {
+    // 1. Setup avec un match Blitz
+    CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-time"});
+    boolean result = cmd.execute(null);
+    assertFalse(result);
     assertTrue(
-        outContent.toString().contains("History command recognized but not yet implemented"));
+        outContent
+            .toString()
+            .contains("This command can only be used when you are currently in a blitz match"),
+        "L'affichage doit contenir le temps");
+    MatchManager matchBlitz =
+        new BlitzMatch(
+            new AgonBoardImpl(),
+            new HumanPlayer("test", Color.WHITE, gameUserInterface),
+            new HumanPlayer("test2", Color.BLACK, gameUserInterface),
+            1);
+
+    // 3. Exécution
+    result = cmd.execute(matchBlitz);
+    assertFalse(result, "La commande show ne doit pas consommer le tour du joueur");
+
+    String output = outContent.toString();
+    assertTrue(
+        output.contains(
+            "Remaining time for : "
+                + matchBlitz.getCurrentPlayer().getName()
+                + "( "
+                + matchBlitz.getCurrentPlayer().getColor()
+                + " ) : "),
+        "Le temps formaté doit être présent");
   }
 
   @Test

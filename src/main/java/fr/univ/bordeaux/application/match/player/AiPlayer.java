@@ -36,7 +36,6 @@ public class AiPlayer extends AbstractPlayer {
   @Override
   public CmdAction getAction(AgonRegister<CmdAction> cmds) {
     CmdAction cmd = new CmdMove(ai.getBestMove(board), null);
-    System.out.println("l'ia a crée un move ");
     return cmd;
   }
 }

@@ -6,6 +6,7 @@ import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
 import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
+import fr.univ.bordeaux.application.commands.specialized.CmdPause;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
 import fr.univ.bordeaux.application.commands.specialized.CmdSave;
@@ -297,6 +298,7 @@ public class GameLauncher {
         cmds.register("redo", new CmdRedo(userInterface));
 
         cmds.register("help", new CmdHelp(userInterface, cmds));
+        cmds.register("pause", new CmdPause(userInterface));
         /*if (filePathToLoad != null) {
           loadCmd.execute(null);
         }*/

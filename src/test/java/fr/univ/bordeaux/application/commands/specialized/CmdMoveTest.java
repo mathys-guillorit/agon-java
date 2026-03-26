@@ -27,12 +27,14 @@ import org.junit.jupiter.api.Test;
 public class CmdMoveTest {
   private AgonRegister<CmdAction> cmds = new AgonRegister<>();
   private GameUserInterface gameUserInterface;
+  private ByteArrayOutputStream outContent;
 
   @BeforeEach
   void setUp() {
     LineReader reader = new FakeLineReader("");
     try {
-      Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
+      outContent = new ByteArrayOutputStream();
+      Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
     } catch (Exception e) {
       fail("Setup failed");
@@ -108,6 +110,10 @@ public class CmdMoveTest {
     boolean result = cmdMove.execute(match);
 
     assertFalse(result, "Un mouvement depuis une case vide doit échouer (false)");
+    cmdMove = new CmdMove(emptyFrom, to, gameUserInterface);
+    cmdMove.execute(null);
+    String output = outContent.toString();
+    assertTrue(output.contains("Invalid move attempt."));
   }
 
   @Test

@@ -24,17 +24,12 @@ public class MatchFactory {
     // 2. On crée les vrais objets Player
     Player white = createPlayerFromAiMap(aiMap, Color.WHITE, agonBoard, gameUI);
     Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUI);
-    /*if (config.isBlitzMode()) {
-      // On récupère les deux temps distincts dans la config
-      long whiteTime = config.getWhiteInitialTime();
-      long blackTime = config.getBlackInitialTime();
+    if (config.isBlitzMode()) {
 
-      return new BlitzMatch(agonBoard,white, black, whiteTime, blackTime);
+      return new BlitzMatch(agonBoard, white, black, config.getTimeout());
+    } else {
+      return new StandardMatch(agonBoard, white, black);
     }
-    else if (mode.equals("contest")) {
-      return new ContestMatch(agonBoard,white, black);
-    } else {*/
-    return new StandardMatch(agonBoard, white, black);
   }
 
   private static Player createPlayerFromAiMap(

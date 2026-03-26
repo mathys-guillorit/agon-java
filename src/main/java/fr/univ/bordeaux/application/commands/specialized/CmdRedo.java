@@ -6,23 +6,13 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
-/**
- * Command responsible for replaying previously undone moves.
- *
- * <p>This command allows players to restore moves that were cancelled using the 'undo' command. It
- * supports replaying a single move or multiple moves if a count is specified.
- */
+/** Command responsible for replaying previously undone moves. */
 public final class CmdRedo extends Cmd {
 
-  /** CLI options for the redo command. */
-  private Options options;
-
-  /** Number of moves to redo in a single execution. Defaults to 1. */
   private int redoNumber = 1;
 
   /**
-   * Constructs the base Redo command for registration. Initializes CLI options and sets the default
-   * command metadata.
+   * Constructs the base Redo command for registration.
    *
    * @param uictx The user interface context for interaction.
    */
@@ -31,8 +21,8 @@ public final class CmdRedo extends Cmd {
     this.setName("redo");
     this.setDesc(
         "Description: Replays the last canceled turn. If a number N is provided, it replays the last N canceled turns.");
-    this.options = new Options();
-    this.options.addOption("n", "number", true, "Number of turns to redo");
+    Options options = super.getOptions();
+    options.addOption("n", "number", true, "Number of turns to redo");
   }
 
   /**
@@ -61,9 +51,6 @@ public final class CmdRedo extends Cmd {
   /**
    * Executes the redo logic.
    *
-   * <p>Iterates up to {@code redoNumber} times, calling the redo method on the {@link
-   * MatchManager}. Stops early if no more moves can be restored.
-   *
    * @param match The manager handling the game history and state.
    * @return true if the execution completed (even if partially).
    */
@@ -73,22 +60,20 @@ public final class CmdRedo extends Cmd {
       this.getCtx().showError("No active match found.\n");
       return false;
     }
-
     for (int i = 0; i < redoNumber; i++) {
       if (!match.redo()) {
         this.getCtx().showWarn("No more moves to redo.\n");
         break;
       }
     }
-    return true;
+    return false;
   }
 
   /**
-   * Factory method to create an executable instance of the redo command. Parses the first argument
-   * to determine the number of moves to redo.
+   * Factory method to create an executable instance of the redo command.
    *
    * @param args CLI arguments (e.g., ["3"] to redo three times).
-   * @return A new {@link CmdRedo} instance with the specified count.
+   * @return A new CmdRedo instance with the specified count.
    */
   @Override
   public CmdAction createNew(String[] args) {
@@ -102,15 +87,5 @@ public final class CmdRedo extends Cmd {
       }
     }
     return new CmdRedo(this.getCtx(), count);
-  }
-
-  /**
-   * Returns the CLI options for this command.
-   *
-   * @return The {@link Options} object.
-   */
-  @Override
-  public Options getOptions() {
-    return this.options;
   }
 }

@@ -3,6 +3,7 @@ package fr.univ.bordeaux.ui.cli;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.MoveDTO;
 import fr.univ.bordeaux.ui.AbstractGameUi;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
@@ -375,5 +376,42 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   public AtomicBoolean getRunning() {
     return running;
+  }
+
+  public void displayHistory(List<MoveDTO> moves) {
+    List<MoveDTO> history = moves;
+
+    if (history.isEmpty()) {
+      this.showInfo("The history is currently empty.");
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("[history]\n");
+
+    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
+    for (int i = 0; i < history.size(); i += 2) {
+      // Coup du joueur O (Premier joueur du tour)
+      MoveDTO moveO = history.get(i);
+      sb.append("O ")
+          .append(moveO.from().toLowerCase())
+          .append(" ")
+          .append(moveO.to().toLowerCase())
+          .append(";");
+
+      // Coup du joueur X (S'il existe déjà dans la liste)
+      if (i + 1 < history.size()) {
+        MoveDTO moveX = history.get(i + 1);
+        sb.append(" X ")
+            .append(moveX.from().toLowerCase())
+            .append(" ")
+            .append(moveX.to().toLowerCase())
+            .append(";");
+      }
+
+      sb.append("\n");
+    }
+
+    this.showMessage(sb.toString());
   }
 }

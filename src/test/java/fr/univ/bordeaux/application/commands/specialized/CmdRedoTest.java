@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.commands.specialized;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
@@ -72,15 +73,14 @@ public class CmdRedoTest {
     boolean result = cmdRedo.execute(match);
 
     // 5. VÉRIFICATIONS
-    assertTrue(result);
-    assertNull(board.getPieceAt(from), "Après redo, la case de départ doit être à nouveau vide");
-    assertEquals(
-        piece,
-        board.getPieceAt(to),
-        "Après redo, la pièce doit être revenue sur la case d'arrivée");
+    assertFalse(result, "Redo doit renvoyer false pour ne pas passer le tour"); // CHANGÉ ICI
+    assertNull(board.getPieceAt(from));
+    assertEquals(piece, board.getPieceAt(to));
+
     match.undo();
     cmdRedo = cmds.get("redo").get().createNew(new String[] {});
-    cmdRedo.execute(match);
+    boolean result2 = cmdRedo.execute(match);
+    assertFalse(result2, "Redo doit renvoyer false");
     assertNull(board.getPieceAt(from), "Après redo, la case de départ doit être à nouveau vide");
     assertEquals(
         piece,
@@ -97,13 +97,9 @@ public class CmdRedoTest {
         new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
 
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"1"});
-
-    // Pas de undo préalable, donc rien à redo
     boolean result = cmdRedo.execute(match);
 
-    assertTrue(
-        result,
-        "La commande doit renvoyer true même s'il n'y a rien à faire (comportement standard)");
+    assertFalse(result);
   }
 
   @Test
@@ -122,5 +118,71 @@ public class CmdRedoTest {
     String desc = cmdRedo.getDescription();
     assertNotNull(desc);
     assertTrue(desc.contains("Usage: redo [N]"));
+  }
+
+  @Test
+  @DisplayName("Couverture : Redo quand il n'y a plus de coups à rétablir (Warning)")
+  void testRedoMoreThanPossible() {
+    AgonBoard board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+    MatchManager match =
+        new StandardMatch(
+            board,
+            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+
+    match.move(
+        new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
+    match.undo();
+
+    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"5"});
+    boolean result = cmdRedo.execute(match);
+
+    assertFalse(result);
+  }
+
+  @Test
+  @DisplayName("Couverture : Format de nombre invalide")
+  void testRedoInvalidFormat() {
+    CmdAction cmd = cmds.get("redo").get().createNew(new String[] {"abc"});
+    assertNotNull(cmd);
+  }
+
+  @Test
+  @DisplayName("Couverture : Atteindre 100% sur execute (branches if !match.redo)")
+  void testExecuteBranches() {
+    AgonBoard board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+    MatchManager match =
+        new StandardMatch(
+            board,
+            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), Color.WHITE)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 11),
+                CoordinateMapper.toIndex('F', 10),
+                Color.BLACK)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 2), CoordinateMapper.toIndex('F', 3), Color.WHITE)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 10), CoordinateMapper.toIndex('F', 9), Color.BLACK)));
+    match.undo();
+    match.undo();
+
+    CmdAction cmd = cmds.get("redo").get().createNew(new String[] {"3"});
+    boolean result = cmd.execute(match);
+
+    assertFalse(result);
   }
 }

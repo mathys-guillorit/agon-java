@@ -8,14 +8,7 @@ import fr.univ.bordeaux.ui.UIPromptParser;
 
 /**
  * The core engine of the Agon application. This class manages the main execution loop. It switches
- * between two states:
- *
- * <ul>
- *   <li><b>Out-of-Match:</b> Where the user interacts with the system via the shell (e.g., help,
- *       load).
- *   <li><b>In-Match:</b> Where the current player (Human or AI) provides moves to progress the
- *       game.
- * </ul>
+ * between Out-of-Match and In-Match states.
  */
 public class GameEngine {
 
@@ -51,11 +44,12 @@ public class GameEngine {
 
       if (this.matchManager == null || this.matchManager.isMatchOver()) {
         String input = ui.getUserInput();
-        if (input == null) continue;
+        if (input == null) {
+          continue;
+        }
 
         action = UIPromptParser.parse(input, this.cmds, ui);
       } else {
-
         Player p = matchManager.getCurrentPlayer();
         ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
 
@@ -63,14 +57,12 @@ public class GameEngine {
       }
 
       if (action != null) {
-
         action.execute(this.matchManager);
 
         if (matchManager != null) {
           ui.updateBoard(matchManager.getAgonBoard());
         }
       } else {
-
         ui.showError("Unknown command. Type 'help' to see available commands.\n");
       }
     }
@@ -79,12 +71,18 @@ public class GameEngine {
   /**
    * Injects a new match manager into the engine.
    *
-   * <p>This is typically called by a "New Game" or "Load" command to transition the engine into the
-   * In-Match state.
-   *
-   * @param matchManager The new {@link MatchManager} instance.
+   * @param matchManager The new MatchManager instance.
    */
   public void setMatchManager(MatchManager matchManager) {
     this.matchManager = matchManager;
+  }
+
+  /**
+   * Returns the current match manager.
+   *
+   * @return The MatchManager instance, or null if no match is active.
+   */
+  public MatchManager getMatchManager() {
+    return this.matchManager;
   }
 }

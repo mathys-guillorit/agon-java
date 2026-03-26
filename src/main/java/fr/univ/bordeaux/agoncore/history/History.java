@@ -153,7 +153,7 @@ public class History {
    *     chronological order.
    */
   public List<HistoryInformations> toList() {
-    return new ArrayList<>(undoStack).reversed();
+    return new ArrayList<>(undoStack);
   }
 
   /**

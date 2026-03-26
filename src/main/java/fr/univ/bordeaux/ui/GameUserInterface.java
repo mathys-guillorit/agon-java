@@ -1,6 +1,8 @@
 package fr.univ.bordeaux.ui;
 
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.match.MoveDTO;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -74,11 +76,6 @@ public interface GameUserInterface {
   void saveGame();
 
   String getUserInput();
-  /**
-   * Asks the user for confirmation (e.g., "Do you really want to quit?").
-   *
-   * @param question The question to ask.
-   * @return {@code true} if the user accepts, {@code false} otherwise.
-   */
-  // boolean getUserConfirmation(String question);
+
+  void displayHistory(List<MoveDTO> moves);
 }
