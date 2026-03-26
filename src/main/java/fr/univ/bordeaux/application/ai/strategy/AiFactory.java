@@ -1,10 +1,7 @@
 package fr.univ.bordeaux.application.ai.strategy;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.application.ai.heuristics.CentralityHeuristic;
-import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
-import fr.univ.bordeaux.application.ai.heuristics.MixedHeuristic;
-import fr.univ.bordeaux.application.ai.heuristics.MobilityHeuristic;
+import fr.univ.bordeaux.application.ai.heuristics.*;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
@@ -27,10 +24,10 @@ public class AiFactory {
   }
 
   public static AbstractAgonAi createAi(GameConfig config, Color color) {
-    Heuristic heuristic = createHeuristic(config.getAiHeuristic());
     String mode = config.getAiMode();
     switch (mode) {
       case "minimax" -> {
+        Heuristic heuristic = createHeuristic(config.getAiHeuristic());
         return new MinimaxStrategy(
             heuristic,
             color,
@@ -39,7 +36,8 @@ public class AiFactory {
             config.getAiTimeLimit());
       }
       case "mcts" -> {
-        return new MctsStrategy(heuristic, color);
+        MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
+        return new MctsStrategy(null, color, heuristic);
       }
       default -> {
         return null;
@@ -57,6 +55,17 @@ public class AiFactory {
       }
       case "mixed" -> {
         return new MixedHeuristic(10, 1);
+      }
+      default -> {
+        return null;
+      }
+    }
+  }
+
+  private static MctsSelectionHeuristic createSelectionHeuristic(String type) {
+    switch (type) {
+      case "uct" -> {
+        return new UctHeuristic(Math.sqrt(2));
       }
       default -> {
         return null;

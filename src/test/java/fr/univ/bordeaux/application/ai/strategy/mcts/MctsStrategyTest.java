@@ -8,6 +8,9 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import java.util.List;
+
+import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
+import fr.univ.bordeaux.application.ai.heuristics.UctHeuristic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +49,8 @@ class MctsStrategyTest {
                 CoordinateMapper.toIndex('F', 7),
                 CoordinateMapper.toIndex('H', 8)),
             List.of());
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE);
+    MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
+    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
 
     mcts.setTimeLimit(500);
 
@@ -84,7 +88,8 @@ class MctsStrategyTest {
 
     AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE);
+    MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
+    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
 
     long timeLimit = 1000;
     mcts.setTimeLimit(timeLimit);
@@ -111,7 +116,8 @@ class MctsStrategyTest {
   @DisplayName("MCTS should return null immediately if no legal moves exist")
   void testMctsNoLegalMoves() {
     AgonBoardImpl emptyBoard = createCustomBoard(-1, -1, List.of(), List.of());
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE);
+    MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
+    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
 
     Move bestMove = mcts.getBestMove(emptyBoard);
 
