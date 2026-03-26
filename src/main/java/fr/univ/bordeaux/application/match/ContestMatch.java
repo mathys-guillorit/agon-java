@@ -31,25 +31,23 @@ public class ContestMatch {
    */
   public ContestMatch() {}
 
-  // fix spotless issues with HTML formatting (temporary deactivation)
-  // spotless:off
   /**
    * Executes a single move calculation for a contest scenario.
    *
    * <p>The process follows these steps:
+   *
    * <ol>
    *   <li>Parses the game state from the provided file path.
    *   <li>Instantiates a high-performance AI strategy (Hint AI) for the current player.
    *   <li>Calculates the optimal move based on the current board configuration.
    *   <li>Outputs the move's string representation to standard output (System.out).
    * </ol>
-   * </p>
-   * If no valid move is found, an error message is printed to standard error.
+   *
+   * <p>If no valid move is found, an error message is printed to standard error.
    *
    * @param filePath The absolute or relative path to the Agon save file (.txt).
    * @throws Exception If an error occurs during file reading, parsing, or AI calculation.
    */
-  // spotless:on
   public static void executeContest(String filePath) throws Exception {
     GameSaveParser parser = new GameSaveParser();
     GameSaveData state = parser.parse(filePath);

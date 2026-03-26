@@ -5,25 +5,25 @@ import fr.univ.bordeaux.application.match.MoveDtO;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// spotless:off
 /**
  * Unified interface defining possible interactions in the Agon game.
  *
  * <p>This interface aggregates both:
+ *
  * <ul>
  *   <li>Actions the player can perform (e.g., {@code tryMove}, {@code undo}).
  *   <li>Methods for updating the display (e.g., {@code updateBoard}).
  * </ul>
- * </p>
- * It serves as the contract between the Presentation layer (UI) and the Application layer (Engine).
+ *
+ * <p>It serves as the contract between the Presentation layer (UI) and the Application layer
+ * (Engine).
  */
-// spotless:on
 public interface GameUserInterface {
 
   /**
    * to check if the UI is running and if the Match is running to close the entire application.
    *
-   * @return truee | false
+   * @return true | false
    */
   boolean isRunning();
 
