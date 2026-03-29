@@ -7,6 +7,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ public class BlitzMatchTest {
     whitePlayer = new HumanPlayer("J1", Color.WHITE, null);
     blackPlayer = new HumanPlayer("J2", Color.BLACK, null);
 
-    match = new BlitzMatch(board, whitePlayer, blackPlayer, 1);
+    match = new BlitzMatch(board, whitePlayer, blackPlayer, 1, new GameConfig());
   }
 
   @Test
@@ -40,7 +41,7 @@ public class BlitzMatchTest {
   @DisplayName("Le match se termine quand le temps est écoulé")
   void testTimeoutRealCondition() throws InterruptedException {
 
-    BlitzMatch shortMatch = new BlitzMatch(board, whitePlayer, blackPlayer, 0);
+    BlitzMatch shortMatch = new BlitzMatch(board, whitePlayer, blackPlayer, 0, new GameConfig());
 
     Thread.sleep(200);
 

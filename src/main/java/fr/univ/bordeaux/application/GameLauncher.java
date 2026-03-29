@@ -19,6 +19,7 @@ import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
+import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
@@ -97,11 +98,13 @@ public class GameLauncher {
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
     CommandLineParser parser = new DefaultParser();
+    AgonRegister<CmdAction> cmds = new AgonRegister<>();
     try {
       CommandLine cmd = parser.parse(options, args);
 
       if (cmd.hasOption("h")) {
-        printHelp();
+        this.fillRegister(cmds, null, null, null);
+        printHelp(cmds);
         return;
       }
       if (cmd.hasOption("V")) {
@@ -139,13 +142,14 @@ public class GameLauncher {
 
       } else if (cmd.hasOption("c")) {
         System.err.println("[ERROR] Contest mode requires a file argument.");
-        printHelp();
+        this.fillRegister(cmds, null, null, null);
+        printHelp(cmds);
         return;
       }
-      startGame(config, cmd, filePath);
+      startGame(config, cmd, cmds, filePath);
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
-      printHelp();
+      printHelp(cmds);
     }
   }
 
@@ -193,9 +197,9 @@ public class GameLauncher {
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
    * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
-  private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
+  private void startGame(
+      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad) {
     System.out.println("Starting Agon Shell...");
-    AgonRegister<CmdAction> cmds = new AgonRegister<>();
     AgonShell userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
@@ -216,27 +220,7 @@ public class GameLauncher {
         userInterface = new AgonShell(terminal, reader, cmds);
         shellRef[0] = userInterface;
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
-
-        cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-
-        cmds.register("quit", new CmdQuit(userInterface));
-
-        cmds.register("hint", new CmdHint(userInterface));
-
-        cmds.register("show", new CmdShow(userInterface, config));
-
-        cmds.register("load", new CmdLoad(userInterface));
-
-        cmds.register("save", new CmdSave(userInterface));
-
-        cmds.register("set", new CmdSet(userInterface, config));
-
-        cmds.register("undo", new CmdUndo(userInterface));
-
-        cmds.register("redo", new CmdRedo(userInterface));
-
-        cmds.register("help", new CmdHelp(userInterface, cmds));
-        cmds.register("pause", new CmdPause(userInterface));
+        this.fillRegister(cmds, userInterface, config, gameEngine);
         /*if (filePathToLoad != null) {
           loadCmd.execute(null);
         }*/
@@ -248,20 +232,45 @@ public class GameLauncher {
     }
   }
 
+  private void fillRegister(
+      AgonRegister<CmdAction> cmds, GameUserInterface ui, GameConfig config, GameEngine engine) {
+    cmds.register("new", new CmdCreate(ui, config, engine));
+    cmds.register("quit", new CmdQuit(ui));
+    cmds.register("hint", new CmdHint(ui));
+    cmds.register("show", new CmdShow(ui, config));
+    cmds.register("load", new CmdLoad(ui));
+    cmds.register("save", new CmdSave(ui));
+    cmds.register("set", new CmdSet(ui, config));
+    cmds.register("undo", new CmdUndo(ui));
+    cmds.register("redo", new CmdRedo(ui));
+    cmds.register("help", new CmdHelp(ui, cmds));
+    cmds.register("pause", new CmdPause(ui));
+  }
+
   /**
    * Prints the CLI help message.
    *
    * <p>Attempts to read a custom "helpGameLauncher.txt" file. If not found, falls back to the
    * standard Apache CLI formatter.
    */
-  private void printHelp() {
-    try {
-      System.out.println(getHelpContent());
-    } catch (IOException e) {
-      System.err.println("[WARNING] agonShellMenu.txt not found. Displaying default help:");
-      HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("agon [OPTIONS] [FILE]", "\nAgon Game\n", this.options, "", true);
-    }
+  private void printHelp(AgonRegister<CmdAction> cmds) {
+    HelpFormatter formatter = new HelpFormatter();
+    formatter.printHelp("agon [OPTIONS]", options);
+    System.out.println("\nCOMMANDES DISPONIBLES DANS LE SHELL :");
+    cmds.getKeys()
+        .forEach(
+            name -> {
+              cmds.get(name)
+                  .ifPresent(
+                      cmd -> {
+                        System.out.printf("  %-12s : %s%n", name, cmd.getDescription());
+                      });
+            });
+    System.out.println(
+        "\nHow to move your pieces : \n\n[letter1][col1][letter2][col2] to move your piece from letter1-col1 to letter2-col2\n"
+            + "if you have a piece to relocate you have to enter the tile where you want to put it [letter][col]\n"
+            + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
+    ;
   }
 
   /**

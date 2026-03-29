@@ -25,6 +25,7 @@ public class LangServiceTest {
   @Test
   @Description("just check behavior of normal usage for UK Locale (2 blocs)")
   void initDefaultLanguageAsEnglishTest() {
+    Locale originalLocale = Locale.getDefault();
     var lang = new LangService();
     if (lang.getLocale() != Locale.ENGLISH) {
       assertTrue(
@@ -34,6 +35,7 @@ public class LangServiceTest {
     }
     final String expected = "locale found and loaded successfully";
     final String comparer = "(" + lang.getLocale() + ")";
+    System.out.println(comparer);
     assertEquals(
         expected,
         lang.getLastMessage(),

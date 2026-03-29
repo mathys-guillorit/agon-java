@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.match;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 
 /** Represents a match played in Blitz mode, where each player has a limited amount of time. */
 public class BlitzMatch extends Match {
@@ -21,8 +22,9 @@ public class BlitzMatch extends Match {
    * @param player2 The second player.
    * @param time The time limit for each player in minutes.
    */
-  public BlitzMatch(AgonBoard agonBoard, Player player1, Player player2, long time) {
-    super(agonBoard, player1, player2);
+  public BlitzMatch(
+      AgonBoard agonBoard, Player player1, Player player2, long time, GameConfig gameConfig) {
+    super(agonBoard, player1, player2, gameConfig);
 
     this.whiteTimer = new GameTimer(time, () -> {});
     this.blackTimer = new GameTimer(time, () -> {});

@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application.match;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.util.List;
 
 /** Represent Match Behavior. */
@@ -78,6 +79,8 @@ public interface MatchManager {
    * @return {@link List}
    */
   List<MoveDtO> getHistory();
+
+  GameConfig getGameConfig();
 
   /** Quit the game. */
   void quit();

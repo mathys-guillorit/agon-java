@@ -13,6 +13,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -51,7 +52,8 @@ public class CmdRedoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     int from = CoordinateMapper.toIndex('B', 1);
     int to = CoordinateMapper.toIndex('C', 1);
@@ -94,7 +96,8 @@ public class CmdRedoTest {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
-        new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
+        new StandardMatch(
+            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"1"});
     boolean result = cmdRedo.execute(match);
@@ -129,7 +132,8 @@ public class CmdRedoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     match.move(
         new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
@@ -157,7 +161,8 @@ public class CmdRedoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     assertTrue(
         match.move(

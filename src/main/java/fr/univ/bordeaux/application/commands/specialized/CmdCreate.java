@@ -1,11 +1,11 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.CommandLine;
@@ -50,14 +50,18 @@ public class CmdCreate extends Cmd {
     this.gameEngine = gameEngine;
     this.args = args;
     Options options = super.getOptions();
-    options.addOption("p1Ia", "player1IsAi", true, "Define if the player 1 is an AI (true/false)");
-    options.addOption("p2Ia", "player2IsAi", true, "Define if the player 2 is an AI (true/false)");
+    options.addOption("a", "ai", true, "Set the [Color] player with an Ai.\n");
     options.addOption(
         "p1Color", "player1Color", true, "Define the color for the player 1 (white/black)");
     options.addOption(
         "p2Color", "player2Color", true, "Define the color for the player 2 (white/black)");
     options.addOption("b", "blitz", false, "Set the game mode to blitz\n");
     options.addOption("t", "time", true, "Set the reflexion time for both player\n");
+    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
+    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
+    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
+    options.addOption(
+        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
   }
 
   /**
@@ -71,76 +75,18 @@ public class CmdCreate extends Cmd {
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine cmd = parser.parse(super.getOptions(), args);
-      Color p1Color = null;
-      Color p2Color = null;
+      GameConfig matchConfig = this.gameConfig.copy();
+      ConfigBinder.bindOptionsToConfig(cmd, matchConfig);
 
-      if (cmd.hasOption("p1Color")) {
-        p1Color = Color.valueOf(cmd.getOptionValue("p1Color").toUpperCase());
-      }
-      if (cmd.hasOption("p2Color")) {
-        p2Color = Color.valueOf(cmd.getOptionValue("p2Color").toUpperCase());
-      }
-
-      if (p1Color != null && p2Color != null) {
-        if (p1Color == p2Color) {
-          this.getCtx().showError("Player 1 and Player 2 cannot have the same color.\n");
-          return false;
-        }
-      } else if (p1Color != null) {
-        p2Color = (p1Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
-      } else if (p2Color != null) {
-        p1Color = (p2Color == Color.WHITE) ? Color.BLACK : Color.WHITE;
-      } else {
-        p1Color = Color.WHITE;
-        p2Color = Color.BLACK;
-      }
-
-      boolean p1IsAi = false;
-      if (cmd.hasOption("p1Ia")) {
-        p1IsAi = Boolean.parseBoolean(cmd.getOptionValue("p1Ia"));
-      }
-
-      boolean p2IsAi = true;
-      if (cmd.hasOption("p2Ia")) {
-        p2IsAi = Boolean.parseBoolean(cmd.getOptionValue("p2Ia"));
-      }
-
-      if (p1Color == Color.WHITE) {
-        gameConfig.setWhiteAi(p1IsAi);
-        gameConfig.setBlackAi(p2IsAi);
-      } else {
-        gameConfig.setWhiteAi(p2IsAi);
-        gameConfig.setBlackAi(p1IsAi);
-      }
-      this.checkBlitzMode(cmd);
+      // On lance le nouveau match
+      MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
       return false;
     }
 
-    MatchManager match = MatchFactory.createMatch(gameConfig, this.getCtx());
-    gameEngine.setMatchManager(match);
     return true;
-  }
-
-  /**
-   * Checks and sets blitz mode configuration.
-   *
-   * @param cmd The parsed command line options.
-   */
-  public void checkBlitzMode(CommandLine cmd) {
-    boolean blitzOption = cmd.hasOption("b");
-    boolean timeOption = cmd.hasOption("t");
-    gameConfig.setBlitzMode(blitzOption);
-    if (timeOption && !blitzOption) {
-      this.getCtx().showWarn("Use option -t/--time for blitz games\n");
-    }
-    if (!timeOption) {
-      gameConfig.setTimeout(30);
-    } else {
-      int time = Integer.parseInt(cmd.getOptionValue("t"));
-      gameConfig.setTimeout(time);
-    }
   }
 
   /**

@@ -57,7 +57,8 @@ public class CmdQuitTest {
         new StandardMatch(
             new AgonBoardImpl(),
             new HumanPlayer("test", Color.WHITE, gameUserInterface),
-            new HumanPlayer("test", Color.WHITE, gameUserInterface));
+            new HumanPlayer("test", Color.WHITE, gameUserInterface),
+            new GameConfig());
     CmdAction cmdQuit = cmds.get("quit").get().createNew(null);
     cmdQuit.execute(match);
     assertFalse(gameUserInterface.isRunning());

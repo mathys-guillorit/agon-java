@@ -95,7 +95,7 @@ public final class CmdHelp extends Cmd {
           .get(name)
           .ifPresent(
               cmd -> {
-                ctx.showMessage(String.format("  %-12s : %s\n", name, cmd.getDescription()));
+                ctx.showMessage(String.format("  %-8s : %s\n", name, cmd.getDescription()));
               });
     }
     ctx.showMessage("\nType 'help [command]' for detailed instructions (e.g., 'help show').\n");
@@ -109,7 +109,9 @@ public final class CmdHelp extends Cmd {
    */
   @Override
   public String getDescription() {
-    return "";
+    return "Usage: help\n"
+        + "Description: display all commands available and their usage or for a specific command.\n"
+        + "Example: help new";
   }
 
   /**

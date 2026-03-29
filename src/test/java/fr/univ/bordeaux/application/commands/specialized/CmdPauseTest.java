@@ -9,6 +9,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.BlitzMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -52,7 +53,7 @@ public class CmdPauseTest {
     Player p2 = new HumanPlayer("Black", Color.BLACK, gameUserInterface);
 
     // On crée un BlitzMatch avec 1 minute pour que ça soit facile à tester
-    BlitzMatch match = new BlitzMatch(board, p1, p2, 1);
+    BlitzMatch match = new BlitzMatch(board, p1, p2, 1, new GameConfig());
 
     // Au début le timer tourne (lancé par le constructeur de BlitzMatch)
     String time1 = match.getRemainingTime();

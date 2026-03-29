@@ -25,7 +25,7 @@ class ConfigSerializerTest {
     String content = Files.readString(configFile);
 
     assertTrue(content.contains("verbose = false"));
-    assertTrue(content.contains("timeout = 1800"));
+    assertTrue(content.contains("timeout = 30"));
     assertTrue(content.contains("ai_mode = minimax"));
   }
 

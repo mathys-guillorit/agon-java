@@ -34,9 +34,9 @@ public class MatchFactory {
     Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUi);
     if (config.isBlitzMode()) {
 
-      return new BlitzMatch(agonBoard, white, black, config.getTimeout());
+      return new BlitzMatch(agonBoard, white, black, config.getTimeout(), config);
     } else {
-      return new StandardMatch(agonBoard, white, black);
+      return new StandardMatch(agonBoard, white, black, config);
     }
   }
 

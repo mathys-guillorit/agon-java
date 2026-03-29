@@ -29,7 +29,6 @@ public class CmdHelpTest {
       Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
 
-      // On utilise tes VRAIES commandes pour le test
       cmds.register("help", new CmdHelp(gameUserInterface, cmds));
       cmds.register("quit", new CmdQuit(gameUserInterface));
 
@@ -41,14 +40,13 @@ public class CmdHelpTest {
   @Test
   @DisplayName("Vérifier l'aide globale avec la liste des commandes")
   void testGlobalHelp() {
-    // Appel de "help" sans argument
+
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {});
     boolean result = cmd.execute(null);
 
     assertTrue(result);
     String output = outContent.toString();
 
-    // On vérifie que les têtes de colonnes et les commandes enregistrées sont là
     assertTrue(output.contains("AVAILABLE COMMANDS"));
     assertTrue(output.contains("help"));
     assertTrue(output.contains("quit"));
@@ -64,7 +62,7 @@ public class CmdHelpTest {
     assertTrue(result);
     String output = outContent.toString();
 
-    // On vérifie que le titre HELP: QUIT et sa vraie description apparaissent
+
     assertTrue(output.contains("HELP: QUIT"));
     assertTrue(output.contains("Exits the game"));
   }
@@ -72,7 +70,7 @@ public class CmdHelpTest {
   @Test
   @DisplayName("Vérifier le message d'erreur pour une commande qui n'existe pas")
   void testTargetedHelpFailure() {
-    // Appel de "help nimportequoi"
+
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {"nimportequoi"});
     boolean result = cmd.execute(null);
 
@@ -85,7 +83,6 @@ public class CmdHelpTest {
   void testMetadata() {
     CmdAction cmd = cmds.get("help").get();
     assertEquals("help", cmd.getName());
-    // On vérifie que la description ne crash pas (renvoie "" selon ton code)
     assertNotNull(cmd.getDescription());
   }
 }

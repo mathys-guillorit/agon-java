@@ -11,7 +11,7 @@ public class GameConfig {
   private boolean debug = false;
   private boolean blitzMode = false;
   private boolean manualPlacement = false;
-  private int timeout = 1800;
+  private int timeout = 30;
   private boolean aiActive = true;
   private String aiMode = "minimax";
   private int aiDepth = 4;
@@ -19,7 +19,7 @@ public class GameConfig {
   private boolean aiIterativeDeepening = true;
   private String aiHeuristic = "mixed";
   private boolean whiteIsAi = false;
-  private boolean blackIsAi = true;
+  private boolean blackIsAi = false;
 
   /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
@@ -277,5 +277,33 @@ public class GameConfig {
     string.append("[whiteIsAI]=").append(whiteIsAi).append("\n");
     string.append("[blackIsAI]=").append(blackIsAi).append("\n");
     return string.toString();
+  }
+
+  /**
+   * Creates a deep copy of the current configuration.
+   *
+   * @return A new GameConfig instance with the same settings.
+   */
+  public GameConfig copy() {
+    GameConfig clone = new GameConfig();
+
+    clone.setVerbose(this.verbose);
+    clone.setDebug(this.debug);
+    clone.setManualPlacement(this.manualPlacement);
+
+    clone.setBlitzMode(this.blitzMode);
+    clone.setTimeout(this.timeout);
+
+    clone.setAi(this.aiActive);
+    clone.setWhiteAi(this.whiteIsAi);
+    clone.setBlackAi(this.blackIsAi);
+
+    clone.setAiMode(this.aiMode);
+    clone.setAiDepth(this.aiDepth);
+    clone.setAiTimeLimit(this.aiTimeLimit);
+    clone.setAiIterativeDeepening(this.aiIterativeDeepening);
+    clone.setAiHeuristic(this.aiHeuristic);
+
+    return clone;
   }
 }

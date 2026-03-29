@@ -358,12 +358,13 @@ public class AgonBoardImpl implements AgonBoard {
     Color color = move.getColor();
     PieceType type = null;
     List<Move> moves = new ArrayList<>();
+    List<Move> legalsMoves = this.generateLegalMoves(color);
     if (isQueenRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_QUEEN : PieceType.BLACK_QUEEN;
     } else if (isPawnRelocating(color)) {
       type = (color == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
     }
-    if (type != null) {
+    if (type != null && legalsMoves.contains(move)) {
       moves.add(new Move(-1, move.getDestination(), color, type));
       movePieceInBitboard(-1, move.getDestination(), color, type);
       if (type.isQueen()) {
@@ -810,6 +811,10 @@ public class AgonBoardImpl implements AgonBoard {
       return !maskTo.andOperation(legalMoves).isEmpty();
     }
     return false;
+  }
+
+  private boolean isValidRelocation(int from, int to) {
+    return from == -1 && isFree(to) && validZoneMask.isSet(to);
   }
 
   /**

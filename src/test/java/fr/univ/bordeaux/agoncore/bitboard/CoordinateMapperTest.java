@@ -47,4 +47,17 @@ class CoordinateMapperTest {
           "Symmetry failed for index " + originalIndex + " (mapped to " + coord + ")");
     }
   }
+
+  @Test
+  @DisplayName("Test returned values")
+  void testReturnValues() {
+    assertEquals(67, CoordinateMapper.toIndex('G', 2), "'G2' should map to index 67");
+    assertEquals(0, CoordinateMapper.toIndex('A', 1), "'A1' should map to index 0");
+    assertEquals(
+        66,
+        CoordinateMapper.toIndex('G', 1),
+        "'G1' is not in the game but is valid so should return 66");
+    assertEquals(
+        -1, CoordinateMapper.toIndex('G', 0), "'G0' is not in the game so should return -1");
+  }
 }

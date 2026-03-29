@@ -23,6 +23,7 @@ public class CoordinateMapper {
    * @return The corresponding 0-indexed position in the 1D bitboard array.
    */
   public static int toIndex(char letter, int col) {
+    if (letter > 'K' || letter < 'A' || col > 11 || col < 1) return -1;
     int base = 'A';
     return (((int) letter - base) * (11)) + (col - 1);
   }

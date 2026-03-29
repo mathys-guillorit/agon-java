@@ -10,6 +10,7 @@ import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import fr.univ.bordeaux.application.ai.strategy.AgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.ObservableMatch;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   private Player player1;
   private Player player2;
   private MatchStatus status;
+  private GameConfig gameConfig;
   MatchObserver observer;
 
   /**
@@ -32,10 +34,11 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * @param player1 {@link Player} first player that plays the party
    * @param player2 {@link Player} second player that plays the party
    */
-  public Match(AgonBoard agonBoard, Player player1, Player player2) {
+  public Match(AgonBoard agonBoard, Player player1, Player player2, GameConfig gameConfig) {
     this.agonBoard = agonBoard;
     this.player1 = player1;
     this.player2 = player2;
+    this.gameConfig = gameConfig;
     this.currentPlayer = player1.getColor() == Color.WHITE ? player1 : player2;
     this.status = MatchStatus.RUNNING;
   }
@@ -202,6 +205,10 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   public RestrictedAgonBoard getAgonBoard() {
     return agonBoard;
+  }
+
+  public GameConfig getGameConfig() {
+    return gameConfig;
   }
 
   protected void switchPlayer() {

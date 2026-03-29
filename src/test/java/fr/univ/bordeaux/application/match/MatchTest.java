@@ -9,6 +9,7 @@ import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +28,7 @@ class MatchTest {
     public boolean endCalled = false;
 
     public TestMatch(AgonBoardImpl board, Player p1, Player p2) {
-      super(board, p1, p2);
+      super(board, p1, p2, new GameConfig());
     }
 
     @Override

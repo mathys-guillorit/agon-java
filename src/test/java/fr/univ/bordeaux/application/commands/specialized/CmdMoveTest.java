@@ -13,6 +13,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -52,7 +53,8 @@ public class CmdMoveTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     // 2. Définition du mouvement (Exemple : déplacer un pion blanc de b1 vers c1)
     // On utilise CoordinateMapper pour être sûr des index
@@ -102,8 +104,8 @@ public class CmdMoveTest {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
-        new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
-    // Tentative de déplacer une case vide (ex: e5 qui est vide au début)
+        new StandardMatch(
+            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
     int emptyFrom = CoordinateMapper.toIndex('E', 5);
     int to = CoordinateMapper.toIndex('E', 6);
     CmdAction cmdMove = new CmdMove(emptyFrom, to, gameUserInterface);

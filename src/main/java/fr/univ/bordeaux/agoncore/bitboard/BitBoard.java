@@ -237,4 +237,18 @@ public class BitBoard {
     this.high = bitBoard.high;
     return this;
   }
+
+  public void printBoard() {
+    System.out.println("=== Agon BitBoard (11x11 Grid) ===");
+    for (int i = 0; i < 121; i++) {
+      // Affiche 1 si le bit est mis, 0 sinon
+      System.out.print(this.isSet(i) ? "1 " : ". ");
+
+      // Retour à la ligne toutes les 11 itérations
+      if ((i + 1) % 11 == 0) {
+        System.out.println();
+      }
+    }
+    System.out.println("==================================");
+  }
 }

@@ -69,7 +69,10 @@ public class CmdShowTest {
     // Initialisation d'un match réel
     MatchManager match =
         new StandardMatch(
-            new AgonBoardImpl(), new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
+            new AgonBoardImpl(),
+            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            null,
+            new GameConfig());
 
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-board"});
     boolean result = cmd.execute(match);
@@ -124,7 +127,8 @@ public class CmdShowTest {
             board,
             new HumanPlayer("test", Color.WHITE, gameUserInterface),
             new HumanPlayer("test2", Color.BLACK, gameUserInterface),
-            1);
+            1,
+            new GameConfig());
     match.move(
         new Move(
             CoordinateMapper.toIndex('F', 1),
@@ -157,7 +161,8 @@ public class CmdShowTest {
             new AgonBoardImpl(),
             new HumanPlayer("test", Color.WHITE, gameUserInterface),
             new HumanPlayer("test2", Color.BLACK, gameUserInterface),
-            1);
+            1,
+            new GameConfig());
 
     // 3. Exécution
     result = cmd.execute(matchBlitz);

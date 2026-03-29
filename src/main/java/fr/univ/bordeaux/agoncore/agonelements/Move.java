@@ -98,6 +98,20 @@ public class Move {
     return from == -1;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    Move move = (Move) obj;
+    if (this.pieceType != null && move.getPieceType() != null) {
+      return this.from == move.from
+          && this.destination == move.destination
+          && this.color == move.color
+          && this.pieceType == move.pieceType;
+    }
+    return this.from == move.from
+        && this.destination == move.destination
+        && this.color == move.color;
+  }
+
   /**
    * Returns a string representation of the move for debugging purposes.
    *
