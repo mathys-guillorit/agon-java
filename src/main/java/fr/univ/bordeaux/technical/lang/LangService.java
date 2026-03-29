@@ -62,18 +62,16 @@ public class LangService implements LangTranslationProvider {
     try {
       this.loadBundle();
     } catch (MissingResourceException e) {
+      // load default
       this.locale = Locale.ENGLISH;
-
-      this.resBundle = ResourceBundle.getBundle("lang.lang", this.locale);
+      this.resBundle = ResourceBundle.getBundle("lang.trad", this.locale);
       this.lastMessage = "locale not found default English is set instead";
     }
   }
 
   private void loadBundle() throws MissingResourceException {
-    final String baseName = "lang.lang";
-
+    final String baseName = "lang.trad";
     ResourceBundle tempBundle = ResourceBundle.getBundle(baseName, this.locale);
-
     String foundLang = tempBundle.getLocale().getLanguage();
     String requestedLang = this.locale.getLanguage();
     if (!foundLang.equals(requestedLang)

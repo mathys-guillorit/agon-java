@@ -23,19 +23,21 @@ public class LangServiceTest {
   }
 
   @Test
-  @Description("just check behavior of normal usage for UK Locale (2 blocs)")
+  @Description("just check behavior of normal usage for setting english")
   void initDefaultLanguageAsEnglishTest() {
-    Locale originalLocale = Locale.getDefault();
-    var lang = new LangService();
-    if (lang.getLocale() != Locale.ENGLISH) {
+    var lang = new LangService(Locale.ENGLISH);
+    // if supported non-English lang (english US is not supported)
+    if (!lang.getLocale().equals(Locale.ENGLISH)) {
       assertTrue(
           LangService.supportedLocales().contains(lang.getLocale()),
           "Language/\"Locale\" is not supported by our app");
       return;
     }
+    // not supported language fallback to default English OR
+    // language is already English
+    // and then test if translation is correct in english
     final String expected = "locale found and loaded successfully";
-    final String comparer = "(" + lang.getLocale() + ")";
-    System.out.println(comparer);
+    final String comparer = "(" + Locale.ENGLISH + ")";
     assertEquals(
         expected,
         lang.getLastMessage(),
