@@ -156,6 +156,16 @@ public class AgonRegisterTest {
     assertTrue(cmdRegister.get(cmdName1).isEmpty());
   }
 
+  @Test
+  @DisplayName("check behavior when key is null")
+  void nullKeyName(){
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new AgonRegister<Integer>().register(null,5),
+      "null name should throw an exception because is not @Nullable"
+    );
+  }
+
   private static class DummyCmd implements CmdAction {
     @Override
     public boolean execute(MatchManager match) {
