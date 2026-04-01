@@ -1,6 +1,9 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
@@ -61,7 +64,6 @@ public class CmdHelpTest {
 
     assertTrue(result);
     String output = outContent.toString();
-
 
     assertTrue(output.contains("HELP: QUIT"));
     assertTrue(output.contains("Exits the game"));

@@ -41,11 +41,7 @@ public class FakeLineReader extends LineReaderImpl implements LineReader {
   private Completer completer;
 
   public FakeLineReader(String... lines) {
-    super(
-            new FakeTerminal(new ByteArrayOutputStream()),
-            "agon-test",
-            null
-    );
+    super(new FakeTerminal(new ByteArrayOutputStream()), "agon-test", null);
     this.inputs = new ArrayDeque<>(List.of(lines));
     this.keyMaps.put(LineReader.MAIN, new KeyMap<>());
   }
@@ -279,14 +275,12 @@ public class FakeLineReader extends LineReaderImpl implements LineReader {
     this.completer = completer;
   }
 
-  public List<Candidate> complete(String input){
-    if(this.completer == null) return List.of();
+  public List<Candidate> complete(String input) {
+    if (this.completer == null) return List.of();
     ParsedLine pl = this.parser.parse(input, input.length());
     List<Candidate> candidates = new ArrayList<>();
-    this.completer.complete(this,pl,candidates);
+    this.completer.complete(this, pl, candidates);
     String currentWord = pl.word();
-    return candidates.stream()
-          .filter(c -> c.value().startsWith(currentWord))
-          .toList();
+    return candidates.stream().filter(c -> c.value().startsWith(currentWord)).toList();
   }
 }

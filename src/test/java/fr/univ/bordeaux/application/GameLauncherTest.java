@@ -1,7 +1,5 @@
 package fr.univ.bordeaux.application;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 

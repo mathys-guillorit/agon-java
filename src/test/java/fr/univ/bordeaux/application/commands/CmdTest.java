@@ -1,30 +1,31 @@
 package fr.univ.bordeaux.application.commands;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeParsedLine;
 import fr.univ.bordeaux.ui.cli.tools.FakeShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import jdk.jfr.Description;
 import org.apache.commons.cli.Option;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
-import org.jline.reader.LineReader;
 import org.jline.reader.impl.LineReaderImpl;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-/**
- * test remaining sections/lines that are not tested in specialized commands
- */
+/** test remaining sections/lines that are not tested in specialized commands */
 public class CmdTest {
 
   // requires 6 "Mock" classes for all those tests
@@ -54,10 +55,7 @@ public class CmdTest {
     Completer completer = this.fakeCmd.getAutoCompleter();
     List<Candidate> candidates = new ArrayList<>();
     completer.complete(new LineReaderImpl(this.term), this.fpl, candidates);
-    assertFalse(
-            candidates.isEmpty(),
-            "completer must give -b, -h, -m, --hey, --help"
-    );
+    assertFalse(candidates.isEmpty(), "completer must give -b, -h, -m, --hey, --help");
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-b")));
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-h")));
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-m")));
@@ -72,67 +70,57 @@ public class CmdTest {
     FakeLineReader lineReader = new FakeLineReader(this.term);
     lineReader.setCompleter(completer);
     String opt = "--he";
-    userInputLine = "cmd " +opt;
+    userInputLine = "cmd " + opt;
     candidates = lineReader.complete(userInputLine);
     StringBuilder finalSb = new StringBuilder();
     StringBuilder finalSb2 = finalSb;
     candidates.forEach(c -> finalSb2.append(c.value()).append(" "));
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-h")),
-            "candidate for \"-h\" must not contain -h but it is: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-h")),
+        "candidate for \"-h\" must not contain -h but it is: (" + finalSb + ")");
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("--reset")),
-            "candidate for \"--reset\" must not contain -h but it is: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--reset")),
+        "candidate for \"--reset\" must not contain -h but it is: (" + finalSb + ")");
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("--hey")),
-            "options: (" + finalSb + ") must contain : \"--hey\""
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--hey")),
+        "options: (" + finalSb + ") must contain : \"--hey\"");
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("--help")),
-            "options: (" + finalSb + ") must contain : \"--help\""
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--help")),
+        "options: (" + finalSb + ") must contain : \"--help\"");
     assertEquals(2, candidates.size());
     opt = "-h";
-    userInputLine = "cmd " +opt;
+    userInputLine = "cmd " + opt;
     candidates = lineReader.complete(userInputLine);
     finalSb = new StringBuilder();
     StringBuilder finalSb1 = finalSb; // ide don't like internal variables
     candidates.forEach(c -> finalSb1.append(c.value()).append(" "));
     msg = "\"candidate for %s must contain %s but is not: (%s)";
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("-h")),
-            String.format(msg, opt, "-h", finalSb)
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-h")),
+        String.format(msg, opt, "-h", finalSb));
     msg = "\"candidate for %s must not contain %s but it is: (%s)";
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-r")),
-            String.format(msg, opt, "-r", finalSb)
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-r")),
+        String.format(msg, opt, "-r", finalSb));
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-m")),
-            String.format(msg, opt, "-m", finalSb)
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-m")),
+        String.format(msg, opt, "-m", finalSb));
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("--reset")),
-            String.format(msg, opt, "--reset", finalSb)
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--reset")),
+        String.format(msg, opt, "--reset", finalSb));
     msg = "options: (%s) must not contain : \"%s\"";
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("--hey")),
-            String.format(msg, finalSb, "--hey")
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--hey")),
+        String.format(msg, finalSb, "--hey"));
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("--help")),
-            String.format(msg, finalSb, "--help")
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--help")),
+        String.format(msg, finalSb, "--help"));
     assertEquals(1, candidates.size(), "only option allowed is -h");
   }
 
   @Test
   @Description("get only long options as result with correct number")
-  void testLongOptionsOnly(){
+  void testLongOptionsOnly() {
     String opt = "--";
     String userInputLine = "cmd " + opt;
     Completer completer = this.fakeCmd.getAutoCompleter();
@@ -142,54 +130,125 @@ public class CmdTest {
     StringBuilder finalSb = new StringBuilder();
     candidates.forEach(c -> finalSb.append(c.value()).append(" "));
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-h")),
-            "candidate for \"" + opt + "\" must not contain -h but it is: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-h")),
+        "candidate for \"" + opt + "\" must not contain -h but it is: (" + finalSb + ")");
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-m")),
-            "candidate for \"" + opt + "\" must not contain -m but it is: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-m")),
+        "candidate for \"" + opt + "\" must not contain -m but it is: (" + finalSb + ")");
     assertFalse(
-            candidates.stream().anyMatch(c -> c.value().equals("-m")),
-            "candidate for \"" + opt + "\" must not contain -b but it is: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("-m")),
+        "candidate for \"" + opt + "\" must not contain -b but it is: (" + finalSb + ")");
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("--hey")),
-            "options: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--hey")), "options: (" + finalSb + ")");
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("--help")),
-            "options: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--help")),
+        "options: (" + finalSb + ")");
     assertTrue(
-            candidates.stream().anyMatch(c -> c.value().equals("--reset")),
-            "options: (" + finalSb + ")"
-    );
+        candidates.stream().anyMatch(c -> c.value().equals("--reset")),
+        "options: (" + finalSb + ")");
     assertEquals(3, candidates.size());
   }
 
   @Test
   @Description("when input look like : --something -a_thing --something_else ...")
-  void testMultipleOptions(){
-
-
-
-  }
-
-  @Test
-  @Description("")
-  void checkWordsCompleter(){
-    var flr = new FakeLineReader("-");
+  void testMultipleOptions() {
+    Completer completer = this.fakeCmd.getAutoCompleter();
+    FakeLineReader lineReader = new FakeLineReader(this.term);
+    lineReader.setCompleter(completer);
+    ArrayList<String> opts =
+        new ArrayList<>(
+            Arrays.asList(
+                "--help ",
+                "-h --he",
+                "-",
+                "-h -m -r",
+                "-h -m -r --r",
+                "-h -m -r ")); // test with single opt
+    String uinput;
+    List<Candidate> candidates;
+    List<Candidate> candidatesResult;
+    final String[][] tmp = {
+      {"--hey", "--help", "--reset", "-b", "-h", "-m", "-r"},
+      {"--hey", "--help"},
+      {"--hey", "--help", "--reset", "-b", "-h", "-m", "-r"},
+      {"-r"},
+      {"--reset"},
+      {"--hey", "--help", "--reset", "-b", "-h", "-m", "-r"}
+    };
+    short j = 0;
+    for (String opt : opts) {
+      uinput = "cmd " + opt;
+      candidates = lineReader.complete(uinput);
+      for (short i = 0; i < tmp[j].length; i++) {
+        candidatesResult = candidates.stream().toList();
+        short finalI = i; // generated by ide
+        short finalJ = j; // generated by ide
+        assertTrue(
+            candidates.stream().anyMatch(c -> c.value().equals(tmp[finalJ][finalI])),
+            "user input is : (\"" + uinput + "\") out is :" + candidatesResult);
+        assertEquals(tmp[j].length, candidates.size());
+      }
+      j++;
+    }
+    String opt = "--hem -m";
+    uinput = "cmd " + opt;
+    candidates = lineReader.complete(uinput);
+    // past commands in options must be correct to fill next one(s)
+    assertFalse(candidates.stream().anyMatch(c -> c.value().equals(opt)));
   }
 
   @Test
   @Description("when user word cannot be predicted (need F19)")
-  void checkErrorSound(){
+  void checkErrorSound() {
     // tested in terminal it's okay
-
 
   }
 
+  // move the test from the class "OptCompleterAdapterTest"
+  // because it requires many tools that we don't have to repeat here
+  // (all tools are present here)
+  @Test
+  @Description("(pattern cannot be predicted because is not in possibilities)")
+  void noOptionsWithBadCommand2() throws IOException {
+    // use optCompleter through a command (because everything we need is there)
+    String input = "non -";
+    var flr = new FakeLineReader(this.term);
+    flr.setCompleter(this.fakeCmd.getAutoCompleter());
+    List<Candidate> candidates = flr.complete(input).stream().toList();
+    short optCount = 0;
+    final String msg = "we must have %d options defined in `loadOptions()` %s";
+    assertEquals(
+        optCount, candidates.size(), String.format(msg, optCount, candidates.stream().toList()));
+  }
 
+  @Test
+  @Description("loading a file description from command")
+  void testLoading() throws IOException {
+    var registrer = new AgonRegister<CmdAction>();
+    var shell = new FakeShell(this.term, new LineReaderImpl(this.term), registrer);
+    FakeCmd cmd = new FakeCmd(shell);
+    final String path = "/cmdsInformations/desc/test.txt";
+    String txt = "this file contains multiple lines as an example for the 1st test\n";
+    assertDoesNotThrow(
+        () -> {
+          new LoadLocalFile(path).getContent().contains("cmdsInformations");
+        },
+        "resources repertory is not duplicated into test environment");
+    assertTrue(Objects.requireNonNull(cmd.loadText("test.txt")).contains(txt));
+    assertEquals(new LoadLocalFile(path).getContent(), cmd.loadText("test.txt"));
+  }
 
+  @Test
+  @Description("to check correct description")
+  void descriptionLoading() throws IOException {
+    var registrer = new AgonRegister<CmdAction>();
+    var shell = new FakeShell(this.term, new LineReaderImpl(this.term), registrer);
+    FakeCmd cmd = new FakeCmd(shell);
+
+    assertEquals("Description: default Command", cmd.getDescription());
+    String desc = "hello 3";
+    cmd.setDesc(desc);
+    assertEquals(desc, cmd.getDescription());
+    assertTrue(cmd.getDescription().contains("3") && cmd.getDescription().contains(" "));
+  }
 }

@@ -158,12 +158,11 @@ public class AgonRegisterTest {
 
   @Test
   @DisplayName("check behavior when key is null")
-  void nullKeyName(){
+  void nullKeyName() {
     assertThrows(
-      IllegalArgumentException.class,
-      () -> new AgonRegister<Integer>().register(null,5),
-      "null name should throw an exception because is not @Nullable"
-    );
+        IllegalArgumentException.class,
+        () -> new AgonRegister<Integer>().register(null, 5),
+        "null name should throw an exception because is not @Nullable");
   }
 
   private static class DummyCmd implements CmdAction {

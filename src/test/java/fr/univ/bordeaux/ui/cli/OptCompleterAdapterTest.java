@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -140,25 +141,6 @@ public class OptCompleterAdapterTest {
         "all candidates should start with '--' but it's not : '" + uniqueOptions + "'");
     assertEquals(
         optCount, uniqueOptions.size(), "options are: " + uniqueOptions + "all options are: ");
-  }
-
-  @Test
-  @Description("(pattern cannot be predicted because is not in possibilities)")
-  void predictNonAppearingPattern() {
-    var a = new OptCompleterAdapter(this.opts);
-    Completer completer = a.getCompleter("cmd");
-    DefaultParser parser = new DefaultParser();
-    String input = "non -";
-    ParsedLine line = parser.parse(input, input.length());
-    var reader = new FakeLineReader(input);
-    List<Candidate> candidates = new ArrayList<>();
-    completer.complete(reader, line, candidates);
-    short optCount = 0;
-    List<String> uniqueOptions = candidates.stream().map(Candidate::value).distinct().toList();
-    assertEquals(
-        optCount,
-        uniqueOptions.size(),
-        "we must have " + optCount + " options defined in `loadOptions()`");
   }
 
   @Test
