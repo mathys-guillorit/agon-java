@@ -10,6 +10,8 @@ import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeParsedLine;
 import fr.univ.bordeaux.ui.cli.tools.FakeShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,8 +22,14 @@ import jdk.jfr.Description;
 import org.apache.commons.cli.Option;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.ParsedLine;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.LineReaderImpl;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -195,13 +203,6 @@ public class CmdTest {
     candidates = lineReader.complete(uinput);
     // past commands in options must be correct to fill next one(s)
     assertFalse(candidates.stream().anyMatch(c -> c.value().equals(opt)));
-  }
-
-  @Test
-  @Description("when user word cannot be predicted (need F19)")
-  void checkErrorSound() {
-    // tested in terminal it's okay
-
   }
 
   // move the test from the class "OptCompleterAdapterTest"
