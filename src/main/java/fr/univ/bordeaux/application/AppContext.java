@@ -22,6 +22,8 @@ public class AppContext {
     /** UDP discovery instance. */
     private ClientDiscovery discovery;
 
+    private AppMode mode = AppMode.LOCAL;
+
     /**
      * Creates an application context from an existing local profile.
      *
@@ -96,5 +98,23 @@ public class AppContext {
             discovery = new ClientDiscovery();
             discovery.start();
         }
+    }
+
+    /**
+     * Returns the current application mode.
+     *
+     * @return the active application mode
+     */
+    public AppMode getMode() {
+        return mode;
+    }
+
+    /**
+     * Updates the current application mode.
+     *
+     * @param mode the new application mode
+     */
+    public void setMode(AppMode mode) {
+        this.mode = mode;
     }
 }

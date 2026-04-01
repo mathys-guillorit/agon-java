@@ -3,16 +3,7 @@ package fr.univ.bordeaux.application;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.network.*;
-import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
-import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
-import fr.univ.bordeaux.application.commands.specialized.CmdHint;
-import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
-import fr.univ.bordeaux.application.commands.specialized.CmdSave;
-import fr.univ.bordeaux.application.commands.specialized.CmdSet;
-import fr.univ.bordeaux.application.commands.specialized.CmdShow;
-import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
+import fr.univ.bordeaux.application.commands.specialized.*;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
@@ -282,8 +273,12 @@ public class GameLauncher {
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
 
     String playerName = askPlayerName();
+    AppMode mode = askApplicationMode();
+    System.out.println("[INFO] Mode selected: " + mode);
+
     LocalProfile profile = new LocalProfile(playerName);
     AppContext context = new AppContext(profile);
+    context.setMode(mode);
 
     GameUserInterface userInterface;
 
@@ -312,8 +307,7 @@ public class GameLauncher {
         // =========================
         // Local / gameplay commands
         // =========================
-        cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-        cmds.register("hint", new CmdHint(userInterface));
+        cmds.register("new", new CmdNew(userInterface, context, config, gameEngine));        cmds.register("hint", new CmdHint(userInterface));
         cmds.register("show", new CmdShow(userInterface, config));
         cmds.register("load", new CmdLoad(userInterface));
         cmds.register("save", new CmdSave(userInterface));
@@ -398,5 +392,32 @@ public class GameLauncher {
    */
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("cmdsInformations/version.txt").getContent();
+  }
+
+  /**
+   * Asks the user to select the application mode (local or online).
+   *
+   * @return the selected application mode
+   */
+  private AppMode askApplicationMode() {
+    Scanner scanner = new Scanner(System.in);
+
+    System.out.println("Select mode:");
+    System.out.println("1 - Local");
+    System.out.println("2 - Online");
+    System.out.print("Your choice: ");
+
+    String input = scanner.nextLine().trim();
+
+    while (!input.equals("1") && !input.equals("2")) {
+      System.out.print("Invalid choice. Enter 1 (Local) or 2 (Online): ");
+      input = scanner.nextLine().trim();
+    }
+
+    if (input.equals("2")) {
+      return AppMode.ONLINE;
+    }
+
+    return AppMode.LOCAL;
   }
 }

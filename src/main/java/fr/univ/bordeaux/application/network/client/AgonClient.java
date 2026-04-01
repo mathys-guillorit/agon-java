@@ -7,10 +7,18 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import fr.univ.bordeaux.application.network.client.LocalProfile;
+import java.util.LinkedList;
 
 /**
  * The AgonClient class manages the TCP connection to the game server.
+ *
+ * <p>This version is adapted for F39:
+ * <ul>
+ *   <li>only one thread reads from the socket,</li>
+ *   <li>synchronous responses are stored line by line,</li>
+ *   <li>asynchronous events are handled separately,</li>
+ *   <li>multi-line responses such as PLAYERS and SCOREBOARD are supported.</li>
+ * </ul>
  */
 public class AgonClient {
 
@@ -21,6 +29,47 @@ public class AgonClient {
     /** Local profile containing the player's name and server ids. */
     private final LocalProfile profile;
 
+    // =========================
+    // KEEP ALIVE MANAGEMENT
+    // =========================
+
+    /** Thread responsible for sending periodic PING messages */
+    private Thread keepAliveThread;
+
+    /** Flag used to control the keep-alive loop */
+    private volatile boolean keepAliveRunning = false;
+
+    // =========================
+    // READER THREAD MANAGEMENT
+    // =========================
+
+    /** Dedicated thread that continuously reads incoming server messages */
+    private Thread readerThread;
+
+    /** Flag used to control the reader loop */
+    private volatile boolean readerRunning = false;
+
+    // =========================
+    // RESPONSE STORAGE
+    // =========================
+
+    /**
+     * Stores synchronous server responses in arrival order.
+     *
+     * <p>This is used by commands such as STATUS, PLAYERS, SCOREBOARD, NEW, PING.
+     */
+    private final LinkedList<String> pendingResponses = new LinkedList<>();
+
+    /** Lock used to wait for incoming responses */
+    private final Object responseLock = new Object();
+
+    /**
+     * Lock used to ensure only one synchronous command is active at a time.
+     *
+     * <p>This avoids mixing PLAYERS / SCOREBOARD / PING / NEW replies.
+     */
+    private final Object commandLock = new Object();
+
     /**
      * Constructor with a local profile.
      *
@@ -30,13 +79,6 @@ public class AgonClient {
         this.profile = profile;
     }
 
-    /**
-     * Connect to a TCP server. If already connected, returns true.
-     *
-     * @param host server host (e.g. "127.0.0.1")
-     * @param port server port (e.g. 12345)
-     * @return true if the connection succeeds (or is already established), false otherwise
-     */
     /**
      * Connects to a TCP server and logs in using the local profile name.
      *
@@ -51,16 +93,20 @@ public class AgonClient {
 
         try {
             socket = new Socket(host, port);
-            socket.setSoTimeout(5000);
+
+            // No timeout on client read side: the reader thread can wait normally.
+            socket.setSoTimeout(0);
 
             in = new BufferedReader(
                     new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
             out = new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
 
-            sendLine("LOGIN NAME=" + profile.getName());
+            // Send login request
+            sendLine("LOGIN NAME=" + profile.getName() + " CLIENT_ID=" + profile.getClientId());
 
-            String response = readProtocolLine();
+            // Read first response directly before starting the reader thread
+            String response = in.readLine();
 
             if (response == null || !response.startsWith("WELCOME")) {
                 disconnectSilently();
@@ -72,6 +118,9 @@ public class AgonClient {
                 String serverKey = host + ":" + port;
                 profile.setIdForServer(serverKey, id);
             }
+
+            startReader();
+            startKeepAlive();
 
             return true;
 
@@ -91,59 +140,154 @@ public class AgonClient {
     }
 
     /**
-     * Checks whether the connection is still alive by sending a PING.
+     * Starts the unique reader thread.
      *
-     * @return true if the server replies with PONG, false otherwise
+     * <p>This thread is the only one allowed to read incoming lines from the socket.
      */
-    public boolean isAlive() {
-        if (!isConnected()) {
-            return false;
+    private void startReader() {
+        if (readerRunning) {
+            return;
         }
 
-        try {
-            sendLine("PING");
-            String resp = readProtocolLine();
+        readerRunning = true;
 
-            if (resp == null || !resp.startsWith("PONG")) {
+        readerThread = new Thread(() -> {
+            try {
+                while (readerRunning && isConnected()) {
+                    String line = in.readLine();
+
+                    if (line == null) {
+                        disconnectSilently();
+                        break;
+                    }
+
+                    if ("BYE".equalsIgnoreCase(line.trim())) {
+                        disconnectSilently();
+                        break;
+                    }
+
+                    if (isAsyncEvent(line)) {
+                        handleAsyncEvent(line);
+                    } else {
+                        synchronized (responseLock) {
+                            pendingResponses.addLast(line);
+                            responseLock.notifyAll();
+                        }
+                    }
+                }
+            } catch (IOException e) {
                 disconnectSilently();
-                return false;
             }
+        }, "AgonClient-Reader");
 
-            return true;
+        readerThread.setDaemon(true);
+        readerThread.start();
+    }
 
-        } catch (IOException e) {
-            disconnectSilently();
-            return false;
+    /**
+     * Returns true if the received line is an asynchronous event.
+     *
+     * @param line received protocol line
+     * @return true if it is an async event
+     */
+    private boolean isAsyncEvent(String line) {
+        return line.startsWith("GAME_STARTED")
+                || line.startsWith("OPPONENT_MOVE")
+                || line.startsWith("GAME_OVER")
+                || line.startsWith("YOUR_TURN");
+    }
+
+    /**
+     * Handles asynchronous events sent by the server.
+     *
+     * <p>For now this only prints the event. Later it can notify the UI
+     * or the online match layer.
+     *
+     * @param line async event line
+     */
+    private void handleAsyncEvent(String line) {
+        System.out.println("[CLIENT EVENT] " + line);
+    }
+
+    /**
+     * Waits for the next synchronous response line from the server.
+     *
+     * @param timeoutMs maximum wait time in milliseconds
+     * @return the received line, or null if timeout/disconnection occurs
+     */
+    private String waitResponse(long timeoutMs) {
+        long end = System.currentTimeMillis() + timeoutMs;
+
+        synchronized (responseLock) {
+            while (isConnected()) {
+                while (!pendingResponses.isEmpty()) {
+                    String line = pendingResponses.removeFirst();
+
+                    if (line != null && !line.isBlank()) {
+                        return line;
+                    }
+                }
+
+                long remaining = end - System.currentTimeMillis();
+
+                if (remaining <= 0) {
+                    return null;
+                }
+
+                try {
+                    responseLock.wait(remaining);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return null;
+                }
+            }
+            return null;
         }
     }
 
     /**
-     * Sends PING to the server and waits for a PONG reply.
-     *
-     * @return a formatted RTT string (in milliseconds) if the server replies correctly, null otherwise
+     * Starts a background thread that sends PING messages every 30 seconds
+     * to prevent server-side timeout.
      */
-    public String pingRttMs() {
-        if (!isConnected()) {
-            return null;
+    private void startKeepAlive() {
+        if (keepAliveRunning) {
+            return;
         }
 
-        long t0 = System.currentTimeMillis();
+        keepAliveRunning = true;
 
-        try {
-            sendLine("PING");
-            String resp = readProtocolLine();
+        keepAliveThread = new Thread(() -> {
+            while (keepAliveRunning) {
+                try {
+                    Thread.sleep(30_000);
 
-            if (resp == null || !resp.startsWith("PONG")) {
-                return null;
+                    if (!isConnected()) {
+                        break;
+                    }
+
+                    synchronized (commandLock) {
+                        sendLine("PING");
+
+                        String resp = waitResponse(5000);
+
+                        if (resp == null || !resp.startsWith("PONG")) {
+                            disconnectSilently();
+                            break;
+                        }
+                    }
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (IOException e) {
+                    disconnectSilently();
+                    break;
+                }
             }
+        }, "AgonClient-KeepAlive");
 
-            long rtt = System.currentTimeMillis() - t0;
-            return "[SERVER] PONG TIME=" + rtt + "ms";
-
-        } catch (IOException e) {
-            disconnectSilently();
-            return null;
-        }
+        keepAliveThread.setDaemon(true);
+        keepAliveThread.start();
     }
 
     /**
@@ -156,24 +300,197 @@ public class AgonClient {
             return null;
         }
 
-        try {
-            sendLine("STATUS");
-            String resp = readProtocolLine();
+        synchronized (commandLock) {
+            try {
+                sendLine("STATUS");
 
-            if (resp == null || !resp.startsWith("STATUS_OK")) {
+                String resp = waitResponse(5000);
+
+                if (resp == null || !resp.startsWith("STATUS_OK")) {
+                    return null;
+                }
+
+                return resp;
+
+            } catch (IOException e) {
+                disconnectSilently();
                 return null;
             }
-
-            return resp;
-
-        } catch (IOException e) {
-            disconnectSilently();
-            return null;
         }
     }
 
     /**
-     * Sends QUIT to the server then closes.
+     * Requests the list of connected players from the server.
+     *
+     * @return the raw players response if successful, null otherwise
+     */
+    public String requestPlayers() {
+        if (!isConnected()) {
+            return null;
+        }
+
+        synchronized (commandLock) {
+            try {
+                sendLine("PLAYERS");
+
+                StringBuilder sb = new StringBuilder();
+
+                while (true) {
+                    String line = waitResponse(5000);
+
+                    if (line == null) {
+                        return null;
+                    }
+
+                    if ("END".equals(line)) {
+                        break;
+                    }
+
+                    sb.append(line).append("\n");
+                }
+
+                return sb.toString().trim();
+
+            } catch (IOException e) {
+                disconnectSilently();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Requests the scoreboard from the connected server.
+     *
+     * @return the formatted scoreboard response, or null if the request fails
+     */
+    public String requestScoreboard() {
+        if (!isConnected()) {
+            return null;
+        }
+
+        synchronized (commandLock) {
+            try {
+                sendLine("SCOREBOARD");
+
+                StringBuilder sb = new StringBuilder();
+
+                while (true) {
+                    String line = waitResponse(5000);
+
+                    if (line == null) {
+                        return null;
+                    }
+
+                    if ("END".equals(line)) {
+                        break;
+                    }
+
+                    sb.append(line).append("\n");
+                }
+
+                return sb.toString().trim();
+
+            } catch (IOException e) {
+                disconnectSilently();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Requests the server to start a new game against a specific player.
+     *
+     * @param targetPlayerId the ID of the target player
+     * @return the raw server response if successful, null otherwise
+     */
+    public String requestNewGame(int targetPlayerId) {
+        if (!isConnected()) {
+            return null;
+        }
+
+        synchronized (commandLock) {
+            try {
+                sendLine("NEW PLAYER_ID=" + targetPlayerId);
+
+                String response = waitResponse(5000);
+
+                if (response == null) {
+                    return null;
+                }
+
+                return response;
+
+            } catch (IOException e) {
+                disconnectSilently();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Checks whether the connection is still alive by sending a PING.
+     *
+     * @return true if the server replies with PONG, false otherwise
+     */
+    public boolean isAlive() {
+        if (!isConnected()) {
+            return false;
+        }
+
+        synchronized (commandLock) {
+            try {
+                sendLine("PING");
+
+                String resp = waitResponse(5000);
+
+                if (resp == null || !resp.startsWith("PONG")) {
+                    disconnectSilently();
+                    return false;
+                }
+
+                return true;
+
+            } catch (IOException e) {
+                disconnectSilently();
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Sends PING to the server and waits for a PONG reply.
+     *
+     * @return a formatted RTT string if successful, null otherwise
+     */
+    public String pingRttMs() {
+        if (!isConnected()) {
+            return null;
+        }
+
+        long t0 = System.currentTimeMillis();
+
+        synchronized (commandLock) {
+            try {
+                sendLine("PING");
+
+                String resp = waitResponse(5000);
+
+                if (resp == null || !resp.startsWith("PONG")) {
+                    return null;
+                }
+
+                long rtt = System.currentTimeMillis() - t0;
+                return "[SERVER] PONG TIME=" + rtt + "ms";
+
+            } catch (IOException e) {
+                disconnectSilently();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Sends QUIT to the server then closes the connection.
      */
     public void quit() {
         if (!isConnected()) {
@@ -181,19 +498,29 @@ public class AgonClient {
             return;
         }
 
-        try {
-            sendLine("QUIT");
-            readProtocolLine(); // BYE expected
-        } catch (IOException ignored) {
-        } finally {
-            disconnectSilently();
+        synchronized (commandLock) {
+            try {
+                sendLine("QUIT");
+                waitResponse(2000);
+            } catch (IOException ignored) {
+            } finally {
+                disconnectSilently();
+            }
         }
     }
 
     /**
-     * Close everything without throwing.
+     * Closes everything without throwing exceptions.
      */
     public void disconnectSilently() {
+        keepAliveRunning = false;
+        readerRunning = false;
+
+        synchronized (responseLock) {
+            pendingResponses.clear();
+            responseLock.notifyAll();
+        }
+
         try {
             if (socket != null) {
                 socket.close();
@@ -212,7 +539,7 @@ public class AgonClient {
      * @param msg message to send
      * @throws IOException if the client is not connected or the write fails
      */
-    private void sendLine(String msg) throws IOException {
+    private synchronized void sendLine(String msg) throws IOException {
         if (out == null) {
             throw new IOException("Not connected");
         }
@@ -220,34 +547,6 @@ public class AgonClient {
         out.write(msg);
         out.write('\n');
         out.flush();
-    }
-
-    /**
-     * Reads a single protocol line from the server.
-     *
-     * <p>If the server sends {@code BYE}, the client disconnects immediately.
-     *
-     * @return the received line, or null if end-of-stream or remote shutdown
-     * @throws IOException if the client is not connected or the read fails
-     */
-    private String readProtocolLine() throws IOException {
-        if (in == null) {
-            throw new IOException("Not connected");
-        }
-
-        String line = in.readLine();
-
-        if (line == null) {
-            disconnectSilently();
-            return null;
-        }
-
-        if ("BYE".equalsIgnoreCase(line.trim())) {
-            disconnectSilently();
-            return "BYE";
-        }
-
-        return line;
     }
 
     /**
@@ -270,81 +569,5 @@ public class AgonClient {
         }
 
         return null;
-    }
-
-    /**
-     * Requests the list of connected players from the server.
-     *
-     * @return the raw players response if successful, null otherwise
-     */
-    public String requestPlayers() {
-        if (!isConnected()) {
-            return null;
-        }
-
-        try {
-            sendLine("PLAYERS");
-
-            StringBuilder sb = new StringBuilder();
-
-            while (true) {
-                String line = readProtocolLine();
-
-                if (line == null) {
-                    return null;
-                }
-
-                if (line.equals("END")) {
-                    break;
-                }
-
-                sb.append(line).append("\n");
-            }
-
-            return sb.toString().trim();
-        } catch (IOException e) {
-            disconnectSilently();
-            return null;
-        }
-    }
-
-    /**
-     * Requests the scoreboard from the connected server.
-     *
-     * <p>The server response may contain multiple lines and is terminated
-     * by an "END" marker.
-     *
-     * @return the formatted scoreboard response, or null if the request fails
-     */
-    public String requestScoreboard() {
-        if (!isConnected()) {
-            return null;
-        }
-
-        try {
-            sendLine("SCOREBOARD");
-
-            StringBuilder sb = new StringBuilder();
-
-            while (true) {
-                String line = readProtocolLine();
-
-                if (line == null) {
-                    return null;
-                }
-
-                if ("END".equals(line)) {
-                    break;
-                }
-
-                sb.append(line).append("\n");
-            }
-
-            return sb.toString().trim();
-
-        } catch (IOException e) {
-            disconnectSilently();
-            return null;
-        }
     }
 }

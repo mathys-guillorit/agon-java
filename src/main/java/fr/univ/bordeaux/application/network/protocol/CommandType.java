@@ -14,6 +14,8 @@ public enum CommandType {
     WELCOME,
     PLAYERS,
     SCOREBOARD,
+    NEW,
+    NEW_OK,
     UNKNOWN;
 
     /**

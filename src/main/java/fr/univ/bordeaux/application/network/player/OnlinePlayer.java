@@ -8,6 +8,7 @@ import fr.univ.bordeaux.application.network.server.ClientHandler;
 public class OnlinePlayer {
 
     private final int id;
+    private final String clientId;
     private final String name;
     private PlayerStatus status;
 
@@ -22,8 +23,9 @@ public class OnlinePlayer {
      * @param status initial player status
      * @param handler associated client handler
      */
-    public OnlinePlayer(int id, String name, PlayerStatus status, ClientHandler handler) {
+    public OnlinePlayer(int id, String clientId, String name, PlayerStatus status, ClientHandler handler) {
         this.id = id;
+        this.clientId = clientId;
         this.name = name;
         this.status = status;
         this.handler = handler;
@@ -36,6 +38,15 @@ public class OnlinePlayer {
      */
     public int getId() {
         return id;
+    }
+
+    /**
+     * Returns the server-local client id.
+     *
+     * @return client id
+     */
+    public String getClientId() {
+        return clientId;
     }
 
     /**

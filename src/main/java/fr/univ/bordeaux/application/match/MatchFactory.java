@@ -8,6 +8,7 @@ import fr.univ.bordeaux.application.ai.strategy.AgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.AiPlayer;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.match.player.NetworkPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -50,5 +51,21 @@ public class MatchFactory {
       // C'est null, donc c'est un humain
       return new HumanPlayer("Joueur_" + color, color, gameUI);
     }
+  }
+
+  /**
+   * Creates an online match for two remote human players.
+   *
+   * <p>This method does not use UI, config, or AI.
+   * It is intended for server-side network matches.
+   */
+  public static Match createOnlineMatch(String whitePlayerName, String blackPlayerName) {
+    AgonBoard agonBoard = new AgonBoardImpl();
+    agonBoard.initBaseConfiguration();
+
+    Player white = new NetworkPlayer(whitePlayerName, Color.WHITE);
+    Player black = new NetworkPlayer(blackPlayerName, Color.BLACK);
+
+    return new StandardMatch(agonBoard, white, black);
   }
 }
