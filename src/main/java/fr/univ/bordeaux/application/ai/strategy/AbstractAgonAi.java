@@ -6,7 +6,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 /**
- * Skeletal implementation of the {@link AgonAI} interface.
+ * Skeletal implementation of the {@link AgonAi} interface.
  *
  * <p>This abstract class handles the common "plumbing" required for any AI strategy, allowing
  * concrete implementations (like Minimax or MCTS) to focus solely on the decision logic.
