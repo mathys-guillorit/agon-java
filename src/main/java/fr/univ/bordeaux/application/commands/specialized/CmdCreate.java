@@ -8,6 +8,8 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
+import fr.univ.bordeaux.ui.ObservableMatch;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -76,10 +78,11 @@ public class CmdCreate extends Cmd {
     try {
       CommandLine cmd = parser.parse(super.getOptions(), args);
       GameConfig matchConfig = this.gameConfig.copy();
-      ConfigBinder.bindOptionsToConfig(cmd, matchConfig);
+      ConfigBinder.bindOptionsToConfig(cmd, matchConfig,super.getCtx());
 
       // On lance le nouveau match
       MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      ((ObservableMatch)match).setObserver((MatchObserver) super.getCtx());
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());

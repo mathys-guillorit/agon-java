@@ -82,7 +82,7 @@ public final class CmdShow extends Cmd {
       case "board" -> showBoard(match);
       case "history" -> showHistory(match);
       case "time" -> showTime(match);
-      case "configuration" -> showConfiguration();
+      case "configuration" -> showConfiguration(match);
       default -> false;
     };
   }
@@ -142,7 +142,7 @@ public final class CmdShow extends Cmd {
       this.getCtx().showError("Error: No active match. Please create or load a game first.\n");
       return false;
     } else {
-      this.getCtx().updateBoard(match.getAgonBoard());
+      this.getCtx().onMatchUpdate(match);
       return false;
     }
   }
@@ -178,8 +178,13 @@ public final class CmdShow extends Cmd {
    *
    * @return true.
    */
-  private boolean showConfiguration() {
-    this.getCtx().showMessage(this.gameConfig.toString() + "\n");
+  private boolean showConfiguration(MatchManager match) {
+    if  (match != null) {
+      this.getCtx().showMessage(match.getGameConfig().toString() + "\n");
+    }
+    else{
+      super.getCtx().showMessage(this.gameConfig.toString() + "\n");
+    }
     return true;
   }
 }

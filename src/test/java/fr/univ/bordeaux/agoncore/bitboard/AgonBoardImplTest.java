@@ -354,7 +354,7 @@ class AgonBoardImplTest {
 
     List<String> textRepresentation = originalBoard.toTextList();
 
-    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation);
+    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation,null);
 
     assertEquals(
         PieceType.WHITE_QUEEN,

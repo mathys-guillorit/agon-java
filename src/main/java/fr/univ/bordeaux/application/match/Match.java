@@ -19,13 +19,15 @@ import java.util.List;
 /** Play an Agon Match between two players. */
 public abstract class Match implements MatchManager, ObservableMatch {
 
-  private AgonBoard agonBoard;
+  private final AgonBoard agonBoard;
   private Player currentPlayer;
-  private Player player1;
-  private Player player2;
+  private final Player player1;
+  private final Player player2;
   private MatchStatus status;
-  private GameConfig gameConfig;
-  MatchObserver observer;
+  private final GameConfig gameConfig;
+  private boolean isSaved=false;
+  private MatchObserver UiObserver;
+  private Player winner;
 
   /**
    * Play a {@link Match}.
@@ -35,11 +37,29 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * @param player2 {@link Player} second player that plays the party
    */
   public Match(AgonBoard agonBoard, Player player1, Player player2, GameConfig gameConfig) {
+    this(agonBoard, player1, player2, gameConfig, Color.WHITE);
+  }
+
+  /**
+   * Play a {@link Match}.
+   *
+   * @param agonBoard {@link AgonBoard} board to play on
+   * @param player1 {@link Player} first player that plays the party
+   * @param player2 {@link Player} second player that plays the party
+   * @param gameConfig {@link GameConfig} game configuration
+   * @param startingColor {@link Color} the color of the player who starts
+   */
+  public Match(
+      AgonBoard agonBoard,
+      Player player1,
+      Player player2,
+      GameConfig gameConfig,
+      Color startingColor) {
     this.agonBoard = agonBoard;
     this.player1 = player1;
     this.player2 = player2;
     this.gameConfig = gameConfig;
-    this.currentPlayer = player1.getColor() == Color.WHITE ? player1 : player2;
+    this.currentPlayer = player1.getColor() == startingColor ? player1 : player2;
     this.status = MatchStatus.RUNNING;
   }
 
@@ -59,7 +79,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * @return true succeeded else false
    */
   public boolean move(Move move) {
-    this.startActions();
+    //this.startActions();
     if (this.status == MatchStatus.FINISHED) {
       return false;
     }
@@ -72,13 +92,31 @@ public abstract class Match implements MatchManager, ObservableMatch {
     if (agonBoard.applyMove(move)) {
       if (agonBoard.isGameWon(currentPlayer.getColor())) {
         this.status = MatchStatus.FINISHED;
-        System.out.println("win");
+        this.winner = currentPlayer;
       }
+      this.isSaved = false;
       this.endActions();
+      this.notifyUi();
       return true;
     }
-
     return false;
+  }
+
+  @Override
+  public Player getWinner() {
+    return winner;
+  }
+
+  public Player getWhitePlayer() {
+    return (player1.getColor() == Color.WHITE) ? player1 : player2;
+  }
+
+  public Player getBlackPlayer() {
+    return (player1.getColor() == Color.BLACK) ? player1 : player2;
+  }
+
+  protected void setWinner(Player winner) {
+    this.winner = winner;
   }
 
   /** Beginning actions when a turn is about to start. */
@@ -119,7 +157,20 @@ public abstract class Match implements MatchManager, ObservableMatch {
   public boolean redo() {
     boolean res1 = agonBoard.redoMove();
     boolean res2 = agonBoard.redoMove();
+    if (res1 || res2) {
+      this.isSaved = false;
+    }
+    this.notifyUi();
     return res1 && res2;
+  }
+
+  /**
+   * Notify the UI about a state change in the match.
+   */
+  public void notifyUi(){
+    if (this.UiObserver != null) {
+      this.UiObserver.onMatchUpdate(this);
+    }
   }
 
   /**
@@ -129,8 +180,32 @@ public abstract class Match implements MatchManager, ObservableMatch {
    */
   @Override
   public boolean undo() {
-    agonBoard.undoMove();
-    return agonBoard.undoMove();
+    boolean res1 = agonBoard.undoMove();
+    boolean res2 = agonBoard.undoMove();
+    if (res1 || res2) {
+      this.isSaved = false;
+    }
+    this.notifyUi();
+    return res1 && res2;
+  }
+
+  /**
+   * Check if the match is saved.
+   *
+   * @return true if saved, false otherwise.
+   */
+  public boolean isSaved() {
+    return isSaved;
+  }
+
+  /**
+   * Set the saved status of the match.
+   *
+   * @param isSaved the saved status.
+   */
+  @Override
+  public void setIsSaved(boolean isSaved) {
+    this.isSaved = isSaved;
   }
 
   /**
@@ -200,16 +275,18 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   @Override
   public void setObserver(MatchObserver observer) {
-    this.observer = observer;
+    this.UiObserver = observer;
   }
 
-  public RestrictedAgonBoard getAgonBoard() {
+  public AgonBoard getAgonBoard() {
     return agonBoard;
   }
 
   public GameConfig getGameConfig() {
     return gameConfig;
   }
+
+  public void startTurn(){}
 
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;

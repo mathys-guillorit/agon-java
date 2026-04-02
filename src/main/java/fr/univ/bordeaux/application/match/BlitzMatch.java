@@ -24,11 +24,35 @@ public class BlitzMatch extends Match {
    */
   public BlitzMatch(
       AgonBoard agonBoard, Player player1, Player player2, long time, GameConfig gameConfig) {
-    super(agonBoard, player1, player2, gameConfig);
+    this(agonBoard, player1, player2, time, gameConfig, Color.WHITE);
+  }
 
-    this.whiteTimer = new GameTimer(time, () -> {});
-    this.blackTimer = new GameTimer(time, () -> {});
-    this.whiteTimer.start();
+  /**
+   * Constructs a BlitzMatch with the specified board, players, time limit and starting player.
+   *
+   * @param agonBoard The board used for the match.
+   * @param player1 The first player.
+   * @param player2 The second player.
+   * @param time The time limit for each player in minutes.
+   * @param gameConfig Game configuration.
+   * @param startingColor The color of the player who starts.
+   */
+  public BlitzMatch(
+      AgonBoard agonBoard,
+      Player player1,
+      Player player2,
+      long time,
+      GameConfig gameConfig,
+      Color startingColor) {
+    super(agonBoard, player1, player2, gameConfig, startingColor);
+
+    this.whiteTimer = new GameTimer(time, this::handleTimeout);
+    this.blackTimer = new GameTimer(time, this::handleTimeout);
+    if (startingColor == Color.WHITE) {
+      this.whiteTimer.start();
+    } else {
+      this.blackTimer.start();
+    }
   }
 
   /**
@@ -43,6 +67,9 @@ public class BlitzMatch extends Match {
   /** Actions to perform at the start of a turn, specifically managing the timer. */
   @Override
   public void startActions() {
+    if (this.getMatchStatus() == MatchStatus.FINISHED) {
+      return;
+    }
     if (!getCurrentTimer().isRunning()) {
       getCurrentTimer().start();
     }
@@ -62,13 +89,24 @@ public class BlitzMatch extends Match {
   }
 
   /** Handles the expiration of a player's timer. */
-  private void handleTimeout() {
-    super.setMatchStatus(MatchStatus.FINISHED);
+  private synchronized void handleTimeout() {
+    if (this.getMatchStatus() != MatchStatus.FINISHED) {
+      this.setMatchStatus(MatchStatus.FINISHED);
+      this.setWinner((this.getCurrentPlayer().getColor()==Color.BLACK)?getWhitePlayer():getBlackPlayer());
+      whiteTimer.kill();
+      blackTimer.kill();
+      this.notifyUi();
+    }
   }
 
   /** Actions to perform at the end of a turn, specifically switching players. */
   @Override
   public void endActions() {
+    if (this.getMatchStatus() == MatchStatus.FINISHED) {
+      whiteTimer.stop();
+      blackTimer.stop();
+      return;
+    }
     this.switchPlayer();
   }
 
@@ -76,6 +114,10 @@ public class BlitzMatch extends Match {
   public void switchPlayer() {
     getCurrentTimer().stop();
     super.switchPlayer();
+  }
+
+  @Override
+  public void startTurn() {
     getCurrentTimer().start();
   }
 

@@ -1,11 +1,22 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.storage.GameSaveData;
+import fr.univ.bordeaux.technical.io.storage.GameSaveSerializer;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
-/** Command responsible for saving the current game state to a file. */
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * Command responsible for saving the current game state to a file.
+ *
+ * <p>This command captures the board state, player information, and move history to allow future
+ * restoration via the 'load' command.
+ */
 public final class CmdSave extends Cmd {
 
   private String filename;
@@ -40,8 +51,8 @@ public final class CmdSave extends Cmd {
   @Override
   public String getDescription() {
     return "Usage: save [filename]\n"
-        + "Description: Saves the current game state to the specified file.\n"
-        + "Example: save party1.txt\n";
+        + "Description: Saves the current game state to the specified file, if there is no filename save by default in default_save.\n"
+        + "Example: save myparty.txt\n";
   }
 
   /**
@@ -52,30 +63,33 @@ public final class CmdSave extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (this.filename == null) {
-      this.getCtx().showError("No filename provided for saving.\n");
+    AgonBoard board = match.getAgonBoard();
+    List<String> boardText = board.toTextList();
+    List<String> historyText = board.getHistoryAsText();
+    GameSaveData saveData = new GameSaveData(match.getGameConfig(), match.getCurrentPlayer().getColor(), boardText, historyText);
+
+    GameSaveSerializer serializer = new GameSaveSerializer();
+    try {
+      serializer.save(saveData, filename);
+      match.setIsSaved(true);
+    } catch (IOException e) {
+      super.getCtx().showError("Something went wrong while saving the game please try again.\n");
       return false;
     }
-
-    this.getCtx()
-        .showInfo(
-            "Save command recognized for file: " + this.filename + " (Implementation pending).\n");
-    return true;
+    return false;
   }
 
   /**
-   * Factory method to create a new CmdSave instance with the filename provided by the user.
+   * Factory method to create a new {@code CmdSave} instance with the filename provided by the user.
    *
    * @param args Array of arguments where the first element is the target filename.
-   * @return A new CmdSave instance, or the base instance if no filename is provided.
+   * @return A new {@link CmdSave} instance, or the base instance if no filename is provided.
    */
   @Override
   public CmdAction createNew(String[] args) {
     if (args.length == 0) {
-      this.getCtx().showWarn("Warning: Saving without a filename might use a default slot.\n");
-      return new CmdSave(super.getCtx(), "default_save.txt");
+      return new CmdSave(super.getCtx(), "default_save");
     }
-
     return new CmdSave(super.getCtx(), args[0]);
   }
 }

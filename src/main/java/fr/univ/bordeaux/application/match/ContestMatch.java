@@ -5,6 +5,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
@@ -51,10 +52,12 @@ public class ContestMatch {
   public static void executeContest(String filePath) throws Exception {
     GameSaveParser parser = new GameSaveParser();
     GameSaveData state = parser.parse(filePath);
+
     if (state == null) {
       throw new Exception("Failed to parse save data.");
     }
-    AgonBoard board = new AgonBoardImpl(state.getBoardLines());
+    History loadedHistory = new History(state.getHistoryMoves());
+    AgonBoard board = new AgonBoardImpl(state.getBoardLines(),loadedHistory);
     Color playerColor = state.getCurrentPlayer();
     char playerChar = (playerColor == Color.BLACK) ? 'X' : 'O';
     AbstractAgonAi aiStrategy = AiFactory.createHintAi(playerColor);

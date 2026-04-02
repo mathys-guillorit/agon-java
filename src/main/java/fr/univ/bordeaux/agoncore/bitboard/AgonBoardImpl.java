@@ -54,7 +54,7 @@ public class AgonBoardImpl implements AgonBoard {
   private boolean blackQueenToRelocate = false;
 
   /** Stack-based history manager for undo/redo operations. */
-  private final History history = new History();
+  private final History history;
 
   /** The constant index of the central tile (Circle 0). */
   private final int throne = 60;
@@ -65,6 +65,7 @@ public class AgonBoardImpl implements AgonBoard {
     this.blackQueen = new BitBoard();
     this.whitePawns = new BitBoard();
     this.blackPawns = new BitBoard();
+    this.history = new History();
     initCirclesAndValidZones();
     initAllowedDestinations();
   }
@@ -76,9 +77,16 @@ public class AgonBoardImpl implements AgonBoard {
    * deduces any pieces waiting for relocation.
    *
    * @param lines The list of strings parsed from the save file.
+   * @param loadedHistory The move history loaded from the save file.
    */
-  public AgonBoardImpl(List<String> lines) {
-    this();
+  public AgonBoardImpl(List<String> lines, History loadedHistory) {
+    this.whiteQueen = new BitBoard();
+    this.blackQueen = new BitBoard();
+    this.whitePawns = new BitBoard();
+    this.blackPawns = new BitBoard();
+    this.history = loadedHistory;
+    initCirclesAndValidZones();
+    initAllowedDestinations();
 
     int rowIndex = 10;
 
@@ -141,6 +149,7 @@ public class AgonBoardImpl implements AgonBoard {
     this.blackQueen = blackQueen;
     this.whitePawns = whitePawns;
     this.blackPawns = blackPawns;
+    this.history = new History();
     initCirclesAndValidZones();
     initAllowedDestinations();
   }
@@ -813,10 +822,6 @@ public class AgonBoardImpl implements AgonBoard {
     return false;
   }
 
-  private boolean isValidRelocation(int from, int to) {
-    return from == -1 && isFree(to) && validZoneMask.isSet(to);
-  }
-
   /**
    * Checks if the queen of the given color is currently waiting to be relocated.
    *
@@ -996,5 +1001,9 @@ public class AgonBoardImpl implements AgonBoard {
   @Override
   public List<HistoryInformations> getHistory() {
     return history.toList();
+  }
+
+  public List<String> getHistoryAsText() {
+    return this.history.toTextList();
   }
 }

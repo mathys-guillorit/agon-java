@@ -1,13 +1,14 @@
 package fr.univ.bordeaux.application.match;
 
 import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.util.List;
 
 /** Represent Match Behavior. */
-public interface MatchManager {
+public interface MatchManager extends ReadOnlyMatch {
 
   /**
    * Move a piece.
@@ -38,50 +39,9 @@ public interface MatchManager {
    */
   boolean pause();
 
-  /**
-   * Explicit.
-   *
-   * @return {@link Player}
-   */
-  Player getCurrentPlayer();
-
-  /**
-   * Explicit.
-   *
-   * @return {@link RestrictedAgonBoard}
-   */
-  RestrictedAgonBoard getAgonBoard();
-
-  /**
-   * Predict next turn.
-   *
-   * @return {@link Move}
-   */
-  Move hint();
-
-  /**
-   * Explicit.
-   *
-   * @return {@link String}
-   */
-  String getRemainingTime();
-
-  /**
-   * Explicit.
-   *
-   * @return true | false
-   */
-  boolean isMatchOver();
-
-  /**
-   * get the last Moves.
-   *
-   * @return {@link List}
-   */
-  List<MoveDtO> getHistory();
-
-  GameConfig getGameConfig();
+  void setIsSaved(boolean isSaved);
 
   /** Quit the game. */
   void quit();
+  void startTurn();
 }

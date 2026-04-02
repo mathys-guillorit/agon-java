@@ -28,16 +28,6 @@ public class AiPlayer extends AbstractPlayer {
   }
 
   /**
-   * Get if the AIPlayer is an AI or not.
-   *
-   * @return true | false
-   */
-  @Override
-  public boolean isAi() {
-    return true;
-  }
-
-  /**
    * Get the player's color.
    *
    * @return {@link Color}

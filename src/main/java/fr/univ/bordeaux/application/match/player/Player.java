@@ -29,10 +29,4 @@ public interface Player {
    */
   Color getColor();
 
-  /**
-   * get if the player is an AI or not.
-   *
-   * @return true | false
-   */
-  boolean isAi();
 }

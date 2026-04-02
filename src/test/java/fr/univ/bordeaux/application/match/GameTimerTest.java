@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,60 +66,62 @@ public class GameTimerTest {
   }
 
   @Test
-  @DisplayName("Test du formatage du temps")
-  void testFormatting() throws Exception {
-    GameTimer timer = new GameTimer(1, null);
-    // On force le temps restant à 65 secondes via réflexion pour tester mm:ss
-    setPrivateField(timer, "remainingTimeMillis", 65000L);
-    assertEquals("01:05", timer.getFormattedRemainingTime());
-
-    setPrivateField(timer, "remainingTimeMillis", 10000L);
-    assertEquals("00:10", timer.getFormattedRemainingTime());
-
-    setPrivateField(timer, "remainingTimeMillis", 0L);
-    assertEquals("00:00", timer.getFormattedRemainingTime());
-  }
-
-  @Test
-  @DisplayName("Test de l'expiration et du callback onTimeout")
-  void testTimeout() throws Exception {
+  @DisplayName("Test de l'expiration réelle avec 1 seconde")
+  void testRealTimeoutInSeconds() throws InterruptedException {
     AtomicBoolean timeoutCalled = new AtomicBoolean(false);
-    GameTimer timer = new GameTimer(1, () -> timeoutCalled.set(true));
 
-    // On réduit le temps restant à 100ms pour ne pas attendre 1 minute
-    setPrivateField(timer, "remainingTimeMillis", 100L);
+    // On crée un timer de 1 SECONDE (possible grâce au nouveau constructeur)
+    GameTimer timer = new GameTimer(1, TimeUnit.SECONDS, () -> timeoutCalled.set(true));
 
     timer.start();
     assertTrue(timer.isRunning());
 
-    // On attend que le thread de surveillance détecte l'expiration (check toutes les 100ms)
-    // On donne un peu de marge (500ms)
-    Thread.sleep(500);
+    // On attend 1.5s (le temps que le thread sleep(100) détecte la fin)
+    Thread.sleep(1500);
 
-    assertFalse(timer.isRunning(), "Le timer devrait s'arrêter de lui-même");
+    assertFalse(timer.isRunning(), "Le timer devrait être arrêté");
     assertTrue(timer.isExpired(), "Le timer devrait être expiré");
-    assertTrue(timeoutCalled.get(), "Le callback onTimeout devrait avoir été appelé");
+    assertTrue(timeoutCalled.get(), "Le callback doit avoir été exécuté");
   }
 
   @Test
-  @DisplayName("Test de la sécurité getRemainingTimeMillis (pas de négatif)")
-  void testNoNegativeTime() throws Exception {
-    GameTimer timer = new GameTimer(1, null);
-    setPrivateField(timer, "remainingTimeMillis", -5000L);
-    assertEquals(0, timer.getRemainingTimeMillis());
-    assertTrue(timer.isExpired());
+  @DisplayName("Test du formatage avec des petites valeurs")
+  void testFormattingSeconds() {
+    // 90 secondes = 01:30
+    GameTimer timer = new GameTimer(90, TimeUnit.SECONDS, null);
+    assertEquals("01:30", timer.getFormattedRemainingTime());
 
-    // Test pendant qu'il tourne
-    setPrivateField(timer, "remainingTimeMillis", 10L);
-    timer.start();
-    Thread.sleep(100);
-    assertEquals(0, timer.getRemainingTimeMillis());
+    // 10 secondes = 00:10
+    GameTimer timer2 = new GameTimer(10, TimeUnit.SECONDS, null);
+    assertEquals("00:10", timer2.getFormattedRemainingTime());
   }
 
-  /** Utilitaire pour modifier les champs privés sans changer le code source. */
-  private void setPrivateField(Object obj, String fieldName, Object value) throws Exception {
-    Field field = obj.getClass().getDeclaredField(fieldName);
-    field.setAccessible(true);
-    field.set(obj, value);
+  @Test
+  @DisplayName("Le constructeur doit empêcher un temps négatif")
+    void testNegativeTimeConstructor() {
+
+      assertThrows(IllegalArgumentException.class, () -> {
+        new GameTimer(-10, TimeUnit.SECONDS, null);
+      }, "Le constructeur aurait dû rejeter un temps de -10s");
+    }
+
+
+  @Test
+  @DisplayName("Test de la transition vers zéro pendant l'exécution")
+  void testTransitionToZero() throws InterruptedException {
+    // On crée un timer très court (10ms)
+    GameTimer timer = new GameTimer(10, TimeUnit.MILLISECONDS, null);
+
+    timer.start();
+
+    // On attend 150ms pour être sûr qu'il a largement dépassé le temps
+    Thread.sleep(150);
+
+    long remaining = timer.getRemainingTimeMillis();
+
+    // Vérification de la sécurité Math.max(0, ...)
+    assertEquals(0, remaining, "Le temps restant ne doit jamais être négatif");
+    assertTrue(timer.isExpired());
+    assertFalse(timer.isRunning(), "Le thread doit avoir arrêté le timer après le timeout");
   }
 }

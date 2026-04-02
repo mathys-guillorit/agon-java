@@ -5,6 +5,9 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UiPromptParser;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * The core engine of the Agon application. This class manages the main execution loop. It switches
@@ -20,6 +23,15 @@ public class GameEngine {
 
   /** The registry containing all available CLI commands. */
   private final AgonRegister<CmdAction> cmds;
+
+  /** Executor for running player actions (Human or AI) asynchronously. */
+  private final ExecutorService playerExecutor =
+      Executors.newSingleThreadExecutor(
+          r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+          });
 
   /**
    * Constructs the game engine with the required UI and command registry.
@@ -40,7 +52,7 @@ public class GameEngine {
    */
   public void start() {
     while (ui.isRunning()) {
-      CmdAction action;
+      CmdAction action = null;
 
       if (this.matchManager == null || this.matchManager.isMatchOver()) {
         String input = ui.getUserInput();
@@ -51,21 +63,37 @@ public class GameEngine {
         action = UiPromptParser.parse(input, this.cmds, ui);
       } else {
         Player p = matchManager.getCurrentPlayer();
-        ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        //ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        matchManager.startTurn();
 
-        action = p.getAction(this.cmds);
+        Future<CmdAction> futureAction = playerExecutor.submit(() -> p.getAction(this.cmds));
+
+        try {
+          while (!futureAction.isDone()) {
+            if (matchManager.isMatchOver()) {
+              futureAction.cancel(true);
+              break;
+            }
+            Thread.sleep(50);
+          }
+
+          if (futureAction.isDone() && !futureAction.isCancelled()) {
+            action = futureAction.get();
+          }
+        } catch (Exception e) {
+          futureAction.cancel(true);
+        }
       }
 
       if (action != null) {
         action.execute(this.matchManager);
-
-        if (matchManager != null) {
-          ui.updateBoard(matchManager.getAgonBoard());
-        }
       } else {
-        ui.showError("Unknown command. Type 'help' to see available commands.\n");
+        if (this.matchManager == null || !this.matchManager.isMatchOver()) {
+          ui.showError("Unknown command. Type 'help' to see available commands.\n");
+        }
       }
     }
+    playerExecutor.shutdownNow();
   }
 
   /**

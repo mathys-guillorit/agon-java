@@ -2,6 +2,7 @@ package fr.univ.bordeaux.agoncore.bitboard;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.List;
 
@@ -95,6 +96,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return A {@link List} containing the sequence of moves in the current game.
    */
   List<HistoryInformations> getHistory();
+  List<String> getHistoryAsText();
 
   /**
    * Converts the current board state into a list of ASCII strings.

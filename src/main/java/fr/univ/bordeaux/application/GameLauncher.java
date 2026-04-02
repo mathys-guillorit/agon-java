@@ -238,7 +238,7 @@ public class GameLauncher {
     cmds.register("quit", new CmdQuit(ui));
     cmds.register("hint", new CmdHint(ui));
     cmds.register("show", new CmdShow(ui, config));
-    cmds.register("load", new CmdLoad(ui));
+    cmds.register("load", new CmdLoad(ui, engine));
     cmds.register("save", new CmdSave(ui));
     cmds.register("set", new CmdSet(ui, config));
     cmds.register("undo", new CmdUndo(ui));

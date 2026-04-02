@@ -1,8 +1,18 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.GameEngine;
+import fr.univ.bordeaux.application.match.Match;
+import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.io.storage.GameSaveData;
+import fr.univ.bordeaux.technical.io.storage.GameSaveParser;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
@@ -13,25 +23,30 @@ public final class CmdLoad extends Cmd {
 
   private String filename;
 
+  private GameEngine gameEngine;
+
   /**
    * Constructs the base Load command for registration.
    *
    * @param uictx The user interface context for interaction.
+   * @param gameEngine The engine that will run the match.
    */
-  public CmdLoad(GameUserInterface uictx) {
+  public CmdLoad(GameUserInterface uictx, GameEngine gameEngine) {
     super(uictx);
     this.opts = new Options();
     this.setName("load");
+    this.gameEngine = gameEngine;
   }
 
   /**
    * Internal constructor used to create an executable instance with a specific filename.
    *
    * @param uictx The user interface context.
+   * @param gameEngine The engine that will run the match.
    * @param filename The name of the file to load.
    */
-  private CmdLoad(GameUserInterface uictx, String filename) {
-    this(uictx);
+  private CmdLoad(GameUserInterface uictx, GameEngine gameEngine, String filename) {
+    this(uictx, gameEngine);
     this.filename = filename;
   }
 
@@ -71,13 +86,29 @@ public final class CmdLoad extends Cmd {
    * Executes the loading logic.
    *
    * @param match The current match manager.
-   * @return false (Implementation pending).
+   * @return true if the game was successfully loaded, false otherwise.
    */
   @Override
   public boolean execute(MatchManager match) {
-    this.getCtx()
-        .showError("Load command recognized but not yet implemented for: " + this.filename + "\n");
-    return false;
+    GameSaveParser parser = new GameSaveParser();
+    try {
+      GameSaveData saveData = parser.parse(this.filename);
+
+      GameConfig loadedConfig = saveData.getConfig();
+      Color playerTurn = saveData.getCurrentPlayer();
+
+      History loadedHistory = new History(saveData.getHistoryMoves());
+      AgonBoard loadedBoard = new AgonBoardImpl(saveData.getBoardLines(), loadedHistory);
+
+      Match newMatch =
+          MatchFactory.createMatch(loadedConfig, super.getCtx(), loadedBoard, playerTurn);
+      gameEngine.setMatchManager(newMatch);
+      super.getCtx().showMessage("Game successfully loaded from: " + this.filename + "\n");
+      return true;
+    } catch (Exception e) {
+      super.getCtx().showError("Failed to load game: " + e.getMessage() + "\n");
+      return false;
+    }
   }
 
   /**
@@ -94,6 +125,6 @@ public final class CmdLoad extends Cmd {
     }
 
     String fileToLoad = args[0];
-    return new CmdLoad(this.getCtx(), fileToLoad);
+    return new CmdLoad(this.getCtx(), this.gameEngine, fileToLoad);
   }
 }

@@ -41,7 +41,29 @@ public class CmdQuit extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match != null) {
+    if (match != null && !match.isMatchOver() && !match.isSaved()) {
+      boolean resolved = false;
+      while (!resolved) {
+        this.getCtx().showMessage("Save the game before quitting? [y/N] \n");
+        String response = this.getCtx().getUserInput();
+        System.out.println("la reponse utilisateur est : " + response);
+        if (response != null && (response.equalsIgnoreCase("y"))) {
+          this.getCtx().showMessage("Enter filename: \n");
+          String filename = this.getCtx().getUserInput();
+          if (filename == null || filename.trim().isEmpty()) {
+            filename = "default_save";
+          }
+          CmdSave saveCmd = new CmdSave(this.getCtx());
+          saveCmd.createNew(new String[]{filename}).execute(match);
+          if (match.isSaved()) {
+            resolved = true;
+          } else {
+            this.getCtx().showMessage("Save failed. Try again.\n");
+          }
+        } else {
+          resolved = true;
+        }
+      }
       match.quit();
     }
     this.getCtx().quit();

@@ -1,9 +1,9 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 
 /** Explicit. */
 public interface MatchObserver {
 
-  void updateBoard(RestrictedAgonBoard agonBoard);
+  void onMatchUpdate(ReadOnlyMatch match);
 }

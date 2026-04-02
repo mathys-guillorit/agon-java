@@ -1,11 +1,12 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
-import fr.univ.bordeaux.ui.AbstractGameUi;
+import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +32,7 @@ import org.jline.utils.AttributedStyle;
  * @author fr.univ.bordeaux
  * @version 1.0
  */
-public class AgonShell extends AbstractGameUi implements GameUserInterface {
+public class AgonShell implements GameUserInterface, MatchObserver {
 
   /** Atomic flag used to control the main execution loop of the shell. */
   private AtomicBoolean running;
@@ -135,24 +136,48 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   }
 
   /**
-   * Captures a single line of input from the terminal. Intercepts {@link UserInterruptException}
-   * (Ctrl+C) to trigger the quit process.
+   * Captures a single line of input from the terminal.
    *
-   * @return The trimmed input string, or null if the input is empty or interrupted.
+   * <p>Handles special cases:
+   * <ul>
+   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.</li>
+   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.</li>
+   * </ul>
+   *
+   * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
    */
   public String getUserInput() {
     try {
-      line = this.reader.readLine(this.userPrompt).trim();
+      String readLine = this.reader.readLine(this.userPrompt);
+      if (readLine == null) {
+        return "quit";
+      }
+      line = readLine.trim();
+      if (line.isEmpty()) {
+        return null;
+      }
+      this.reader.getHistory().add(line);
+      return line;
+      
     } catch (UserInterruptException e) {
-      this.quit();
+      // Si le thread est interrompu par le chrono, on ne veut pas quitter
+      if (Thread.currentThread().isInterrupted()) {
+        return null;
+      }
+      // Sinon, c'est un vrai Ctrl+C -> on déclenche la sauvegarde via CmdQuit
+      return "quit";
+      
+    } catch (org.jline.reader.EndOfFileException e) {
+      // Ctrl+D
+      if (Thread.currentThread().isInterrupted()) {
+        return null;
+      }
+      return "quit";
+      
+    } catch (Exception e) {
+      // Autre erreur ou interruption système
       return null;
     }
-    if (line.isEmpty()) {
-      return null;
-    }
-
-    this.reader.getHistory().add(line);
-    return line;
   }
 
   /**
@@ -316,23 +341,24 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void quit() {
-    this.showWarn("Unsaved changes may be lost. Save game now? [y/n]");
-    String input = this.getUserInput();
-    if (input != null && input.equalsIgnoreCase("y")) {
-      this.saveGame();
-      this.showInfo("Game saved successfully.");
-    }
     this.leave();
   }
 
   /**
-   * Renders the current state of the game board using the ConsoleRenderer.
+   * Renders the current state of the game board and match information.
    *
-   * @param board The restricted board view to render.
+   * @param match The read-only match view to render.
    */
   @Override
-  public void updateBoard(RestrictedAgonBoard board) {
-    this.cliWln(ConsoleRenderer.getBoardRepresentation(board));
+  public void onMatchUpdate(ReadOnlyMatch match) {
+    this.cliWln(ConsoleRenderer.getBoardRepresentation(match.getAgonBoard()));
+    if (match.isMatchOver()) {
+      Player winner = match.getWinner();
+      String winnerInfo = (winner != null) ? winner.getColor().toString() : "UNKNOWN";
+      this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
+    } else {
+      this.showInfo("Current turn: " + match.getCurrentPlayer().getColor());
+    }
   }
 
   /**

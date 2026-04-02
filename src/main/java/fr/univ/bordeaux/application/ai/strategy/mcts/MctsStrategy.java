@@ -84,7 +84,7 @@ public class MctsStrategy extends AbstractAgonAi {
       int rolloutMoves = 0;
       Color turn = node.getPlayerToMove();
 
-      while (winner == null && rolloutMoves < 50) {
+      while (winner == null && rolloutMoves < 50 && isTimeRemaining()) {
         List<Move> moves = board.generateLegalMoves(turn);
         if (moves.isEmpty()) {
           break;

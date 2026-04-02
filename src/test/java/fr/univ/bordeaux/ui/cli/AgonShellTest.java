@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.application.commands.AgonRegister;
@@ -21,6 +23,12 @@ import fr.univ.bordeaux.application.commands.specialized.CmdSet;
 import fr.univ.bordeaux.application.commands.specialized.CmdShow;
 import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.GameEngine;
+import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.MoveDtO;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
+import fr.univ.bordeaux.application.match.StandardMatch;
+import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -32,6 +40,7 @@ import java.util.List;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
+import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +67,7 @@ public class AgonShellTest {
       cmds.register("quit", new CmdQuit(userInterface));
       cmds.register("hint", new CmdHint(userInterface));
       cmds.register("show", new CmdShow(userInterface, config));
-      cmds.register("load", new CmdLoad(userInterface));
+      cmds.register("load", new CmdLoad(userInterface,gameEngine));
       cmds.register("save", new CmdSave(userInterface));
       cmds.register("set", new CmdSet(userInterface, config));
       cmds.register("undo", new CmdUndo(userInterface));
@@ -360,7 +369,8 @@ public class AgonShellTest {
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
     AgonBoard agonboard = new AgonBoardImpl();
     agonboard.initBaseConfiguration();
-    shell.updateBoard(agonboard);
+    MatchManager match=new StandardMatch(agonboard,new HumanPlayer("test", Color.BLACK,(GameUserInterface) shell),new HumanPlayer("test", Color.BLACK,(GameUserInterface) shell),new GameConfig());
+    shell.onMatchUpdate(match);
     String Board =
         "     K /. X . . O .\\\n"
             + "    J /O . . . . . X\\\n"
@@ -379,5 +389,191 @@ public class AgonShellTest {
     assertTrue(
         output.contains(Board),
         "Le terminal devrait afficher : " + Board + "mais affiche : " + output);
+  }
+  @Test
+  @DisplayName("onMatchUpdate : affiche le gagnant quand le match est fini")
+  void testOnMatchUpdateFinished() {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    AgonShell shell = new AgonShell(new FakeTerminal(out), new FakeLineReader(), cmds);
+
+    // Créer un match fini
+    AgonBoard board = new AgonBoardImpl();
+    StandardMatch match = new StandardMatch(board,
+        new HumanPlayer("P1", Color.WHITE, shell),
+        new HumanPlayer("P2", Color.BLACK, shell), new GameConfig());
+
+    // Simuler la fin du match (via un setter ou en manipulant le board si nécessaire)
+    // Ici, on suppose qu'il y a un moyen de forcer l'état ou on utilise un ReadOnlyMatch anonyme
+    ReadOnlyMatch finishedMatch = new ReadOnlyMatch() {
+      @Override public AgonBoard getAgonBoard() { return board; }
+
+      @Override
+      public boolean isSaved() {
+        return false;
+      }
+
+      @Override
+      public String getRemainingTime() {
+        return "";
+      }
+
+      @Override public boolean isMatchOver() { return true; }
+
+      @Override
+      public List<MoveDtO> getHistory() {
+        return List.of();
+      }
+
+      @Override public Player getWinner() { return new HumanPlayer("P1", Color.WHITE, shell); }
+      @Override public Player getCurrentPlayer() { return null; }
+      @Override public GameConfig getGameConfig() { return new GameConfig(); }
+
+      @Override
+      public Move hint() {
+        return null;
+      }
+    };
+
+    shell.onMatchUpdate(finishedMatch);
+
+    String output = out.toString();
+    assertTrue(output.contains("MATCH FINISHED!"), "Devrait afficher le message de fin");
+    assertTrue(output.contains("WHITE"), "Devrait afficher la couleur du gagnant");
+  }
+  @Test
+  @DisplayName("displayHistory : gère un historique vide et un nombre impair de coups")
+  void testDisplayHistory() {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    AgonShell shell = new AgonShell(new FakeTerminal(out), new FakeLineReader(), cmds);
+
+    // 1. Test vide
+    shell.displayHistory(new ArrayList<>());
+    assertTrue(out.toString().contains("history is currently empty"));
+
+    // 2. Test nombre impair (3 coups)
+    out.reset();
+    List<MoveDtO> moves = List.of(
+        new MoveDtO("A1", "B2", "white"),
+        new MoveDtO("A7", "B6", "black"),
+        new MoveDtO("B2", "C3", "white")
+    );
+    shell.displayHistory(moves);
+
+    String output = out.toString();
+    assertTrue(output.contains("O a1 b2; X a7 b6;"));
+    assertTrue(output.contains("O b2 c3;")); // Le dernier coup O n'a pas de X correspondant
+    assertFalse(output.contains("X null"), "Ne devrait pas afficher de X pour le dernier tour incomplet");
+  }
+
+  @Test
+  @DisplayName("getUserInput : lecture normale d'une commande")
+  void testGetUserInputNormal() throws Exception {
+    LineReader reader = new FakeLineReader("  create -b  ");
+    AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
+
+    String result = shell.getUserInput();
+
+    assertEquals("create -b", result, "La commande doit être trimée");
+    // Vérifier que c'est ajouté à l'historique
+    assertTrue(reader.getHistory().iterator().hasNext());
+  }
+
+  @Test
+  @DisplayName("getUserInput : Ctrl+D (EOF / readLine returns null) retourne 'quit'")
+  void testGetUserInputEOF() throws Exception {
+    // On crée un reader qui renvoie explicitement null quand on appelle readLine
+    LineReader eofReader = new FakeLineReader("") {
+      @Override
+      public String readLine(String prompt) {
+        return null;
+      }
+    };
+
+    AgonShell shell = new AgonShell(createFakeTerminal(), eofReader, cmds);
+    String result = shell.getUserInput();
+
+    assertEquals("quit", result, "Le shell doit retourner 'quit' lors d'un Ctrl+D (null)");
+  }
+
+  @Test
+  @DisplayName("getUserInput : EndOfFileException (JLine EOF) retourne 'quit'")
+  void testGetUserInputEndOfFileException() throws Exception {
+    // Certains terminaux lèvent une EndOfFileException au lieu de renvoyer null
+    LineReader eofExceptionReader = new FakeLineReader("") {
+      @Override
+      public String readLine(String prompt) {
+        throw new org.jline.reader.EndOfFileException();
+      }
+    };
+
+    AgonShell shell = new AgonShell(createFakeTerminal(), eofExceptionReader, cmds);
+    String result = shell.getUserInput();
+
+    assertEquals("quit", result, "Le shell doit retourner 'quit' en cas d'EndOfFileException");
+  }
+
+  @Test
+  @DisplayName("getUserInput : Ctrl+C (UserInterruptException) retourne 'quit'")
+  void testGetUserInputInterrupt() throws Exception {
+    // On crée un reader qui jette l'exception d'interruption
+    LineReader interruptingReader = new FakeLineReader("") {
+      @Override
+      public String readLine(String prompt) {
+        throw new UserInterruptException("Interrupted");
+      }
+    };
+    AgonShell shell = new AgonShell(createFakeTerminal(), interruptingReader, cmds);
+
+    String result = shell.getUserInput();
+
+    assertEquals("quit", result);
+  }
+
+  @Test
+  @DisplayName("getUserInput : Interruption Blitz (Thread interrupted) retourne null")
+  void testGetUserInputBlitzTimeout() throws Exception {
+    LineReader reader = new FakeLineReader("") {
+      @Override
+      public String readLine(String prompt) {
+        // On simule l'interruption du thread (par le timer Blitz)
+        Thread.currentThread().interrupt();
+        throw new UserInterruptException("Timeout");
+      }
+    };
+    AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
+
+    String result = shell.getUserInput();
+
+    // Doit retourner null pour que l'engine sache que c'est un timeout et non un quit
+    assertNull(result);
+    // Nettoyage du flag d'interruption pour les autres tests
+    Thread.interrupted();
+  }
+
+  @Test
+  @DisplayName("getUserInput : Exception générique retourne null")
+  void testGetUserInputGenericException() throws Exception {
+    LineReader reader = new FakeLineReader("") {
+      @Override
+      public String readLine(String prompt) {
+        throw new RuntimeException("Unexpected error");
+      }
+    };
+    AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
+
+    String result = shell.getUserInput();
+
+    assertNull(result);
+  }
+
+  @Test
+  @DisplayName("getUserInput : Entrée vide retourne null")
+  void testGetUserInputEmpty() throws Exception {
+    LineReader reader = new FakeLineReader("   ");
+    AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
+
+    String result = shell.getUserInput();
+
+    assertNull(result, "Une ligne vide (après trim) doit retourner null");
   }
 }

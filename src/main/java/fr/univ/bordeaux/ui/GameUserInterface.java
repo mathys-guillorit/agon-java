@@ -1,6 +1,6 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,12 +34,11 @@ public interface GameUserInterface {
   void quit();
 
   /**
-   * Updates the game board display.
+   * Updates the game board display and match information.
    *
-   * @param agonBoard A textual (ASCII) or serialized representation of the board.
+   * @param match {@link ReadOnlyMatch} the current match state.
    */
-  // void updateBoard(String boardRepresentation);
-  void updateBoard(RestrictedAgonBoard agonBoard);
+  void onMatchUpdate(ReadOnlyMatch match);
 
   /**
    * Displays an informational message to the user.
@@ -77,9 +76,6 @@ public interface GameUserInterface {
 
   /** Explicit. */
   void setVerbose(boolean state);
-
-  /** Save the game before leaving. */
-  void saveGame();
 
   /**
    * Retrieve from ui/CLi some text.

@@ -24,19 +24,30 @@ public class MatchFactory {
    * @return {@link Match}
    */
   public static Match createMatch(GameConfig config, GameUserInterface gameUi) {
-    // 1. On récupère la map des cerveaux IA (certaines couleurs seront null)
-    Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
     AgonBoard agonBoard = new AgonBoardImpl();
     agonBoard.initBaseConfiguration();
+    return createMatch(config, gameUi, agonBoard, Color.WHITE);
+  }
 
-    // 2. On crée les vrais objets Player
+  /**
+   * Explicit.
+   *
+   * @param config {@link GameConfig}
+   * @param gameUi {@link GameUserInterface} ui part to display the game.
+   * @param agonBoard {@link AgonBoard} pre-initialized board.
+   * @param startingColor {@link Color} current player turn.
+   * @return {@link Match}
+   */
+  public static Match createMatch(
+      GameConfig config, GameUserInterface gameUi, AgonBoard agonBoard, Color startingColor) {
+    Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
+
     Player white = createPlayerFromAiMap(aiMap, Color.WHITE, agonBoard, gameUi);
     Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUi);
     if (config.isBlitzMode()) {
-
-      return new BlitzMatch(agonBoard, white, black, config.getTimeout(), config);
+      return new BlitzMatch(agonBoard, white, black, config.getTimeout(), config, startingColor);
     } else {
-      return new StandardMatch(agonBoard, white, black, config);
+      return new StandardMatch(agonBoard, white, black, config, startingColor);
     }
   }
 
@@ -56,10 +67,8 @@ public class MatchFactory {
       GameUserInterface gameUi) {
     AgonAi aiStrategy = aiMap.get(color);
     if (aiStrategy != null) {
-      // C'est une IA selon la factory de ton collègue
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);
     } else {
-      // C'est null, donc c'est un humain
       return new HumanPlayer("Joueur_" + color, color, gameUi);
     }
   }
