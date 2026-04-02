@@ -12,6 +12,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -50,7 +51,8 @@ public class CmdUndoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     int from = CoordinateMapper.toIndex('B', 1);
     int to = CoordinateMapper.toIndex('C', 1);
@@ -87,7 +89,8 @@ public class CmdUndoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     // On joue deux coups
     new CmdMove(
@@ -118,14 +121,14 @@ public class CmdUndoTest {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
-        new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
+        new StandardMatch(
+            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
     // Pas de coups joués, on tente un undo
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"1"});
     boolean result = cmdUndo.execute(match);
 
     assertTrue(result);
-    // Ici, le code passe dans le "if (!match.undo())" et exécute le "break"
   }
 
   @Test

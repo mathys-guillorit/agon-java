@@ -5,54 +5,41 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jline.reader.Completer;
 
-/**
- * Command responsible for dynamically updating the game configuration.
- *
- * <p>This command allows modifying system settings (verbose, debug), game rules (blitz mode,
- * timeouts), and AI behavior (depth, heuristics, mode) without restarting the application.
- */
+/** Command responsible for dynamically updating the game configuration. */
 public final class CmdSet extends Cmd {
 
-  /** CLI options for all configurable parameters. */
-  private final Options options;
-
-  /** Reference to the global game configuration. */
   private GameConfig gameConfig;
 
-  /** Arguments containing the parameters to update. */
   private String[] args;
 
   /**
-   * Constructs the base Set command for registration. Defines all available configuration flags for
-   * the CLI.
+   * Constructs the base Set command for registration.
    *
    * @param uictx The user interface context.
    * @param gameConfig The configuration object to be modified.
    */
   public CmdSet(GameUserInterface uictx, GameConfig gameConfig) {
     super(uictx);
-    this.options = new Options();
-    this.options.addOption("verbose", null, true, "increases the verbosity of the programme");
-    this.options.addOption("debug", null, true, "displays the debug output");
-    this.options.addOption("blitzmode", null, true, "sets if the game is a blitz");
-    this.options.addOption("timeout", null, true, "set the timeout in milliseconds for blitzmode");
-    this.options.addOption("aiActive", null, true, "enable aiPlayers for the game");
-    this.options.addOption("aiMode", null, true, "set the algorithme to use for ai");
-    this.options.addOption("aiDepth", null, true, "set the maximum depth for the AI algorithm");
-    this.options.addOption(
+    Options options = super.getOptions();
+    options.addOption("verbose", null, true, "increases the verbosity of the programme");
+    options.addOption("debug", null, true, "displays the debug output");
+    options.addOption("blitzmode", null, true, "sets if the game is a blitz");
+    options.addOption("timeout", null, true, "set the timeout in milliseconds for blitzmode");
+    options.addOption("aiActive", null, true, "enable aiPlayers for the game");
+    options.addOption("aiMode", null, true, "set the algorithme to use for ai");
+    options.addOption("aiDepth", null, true, "set the maximum depth for the AI algorithm");
+    options.addOption(
         "aiIterativeDeepening", null, true, "set IterativeDeepening for AI algorithm");
-    this.options.addOption("aiTimeLimit", null, true, "set the response time for an AI");
-    this.options.addOption("aiHeuristic", null, true, "set the heuristic use for AI algorithm");
-    this.options.addOption("whiteIsAI", null, true, "set if the white player is an AI");
-    this.options.addOption("blackIsAI", null, true, "set if the black player an AI");
+    options.addOption("aiTimeLimit", null, true, "set the response time for an AI");
+    options.addOption("aiHeuristic", null, true, "set the heuristic use for AI algorithm");
+    options.addOption("whiteIsAI", null, true, "set if the white player is an AI");
+    options.addOption("blackIsAI", null, true, "set if the black player an AI");
     this.gameConfig = gameConfig;
     this.setName("set");
   }
@@ -70,27 +57,6 @@ public final class CmdSet extends Cmd {
   }
 
   /**
-   * Provides the autocompleter for configuration keys.
-   *
-   * @return null (Default behavior, could be specialized for parameter keys).
-   */
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return super.getAutoCompleter();
-  }
-
-  /**
-   * Returns the CLI options recognized by this command.
-   *
-   * @return The {@link Options} object.
-   */
-  @Override
-  public Options getOptions() {
-    return this.options;
-  }
-
-  /**
    * Returns the usage and description for the set command.
    *
    * @return A formatted string for the help menu.
@@ -105,9 +71,6 @@ public final class CmdSet extends Cmd {
   /**
    * Executes the configuration update logic.
    *
-   * <p>Parses the provided arguments and updates the {@link GameConfig} object. Provides visual
-   * feedback to the user for each modified parameter.
-   *
    * @param match The current match manager (unused during config update).
    * @return true if the configuration was successfully parsed and updated.
    */
@@ -115,10 +78,9 @@ public final class CmdSet extends Cmd {
   public boolean execute(MatchManager match) {
     CommandLineParser parser = new DefaultParser();
     try {
-      CommandLine cmd = parser.parse(options, args);
+      CommandLine cmd = parser.parse(super.getOptions(), args);
       StringBuilder feedback = new StringBuilder("Configuration updated:\n");
 
-      // --- System Parameters ---
       if (cmd.hasOption("verbose")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("verbose"));
         gameConfig.setVerbose(val);
@@ -130,7 +92,6 @@ public final class CmdSet extends Cmd {
         feedback.append("  - Debug: ").append(val).append("\n");
       }
 
-      // --- Game Parameters ---
       if (cmd.hasOption("blitzmode")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("blitzmode"));
         gameConfig.setBlitzMode(val);
@@ -142,7 +103,6 @@ public final class CmdSet extends Cmd {
         feedback.append("  - Timeout: ").append(val).append("ms\n");
       }
 
-      // --- AI Parameters ---
       if (cmd.hasOption("aiActive")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("aiActive"));
         gameConfig.setAi(val);
@@ -174,15 +134,14 @@ public final class CmdSet extends Cmd {
         feedback.append("  - Heuristic: ").append(val).append("\n");
       }
 
-      // --- Player Assignments ---
       if (cmd.hasOption("whiteIsAI")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("whiteIsAI"));
-        gameConfig.setWhiteAI(val);
+        gameConfig.setWhiteAi(val);
         feedback.append("  - White is AI: ").append(val).append("\n");
       }
       if (cmd.hasOption("blackIsAI")) {
         boolean val = Boolean.parseBoolean(cmd.getOptionValue("blackIsAI"));
-        gameConfig.setBlackAI(val);
+        gameConfig.setBlackAi(val);
         feedback.append("  - Black is AI: ").append(val).append("\n");
       }
 
@@ -203,7 +162,7 @@ public final class CmdSet extends Cmd {
    * Factory method to create an instance of the set command with provided arguments.
    *
    * @param args CLI arguments for configuration.
-   * @return A new {@link CmdSet} instance.
+   * @return A new CmdSet instance.
    */
   @Override
   public CmdAction createNew(String[] args) {

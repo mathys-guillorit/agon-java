@@ -137,7 +137,23 @@ class AgonBoardImplTest {
     BitBoard bPawns = new BitBoard(62);
     AgonBoardImpl boardReloc = new AgonBoardImpl(new BitBoard(), new BitBoard(), wPawns, bPawns);
     boardReloc.applyMove(new Move(64, 63, Color.WHITE, PieceType.WHITE_PAWN));
-    assertTrue(boardReloc.applyMove(new Move(-1, 1, Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(
+        boardReloc.applyMove(
+            new Move(-1, CoordinateMapper.toIndex('G', 1), Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(
+        boardReloc.applyMove(
+            new Move(-1, CoordinateMapper.toIndex('A', 0), Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(boardReloc.applyMove(new Move(-1, -1, Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(boardReloc.applyMove(new Move(-1, 60, Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(
+        boardReloc.applyMove(
+            new Move(-1, CoordinateMapper.toIndex('F', 3), Color.BLACK, PieceType.BLACK_PAWN)));
+    assertFalse(
+        boardReloc.applyMove(
+            new Move(-1, CoordinateMapper.toIndex('A', 11), Color.BLACK, PieceType.BLACK_PAWN)));
+    assertTrue(
+        boardReloc.applyMove(
+            new Move(-1, CoordinateMapper.toIndex('G', 2), Color.BLACK, PieceType.BLACK_PAWN)));
   }
 
   @Test
@@ -221,9 +237,9 @@ class AgonBoardImplTest {
     AgonBoardImpl boardReloc2 = new AgonBoardImpl(wQueen, new BitBoard(), new BitBoard(), bPawns);
     boardReloc2.applyMove(new Move(65, 64, Color.BLACK));
     assertNull(boardReloc2.getPieceAt(63), "La reine blanche devrait être capturée");
-    Move relocationMove2 = new Move(-1, 20, Color.WHITE, PieceType.WHITE_QUEEN);
-    boardReloc2.applyMove(relocationMove2);
-    assertEquals(PieceType.WHITE_QUEEN, boardReloc2.getPieceAt(20));
+    Move relocationMove2 = new Move(-1, 61, Color.WHITE);
+    assertTrue(boardReloc2.applyMove(relocationMove2));
+    assertEquals(PieceType.WHITE_QUEEN, boardReloc2.getPieceAt(61));
     boolean undoResult2 = boardReloc2.undoMove();
     assertTrue(undoResult2, "L'undo doit réussir");
     assertNull(boardReloc2.getPieceAt(20), "La reine ne doit plus être sur le plateau");
@@ -334,7 +350,7 @@ class AgonBoardImplTest {
 
     List<String> textRepresentation = originalBoard.toTextList();
 
-    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation);
+    AgonBoardImpl reconstructedBoard = new AgonBoardImpl(textRepresentation,null);
 
     assertEquals(
         PieceType.WHITE_QUEEN,

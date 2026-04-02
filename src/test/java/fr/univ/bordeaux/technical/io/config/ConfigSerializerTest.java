@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
-import fr.univ.bordeaux.technical.io.config.GameConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,7 +25,7 @@ class ConfigSerializerTest {
     String content = Files.readString(configFile);
 
     assertTrue(content.contains("verbose = false"));
-    assertTrue(content.contains("timeout = 1800"));
+    assertTrue(content.contains("timeout = 30"));
     assertTrue(content.contains("ai_mode = minimax"));
   }
 

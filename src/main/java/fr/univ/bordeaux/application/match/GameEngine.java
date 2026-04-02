@@ -4,18 +4,14 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.UIPromptParser;
+import fr.univ.bordeaux.ui.UiPromptParser;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * The core engine of the Agon application. This class manages the main execution loop. It switches
- * between two states:
- *
- * <ul>
- *   <li><b>Out-of-Match:</b> Where the user interacts with the system via the shell (e.g., help,
- *       load).
- *   <li><b>In-Match:</b> Where the current player (Human or AI) provides moves to progress the
- *       game.
- * </ul>
+ * between Out-of-Match and In-Match states.
  */
 public class GameEngine {
 
@@ -27,6 +23,15 @@ public class GameEngine {
 
   /** The registry containing all available CLI commands. */
   private final AgonRegister<CmdAction> cmds;
+
+  /** Executor for running player actions (Human or AI) asynchronously. */
+  private final ExecutorService playerExecutor =
+      Executors.newSingleThreadExecutor(
+          r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+          });
 
   /**
    * Constructs the game engine with the required UI and command registry.
@@ -47,44 +52,75 @@ public class GameEngine {
    */
   public void start() {
     while (ui.isRunning()) {
-      CmdAction action;
+      CmdAction action = null;
 
       if (this.matchManager == null || this.matchManager.isMatchOver()) {
         String input = ui.getUserInput();
-        if (input == null) continue;
+        if (input == null) {
+          continue;
+        }
 
-        action = UIPromptParser.parse(input, this.cmds, ui);
+        action = UiPromptParser.parse(input, this.cmds, ui);
       } else {
-
         Player p = matchManager.getCurrentPlayer();
-        ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        //ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        matchManager.startTurn();
 
-        action = p.getAction(this.cmds);
+        // On lance la réflexion du joueur dans un thread séparé
+        Future<CmdAction> futureAction = playerExecutor.submit(() -> p.getAction(this.cmds));
+
+        try {
+          // Boucle de surveillance
+          while (!futureAction.isDone()) {
+            if (matchManager.isMatchOver()) {
+              futureAction.cancel(true); // Signal d'interruption (IA ou Humain)
+              break;
+            }
+            Thread.sleep(50);
+          }
+
+          if (futureAction.isDone() && !futureAction.isCancelled()) {
+            action = futureAction.get();
+          }
+        } catch (Exception e) {
+          futureAction.cancel(true);
+        }
       }
 
       if (action != null) {
-
         action.execute(this.matchManager);
 
-        if (matchManager != null) {
-          ui.updateBoard(matchManager.getAgonBoard());
+       /* if (matchManager != null) {
+          ui.onMatchUpdate(matchManager);
         }
-      } else {
-
-        ui.showError("Unknown command. Type 'help' to see available commands.\n");
+      } else if (matchManager != null && matchManager.isMatchOver()) {
+        ui.showMessage("\n[GAME OVER] Match terminé.\n");
+        ui.onMatchUpdate(matchManager);
+      */} else {
+        // Optionnel : message si l'action a été annulée ou est inconnue
+        if (this.matchManager == null || !this.matchManager.isMatchOver()) {
+          ui.showError("Unknown command. Type 'help' to see available commands.\n");
+        }
       }
     }
+    playerExecutor.shutdownNow();
   }
 
   /**
    * Injects a new match manager into the engine.
    *
-   * <p>This is typically called by a "New Game" or "Load" command to transition the engine into the
-   * In-Match state.
-   *
-   * @param matchManager The new {@link MatchManager} instance.
+   * @param matchManager The new MatchManager instance.
    */
   public void setMatchManager(MatchManager matchManager) {
     this.matchManager = matchManager;
+  }
+
+  /**
+   * Returns the current match manager.
+   *
+   * @return The MatchManager instance, or null if no match is active.
+   */
+  public MatchManager getMatchManager() {
+    return this.matchManager;
   }
 }

@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.agoncore.agonelements;
 
 /**
- * Represents the different types of pieces available in the Agon game. *
+ * Represents the different types of pieces available in the Agon game.
  *
  * <p>Each piece type is defined by its owning color and its rank (Queen or Pawn). This enum is used
  * throughout the board logic to simplify piece identification and movement rules without manual
@@ -17,10 +17,10 @@ public enum PieceType {
   /** A black pawn piece. */
   BLACK_PAWN(Color.BLACK, false);
 
-  /** The color of piece */
+  /** The color of piece. */
   private final Color color;
 
-  /** Boolean to know if the piece is a queen */
+  /** Boolean to know if the piece is a queen. */
   private final boolean isQueen;
 
   /**
@@ -61,6 +61,12 @@ public enum PieceType {
     return !isQueen;
   }
 
+  /**
+   * Explicit.
+   *
+   * @param color {@link Color}
+   * @return {@link PieceType}
+   */
   public static PieceType getQueen(final Color color) {
     PieceType queenType;
 

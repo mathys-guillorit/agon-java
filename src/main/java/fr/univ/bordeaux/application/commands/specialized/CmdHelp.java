@@ -11,22 +11,11 @@ import org.apache.commons.cli.Option;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 
-/**
- * Command responsible for displaying help information to the user. This command can operate in two
- * modes:
- *
- * <ul>
- *   <li><b>Global Help:</b> Lists all available commands registered in the system.
- *   <li><b>Targeted Help:</b> Provides the specific description and usage of a given command (e.g.,
- *       {@code help load}).
- * </ul>
- */
+/** Command responsible for displaying help information to the user. */
 public final class CmdHelp extends Cmd {
 
-  /** The specific command name for which the user is seeking help (optional). */
   private String commandToHelp = null;
 
-  /** The registry containing all commands available in the application. */
   private AgonRegister<CmdAction> agonRegister;
 
   /**
@@ -40,7 +29,6 @@ public final class CmdHelp extends Cmd {
     super(uictx);
     this.agonRegister = cmds;
 
-    // Dynamically add all registered command names as valid options for the help command
     cmds.getKeys()
         .forEach(
             cmdName -> {
@@ -52,8 +40,7 @@ public final class CmdHelp extends Cmd {
   }
 
   /**
-   * Internal constructor used by {@link #createNew(String[])} to create an executable instance with
-   * a specific target.
+   * Internal constructor used to create an executable instance with a specific target.
    *
    * @param uictx The user interface context.
    * @param cmds The command registry.
@@ -65,12 +52,9 @@ public final class CmdHelp extends Cmd {
   }
 
   /**
-   * Provides a custom {@link Completer} for the help command.
+   * Provides a custom Completer for the help command.
    *
-   * <p>This completer suggests names of other registered commands to assist the user in typing
-   * {@code help [command]}.
-   *
-   * @return A non-null JLine {@link Completer}.
+   * @return A non-null JLine Completer.
    */
   @Nonnull
   @Override
@@ -86,9 +70,6 @@ public final class CmdHelp extends Cmd {
   /**
    * Executes the help logic.
    *
-   * <p>If {@code commandToHelp} is set, it attempts to find and display that specific command's
-   * description. Otherwise, it iterates through the registry to list all available commands.
-   *
    * @param match The current match manager (unused by the help command).
    * @return Always true, as help display is always considered successful.
    */
@@ -96,7 +77,6 @@ public final class CmdHelp extends Cmd {
   public boolean execute(MatchManager match) {
     GameUserInterface ctx = this.getCtx();
 
-    // CASE 1: Targeted Help (e.g., help show)
     if (commandToHelp != null) {
       Optional<CmdAction> targetCmd = this.agonRegister.get(commandToHelp);
 
@@ -109,14 +89,13 @@ public final class CmdHelp extends Cmd {
       }
     }
 
-    // CASE 2: Global Help
     ctx.showMessage("======= AVAILABLE COMMANDS =======\n");
     for (String name : this.agonRegister.getKeys()) {
       this.agonRegister
           .get(name)
           .ifPresent(
               cmd -> {
-                ctx.showMessage(String.format("  %-12s : %s\n", name, cmd.getDescription()));
+                ctx.showMessage(String.format("  %-8s : %s\n", name, cmd.getDescription()));
               });
     }
     ctx.showMessage("\nType 'help [command]' for detailed instructions (e.g., 'help show').\n");
@@ -126,18 +105,20 @@ public final class CmdHelp extends Cmd {
   /**
    * Provides the short description for the help command itself.
    *
-   * @return An empty string (description is managed via {@code setDesc} in constructor).
+   * @return An empty string.
    */
   @Override
   public String getDescription() {
-    return "";
+    return "Usage: help\n"
+        + "Description: display all commands available and their usage or for a specific command.\n"
+        + "Example: help new";
   }
 
   /**
-   * Factory method to create a new instance of {@code CmdHelp} based on user input.
+   * Factory method to create a new instance of CmdHelp based on user input.
    *
    * @param args The arguments passed after the 'help' keyword.
-   * @return A new {@link CmdAction} targeting either a specific command or global help.
+   * @return A new CmdAction targeting either a specific command or global help.
    */
   @Override
   public CmdAction createNew(String[] args) {

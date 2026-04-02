@@ -1,47 +1,159 @@
 package fr.univ.bordeaux.application.match;
 
-public class GameTimer {
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+/** A timer used to manage player reflection time during a game. */
+public class GameTimer {
   private long remainingTimeMillis;
   private long lastStartTime;
-  private boolean isRunning;
+  private volatile boolean isRunning;
 
-  public GameTimer(long initialTimeMillis) {
-    this.remainingTimeMillis = initialTimeMillis;
+  // Utilisation de ReentrantLock au lieu d'un simple Object
+  private final Lock lock = new ReentrantLock();
+  private final Condition isRunningCondition = lock.newCondition();
+
+  private final Runnable onTimeout;
+  private volatile boolean alive = true;
+
+  public GameTimer(long time, Runnable onTimeout) {
+    if (time < 0) {
+      throw new IllegalArgumentException("Le temps ne peut pas être négatif : " + time);
+    }
+    this.remainingTimeMillis = TimeUnit.MINUTES.toMillis(time);
     this.isRunning = false;
+    this.onTimeout = onTimeout;
+    Thread timerThread = new Thread(this::runTimer);
+    timerThread.setDaemon(true);
+    timerThread.start();
   }
 
-  /** Lance ou reprend le chronomètre. */
+  /**
+   * Test Constructor
+   * @param time
+   * @param unit
+   * @param onTimeout
+   */
+  GameTimer(long time, TimeUnit unit, Runnable onTimeout) {
+    if (time < 0) {
+      throw new IllegalArgumentException("Le temps ne peut pas être négatif : " + time);
+    }
+    this.remainingTimeMillis = unit.toMillis(time);
+    this.isRunning = false;
+    this.onTimeout = onTimeout;
+
+    Thread timerThread = new Thread(this::runTimer);
+    timerThread.setDaemon(true);
+    timerThread.setName("GameTimer-Custom-Thread");
+    timerThread.start();
+  }
+
+  private void runTimer() {
+    try {
+      while (alive) {
+        // --- PHASE 1 : ATTENTE (SOUS VERROU) ---
+        lock.lock();
+        try {
+          while (!isRunning && alive) {
+            // await() relâche le lock et endort le thread proprement
+            isRunningCondition.await();
+          }
+        } finally {
+          lock.unlock(); // On relâche dès qu'on sait qu'on doit bosser
+        }
+
+        if (!alive) break;
+
+        // --- PHASE 2 : CALCUL ET SLEEP (HORS VERROU) ---
+        // Ici, le lock est LIBRE, donc le thread principal peut appeler stop() sans attendre
+        long currentRemaining = getRemainingTimeMillis();
+
+        if (currentRemaining <= 0) {
+          handleTimeout();
+        } else {
+          // System.out.println("Reste: " + currentRemaining / 1000 + "s");
+          Thread.sleep(100);
+        }
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
   public void start() {
-    if (!isRunning) {
-      this.lastStartTime = System.currentTimeMillis();
-      this.isRunning = true;
+    lock.lock();
+    try {
+      if (!isRunning && remainingTimeMillis > 0) {
+        this.lastStartTime = System.currentTimeMillis();
+        this.isRunning = true;
+        isRunningCondition.signal();
+      }
+    } finally {
+      lock.unlock();
     }
   }
 
-  /** Arrête le chronomètre et déduit le temps écoulé. */
   public void stop() {
-    if (isRunning) {
-      long elapsed = System.currentTimeMillis() - lastStartTime;
-      this.remainingTimeMillis -= elapsed;
-      this.isRunning = false;
+    lock.lock();
+    try {
+      if (isRunning) {
+
+        this.remainingTimeMillis = getRemainingTimeMillis();
+        this.isRunning = false;
+      }
+    } finally {
+      lock.unlock();
     }
   }
 
-  /** Vérifie si le temps est écoulé (même pendant que le chrono tourne). */
-  public boolean isExpired() {
-    if (isRunning) {
-      long currentElapsed = System.currentTimeMillis() - lastStartTime;
-      return (remainingTimeMillis - currentElapsed) <= 0;
+  /** Gère l'expiration du temps de manière synchronisée. */
+  private void handleTimeout() {
+    lock.lock();
+    try {
+      if (isRunning) {
+        this.remainingTimeMillis = 0;
+        this.isRunning = false;
+        if (onTimeout != null) {
+          onTimeout.run();
+        }
+      }
+    } finally {
+      lock.unlock();
     }
-    return remainingTimeMillis <= 0;
   }
 
   public long getRemainingTimeMillis() {
     if (isRunning) {
-      long currentElapsed = System.currentTimeMillis() - lastStartTime;
-      return Math.max(0, remainingTimeMillis - currentElapsed);
+      long elapsedSinceLastStart = System.currentTimeMillis() - lastStartTime;
+      return Math.max(0, remainingTimeMillis - elapsedSinceLastStart);
     }
-    return Math.max(0, remainingTimeMillis);
+    return remainingTimeMillis;
+  }
+
+  public void kill() {
+    alive = false;
+    lock.lock();
+    try {
+      isRunningCondition.signal();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  public boolean isExpired() {
+    return getRemainingTimeMillis() <= 0;
+  }
+
+  public String getFormattedRemainingTime() {
+    long totalSeconds = getRemainingTimeMillis() / 1000;
+    long minutes = totalSeconds / 60;
+    long seconds = totalSeconds % 60;
+    return String.format("%02d:%02d", minutes, seconds);
+  }
+
+  public boolean isRunning() {
+    return isRunning;
   }
 }

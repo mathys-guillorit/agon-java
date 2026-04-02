@@ -23,8 +23,9 @@ public class CoordinateMapper {
    * @return The corresponding 0-indexed position in the 1D bitboard array.
    */
   public static int toIndex(char letter, int col) {
-    int Base = 'A';
-    return (((int) letter - Base) * (11)) + (col - 1);
+    if (letter > 'K' || letter < 'A' || col > 11 || col < 1) return -1;
+    int base = 'A';
+    return (((int) letter - base) * (11)) + (col - 1);
   }
 
   /**
@@ -47,7 +48,9 @@ public class CoordinateMapper {
    * @return The coordinate string in lowercase (as per ABA-pro notation).
    */
   public static String toCoordinate(int index) {
-    if (index < 0) return "reloc";
+    if (index < 0) {
+      return "reloc";
+    }
 
     int rowOffset = index / 11;
     int col = (index % 11) + 1;

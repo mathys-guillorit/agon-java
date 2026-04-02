@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.application.commands;
 
+import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.cli.LoadLocalFile;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
 import java.io.IOException;
 import javax.annotation.Nonnull;

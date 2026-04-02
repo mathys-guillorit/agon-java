@@ -60,7 +60,8 @@ public class CmdHintTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     // 2. Exécution de la commande
     CmdAction cmdHint = cmds.get("hint").get().createNew(null);

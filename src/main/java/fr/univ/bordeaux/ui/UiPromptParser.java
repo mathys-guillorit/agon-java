@@ -22,7 +22,7 @@ import org.jline.reader.impl.DefaultParser;
  *       relocation (e.g., "a1") using Regex patterns.
  * </ol>
  */
-public class UIPromptParser {
+public class UiPromptParser {
 
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
   private static final Parser parser = new DefaultParser();

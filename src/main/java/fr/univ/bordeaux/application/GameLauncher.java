@@ -6,6 +6,7 @@ import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
 import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
+import fr.univ.bordeaux.application.commands.specialized.CmdPause;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
 import fr.univ.bordeaux.application.commands.specialized.CmdSave;
@@ -22,7 +23,13 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -42,7 +49,6 @@ import org.jline.terminal.TerminalBuilder;
  *   <li>Initializing the appropriate User Interface (CLI or GUI).
  * </ul>
  *
- * @author L'équipe de développement (ou ton nom)
  * @version 1.0
  * @see GameConfig
  */
@@ -66,8 +72,8 @@ public class GameLauncher {
   /**
    * Configures the available command-line options.
    *
-   * <p>This method defines flags (like -h, -v) and complex arguments (like -t TIME, -a COLOR). It
-   * uses {@link Option.Builder} for complex options to ensure clarity.
+   * <p>This method defines flags (like -h, -v). It uses {@link Option.Builder} for complex options
+   * to ensure clarity.
    */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
@@ -75,25 +81,8 @@ public class GameLauncher {
     options.addOption("v", "verbose", false, "Enables verbose output.");
     options.addOption("d", "debug", false, "Enables debug mode.");
     options.addOption("g", "gui", false, "Starts the graphical interface.");
-    options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
     options.addOption(
         "c", "contest", false, "Launches contest mode (reads file and outputs move).");
-    options.addOption("p", "placement", false, "Manual placement of guards.");
-    options.addOption(
-        Option.builder("t")
-            .longOpt("time")
-            .hasArg(true)
-            .argName("TIME")
-            .desc("Time limit in minutes for blitz mode (default: 30).")
-            .build());
-    options.addOption(
-        Option.builder("a")
-            .longOpt("ai")
-            .hasArg(true)
-            .optionalArg(true)
-            .argName("COLOR")
-            .desc("Replaces a player with AI (Colors: B, W, A).")
-            .build());
   }
 
   /**
@@ -109,11 +98,13 @@ public class GameLauncher {
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
     CommandLineParser parser = new DefaultParser();
+    AgonRegister<CmdAction> cmds = new AgonRegister<>();
     try {
       CommandLine cmd = parser.parse(options, args);
 
       if (cmd.hasOption("h")) {
-        printHelp();
+        this.fillRegister(cmds, null, null, null);
+        printHelp(cmds);
         return;
       }
       if (cmd.hasOption("V")) {
@@ -128,51 +119,6 @@ public class GameLauncher {
         config.setDebug(true);
         System.out.println("[DEBUG] Debug mode enabled.");
       }
-      if (cmd.hasOption("p")) {
-        System.out.println("[INFO] Manual guard placement detected.");
-        config.setManualPlacement(true);
-      }
-      if (cmd.hasOption("t") && !cmd.hasOption("b")) {
-        System.out.println(
-            "[WARNING] The '-t' / '--time' option is ignored because blitz mode (-b) is not active");
-      } else if (cmd.hasOption("b")) {
-        config.setBlitzMode(true);
-        int time = 30;
-        if (cmd.hasOption("t")) {
-          try {
-            time = Integer.parseInt(cmd.getOptionValue("t"));
-          } catch (NumberFormatException e) {
-            System.err.println("[ERROR] Invalid time format. Using default 30 mins.");
-          }
-        }
-        config.setTimeout(time * 60);
-        System.out.println("[INFO] Blitz mode activated: " + time + " minutes");
-      }
-      if (cmd.hasOption("c")) {
-        System.out.println("[INFO] Contest mode detected.");
-        // TODO: Uncomment when GameConfig has setContestMode()
-      }
-      if (cmd.hasOption("a")) {
-        config.setAi(true);
-        String color = cmd.getOptionValue("a", "DEFAULT");
-        if ("W".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(false);
-          System.out.println("[INFO] AI configured to play White.");
-        } else if ("B".equalsIgnoreCase(color)) {
-          config.setWhiteAI(false);
-          config.setBlackAI(true);
-          System.out.println("[INFO] AI configured to play Black.");
-        } else if ("A".equalsIgnoreCase(color)) {
-          config.setWhiteAI(true);
-          config.setBlackAI(true);
-          System.out.println("[INFO] AI configured to play Both sides.");
-        } else {
-          config.setWhiteAi(false);
-          config.setBlackAi(true);
-          System.out.println("[INFO] AI defaults configuration (Black).");
-        }
-      }
       String[] fileArg = cmd.getArgs();
       String filePath = null;
       if (fileArg.length > 0) {
@@ -182,10 +128,6 @@ public class GameLauncher {
           System.err.println(
               "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
           return;
-        }
-        if (cmd.hasOption("p")) {
-          System.out.println(
-              "[WARNING] Option '-p' (Manual Placement) is ignored because a save file is loaded.");
         }
         if (cmd.hasOption("c")) {
           System.out.println("[INFO] Contest mode detected.");
@@ -200,13 +142,14 @@ public class GameLauncher {
 
       } else if (cmd.hasOption("c")) {
         System.err.println("[ERROR] Contest mode requires a file argument.");
-        printHelp();
+        this.fillRegister(cmds, null, null, null);
+        printHelp(cmds);
         return;
       }
-      startGame(config, cmd, filePath);
+      startGame(config, cmd, cmds, filePath);
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
-      printHelp();
+      printHelp(cmds);
     }
   }
 
@@ -254,10 +197,10 @@ public class GameLauncher {
    * @param cmd The parsed command line, used to check for the GUI flag (-g).
    * @param filePathToLoad The path to the save file to load automatically, or null if none.
    */
-  private void startGame(GameConfig config, CommandLine cmd, String filePathToLoad) {
+  private void startGame(
+      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad) {
     System.out.println("Starting Agon Shell...");
-    AgonRegister<CmdAction> cmds = new AgonRegister<>();
-    GameUserInterface userInterface;
+    AgonShell userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
     } else {
@@ -275,28 +218,9 @@ public class GameLauncher {
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
         userInterface = new AgonShell(terminal, reader, cmds);
-        shellRef[0] = (AgonShell) userInterface;
+        shellRef[0] = userInterface;
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
-
-        cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-
-        cmds.register("quit", new CmdQuit(userInterface));
-
-        cmds.register("hint", new CmdHint(userInterface));
-
-        cmds.register("show", new CmdShow(userInterface, config));
-
-        cmds.register("load", new CmdLoad(userInterface));
-
-        cmds.register("save", new CmdSave(userInterface));
-
-        cmds.register("set", new CmdSet(userInterface, config));
-
-        cmds.register("undo", new CmdUndo(userInterface));
-
-        cmds.register("redo", new CmdRedo(userInterface));
-
-        cmds.register("help", new CmdHelp(userInterface, cmds));
+        this.fillRegister(cmds, userInterface, config, gameEngine);
         /*if (filePathToLoad != null) {
           loadCmd.execute(null);
         }*/
@@ -308,20 +232,45 @@ public class GameLauncher {
     }
   }
 
+  private void fillRegister(
+      AgonRegister<CmdAction> cmds, GameUserInterface ui, GameConfig config, GameEngine engine) {
+    cmds.register("new", new CmdCreate(ui, config, engine));
+    cmds.register("quit", new CmdQuit(ui));
+    cmds.register("hint", new CmdHint(ui));
+    cmds.register("show", new CmdShow(ui, config));
+    cmds.register("load", new CmdLoad(ui, engine));
+    cmds.register("save", new CmdSave(ui));
+    cmds.register("set", new CmdSet(ui, config));
+    cmds.register("undo", new CmdUndo(ui));
+    cmds.register("redo", new CmdRedo(ui));
+    cmds.register("help", new CmdHelp(ui, cmds));
+    cmds.register("pause", new CmdPause(ui));
+  }
+
   /**
    * Prints the CLI help message.
    *
    * <p>Attempts to read a custom "helpGameLauncher.txt" file. If not found, falls back to the
    * standard Apache CLI formatter.
    */
-  private void printHelp() {
-    try {
-      System.out.println(getHelpContent());
-    } catch (IOException e) {
-      System.err.println("[WARNING] agonShellMenu.txt not found. Displaying default help:");
-      HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("agon [OPTIONS] [FILE]", "\nAgon Game\n", this.options, "", true);
-    }
+  private void printHelp(AgonRegister<CmdAction> cmds) {
+    HelpFormatter formatter = new HelpFormatter();
+    formatter.printHelp("agon [OPTIONS]", options);
+    System.out.println("\nCOMMANDES DISPONIBLES DANS LE SHELL :");
+    cmds.getKeys()
+        .forEach(
+            name -> {
+              cmds.get(name)
+                  .ifPresent(
+                      cmd -> {
+                        System.out.printf("  %-12s : %s%n", name, cmd.getDescription());
+                      });
+            });
+    System.out.println(
+        "\nHow to move your pieces : \n\n[letter1][col1][letter2][col2] to move your piece from letter1-col1 to letter2-col2\n"
+            + "if you have a piece to relocate you have to enter the tile where you want to put it [letter][col]\n"
+            + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
+    ;
   }
 
   /**
@@ -349,7 +298,7 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getHelpContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/helpGameLauncher.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/helpGameLauncher.txt").getContent();
   }
 
   /**
@@ -363,6 +312,6 @@ public class GameLauncher {
    * @throws IOException If the file is missing or cannot be accessed.
    */
   protected String getVersionContent() throws IOException {
-    return new LoadLocalFile("cmdsInformations/version.txt").getContent();
+    return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 }
