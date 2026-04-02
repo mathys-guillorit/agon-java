@@ -23,18 +23,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Classe de test pour GameViewController (Objectif > 95% de couverture). Utilise une recherche
- * récursive pour simuler l'écriture et garantir la stabilité des dialogues.
- */
 public class GameViewControllerTest {
 
   private GameViewController controller;
   private FakeAgonGui fakeGui;
 
-  // =================================================================================
-  // FAKE CLASS
-  // =================================================================================
   private static class FakeAgonGui extends AgonGui {
     public final List<String> sentCommands = new ArrayList<>();
 
@@ -47,10 +40,6 @@ public class GameViewControllerTest {
       sentCommands.add(command);
     }
   }
-
-  // =================================================================================
-  // INITIALISATION ET UTILITAIRES
-  // =================================================================================
 
   @BeforeAll
   static void initJFX() throws InterruptedException {
@@ -93,7 +82,7 @@ public class GameViewControllerTest {
           latch.countDown();
         });
     if (!latch.await(5, TimeUnit.SECONDS)) {
-      fail("Timeout d'attente pour l'action JavaFX !");
+      fail("Timeout for JavaFX action!");
     }
   }
 
@@ -119,7 +108,6 @@ public class GameViewControllerTest {
     return null;
   }
 
-  /** Sniper ciblé et sécurisé : Cherche la boîte de dialogue, écrit le texte et clique. */
   private void interactWithNextDialog(String inputText, boolean clickCancel) {
     new Thread(
             () -> {
@@ -195,10 +183,6 @@ public class GameViewControllerTest {
         .start();
   }
 
-  // =================================================================================
-  // TESTS DES NOUVELLES BRANCHES (AGON_GUI == NULL)
-  // =================================================================================
-
   @Test
   void testNullAgonGuiBranches() {
     controller.setAgonGUI(null);
@@ -215,10 +199,6 @@ public class GameViewControllerTest {
         });
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
-
-  // =================================================================================
-  // TESTS DES BOÎTES DE DIALOGUES
-  // =================================================================================
 
   @Test
   void testSaveGame_Branches() throws InterruptedException {
@@ -255,8 +235,6 @@ public class GameViewControllerTest {
     interactWithNextDialog("   ", false);
     runAndWait(() -> controller.loadGame());
 
-    // CORRECTION ICI : Accepte les deux comportements (ne rien envoyer OU envoyer load
-    // default_save)
     boolean sentDefaultLoad = fakeGui.sentCommands.contains("load default_save");
     boolean sentNothing = fakeGui.sentCommands.stream().noneMatch(cmd -> cmd.startsWith("load"));
     assertTrue(
@@ -374,7 +352,7 @@ public class GameViewControllerTest {
     runAndWait(() -> controller.routeMessage("filename"));
     Thread.sleep(300);
 
-    interactWithNextDialog("ma_sauvegarde", false);
+    interactWithNextDialog("my_save", false);
     runAndWait(() -> controller.routeMessage("filename"));
     Thread.sleep(300);
 
@@ -387,10 +365,6 @@ public class GameViewControllerTest {
 
     assertTrue(true);
   }
-
-  // =================================================================================
-  // TESTS DES MÉTHODES SIMPLES
-  // =================================================================================
 
   @Test
   void testInitializeAndMoveRequestListener() {
