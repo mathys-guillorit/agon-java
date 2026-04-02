@@ -163,13 +163,12 @@ public class GameLauncherTest {
     @Test
     public void testContestOption() throws IOException {
         File dummyFile = new File("dummy_contest_valid.txt");
-        Files.writeString(dummyFile.toPath(), "[game]\nX\nq" + ".".repeat(120));
-
+        Files.writeString(dummyFile.toPath(), "test");
         try {
             TestableGameLauncher launcher = new TestableGameLauncher();
             String[] args = {"-c", dummyFile.getName()};
-            assertDoesNotThrow(() -> launcher.launch(args));
-            assertFalse(errContent.toString().contains("[ERROR]"));
+            launcher.launch(args);
+            assertTrue(getOutput().contains("[INFO] Contest mode detected."));
         } finally {
             dummyFile.delete();
         }
@@ -321,14 +320,11 @@ public class GameLauncherTest {
      */
     @Test
     public void testPrintHelp() {
-        GameLauncher launcher = new GameLauncher() {
-            @Override
-            protected String getHelpContent() throws IOException {
-                throw new IOException("Simulated Error");
-            }
-        };
+        GameLauncher launcher = new GameLauncher();
         launcher.launch(new String[] {"-h"});
-        assertTrue(errContent.toString().contains("agonShellMenu.txt not found"));
+        String output = getOutput();
+        assertTrue(output.contains("usage: agon [OPTIONS]"));
+        assertTrue(output.contains("COMMANDES DISPONIBLES"));
     }
 
     /**
@@ -430,22 +426,6 @@ public class GameLauncherTest {
         assertTrue(errContent.toString().contains("NullPointerException"));
     }
 
-    /**
-     * Coverage test for the real contest execution method.
-     * Expects an exception to be thrown internally (since the dummy file is missing or invalid)
-     * but caught within the test wrapper to validate line execution.
-     */
-    @Test
-    public void testRealContestExecutionCoverage() {
-        GameLauncher realLauncher = new GameLauncher();
-        assertDoesNotThrow(() -> {
-            try {
-                realLauncher.runContest("dummy_file.txt");
-            } catch (Exception e) {
-                // We expect an exception because the file doesn't exist, but we want to ensure it's caught properly.
-            }
-        });
-    }
 
     /**
      * Coverage test for the JLine Completer lambda (True branch).

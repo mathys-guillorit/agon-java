@@ -138,7 +138,7 @@ public class GameLauncher {
         printHelp(cmds);
         return;
       }
-      startGame(config, cmd, cmds, filePath);
+      startGame(config, cmd, filePath);
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
       printHelp(cmds);
@@ -206,10 +206,11 @@ public class GameLauncher {
               AgonGui gui = new AgonGui(config);
               userInterface = (GameUserInterface) gui;
               gameEngine = new GameEngine(userInterface, cmds);
+              this.fillRegister(cmds, userInterface, config, gameEngine);
               gui.start();
       } else {
         System.out.println("[INFO] Starting Agon Shell...");
-              }
+
         final AgonShell[] shellRef = new AgonShell[1];
 
         Completer strategyCompleter = createCompleter(shellRef);
@@ -224,8 +225,8 @@ public class GameLauncher {
         /*if (filePathToLoad != null) {
           loadCmd.execute(null);
         }*/
-
-        gameEngine.start();
+      }
+      gameEngine.start();
       } catch (Exception e) {
         e.printStackTrace();
       }

@@ -31,6 +31,7 @@
                 <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem mnemonicParsing="false" onAction="#pauseGame" text="Pause"/>
                 <MenuItem mnemonicParsing="false" onAction="#requestHint" text="Hint"/>
+                <MenuItem mnemonicParsing="false" onAction="#showHistory" text="History"/>
             </Menu>
 
             <Menu mnemonicParsing="false">

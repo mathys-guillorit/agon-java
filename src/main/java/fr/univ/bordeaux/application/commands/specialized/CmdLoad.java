@@ -6,14 +6,13 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.match.GameEngine;
-import fr.univ.bordeaux.application.match.Match;
-import fr.univ.bordeaux.application.match.MatchFactory;
-import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.*;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
 import fr.univ.bordeaux.technical.io.storage.GameSaveParser;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
+import fr.univ.bordeaux.ui.ObservableMatch;
 import org.apache.commons.cli.Options;
 
 /** Command responsible for loading a saved game state from a file. */
@@ -102,6 +101,12 @@ public final class CmdLoad extends Cmd {
 
       Match newMatch =
           MatchFactory.createMatch(loadedConfig, super.getCtx(), loadedBoard, playerTurn);
+        if (newMatch instanceof ObservableMatch obsMatch) {
+            obsMatch.setObserver((MatchObserver) super.getCtx());
+        }
+        if (newMatch instanceof ReadOnlyMatch roMatch) {
+            ((MatchObserver) super.getCtx()).onMatchUpdate(roMatch);
+        }
       gameEngine.setMatchManager(newMatch);
       super.getCtx().showMessage("Game successfully loaded from: " + this.filename + "\n");
       return true;

@@ -3,11 +3,20 @@ package fr.univ.bordeaux.ui.gui;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.match.BlitzMatch;
+import fr.univ.bordeaux.application.match.MoveDtO;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
-import fr.univ.bordeaux.ui.AbstractGameUi;
+import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.util.Duration;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * This class acts as the bridge between the core game engine and the JavaFX visual components.
  * It handles the command queue, updates the graphical board state, and manages UI popups.
  */
-public class AgonGui extends AbstractGameUi {
+public class AgonGui implements GameUserInterface, MatchObserver {
 
     private AgonBoardImpl board;
     private final AtomicBoolean debugMode = new AtomicBoolean(false);
@@ -27,6 +36,9 @@ public class AgonGui extends AbstractGameUi {
     private boolean verbose = false;
     private final GameConfig config;
     private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
+    private ReadOnlyMatch currentMatch;
+    private Timeline blitzTimeline;
+
 
     /**
      * Constructs a new AgonGui instance.
@@ -65,6 +77,24 @@ public class AgonGui extends AbstractGameUi {
         }
     }
 
+    @Override
+    public void displayHistory(List<MoveDtO> moves) {
+        if (moves.isEmpty()) {
+            showInfo("The history is currently empty.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("--- Move History ---\n\n");
+        for (int i = 0; i < moves.size(); i++) {
+            MoveDtO m = moves.get(i);
+            sb.append(String.format("%d. %s : %s -> %s\n",
+                    (i / 2) + 1,
+                    (i % 2 == 0 ? "White" : "Black"),
+                    m.from(), m.to()));
+        }
+        showInfo(sb.toString());
+    }
+
     /**
      * Binds the core game board to the UI.
      *
@@ -80,10 +110,9 @@ public class AgonGui extends AbstractGameUi {
     public void start() {
         AgonApp.setBoard(this.board);
         AgonApp.setGui(this);
-        new Thread(() -> javafx.application.Application.launch(AgonApp.class)).start();
+        new Thread(() -> Application.launch(AgonApp.class)).start();
     }
 
-    @Override
     public void updateBoard(RestrictedAgonBoard agonBoard) {
         GameViewController controller = AgonApp.getController();
         if (controller != null && controller.getHexCanvas() != null) {
@@ -147,7 +176,41 @@ public class AgonGui extends AbstractGameUi {
     @Override
     public void quit() {
         running.set(false);
-        Platform.exit();
+
+        String cp = System.getProperty("java.class.path").toLowerCase();
+        if (!cp.contains("junit") && !cp.contains("surefire")) {
+            Platform.exit();
+            System.exit(0);
+        }
+    }
+
+    @Override
+    public void onMatchUpdate(ReadOnlyMatch match) {
+        this.currentMatch = match;
+        if (match != null) {
+            updateBoard((RestrictedAgonBoard) match.getAgonBoard());
+
+            if (match.isMatchOver()) {
+                if (blitzTimeline != null) blitzTimeline.stop();
+                showInfo("MATCH OVER! Winner: " + (match.getWinner() != null ? match.getWinner().getColor() : "None"));
+            } else {
+                updateStatusMessage();
+                if (match instanceof BlitzMatch && blitzTimeline == null) {
+                    blitzTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateStatusMessage()));
+                    blitzTimeline.setCycleCount(Timeline.INDEFINITE);
+                    blitzTimeline.play();
+                }
+            }
+        }
+    }
+
+    private void updateStatusMessage() {
+        if (currentMatch == null || currentMatch.isMatchOver()) return;
+        StringBuilder sb = new StringBuilder("Current Player: " + currentMatch.getCurrentPlayer().getColor());
+        if (currentMatch instanceof BlitzMatch blitzMatch) {
+            sb.append("   |   Time left: ").append(blitzMatch.getRemainingTime());
+        }
+        showMessage(sb.toString());
     }
 
     @Override

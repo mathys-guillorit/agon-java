@@ -87,10 +87,48 @@ public class GameViewController {
      */
     public void routeMessage(String message) {
         if (message == null) return;
-        if (message.contains("Current Player") || message.contains(">>")) {
+        String lowerMsg = message.toLowerCase();
+        if (lowerMsg.contains("current player") || lowerMsg.contains(">>")) {
             updateMessage(message);
+        }
+        else if (lowerMsg.contains("save the game before quitting")) {
+            promptYesNo("save the game before quitting ?");
+        } else if (lowerMsg.contains("filename") || lowerMsg.contains("nom du fichier")) {
+            promptFilename("Enter the name of the save file :");
         } else {
             showInfo(message);
+        }
+    }
+
+    private void promptYesNo(String msg) {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Quit the Game");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+
+        ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
+        alert.getButtonTypes().setAll(buttonYes, buttonNo);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == buttonYes) {
+            if (agonGui != null) agonGui.sendCommand("y");
+        } else {
+            if (agonGui != null) agonGui.sendCommand("n");
+        }
+    }
+
+    private void promptFilename(String msg) {
+        TextInputDialog dialog = new TextInputDialog("");
+        dialog.setTitle("Save");
+        dialog.setHeaderText(null);
+        dialog.setContentText(msg);
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent() && !result.get().trim().isEmpty()) {
+            if (agonGui != null) agonGui.sendCommand(result.get().trim());
+        } else {
+            if (agonGui != null) agonGui.sendCommand("default_save");
         }
     }
 
@@ -188,19 +226,20 @@ public class GameViewController {
             if (dialogButton == createButtonType) {
                 StringBuilder cmd = new StringBuilder("new");
 
-                boolean p1IsAi = p1Type.getValue().equals("AI");
-                boolean p2IsAi = p2Type.getValue().equals("AI");
-                String color = p1Color.getValue().toLowerCase();
+                String p1ColorStr = p1Color.getValue().toLowerCase();
+                String p2ColorStr = p1ColorStr.equals("white") ? "black" : "white";
 
-                cmd.append(" -p1Ia ").append(p1IsAi);
-                cmd.append(" -p2Ia ").append(p2IsAi);
-                cmd.append(" -p1Color ").append(color);
+                if (p1Type.getValue().equals("AI")) {
+                    cmd.append(" --ai ").append(p1ColorStr);
+                }
+                if (p2Type.getValue().equals("AI")) {
+                    cmd.append(" --ai ").append(p2ColorStr);
+                }
+
+                cmd.append(" --player1Color ").append(p1ColorStr);
 
                 if (blitzCheck.isSelected()) {
-                    cmd.append(" -b true");
-                    cmd.append(" -t ").append(timeSpinner.getValue());
-                } else {
-                    cmd.append(" -b false");
+                    cmd.append(" --blitz --time ").append(timeSpinner.getValue());
                 }
 
                 return cmd.toString();
@@ -231,14 +270,34 @@ public class GameViewController {
     @FXML
     public void saveGame() {
         if (agonGui != null) {
-            agonGui.sendCommand("save");
+            TextInputDialog dialog = new TextInputDialog("");
+            dialog.setTitle("Save");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Enter the name of the game you want to save :");
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()) {
+                String filename = result.get().trim();
+                if (filename.isEmpty()) {
+                    filename = "default_save";
+                }
+                agonGui.sendCommand("save " + filename);
+            }
         }
     }
 
     @FXML
     public void loadGame() {
         if (agonGui != null) {
-            agonGui.sendCommand("load");
+            TextInputDialog dialog = new TextInputDialog("");
+            dialog.setTitle("Load a Game");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Enter the name of the game you want to load :");
+
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent() && !result.get().trim().isEmpty()) {
+                agonGui.sendCommand("load " + result.get().trim());
+            }
         }
     }
 
@@ -275,16 +334,20 @@ public class GameViewController {
 
     @FXML
     public void showConfig() {
-        if (agonGui != null && agonGui.getConfig() != null) {
-            String configText = agonGui.getConfig().toString();
-            showInfo("Current configuration:\n\n" + configText);
-        } else {
-            showInfo("The configuration is not loaded yet.");
+        if (agonGui != null) {
+            agonGui.sendCommand("show -configuration");
         }
     }
 
     @FXML
     public void showVersion() {
         showInfo("Agon Game - GUI Version");
+    }
+
+    @FXML
+    public void showHistory() {
+        if (agonGui != null) {
+            agonGui.sendCommand("show -history");
+        }
     }
 }
