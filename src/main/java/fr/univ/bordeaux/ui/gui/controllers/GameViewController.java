@@ -2,6 +2,8 @@ package fr.univ.bordeaux.ui.gui.controllers;
 
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -9,345 +11,341 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-
 /**
  * The main JavaFX Controller handling interactions on the game board screen.
- * <p>
- * This class binds the visual FXML elements to the logic and sends interactions
- * to the {@link AgonGui} engine wrapper.
+ *
+ * <p>This class binds the visual FXML elements to the logic and sends interactions to the {@link
+ * AgonGui} engine wrapper.
  */
 public class GameViewController {
 
-    @FXML
-    private StackPane boardContainer;
+  @FXML private StackPane boardContainer;
 
-    @FXML
-    private Label messageLabel;
+  @FXML private Label messageLabel;
 
-    private AgonGui agonGui;
+  private AgonGui agonGui;
 
-    private HexagonCanvas hexCanvas;
+  private HexagonCanvas hexCanvas;
 
-    /**
-     * Injects the underlying GUI controller.
-     *
-     * @param agonGui The AgonGui instance managing the game state.
-     */
-    public void setAgonGUI(AgonGui agonGui) {
-        this.agonGui = agonGui;
-    }
+  /**
+   * Injects the underlying GUI controller.
+   *
+   * @param agonGui The AgonGui instance managing the game state.
+   */
+  public void setAgonGUI(AgonGui agonGui) {
+    this.agonGui = agonGui;
+  }
 
-    /**
-     * Returns the canvas currently managing the board rendering.
-     *
-     * @return The active HexagonCanvas.
-     */
-    public HexagonCanvas getHexCanvas() {
-        return this.hexCanvas;
-    }
+  /**
+   * Returns the canvas currently managing the board rendering.
+   *
+   * @return The active HexagonCanvas.
+   */
+  public HexagonCanvas getHexCanvas() {
+    return this.hexCanvas;
+  }
 
-    /**
-     * Initializes the JavaFX controller.
-     * Sets up the canvas, binds dimensions, and links the resizing listener.
-     */
-    @FXML
-    public void initialize() {
-        hexCanvas = new HexagonCanvas();
-        hexCanvas.setMoveRequestListener(move -> {;
-            if (agonGui != null) {
-                agonGui.sendCommand(move);
-            }
+  /**
+   * Initializes the JavaFX controller. Sets up the canvas, binds dimensions, and links the resizing
+   * listener.
+   */
+  @FXML
+  public void initialize() {
+    hexCanvas = new HexagonCanvas();
+    hexCanvas.setMoveRequestListener(
+        move -> {
+          ;
+          if (agonGui != null) {
+            agonGui.sendCommand(move);
+          }
         });
-        boardContainer.getChildren().add(hexCanvas);
-        hexCanvas.widthProperty().bind(boardContainer.widthProperty());
-        hexCanvas.heightProperty().bind(boardContainer.heightProperty());
-        hexCanvas.widthProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
-        hexCanvas.heightProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
+    boardContainer.getChildren().add(hexCanvas);
+    hexCanvas.widthProperty().bind(boardContainer.widthProperty());
+    hexCanvas.heightProperty().bind(boardContainer.heightProperty());
+    hexCanvas.widthProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
+    hexCanvas.heightProperty().addListener((obs, oldVal, newVal) -> hexCanvas.draw());
+  }
+
+  /**
+   * Updates the status message displayed at the top/bottom of the board.
+   *
+   * @param message The text to display.
+   */
+  public void updateMessage(String message) {
+    if (messageLabel != null) {
+      messageLabel.setText(message);
     }
+  }
 
-    /**
-     * Updates the status message displayed at the top/bottom of the board.
-     *
-     * @param message The text to display.
-     */
-    public void updateMessage(String message) {
-        if (messageLabel != null) {
-            messageLabel.setText(message);
-        }
+  /**
+   * Routes a message to the appropriate UI component based on its content. - "Current Player" or
+   * ">>" implies a Status bar update. - Everything else is displayed as an Information Popup.
+   *
+   * @param message The system message.
+   */
+  public void routeMessage(String message) {
+    if (message == null) return;
+    String lowerMsg = message.toLowerCase();
+    if (lowerMsg.contains("current player") || lowerMsg.contains(">>")) {
+      updateMessage(message);
+    } else if (lowerMsg.contains("save the game before quitting")) {
+      promptYesNo("save the game before quitting ?");
+    } else if (lowerMsg.contains("filename") || lowerMsg.contains("nom du fichier")) {
+      promptFilename("Enter the name of the save file :");
+    } else {
+      showInfo(message);
     }
+  }
 
-    /**
-     * Routes a message to the appropriate UI component based on its content.
-     * - "Current Player" or ">>" implies a Status bar update.
-     * - Everything else is displayed as an Information Popup.
-     *
-     * @param message The system message.
-     */
-    public void routeMessage(String message) {
-        if (message == null) return;
-        String lowerMsg = message.toLowerCase();
-        if (lowerMsg.contains("current player") || lowerMsg.contains(">>")) {
-            updateMessage(message);
-        }
-        else if (lowerMsg.contains("save the game before quitting")) {
-            promptYesNo("save the game before quitting ?");
-        } else if (lowerMsg.contains("filename") || lowerMsg.contains("nom du fichier")) {
-            promptFilename("Enter the name of the save file :");
-        } else {
-            showInfo(message);
-        }
+  private void promptYesNo(String msg) {
+    Alert alert = new Alert(AlertType.CONFIRMATION);
+    alert.setTitle("Quit the Game");
+    alert.setHeaderText(null);
+    alert.setContentText(msg);
+
+    ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+    ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
+    alert.getButtonTypes().setAll(buttonYes, buttonNo);
+
+    Optional<ButtonType> result = alert.showAndWait();
+    if (result.isPresent() && result.get() == buttonYes) {
+      if (agonGui != null) agonGui.sendCommand("y");
+    } else {
+      if (agonGui != null) agonGui.sendCommand("n");
     }
+  }
 
-    private void promptYesNo(String msg) {
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Quit the Game");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
+  private void promptFilename(String msg) {
+    TextInputDialog dialog = new TextInputDialog("");
+    dialog.setTitle("Save");
+    dialog.setHeaderText(null);
+    dialog.setContentText(msg);
 
-        ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
-        ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
-        alert.getButtonTypes().setAll(buttonYes, buttonNo);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == buttonYes) {
-            if (agonGui != null) agonGui.sendCommand("y");
-        } else {
-            if (agonGui != null) agonGui.sendCommand("n");
-        }
+    Optional<String> result = dialog.showAndWait();
+    if (result.isPresent() && !result.get().trim().isEmpty()) {
+      if (agonGui != null) agonGui.sendCommand(result.get().trim());
+    } else {
+      if (agonGui != null) agonGui.sendCommand("default_save");
     }
+  }
 
-    private void promptFilename(String msg) {
-        TextInputDialog dialog = new TextInputDialog("");
-        dialog.setTitle("Save");
-        dialog.setHeaderText(null);
-        dialog.setContentText(msg);
+  /**
+   * Displays an error popup dialogue.
+   *
+   * @param error The error message to present to the user.
+   */
+  public void showError(String error) {
+    updateMessage("Error : " + error);
+    Alert alert = new Alert(AlertType.ERROR);
+    alert.setTitle("Error");
+    alert.setHeaderText(null);
+    alert.setContentText(error);
+    alert.showAndWait();
+  }
 
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent() && !result.get().trim().isEmpty()) {
-            if (agonGui != null) agonGui.sendCommand(result.get().trim());
-        } else {
-            if (agonGui != null) agonGui.sendCommand("default_save");
-        }
-    }
+  /**
+   * Displays an informational popup dialogue.
+   *
+   * @param info The information to present.
+   */
+  public void showInfo(String info) {
+    Alert alert = new Alert(AlertType.INFORMATION);
+    alert.setTitle("Information");
+    alert.setHeaderText(null);
+    alert.setContentText(info);
+    alert.showAndWait();
+  }
 
-    /**
-     * Displays an error popup dialogue.
-     *
-     * @param error The error message to present to the user.
-     */
-    public void showError(String error) {
-        updateMessage("Error : " + error);
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(error);
-        alert.showAndWait();
-    }
+  /**
+   * Displays a warning popup dialogue.
+   *
+   * @param warning The warning text to present.
+   */
+  public void showWarn(String warning) {
+    Alert alert = new Alert(AlertType.WARNING);
+    alert.setTitle("Warning");
+    alert.setHeaderText(null);
+    alert.setContentText(warning);
+    alert.showAndWait();
+  }
 
-    /**
-     * Displays an informational popup dialogue.
-     *
-     * @param info The information to present.
-     */
-    public void showInfo(String info) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(null);
-        alert.setContentText(info);
-        alert.showAndWait();
-    }
+  /**
+   * Builds and displays the "New Game" configuration dialog box.
+   *
+   * @return An Optional containing the command string to be executed if accepted.
+   */
+  private Optional<String> showNewGameDialog() {
+    Dialog<String> dialog = new Dialog<>();
+    dialog.setTitle("New Game");
+    dialog.setHeaderText("Player configuration for the new game");
 
-    /**
-     * Displays a warning popup dialogue.
-     *
-     * @param warning The warning text to present.
-     */
-    public void showWarn(String warning) {
-        Alert alert = new Alert(AlertType.WARNING);
-        alert.setTitle("Warning");
-        alert.setHeaderText(null);
-        alert.setContentText(warning);
-        alert.showAndWait();
-    }
+    ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
+    dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
 
-    /**
-     * Builds and displays the "New Game" configuration dialog box.
-     *
-     * @return An Optional containing the command string to be executed if accepted.
-     */
-    private Optional<String> showNewGameDialog() {
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("New Game");
-        dialog.setHeaderText("Player configuration for the new game");
+    ComboBox<String> p1Type = new ComboBox<>();
+    p1Type.getItems().addAll("Human", "AI");
+    p1Type.setValue("Human");
 
-        ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
+    ComboBox<String> p1Color = new ComboBox<>();
+    p1Color.getItems().addAll("White", "Black");
+    p1Color.setValue("White");
 
-        ComboBox<String> p1Type = new ComboBox<>();
-        p1Type.getItems().addAll("Human", "AI");
-        p1Type.setValue("Human");
+    ComboBox<String> p2Type = new ComboBox<>();
+    p2Type.getItems().addAll("Human", "AI");
+    p2Type.setValue("AI");
 
-        ComboBox<String> p1Color = new ComboBox<>();
-        p1Color.getItems().addAll("White", "Black");
-        p1Color.setValue("White");
+    CheckBox blitzCheck = new CheckBox("Enable Blitz mode");
+    Spinner<Integer> timeSpinner = new Spinner<>(1, 60, 5);
+    timeSpinner.setDisable(true);
 
-        ComboBox<String> p2Type = new ComboBox<>();
-        p2Type.getItems().addAll("Human", "AI");
-        p2Type.setValue("AI");
+    blitzCheck.setOnAction(e -> timeSpinner.setDisable(!blitzCheck.isSelected()));
 
-        CheckBox blitzCheck = new CheckBox("Enable Blitz mode");
-        Spinner<Integer> timeSpinner = new Spinner<>(1, 60, 5);
-        timeSpinner.setDisable(true);
+    GridPane grid = new GridPane();
+    grid.setHgap(10);
+    grid.setVgap(10);
+    grid.setPadding(new Insets(20, 150, 10, 10));
 
-        blitzCheck.setOnAction(e -> timeSpinner.setDisable(!blitzCheck.isSelected()));
+    grid.add(new Label("PLayer 1 :"), 0, 0);
+    grid.add(p1Type, 1, 0);
+    grid.add(new Label("PLayer 1 Color:"), 0, 1);
+    grid.add(p1Color, 1, 1);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+    grid.add(new Label("PLayer 2 :"), 0, 2);
+    grid.add(p2Type, 1, 2);
 
-        grid.add(new Label("PLayer 1 :"), 0, 0);
-        grid.add(p1Type, 1, 0);
-        grid.add(new Label("PLayer 1 Color:"), 0, 1);
-        grid.add(p1Color, 1, 1);
+    grid.add(blitzCheck, 0, 3, 2, 1);
+    grid.add(new Label("Time (minutes) :"), 0, 4);
+    grid.add(timeSpinner, 1, 4);
 
-        grid.add(new Label("PLayer 2 :"), 0, 2);
-        grid.add(p2Type, 1, 2);
+    dialog.getDialogPane().setContent(grid);
 
-        grid.add(blitzCheck, 0, 3, 2, 1);
-        grid.add(new Label("Time (minutes) :"), 0, 4);
-        grid.add(timeSpinner, 1, 4);
+    dialog.setResultConverter(
+        dialogButton -> {
+          if (dialogButton == createButtonType) {
+            StringBuilder cmd = new StringBuilder("new");
 
-        dialog.getDialogPane().setContent(grid);
+            String p1ColorStr = p1Color.getValue().toLowerCase();
+            String p2ColorStr = p1ColorStr.equals("white") ? "black" : "white";
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == createButtonType) {
-                StringBuilder cmd = new StringBuilder("new");
-
-                String p1ColorStr = p1Color.getValue().toLowerCase();
-                String p2ColorStr = p1ColorStr.equals("white") ? "black" : "white";
-
-                if (p1Type.getValue().equals("AI")) {
-                    cmd.append(" --ai ").append(p1ColorStr);
-                }
-                if (p2Type.getValue().equals("AI")) {
-                    cmd.append(" --ai ").append(p2ColorStr);
-                }
-
-                cmd.append(" --player1Color ").append(p1ColorStr);
-
-                if (blitzCheck.isSelected()) {
-                    cmd.append(" --blitz --time ").append(timeSpinner.getValue());
-                }
-
-                return cmd.toString();
+            if (p1Type.getValue().equals("AI")) {
+              cmd.append(" --ai ").append(p1ColorStr);
             }
-            return null;
+            if (p2Type.getValue().equals("AI")) {
+              cmd.append(" --ai ").append(p2ColorStr);
+            }
+
+            cmd.append(" --player1Color ").append(p1ColorStr);
+
+            if (blitzCheck.isSelected()) {
+              cmd.append(" --blitz --time ").append(timeSpinner.getValue());
+            }
+
+            return cmd.toString();
+          }
+          return null;
         });
 
-        return dialog.showAndWait();
-    }
+    return dialog.showAndWait();
+  }
 
-    @FXML
-    public void startNewGame() {
-        if (agonGui == null) return;
-        Optional<String> result = showNewGameDialog();
-        result.ifPresent(command -> agonGui.sendCommand(command));
-    }
+  @FXML
+  public void startNewGame() {
+    if (agonGui == null) return;
+    Optional<String> result = showNewGameDialog();
+    result.ifPresent(command -> agonGui.sendCommand(command));
+  }
 
-    @FXML
-    public void undo() {
-        if (agonGui != null) agonGui.sendCommand("undo");
-    }
+  @FXML
+  public void undo() {
+    if (agonGui != null) agonGui.sendCommand("undo");
+  }
 
-    @FXML
-    public void redo() {
-        if (agonGui != null) agonGui.sendCommand("redo");
-    }
+  @FXML
+  public void redo() {
+    if (agonGui != null) agonGui.sendCommand("redo");
+  }
 
-    @FXML
-    public void saveGame() {
-        if (agonGui != null) {
-            TextInputDialog dialog = new TextInputDialog("");
-            dialog.setTitle("Save");
-            dialog.setHeaderText(null);
-            dialog.setContentText("Enter the name of the game you want to save :");
+  @FXML
+  public void saveGame() {
+    if (agonGui != null) {
+      TextInputDialog dialog = new TextInputDialog("");
+      dialog.setTitle("Save");
+      dialog.setHeaderText(null);
+      dialog.setContentText("Enter the name of the game you want to save :");
 
-            Optional<String> result = dialog.showAndWait();
-            if (result.isPresent()) {
-                String filename = result.get().trim();
-                if (filename.isEmpty()) {
-                    filename = "default_save";
-                }
-                agonGui.sendCommand("save " + filename);
-            }
+      Optional<String> result = dialog.showAndWait();
+      if (result.isPresent()) {
+        String filename = result.get().trim();
+        if (filename.isEmpty()) {
+          filename = "default_save";
         }
+        agonGui.sendCommand("save " + filename);
+      }
     }
+  }
 
-    @FXML
-    public void loadGame() {
-        if (agonGui != null) {
-            TextInputDialog dialog = new TextInputDialog("");
-            dialog.setTitle("Load a Game");
-            dialog.setHeaderText(null);
-            dialog.setContentText("Enter the name of the game you want to load :");
+  @FXML
+  public void loadGame() {
+    if (agonGui != null) {
+      TextInputDialog dialog = new TextInputDialog("");
+      dialog.setTitle("Load a Game");
+      dialog.setHeaderText(null);
+      dialog.setContentText("Enter the name of the game you want to load :");
 
-            Optional<String> result = dialog.showAndWait();
-            if (result.isPresent() && !result.get().trim().isEmpty()) {
-                agonGui.sendCommand("load " + result.get().trim());
-            }
-        }
+      Optional<String> result = dialog.showAndWait();
+      if (result.isPresent() && !result.get().trim().isEmpty()) {
+        agonGui.sendCommand("load " + result.get().trim());
+      }
     }
+  }
 
-    @FXML
-    public void pauseGame() {
-        if (agonGui != null) agonGui.sendCommand("pause");
+  @FXML
+  public void pauseGame() {
+    if (agonGui != null) agonGui.sendCommand("pause");
+  }
+
+  @FXML
+  public void quitGame() {
+    if (agonGui != null) agonGui.sendCommand("quit");
+  }
+
+  @FXML
+  public void requestHint() {
+    if (agonGui != null) agonGui.sendCommand("hint");
+  }
+
+  @FXML
+  public void showHelp() {
+    try {
+      java.io.InputStream in = getClass().getResourceAsStream("/cmdsInformations/agonGuiMenu.txt");
+
+      if (in != null) {
+        String helpText = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        showInfo(helpText);
+      } else {
+        showInfo("The help file agonGuiMenu.txt could not be found.");
+      }
+    } catch (Exception e) {
+      showError("Error reading the help file:" + e.getMessage());
     }
+  }
 
-    @FXML
-    public void quitGame() {
-        if (agonGui != null) agonGui.sendCommand("quit");
+  @FXML
+  public void showConfig() {
+    if (agonGui != null) {
+      agonGui.sendCommand("show -configuration");
     }
+  }
 
-    @FXML
-    public void requestHint() {
-        if (agonGui != null) agonGui.sendCommand("hint");
+  @FXML
+  public void showVersion() {
+    showInfo("Agon Game - GUI Version");
+  }
+
+  @FXML
+  public void showHistory() {
+    if (agonGui != null) {
+      agonGui.sendCommand("show -history");
     }
-
-    @FXML
-    public void showHelp() {
-        try {
-            java.io.InputStream in = getClass().getResourceAsStream("/cmdsInformations/agonGuiMenu.txt");
-
-            if (in != null) {
-                String helpText = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                showInfo(helpText);
-            } else {
-                showInfo("The help file agonGuiMenu.txt could not be found.");
-            }
-        } catch (Exception e) {
-            showError("Error reading the help file:" + e.getMessage());
-        }
-    }
-
-    @FXML
-    public void showConfig() {
-        if (agonGui != null) {
-            agonGui.sendCommand("show -configuration");
-        }
-    }
-
-    @FXML
-    public void showVersion() {
-        showInfo("Agon Game - GUI Version");
-    }
-
-    @FXML
-    public void showHistory() {
-        if (agonGui != null) {
-            agonGui.sendCommand("show -history");
-        }
-    }
+  }
 }

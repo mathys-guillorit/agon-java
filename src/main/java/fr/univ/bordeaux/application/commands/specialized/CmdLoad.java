@@ -101,12 +101,12 @@ public final class CmdLoad extends Cmd {
 
       Match newMatch =
           MatchFactory.createMatch(loadedConfig, super.getCtx(), loadedBoard, playerTurn);
-        if (newMatch instanceof ObservableMatch obsMatch) {
-            obsMatch.setObserver((MatchObserver) super.getCtx());
-        }
-        if (newMatch instanceof ReadOnlyMatch roMatch) {
-            ((MatchObserver) super.getCtx()).onMatchUpdate(roMatch);
-        }
+      if (newMatch instanceof ObservableMatch obsMatch) {
+        obsMatch.setObserver((MatchObserver) super.getCtx());
+      }
+      if (newMatch instanceof ReadOnlyMatch roMatch) {
+        ((MatchObserver) super.getCtx()).onMatchUpdate(roMatch);
+      }
       gameEngine.setMatchManager(newMatch);
       super.getCtx().showMessage("Game successfully loaded from: " + this.filename + "\n");
       return true;

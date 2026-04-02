@@ -11,8 +11,8 @@ import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
+import fr.univ.bordeaux.ui.gui.AgonGui;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -21,7 +21,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import fr.univ.bordeaux.ui.gui.AgonGui;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -145,7 +144,7 @@ public class GameLauncher {
     }
   }
 
-    /**
+  /**
    * Loads the initial configuration from the .agonrc file.
    *
    * <p>If the file is missing or unreadable, a default configuration file is created and a default
@@ -154,21 +153,21 @@ public class GameLauncher {
    * @return A {@link GameConfig} object populated with file settings or default values.
    */
   private GameConfig loadInitialConfig() {
-      File file = new File(configPath);
+    File file = new File(configPath);
 
-      if (!file.exists() || file.isDirectory()) {
-          System.out.println("No config file found. Creating a default file...");
-          createDefaultConfigFile();
-          return new GameConfig();
-      }
+    if (!file.exists() || file.isDirectory()) {
+      System.out.println("No config file found. Creating a default file...");
+      createDefaultConfigFile();
+      return new GameConfig();
+    }
 
-      ConfigParser configParser = new ConfigParser();
-      try {
-          return configParser.parse(configPath);
-      } catch (IOException e) {
-          System.out.println("Error reading config file: " + e.getMessage());
-          return new GameConfig();
-      }
+    ConfigParser configParser = new ConfigParser();
+    try {
+      return configParser.parse(configPath);
+    } catch (IOException e) {
+      System.out.println("Error reading config file: " + e.getMessage());
+      return new GameConfig();
+    }
   }
 
   /**
@@ -200,14 +199,14 @@ public class GameLauncher {
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
     GameUserInterface userInterface;
     GameEngine gameEngine;
-      try {
-          if ( cmd.hasOption("g")) {
-              System.out.println("[INFO] Starting Agon GUI...");
-              AgonGui gui = new AgonGui(config);
-              userInterface = (GameUserInterface) gui;
-              gameEngine = new GameEngine(userInterface, cmds);
-              this.fillRegister(cmds, userInterface, config, gameEngine);
-              gui.start();
+    try {
+      if (cmd.hasOption("g")) {
+        System.out.println("[INFO] Starting Agon GUI...");
+        AgonGui gui = new AgonGui(config);
+        userInterface = (GameUserInterface) gui;
+        gameEngine = new GameEngine(userInterface, cmds);
+        this.fillRegister(cmds, userInterface, config, gameEngine);
+        gui.start();
       } else {
         System.out.println("[INFO] Starting Agon Shell...");
 
@@ -227,10 +226,10 @@ public class GameLauncher {
         }*/
       }
       gameEngine.start();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+  }
 
   private void fillRegister(
       AgonRegister<CmdAction> cmds, GameUserInterface ui, GameConfig config, GameEngine engine) {
@@ -315,14 +314,12 @@ public class GameLauncher {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 
-    /**
-     * Extracted to protected method to allow Unit Testing of the Lambda execution.
-     */
-    protected Completer createCompleter(AgonShell[] shellRef) {
-        return (reader, line, candidates) -> {
-            if (shellRef[0] != null) {
-                shellRef[0].globalCompleter(reader, line, candidates);
-            }
-        };
-    }
+  /** Extracted to protected method to allow Unit Testing of the Lambda execution. */
+  protected Completer createCompleter(AgonShell[] shellRef) {
+    return (reader, line, candidates) -> {
+      if (shellRef[0] != null) {
+        shellRef[0].globalCompleter(reader, line, candidates);
+      }
+    };
+  }
 }

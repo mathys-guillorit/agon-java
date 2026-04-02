@@ -86,7 +86,7 @@ public class CmdCreate extends Cmd {
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
       if (match instanceof ReadOnlyMatch) {
         ((MatchObserver) super.getCtx()).onMatchUpdate((ReadOnlyMatch) match);
-        }
+      }
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
