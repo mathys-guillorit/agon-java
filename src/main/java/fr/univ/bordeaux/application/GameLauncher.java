@@ -21,6 +21,7 @@ import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import fr.univ.bordeaux.ui.gui.AgonGui;
@@ -154,14 +155,21 @@ public class GameLauncher {
    * @return A {@link GameConfig} object populated with file settings or default values.
    */
   private GameConfig loadInitialConfig() {
-    ConfigParser configParser = new ConfigParser();
-    try {
-      return configParser.parse(configPath);
-    } catch (IOException e) {
-      System.out.println("No config file found. Creating a default file...");
-      createDefaultConfigFile();
-      return new GameConfig();
-    }
+      File file = new File(configPath);
+
+      if (!file.exists() || file.isDirectory()) {
+          System.out.println("No config file found. Creating a default file...");
+          createDefaultConfigFile();
+          return new GameConfig();
+      }
+
+      ConfigParser configParser = new ConfigParser();
+      try {
+          return configParser.parse(configPath);
+      } catch (IOException e) {
+          System.out.println("Error reading config file: " + e.getMessage());
+          return new GameConfig();
+      }
   }
 
   /**
@@ -204,12 +212,7 @@ public class GameLauncher {
               System.out.println("[INFO] Starting Agon Shell...");
         final AgonShell[] shellRef = new AgonShell[1];
 
-        Completer strategyCompleter =
-            (reader, line, candidates) -> {
-              if (shellRef[0] != null) {
-                shellRef[0].globalCompleter(reader, line, candidates);
-              }
-            };
+        Completer strategyCompleter = createCompleter(shellRef);
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
         LineReader reader =
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
@@ -313,4 +316,14 @@ public class GameLauncher {
         ContestMatch.executeContest(filePath);
     }
 
+    /**
+     * Extracted to protected method to allow Unit Testing of the Lambda execution.
+     */
+    protected Completer createCompleter(AgonShell[] shellRef) {
+        return (reader, line, candidates) -> {
+            if (shellRef[0] != null) {
+                shellRef[0].globalCompleter(reader, line, candidates);
+            }
+        };
+    }
 }

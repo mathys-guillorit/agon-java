@@ -1,0 +1,15 @@
+----- Agon - Graphical User Interface Guide -----
+
+Playing a game:
+- Click on one of your pieces to select it.
+- Click on a valid hex to move your piece.
+
+Game Menu:
+- New Game: Configure and start a new match (AI, colors, etc.).
+- Hint: Ask the game engine for the best possible move.
+- Configuration: Display the current rules (Blitz, AI Depth...).
+- Undo / Redo: Cancel or replay the last move.
+- Save / Load: Save or load an ongoing game.
+
+The current player's turn is always indicated in the gray bar
+at the bottom of the screen.
