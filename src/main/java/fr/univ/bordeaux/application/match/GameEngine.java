@@ -66,14 +66,12 @@ public class GameEngine {
         //ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
         matchManager.startTurn();
 
-        // On lance la réflexion du joueur dans un thread séparé
         Future<CmdAction> futureAction = playerExecutor.submit(() -> p.getAction(this.cmds));
 
         try {
-          // Boucle de surveillance
           while (!futureAction.isDone()) {
             if (matchManager.isMatchOver()) {
-              futureAction.cancel(true); // Signal d'interruption (IA ou Humain)
+              futureAction.cancel(true);
               break;
             }
             Thread.sleep(50);
@@ -89,15 +87,7 @@ public class GameEngine {
 
       if (action != null) {
         action.execute(this.matchManager);
-
-       /* if (matchManager != null) {
-          ui.onMatchUpdate(matchManager);
-        }
-      } else if (matchManager != null && matchManager.isMatchOver()) {
-        ui.showMessage("\n[GAME OVER] Match terminé.\n");
-        ui.onMatchUpdate(matchManager);
-      */} else {
-        // Optionnel : message si l'action a été annulée ou est inconnue
+      } else {
         if (this.matchManager == null || !this.matchManager.isMatchOver()) {
           ui.showError("Unknown command. Type 'help' to see available commands.\n");
         }

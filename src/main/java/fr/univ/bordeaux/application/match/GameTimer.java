@@ -11,7 +11,6 @@ public class GameTimer {
   private long lastStartTime;
   private volatile boolean isRunning;
 
-  // Utilisation de ReentrantLock au lieu d'un simple Object
   private final Lock lock = new ReentrantLock();
   private final Condition isRunningCondition = lock.newCondition();
 
@@ -57,23 +56,18 @@ public class GameTimer {
         lock.lock();
         try {
           while (!isRunning && alive) {
-            // await() relâche le lock et endort le thread proprement
             isRunningCondition.await();
           }
         } finally {
-          lock.unlock(); // On relâche dès qu'on sait qu'on doit bosser
+          lock.unlock();
         }
 
         if (!alive) break;
-
-        // --- PHASE 2 : CALCUL ET SLEEP (HORS VERROU) ---
-        // Ici, le lock est LIBRE, donc le thread principal peut appeler stop() sans attendre
         long currentRemaining = getRemainingTimeMillis();
 
         if (currentRemaining <= 0) {
           handleTimeout();
         } else {
-          // System.out.println("Reste: " + currentRemaining / 1000 + "s");
           Thread.sleep(100);
         }
       }
