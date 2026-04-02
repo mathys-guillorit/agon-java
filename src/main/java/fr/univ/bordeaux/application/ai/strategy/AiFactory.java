@@ -37,7 +37,7 @@ public class AiFactory {
       }
       case "mcts" -> {
         MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
-        return new MctsStrategy(null, color, heuristic);
+        return new MctsStrategy(color, heuristic, config.getAiTimeLimit());
       }
       default -> {
         return null;

@@ -28,12 +28,12 @@ public class MctsStrategy extends AbstractAgonAi {
   /**
    * Constructs a new MCTS strategy instance.
    *
-   * @param heuristic          The standard board evaluation heuristic.
    * @param color              The color played by this AI agent.
    * @param selectionHeuristic The specific heuristic used for node selection (e.g., UCT or ML).
    */
-  public MctsStrategy(Heuristic heuristic, Color color, MctsSelectionHeuristic selectionHeuristic) {
-    super(heuristic, color);
+  public MctsStrategy(Color color, MctsSelectionHeuristic selectionHeuristic, int timeLimit) {
+    super(null, color);
+    this.setTimeLimit(timeLimit*1000L);
     this.selectionHeuristic = selectionHeuristic;
   }
 
@@ -63,7 +63,7 @@ public class MctsStrategy extends AbstractAgonAi {
       MctsNode node = root;
 
       while (node.isFullyExpanded() && !node.isLeaf()) {
-        node = getBestChild(node);
+        node = getBestChild(node, board);
         board.applyMove(node.getMove());
         depth++;
       }
@@ -116,22 +116,27 @@ public class MctsStrategy extends AbstractAgonAi {
       }
     }
 
-    MctsNode bestChild = getBestChild(root);
+    MctsNode bestChild = getBestChild(root, board);
     return bestChild != null ? bestChild.getMove() : initialLegalMoves.get(0);
   }
 
   /**
    * Evaluates and selects the best child node using the injected {@link MctsSelectionHeuristic}.
    *
-   * @param node             The parent node whose children are to be evaluated.
+   * @param node  The parent node whose children are to be evaluated.
+   * @param board The current game board state (matching the parent node's state).
    * @return The child {@link MctsNode} with the highest computed selection score.
    */
-  private MctsNode getBestChild(MctsNode node) {
+  private MctsNode getBestChild(MctsNode node, AgonBoard board) {
     MctsNode bestChild = null;
     double bestValue = Double.NEGATIVE_INFINITY;
 
     for (MctsNode child : node.getChildren()) {
-      double nodeValue = this.selectionHeuristic.evaluateNode(node, child);
+      board.applyMove(child.getMove());
+
+      double nodeValue = this.selectionHeuristic.evaluateNode(node, child, board);
+
+      board.undoMove();
 
       if (nodeValue > bestValue) {
         bestValue = nodeValue;

@@ -10,7 +10,9 @@ import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import java.util.List;
 
 import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
+import fr.univ.bordeaux.application.ai.heuristics.MlHeuristic;
 import fr.univ.bordeaux.application.ai.heuristics.UctHeuristic;
+import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -50,9 +52,7 @@ class MctsStrategyTest {
                 CoordinateMapper.toIndex('H', 8)),
             List.of());
     MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
-
-    mcts.setTimeLimit(500);
+    MctsStrategy mcts = new MctsStrategy(Color.WHITE,heuristic, 1 );
 
     Move bestMove = mcts.getBestMove(board);
 
@@ -89,10 +89,7 @@ class MctsStrategyTest {
     AgonBoardImpl board = createCustomBoard(wQ, bQ, wP, bP);
 
     MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
-
-    long timeLimit = 1000;
-    mcts.setTimeLimit(timeLimit);
+    MctsStrategy mcts = new MctsStrategy(Color.WHITE,heuristic, 1 );
 
     long startTime = System.currentTimeMillis();
     Move bestMove = mcts.getBestMove(board);
@@ -101,10 +98,10 @@ class MctsStrategyTest {
     assertNotNull(bestMove, "Even when interrupted, MCTS must return the best move found so far");
 
     assertTrue(
-        elapsed >= timeLimit - 100,
+        elapsed >= mcts.getTimeLimit() - 100,
         "The AI should have used its allocated time (" + elapsed + "ms)");
     assertTrue(
-        elapsed < timeLimit + 100,
+        elapsed < mcts.getTimeLimit() + 100,
         "The AI should have stopped cleanly without drastically exceeding the timeout ("
             + elapsed
             + "ms)");
@@ -117,12 +114,33 @@ class MctsStrategyTest {
   void testMctsNoLegalMoves() {
     AgonBoardImpl emptyBoard = createCustomBoard(-1, -1, List.of(), List.of());
     MctsSelectionHeuristic heuristic = new UctHeuristic(Math.sqrt(2));
-    MctsStrategy mcts = new MctsStrategy(null, Color.WHITE,heuristic );
+    MctsStrategy mcts = new MctsStrategy(Color.WHITE,heuristic, 5 );
 
     Move bestMove = mcts.getBestMove(emptyBoard);
 
     assertNull(bestMove, "Should return null when no moves are possible");
     assertEquals(
         0, mcts.getNodeCount(), "Should not build any tree because it returns immediately");
+  }
+
+  @Test
+  void testMctsWithMlHeuristicDoesNotCrash() {
+    AgonBoardImpl board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+
+    List<Move> legalMoves = board.generateLegalMoves(Color.WHITE);
+
+    MlHeuristic mlHeuristic = new MlHeuristic(Math.sqrt(2));
+    AbstractAgonAi ai = new MctsStrategy(Color.WHITE, mlHeuristic, 2);
+
+    Move bestMove = ai.getBestMove(board);
+
+    assertNotNull(bestMove, "AI should not return a null move.");
+
+    boolean isMoveLegal = legalMoves.stream()
+            .anyMatch(m -> m.getFrom() == bestMove.getFrom()
+                    && m.getDestination() == bestMove.getDestination());
+
+    assertTrue(isMoveLegal, "The returned move must be in the initial legal moves list.");
   }
 }
