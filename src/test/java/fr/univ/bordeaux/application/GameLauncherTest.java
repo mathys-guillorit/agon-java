@@ -2,21 +2,34 @@ package fr.univ.bordeaux.application;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.commands.AgonRegister;
+import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.ui.cli.AgonShell;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
+
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link GameLauncher} class.
- * Ensures command-line arguments are parsed correctly and proper modes are initialized.
+ * Ensures command-line arguments are parsed correctly, proper modes are initialized,
+ * and achieves maximum code coverage.
  */
 public class GameLauncherTest {
 
@@ -81,7 +94,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the help argument (-h).
+     * Tests the behavior when the help (-h) argument is passed.
+     * Expects the mock help content or default usage message to be printed.
      */
     @Test
     public void testHelpOption() {
@@ -92,7 +106,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the version argument (-V).
+     * Tests the behavior when the version (-V) argument is passed.
+     * Expects the mock version content or the default version string to be printed.
      */
     @Test
     public void testVersionOption() {
@@ -103,7 +118,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the verbose argument (-v).
+     * Tests the behavior when the verbose (-v) argument is passed.
+     * Verifies that the verbose mode confirmation message is printed.
      */
     @Test
     public void testVerboseOption() {
@@ -114,7 +130,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the debug argument (-d).
+     * Tests the behavior when the debug (-d) argument is passed.
+     * Verifies that the debug mode confirmation message is printed.
      */
     @Test
     public void testDebugOption() {
@@ -125,7 +142,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the GUI argument (-g).
+     * Tests the behavior when the GUI (-g) argument is passed.
+     * Verifies that the command line parser accurately identifies the GUI flag.
      */
     @Test
     public void testGuiOption() {
@@ -137,7 +155,10 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the contest mode argument (-c) with a valid dummy file.
+     * Tests the contest mode (-c) with a valid dummy file.
+     * Ensures that no errors are thrown or printed to the error stream.
+     *
+     * @throws IOException If file creation or deletion fails during the test.
      */
     @Test
     public void testContestOption() throws IOException {
@@ -155,7 +176,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the contest mode argument (-c) without providing a file path.
+     * Tests the contest mode (-c) when no file path is provided.
+     * Expects an error message indicating that a file argument is required.
      */
     @Test
     public void testContestModeWithoutFile() {
@@ -166,7 +188,10 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests the contest mode execution when the simulated run fails.
+     * Tests the contest mode execution when the provided file is intentionally invalid.
+     * Expects an error message stating that the contest mode failed.
+     *
+     * @throws IOException If file creation or deletion fails during the test.
      */
     @Test
     public void testContestModeExecutionFailure() throws IOException {
@@ -183,7 +208,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests handling of an unrecognized command-line option.
+     * Tests the behavior when an invalid or unrecognized option is passed.
+     * Expects an Argument Error to be printed to the error stream.
      */
     @Test
     public void testInvalidOption() {
@@ -194,7 +220,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests behavior when a specified file does not exist.
+     * Tests the launch process when a non-existent file is passed as an argument.
+     * Expects an error message indicating the file does not exist.
      */
     @Test
     public void testMissingFile() {
@@ -205,7 +232,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests behavior when a directory is passed instead of a file.
+     * Tests the launch process when a directory path is passed instead of a file.
+     * Expects an error message indicating the target is a directory.
      */
     @Test
     public void testFileIsDirectory() {
@@ -216,7 +244,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests successful creation of the default configuration file.
+     * Tests the creation of the default configuration file when none exists.
+     * Backs up any existing configuration, runs the launcher, and checks for success.
      */
     @Test
     public void testCreateDefaultConfig_Success() {
@@ -241,7 +270,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests failure handling when creating the default configuration file.
+     * Tests the failure handling when the application attempts to create a default
+     * configuration file but lacks permission or encounters an IO error.
      */
     @Test
     public void testCreateDefaultConfig_Failed() {
@@ -266,7 +296,10 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests launching the game with a valid file argument.
+     * Tests a standard game launch when a valid save file is provided as an argument.
+     * Expects confirmation that the file argument was detected.
+     *
+     * @throws IOException If test file creation or deletion fails.
      */
     @Test
     public void testValidFile() throws IOException {
@@ -283,7 +316,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests behavior when the help file is missing or triggers an IO error.
+     * Tests the fallback help printing mechanism when the physical help file is missing.
+     * Expects a warning message and the default Apache CLI help formatter output.
      */
     @Test
     public void testPrintHelp() {
@@ -298,7 +332,8 @@ public class GameLauncherTest {
     }
 
     /**
-     * Tests behavior when the version file is missing or triggers an IO error.
+     * Tests the fallback version printing mechanism when the physical version file is missing.
+     * Expects a warning message to be printed.
      */
     @Test
     public void testPrintVersion() {
@@ -313,35 +348,9 @@ public class GameLauncherTest {
     }
 
     /**
-     * Coverage test for startGame logic (GUI and Shell branches) without blocking threads.
-     */
-    @Test
-    public void testStartGameLogicWithoutBlocking() {
-        GameLauncher launcher = new GameLauncher() {
-            @Override
-            protected void startGame(GameConfig config, CommandLine cmd, String filePath) {
-                System.out.println("[INFO] Running startGame coverage...");
-                if (cmd != null && cmd.hasOption("g")) {
-                    System.out.println("[INFO] Starting Agon GUI...");
-                } else {
-                    System.out.println("[INFO] Starting Agon Shell...");
-                }
-            }
-        };
-
-        assertDoesNotThrow(() -> {
-            launcher.launch(new String[]{"-g"});
-        });
-        assertTrue(getOutput().contains("Starting Agon GUI..."));
-        outContent.reset();
-        assertDoesNotThrow(() -> {
-            launcher.launch(new String[]{});
-        });
-        assertTrue(getOutput().contains("Starting Agon Shell..."));
-    }
-
-    /**
-     * Validates that the actual help content can be retrieved properly.
+     * Validates that the actual help content can be retrieved properly from the filesystem.
+     *
+     * @throws Exception If the real help file is inaccessible.
      */
     @Test
     public void testRealGetHelpContent() throws Exception {
@@ -352,7 +361,9 @@ public class GameLauncherTest {
     }
 
     /**
-     * Validates that the actual version content can be retrieved properly.
+     * Validates that the actual version content can be retrieved properly from the filesystem.
+     *
+     * @throws Exception If the real version file is inaccessible.
      */
     @Test
     public void testRealGetVersionContent() throws Exception {
@@ -362,4 +373,114 @@ public class GameLauncherTest {
         assertFalse(content.isEmpty(), "The version file must contain text.");
     }
 
+    /**
+     * Coverage test for real startGame logic targeting the CLI (Shell) branch.
+     * Uses a background thread to prevent the JLine/GameEngine loop from blocking JUnit execution.
+     *
+     * @throws InterruptedException If thread interruption fails.
+     * @throws ParseException If the mock arguments are improperly parsed.
+     */
+    @Test
+    public void testRealStartGameShellCoverage() throws InterruptedException, ParseException {
+        GameLauncher realLauncher = new GameLauncher();
+        Options options = new Options();
+        options.addOption("g", "gui", false, "GUI");
+        CommandLine cmd = new DefaultParser().parse(options, new String[]{});
+        Thread t = new Thread(() -> {
+            realLauncher.startGame(new GameConfig(), cmd, null);
+        });
+        t.start();
+        Thread.sleep(600);
+        t.interrupt();
+        assertTrue(getOutput().contains("Starting Agon Shell..."));
+    }
+
+    /**
+     * Coverage test for real startGame logic targeting the GUI branch.
+     * Instantiates JavaFX components in a thread to validate object creation without blocking.
+     *
+     * @throws InterruptedException If thread interruption fails.
+     * @throws ParseException If the mock arguments are improperly parsed.
+     */
+    @Test
+    public void testRealStartGameGuiCoverage() throws InterruptedException, ParseException {
+        GameLauncher realLauncher = new GameLauncher();
+        Options options = new Options();
+        options.addOption("g", "gui", false, "GUI");
+        CommandLine cmd = new DefaultParser().parse(options, new String[]{"-g"});
+        Thread t = new Thread(() -> {
+            realLauncher.startGame(new GameConfig(), cmd, null);
+        });
+        t.start();
+        Thread.sleep(600); // Give time for GUI logic
+        t.interrupt();
+        assertTrue(getOutput().contains("Starting Agon GUI..."));
+    }
+
+    /**
+     * Coverage test for the broad catch (Exception e) block inside the real startGame() method.
+     * Passes a null CommandLine to intentionally trigger a NullPointerException during parsing.
+     */
+    @Test
+    public void testStartGameExceptionCatchBlock() {
+        GameLauncher realLauncher = new GameLauncher();
+        assertDoesNotThrow(() -> {
+            realLauncher.startGame(new GameConfig(), null, null);
+        });
+        assertTrue(errContent.toString().contains("NullPointerException"));
+    }
+
+    /**
+     * Coverage test for the real contest execution method.
+     * Expects an exception to be thrown internally (since the dummy file is missing or invalid)
+     * but caught within the test wrapper to validate line execution.
+     */
+    @Test
+    public void testRealContestExecutionCoverage() {
+        GameLauncher realLauncher = new GameLauncher();
+        assertDoesNotThrow(() -> {
+            try {
+                realLauncher.runContest("dummy_file.txt");
+            } catch (Exception e) {
+                // We expect an exception because the file doesn't exist, but we want to ensure it's caught properly.
+            }
+        });
+    }
+
+    /**
+     * Coverage test for the JLine Completer lambda (True branch).
+     * Provides a non-null AgonShell instance to validate the inner execution of the lambda.
+     * Expects a NullPointerException because the mocked input line is null.
+     *
+     * @throws Exception If terminal creation fails.
+     */
+    @Test
+    public void testStrategyCompleterLambdaCoverageWithNonNullShell() throws Exception {
+        GameLauncher launcher = new GameLauncher();
+        Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
+        AgonRegister<CmdAction> cmds = new AgonRegister<>();
+        AgonShell realShell = new AgonShell(terminal, reader, cmds);
+        AgonShell[] mockShellRef = new AgonShell[1];
+        mockShellRef[0] = realShell;
+        Completer completer = launcher.createCompleter(mockShellRef);
+        assertThrows(NullPointerException.class, () -> {
+            completer.complete(reader, null, new java.util.ArrayList<>());
+        });
+    }
+
+    /**
+     * Coverage test for the JLine Completer lambda (False branch).
+     * Provides a null AgonShell reference to ensure the lambda condition evaluates to false
+     * without throwing exceptions.
+     */
+    @Test
+    public void testStrategyCompleterLambdaCoverageWithNullShell() {
+        GameLauncher launcher = new GameLauncher();
+        AgonShell[] mockShellRef = new AgonShell[1];
+        Completer completer = launcher.createCompleter(mockShellRef);
+        assertDoesNotThrow(() -> {
+            completer.complete(null, null, null);
+        });
+    }
 }

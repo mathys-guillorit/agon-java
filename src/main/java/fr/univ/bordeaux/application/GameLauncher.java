@@ -2,17 +2,7 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
-import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
-import fr.univ.bordeaux.application.commands.specialized.CmdHint;
-import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.specialized.CmdPause;
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
-import fr.univ.bordeaux.application.commands.specialized.CmdSave;
-import fr.univ.bordeaux.application.commands.specialized.CmdSet;
-import fr.univ.bordeaux.application.commands.specialized.CmdShow;
-import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
+import fr.univ.bordeaux.application.commands.specialized.*;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.technical.io.config.ConfigParser;
@@ -22,6 +12,7 @@ import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -163,14 +154,21 @@ public class GameLauncher {
    * @return A {@link GameConfig} object populated with file settings or default values.
    */
   private GameConfig loadInitialConfig() {
-    ConfigParser configParser = new ConfigParser();
-    try {
-      return configParser.parse(configPath);
-    } catch (IOException e) {
-      System.out.println("No config file found. Creating a default file...");
-      createDefaultConfigFile();
-      return new GameConfig();
-    }
+      File file = new File(configPath);
+
+      if (!file.exists() || file.isDirectory()) {
+          System.out.println("No config file found. Creating a default file...");
+          createDefaultConfigFile();
+          return new GameConfig();
+      }
+
+      ConfigParser configParser = new ConfigParser();
+      try {
+          return configParser.parse(configPath);
+      } catch (IOException e) {
+          System.out.println("Error reading config file: " + e.getMessage());
+          return new GameConfig();
+      }
   }
 
   /**
@@ -214,12 +212,7 @@ public class GameLauncher {
               }
         final AgonShell[] shellRef = new AgonShell[1];
 
-        Completer strategyCompleter =
-            (reader, line, candidates) -> {
-              if (shellRef[0] != null) {
-                shellRef[0].globalCompleter(reader, line, candidates);
-              }
-            };
+        Completer strategyCompleter = createCompleter(shellRef);
         Terminal terminal = TerminalBuilder.builder().dumb(true).build();
         LineReader reader =
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
@@ -320,4 +313,15 @@ public class GameLauncher {
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
+
+    /**
+     * Extracted to protected method to allow Unit Testing of the Lambda execution.
+     */
+    protected Completer createCompleter(AgonShell[] shellRef) {
+        return (reader, line, candidates) -> {
+            if (shellRef[0] != null) {
+                shellRef[0].globalCompleter(reader, line, candidates);
+            }
+        };
+    }
 }
