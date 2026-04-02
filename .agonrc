@@ -5,11 +5,11 @@ placement = false
 
 [game]
 blitz = false
-timeout = 1800
+timeout = 30
 
 [ai_setup]
 ai = true
-ai_color = BLACK
+ai_color = NONE
 
 [ai_tuning]
 ai_mode = minimax

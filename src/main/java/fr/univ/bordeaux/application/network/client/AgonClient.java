@@ -252,6 +252,11 @@ public class AgonClient {
                 case "GAME_NOT_FOUND" -> System.out.println("[SERVER] Game not found.");
                 default -> System.out.println("[SERVER] " + msg);
             }
+
+            if (onlineGameStartListener != null) {
+                onlineGameStartListener.onOnlineBoardRefreshRequested();
+            }
+
             return;
         }
 
@@ -733,9 +738,12 @@ public class AgonClient {
         }
 
         try {
-            sendLine("MOVE " + rawMove.trim().toUpperCase());
+            synchronized (commandLock) {
+                sendLine("MOVE " + rawMove.trim().toUpperCase());
+            }
             return true;
         } catch (IOException e) {
+            disconnectSilently();
             return false;
         }
     }

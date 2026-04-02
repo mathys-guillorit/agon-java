@@ -50,7 +50,7 @@ public class CmdQuit extends Cmd {
   /**
    * Provides the usage and description for the quit command.
    *
-   * @return A formatted help string
+   * @return A formatted string for the help menu.
    */
   @Override
   public String getDescription() {
@@ -86,9 +86,36 @@ public class CmdQuit extends Cmd {
     }
 
     // ===== CASE 2: LOCAL MATCH RUNNING =====
-    if (match != null) {
+    if (match != null && !match.isMatchOver() && !match.isSaved()) {
+      boolean resolved = false;
+
+      while (!resolved) {
+        this.getCtx().showMessage("Save the game before quitting? [y/N] \n");
+        String response = this.getCtx().getUserInput();
+
+        if (response != null && response.equalsIgnoreCase("y")) {
+          this.getCtx().showMessage("Enter filename: \n");
+          String filename = this.getCtx().getUserInput();
+
+          if (filename == null || filename.trim().isEmpty()) {
+            filename = "default_save";
+          }
+
+          CmdSave saveCmd = new CmdSave(this.getCtx());
+          saveCmd.createNew(new String[] {filename}).execute(match);
+
+          if (match.isSaved()) {
+            resolved = true;
+          } else {
+            this.getCtx().showMessage("Save failed. Try again.\n");
+          }
+        } else {
+          resolved = true;
+        }
+      }
+
       match.quit();
-      this.getCtx().showMessage("[GAME] Match ended.\n");
+      this.getCtx().quit();
       return true;
     }
 

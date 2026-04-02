@@ -27,4 +27,6 @@ public interface OnlineGameStartListener {
     void onOpponentMoveReceived(String rawMove);
 
     void onGameOver(String line);
+
+    void onOnlineBoardRefreshRequested();
 }

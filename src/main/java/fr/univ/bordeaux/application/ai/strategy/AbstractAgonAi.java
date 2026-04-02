@@ -6,7 +6,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 
 /**
- * Skeletal implementation of the {@link AgonAI} interface.
+ * Skeletal implementation of the {@link AgonAi} interface.
  *
  * <p>This abstract class handles the common "plumbing" required for any AI strategy, allowing
  * concrete implementations (like Minimax or MCTS) to focus solely on the decision logic.
@@ -61,16 +61,19 @@ public abstract class AbstractAgonAi implements AgonAi {
   }
 
   /**
-   * Checks if there is still time allocated for calculation.
+   * Checks if there is still time allocated for calculation and if the calculation has not been
+   * interrupted.
    *
    * <p>This method includes a <b>safety buffer of 50ms</b> to ensure the AI returns before the
-   * strict timeout, avoiding disqualification. It should be called frequently within the search
-   * loops (e.g., inside Minimax recursion).
+   * strict timeout, avoiding disqualification. It also checks for the <b>Thread interruption
+   * signal</b>, allowing for immediate termination during a Blitz timeout or application shutdown.
    *
-   * @return {@code true} if the elapsed time is within the safe limit, {@code false} otherwise.
+   * @return {@code true} if the elapsed time is within the safe limit and not interrupted, {@code
+   *     false} otherwise.
    */
   protected boolean isTimeRemaining() {
-    return (System.currentTimeMillis() - startTime) < (timeLimit - 50);
+    return !Thread.currentThread().isInterrupted()
+        && (System.currentTimeMillis() - startTime) < (timeLimit - 50);
   }
 
   /**

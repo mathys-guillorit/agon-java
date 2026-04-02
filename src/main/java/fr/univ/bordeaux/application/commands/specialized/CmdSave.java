@@ -1,10 +1,14 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.io.storage.GameSaveData;
+import fr.univ.bordeaux.technical.io.storage.GameSaveSerializer;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import org.apache.commons.cli.Options;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Command responsible for saving the current game state to a file.
@@ -14,21 +18,15 @@ import org.apache.commons.cli.Options;
  */
 public final class CmdSave extends Cmd {
 
-  /** CLI options for the save command. */
-  private Options opts;
-
-  /** The target filename for the save operation. */
   private String filename;
 
   /**
-   * Constructs the base Save command for registration. Initializes the name to "save" and sets the
-   * default description.
+   * Constructs the base Save command for registration.
    *
    * @param uictx The user interface context.
    */
   public CmdSave(GameUserInterface uictx) {
     super(uictx);
-    this.opts = new Options();
     this.setDesc("Description: Saves the current game state and history to the specified file.");
     this.setName("save");
   }
@@ -52,31 +50,34 @@ public final class CmdSave extends Cmd {
   @Override
   public String getDescription() {
     return "Usage: save [filename]\n"
-        + "Description: Saves the current game state to the specified file.\n"
-        + "Example: save party1.txt\n";
+        + "Description: Saves the current game state to the specified file, if there is no filename save by default in default_save.\n"
+        + "Example: save myparty.txt\n";
   }
 
   /**
    * Executes the save logic.
-   *
-   * <p>Currently a placeholder. It should interface with a storage service to write the {@link
-   * MatchManager} state into {@code filename}.
    *
    * @param match The manager handling the current match data.
    * @return true if the command was recognized, false if the operation failed.
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (this.filename == null) {
-      this.getCtx().showError("No filename provided for saving.\n");
+    AgonBoard board = match.getAgonBoard();
+    List<String> boardText = board.toTextList();
+    List<String> historyText = board.getHistoryAsText();
+    GameSaveData saveData =
+        new GameSaveData(
+            match.getGameConfig(), match.getCurrentPlayer().getColor(), boardText, historyText);
+
+    GameSaveSerializer serializer = new GameSaveSerializer();
+    try {
+      serializer.save(saveData, filename);
+      match.setIsSaved(true);
+    } catch (IOException e) {
+      super.getCtx().showError("Something went wrong while saving the game please try again.\n");
       return false;
     }
-
-    // Logique de sauvegarde à implémenter ici
-    this.getCtx()
-        .showInfo(
-            "Save command recognized for file: " + this.filename + " (Implementation pending).\n");
-    return true;
+    return false;
   }
 
   /**
@@ -88,20 +89,8 @@ public final class CmdSave extends Cmd {
   @Override
   public CmdAction createNew(String[] args) {
     if (args.length == 0) {
-      this.getCtx().showWarn("Warning: Saving without a filename might use a default slot.\n");
-      return new CmdSave(super.getCtx(), "default_save.txt");
+      return new CmdSave(super.getCtx(), "default_save");
     }
-
     return new CmdSave(super.getCtx(), args[0]);
-  }
-
-  /**
-   * Returns the CLI options for this command.
-   *
-   * @return An {@link Options} object.
-   */
-  @Override
-  public Options getOptions() {
-    return this.opts;
   }
 }

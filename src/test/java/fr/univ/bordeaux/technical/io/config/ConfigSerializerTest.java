@@ -1,6 +1,7 @@
-package fr.univ.bordeaux.technical.config;
+package fr.univ.bordeaux.technical.io.config;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +26,7 @@ class ConfigSerializerTest {
     String content = Files.readString(configFile);
 
     assertTrue(content.contains("verbose = false"));
-    assertTrue(content.contains("timeout = 1800"));
+    assertTrue(content.contains("timeout = 30"));
     assertTrue(content.contains("ai_mode = minimax"));
   }
 

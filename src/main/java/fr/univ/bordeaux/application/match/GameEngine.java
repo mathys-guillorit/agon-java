@@ -1,24 +1,22 @@
 package fr.univ.bordeaux.application.match;
 
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.UIPromptParser;
-import fr.univ.bordeaux.application.AppContext;
-import fr.univ.bordeaux.application.commands.specialized.CmdMove;
-import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.ui.UiPromptParser;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
- * The core engine of the Agon application. This class manages the main execution loop. It switches
- * between two states:
- *
- * <ul>
- *   <li><b>Out-of-Match:</b> Where the user interacts with the system via the shell (e.g., help,
- *       load).
- *   <li><b>In-Match:</b> Where the current player (Human or AI) provides moves to progress the
- *       game.
- * </ul>
+ * The core engine of the Agon application. This class manages the main execution loop.
+ * It switches between Out-of-Match and In-Match states.
  */
 public class GameEngine {
 
@@ -34,6 +32,15 @@ public class GameEngine {
   /** Shared application context, used to detect online game state. */
   private AppContext appContext;
 
+  /** Executor for running player actions (Human or AI) asynchronously. */
+  private final ExecutorService playerExecutor =
+          Executors.newSingleThreadExecutor(
+                  r -> {
+                    Thread t = new Thread(r);
+                    t.setDaemon(true);
+                    return t;
+                  });
+
   /**
    * Constructs the game engine with the required UI and command registry.
    *
@@ -47,25 +54,39 @@ public class GameEngine {
 
   /**
    * Starts the main application loop.
-   *
-   * <p>The loop runs as long as the UI is active. It identifies the current player, requests an
-   * action (from the user or the AI), executes it, and updates the display.
    */
   public void start() {
     while (ui.isRunning()) {
-      CmdAction action;
+      CmdAction action = null;
 
       if (this.matchManager == null || this.matchManager.isMatchOver()) {
         String input = ui.getUserInput();
-        if (input == null) continue;
+        if (input == null) {
+          continue;
+        }
 
-        action = UIPromptParser.parse(input, this.cmds, ui);
+        action = UiPromptParser.parse(input, this.cmds, ui);
       } else {
-
         Player p = matchManager.getCurrentPlayer();
-        ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        matchManager.startTurn();
 
-        action = p.getAction(this.cmds);
+        Future<CmdAction> futureAction = playerExecutor.submit(() -> p.getAction(this.cmds));
+
+        try {
+          while (!futureAction.isDone()) {
+            if (matchManager.isMatchOver()) {
+              futureAction.cancel(true);
+              break;
+            }
+            Thread.sleep(50);
+          }
+
+          if (futureAction.isDone() && !futureAction.isCancelled()) {
+            action = futureAction.get();
+          }
+        } catch (Exception e) {
+          futureAction.cancel(true);
+        }
       }
 
       if (action != null) {
@@ -76,9 +97,7 @@ public class GameEngine {
 
           if (!appContext.isMyOnlineTurn()) {
             ui.showWarn("[ONLINE] It is not your turn.\n");
-            if (appContext.getCurrentOnlineMatch() != null) {
-              ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
-            }
+            refreshOnlineBoard();
             continue;
           }
 
@@ -87,70 +106,87 @@ public class GameEngine {
           if (onlineMove.getFrom() == -1) {
             String rawMove =
                     CoordinateMapper.toAbaPro(onlineMove.getDestination()).toLowerCase();
-
             sent = appContext.getClient().sendRawMove(rawMove);
           } else {
             sent = appContext.getClient().sendMove(
                     onlineMove.getFrom(),
-                    onlineMove.getDestination()
-            );
+                    onlineMove.getDestination());
           }
 
           if (!sent) {
             ui.showError("[ONLINE] Failed to send move.\n");
-            if (appContext.getCurrentOnlineMatch() != null) {
-              ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
-            }
+            refreshOnlineBoard();
           }
 
         } else {
+
           if (appContext != null
                   && appContext.isOnlineGameActive()
                   && isForbiddenOnlineCommand(action)) {
             ui.showWarn("[ONLINE] This command is disabled during an online match.\n");
+            refreshOnlineBoard();
             continue;
           }
 
           action.execute(this.matchManager);
-
           if (appContext != null
                   && appContext.isOnlineGameActive()
                   && appContext.getCurrentOnlineMatch() != null) {
-            ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
-          } else if (matchManager != null) {
-            ui.updateBoard(matchManager.getAgonBoard());
+            refreshOnlineBoard();
           }
         }
 
       } else {
-        ui.showError("Unknown command. Type 'help' to see available commands.\n");
+        if (this.matchManager == null || !this.matchManager.isMatchOver()) {
+          ui.showError("Unknown command. Type 'help' to see available commands.\n");
+        }
       }
-
     }
+
+    playerExecutor.shutdownNow();
   }
 
   /**
    * Injects a new match manager into the engine.
    *
-   * <p>This is typically called by a "New Game" or "Load" command to transition the engine into the
-   * In-Match state.
-   *
-   * @param matchManager The new {@link MatchManager} instance.
+   * @param matchManager The new MatchManager instance.
    */
   public void setMatchManager(MatchManager matchManager) {
     this.matchManager = matchManager;
   }
 
   /**
+   * Returns the current match manager.
+   *
+   * @return The MatchManager instance, or null if no match is active.
+   */
+  public MatchManager getMatchManager() {
+    return this.matchManager;
+  }
+
+  /**
    * Displays the board of a match manager without injecting it into the main engine loop.
    *
-   * <p>This is useful for online games during the initialization phase.
    * @param matchManager the match whose board should be displayed
    */
   public void previewMatch(MatchManager matchManager) {
-    if (matchManager != null) {
-      ui.updateBoard(matchManager.getAgonBoard());
+    if (matchManager == null) {
+      return;
     }
+
+    if (ui instanceof fr.univ.bordeaux.ui.cli.AgonShell shell) {
+      if (appContext != null && appContext.isOnlineGameActive()) {
+        shell.setBoardFooter(
+                appContext.isMyOnlineTurn()
+                        ? "[ONLINE] Your turn"
+                        : "[ONLINE] Opponent turn");
+      } else {
+        shell.setBoardFooter("");
+      }
+    }
+
+    ui.onMatchUpdate((ReadOnlyMatch) matchManager);
+
   }
 
   /**
@@ -184,5 +220,21 @@ public class GameEngine {
             || name.equalsIgnoreCase("pause")
             || name.equalsIgnoreCase("save")
             || name.equalsIgnoreCase("load");
+  }
+
+  private void refreshOnlineBoard() {
+    if (appContext != null && appContext.getCurrentOnlineMatch() != null) {
+      previewMatch(appContext.getCurrentOnlineMatch());
+    }
+  }
+
+  private void refreshCurrentBoard() {
+    if (appContext != null
+            && appContext.isOnlineGameActive()
+            && appContext.getCurrentOnlineMatch() != null) {
+      previewMatch(appContext.getCurrentOnlineMatch());
+    } else if (matchManager != null) {
+      previewMatch(matchManager);
+    }
   }
 }

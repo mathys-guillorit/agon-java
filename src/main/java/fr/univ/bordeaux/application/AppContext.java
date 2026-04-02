@@ -325,4 +325,11 @@ public class AppContext implements OnlineGameStartListener {
     public void onGameOver(String line) {
         leaveOnlineGame();
     }
+
+    @Override
+    public void onOnlineBoardRefreshRequested() {
+        if (gameEngine != null && currentOnlineMatch != null) {
+            gameEngine.previewMatch(currentOnlineMatch);
+        }
+    }
 }

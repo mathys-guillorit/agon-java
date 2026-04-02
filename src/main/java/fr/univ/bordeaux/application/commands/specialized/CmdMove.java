@@ -11,12 +11,7 @@ import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Command responsible for executing a player's move on the board.
- *
- * <p>This command bridges the UI input (coordinates or Move object) with the {@link MatchManager}
- * to update the game state.
- */
+/** Command responsible for executing a player's move on the board. */
 public class CmdMove extends Cmd {
 
   /** The move object to execute (optional if coordinates are provided). */
@@ -33,7 +28,7 @@ public class CmdMove extends Cmd {
           Pattern.compile("^([a-kA-K])(\\d{1,2})([a-kA-K])(\\d{1,2})$");
 
   /**
-   * Constructs a move command using a pre-built {@link Move} object.
+   * Constructs a move command using a pre-built Move object.
    *
    * @param move The move to be applied.
    * @param ui The user interface context.
@@ -61,9 +56,6 @@ public class CmdMove extends Cmd {
   /**
    * Executes the move on the match manager.
    *
-   * <p>If a {@link Move} object was provided, it is used directly. Otherwise, a new Move is created
-   * using the current player's color.
-   *
    * @param match The manager responsible for game rules and board updates.
    * @return true if the move was valid and successfully applied, false otherwise.
    */
@@ -78,12 +70,11 @@ public class CmdMove extends Cmd {
     if (this.move != null) {
       result = match.move(this.move);
     } else {
-      // Fallback to coordinates if Move object is null
       Move newMove = new Move(this.from, this.destination, match.getCurrentPlayer().getColor());
       result = match.move(newMove);
     }
 
-    if (!result) {
+    if (!result && this.getCtx() != null) {
       this.getCtx().showWarn("Invalid move attempt.");
     }
 
@@ -115,39 +106,14 @@ public class CmdMove extends Cmd {
   }
 
   /**
-   * Factory method to create a new move action from CLI arguments. * @param args Arguments provided
-   * (e.g., from and destination).
+   * Factory method to create a new move action from CLI arguments.
    *
-   * @return A new {@link CmdMove} or null if arguments are not handled here.
+   * @param args Arguments provided (e.g., from and destination).
+   * @return A new CmdMove or null if arguments are not handled here.
    */
   @Override
   public CmdAction createNew(String[] args) {
-    if (args == null || args.length < 1) {
-      return null;
-    }
-
-    String rawMove = args[0].trim();
-    Matcher matcher = MOVE_INPUT_PATTERN.matcher(rawMove);
-
-    if (!matcher.matches()) {
-      return null;
-    }
-
-    try {
-      char fromLetter = Character.toUpperCase(matcher.group(1).charAt(0));
-      int fromNumber = Integer.parseInt(matcher.group(2));
-
-      char toLetter = Character.toUpperCase(matcher.group(3).charAt(0));
-      int toNumber = Integer.parseInt(matcher.group(4));
-
-      int fromIndex = CoordinateMapper.toIndex(fromLetter, fromNumber);
-      int toIndex = CoordinateMapper.toIndex(toLetter, toNumber);
-
-      return new CmdMove(fromIndex, toIndex, getCtx());
-
-    } catch (Exception e) {
-      return null;
-    }
+    return null;
   }
 
   /**

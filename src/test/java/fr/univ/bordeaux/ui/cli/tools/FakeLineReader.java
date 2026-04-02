@@ -1,7 +1,9 @@
 package fr.univ.bordeaux.ui.cli.tools;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Queue;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Binding;
 import org.jline.reader.Buffer;
+import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.Expander;
@@ -22,12 +25,13 @@ import org.jline.reader.Parser;
 import org.jline.reader.UserInterruptException;
 import org.jline.reader.Widget;
 import org.jline.reader.impl.DefaultParser;
+import org.jline.reader.impl.LineReaderImpl;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.MouseEvent;
 import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 
-public class FakeLineReader implements LineReader {
+public class FakeLineReader extends LineReaderImpl implements LineReader {
 
   private final Queue<String> inputs;
   private final Parser parser = new DefaultParser();
@@ -37,8 +41,14 @@ public class FakeLineReader implements LineReader {
   private Completer completer;
 
   public FakeLineReader(String... lines) {
+    super(new FakeTerminal(new ByteArrayOutputStream()), "agon-test", null);
     this.inputs = new ArrayDeque<>(List.of(lines));
     this.keyMaps.put(LineReader.MAIN, new KeyMap<>());
+  }
+
+  public FakeLineReader(Terminal terminal) {
+    super(terminal, "agon-test", null);
+    this.inputs = new ArrayDeque<>(List.of(""));
   }
 
   @Override
@@ -259,5 +269,18 @@ public class FakeLineReader implements LineReader {
   @Override
   public String getKeyMap() {
     return LineReader.MAIN;
+  }
+
+  public void setCompleter(Completer completer) {
+    this.completer = completer;
+  }
+
+  public List<Candidate> complete(String input) {
+    if (this.completer == null) return List.of();
+    ParsedLine pl = this.parser.parse(input, input.length());
+    List<Candidate> candidates = new ArrayList<>();
+    this.completer.complete(this, pl, candidates);
+    String currentWord = pl.word();
+    return candidates.stream().filter(c -> c.value().startsWith(currentWord)).toList();
   }
 }

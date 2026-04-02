@@ -7,16 +7,11 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
-/**
- * Command providing strategic suggestions to the player.
- *
- * <p>This command requests the best possible move from the current {@link MatchManager} (often
- * calculated via an AI) and displays it in the standard Aba-Pro notation.
- */
+/** Command providing strategic suggestions to the player. */
 public final class CmdHint extends Cmd {
 
   /**
-   * Constructs the Hint command. Initializes the name to "hint" and sets a default description.
+   * Constructs the Hint command.
    *
    * @param uictx The user interface context for displaying the suggestion.
    */
@@ -27,9 +22,9 @@ public final class CmdHint extends Cmd {
   }
 
   /**
-   * Provides the short description for the hint command.
+   * Provides the help description for the hint command.
    *
-   * @return An empty string (description is pre-set in the constructor via {@code setDesc}).
+   * @return A formatted string describing the command.
    */
   @Override
   public String getDescription() {
@@ -39,12 +34,8 @@ public final class CmdHint extends Cmd {
   /**
    * Executes the hint logic.
    *
-   * <p>Calls {@code match.hint()} to obtain a recommended {@link Move}, then converts the move's
-   * coordinates into human-readable Aba-Pro notation using {@link CoordinateMapper}.
-   *
    * @param match The current match manager providing the game state and AI logic.
-   * @return Always {@code false} as this command does not modify the game state (it only provides
-   *     information).
+   * @return Always false as this command does not modify the game state.
    */
   @Override
   public boolean execute(MatchManager match) {
@@ -71,7 +62,7 @@ public final class CmdHint extends Cmd {
    * Factory method to create an executable instance of the hint command.
    *
    * @param args The arguments passed (ignored for this command).
-   * @return A new {@link CmdHint} instance.
+   * @return A new CmdHint instance.
    */
   @Override
   public CmdAction createNew(String[] args) {

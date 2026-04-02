@@ -60,10 +60,12 @@ public class OptCompleterAdapter {
       if (o == null || (o.getOpt() == null && o.getLongOpt() == null)) {
         continue;
       }
-
       predictOptsNames.addAll(this.optify(o));
     }
-    return new ArgumentCompleter(
-        new StringsCompleter(cmdName), new StringsCompleter(predictOptsNames));
+    ArgumentCompleter arcComp =
+        new ArgumentCompleter(
+            new StringsCompleter(cmdName), new StringsCompleter(predictOptsNames));
+    arcComp.setStrict(true);
+    return arcComp;
   }
 }

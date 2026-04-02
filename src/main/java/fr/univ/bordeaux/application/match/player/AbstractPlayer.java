@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 
+/** Player Default class. */
 public abstract class AbstractPlayer implements Player {
 
   String name;

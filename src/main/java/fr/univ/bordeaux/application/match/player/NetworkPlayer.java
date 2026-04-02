@@ -31,8 +31,4 @@ public class NetworkPlayer extends AbstractPlayer {
         return name;
     }
 
-    @Override
-    public boolean isAI() {
-        return false;
-    }
 }

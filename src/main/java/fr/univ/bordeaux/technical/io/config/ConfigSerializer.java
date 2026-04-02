@@ -1,4 +1,4 @@
-package fr.univ.bordeaux.technical.config;
+package fr.univ.bordeaux.technical.io.config;
 
 import fr.univ.bordeaux.technical.io.Serializer;
 import java.io.BufferedWriter;

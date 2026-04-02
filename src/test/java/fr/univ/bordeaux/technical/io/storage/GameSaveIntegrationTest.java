@@ -1,9 +1,13 @@
 package fr.univ.bordeaux.technical.io.storage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.technical.config.GameConfig;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.io.storage.states.GameState;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -194,7 +198,8 @@ class GameSaveIntegrationTest {
     assertTrue(Files.readString(edgeCaseFile).contains("ai_color = WHITE\n"));
 
     Path emptyMoveFile = tempDir.resolve("empty_move.asv");
-    Files.writeString(emptyMoveFile, "[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
+    Files.writeString(
+        emptyMoveFile, "[settings]\n[game]\nO\n. .\n[history]\nO a1 a2;  ; X c3 c5;\n");
     GameSaveParser parser = new GameSaveParser();
     GameSaveData loadedData = parser.parse(emptyMoveFile.toString());
 
@@ -213,5 +218,118 @@ class GameSaveIntegrationTest {
           gameState.parseLine("Z", builder);
         },
         "Should throw an IOException for unknown player character like 'Z'");
+  }
+
+  @Test
+  @DisplayName(
+      "Should violently reject save file and throw IOException if a block comment is unclosed")
+  void testUnclosedBlockCommentSwallowsSection() throws IOException {
+    Path corruptFile = tempDir.resolve("corrupt_save.asv");
+
+    String corruptContent =
+        "[settings]\n"
+            + "timeout = 120\n"
+            + "[game]\n"
+            + "X\n"
+            + ". X o .\n"
+            + "{ Oops, I forgot to close this comment\n"
+            + "[history]\n"
+            + "O a1 a2;\n";
+
+    Files.writeString(corruptFile, corruptContent);
+
+    GameSaveParser parser = new GameSaveParser();
+
+    Exception exception =
+        assertThrows(
+            IOException.class,
+            () -> parser.parse(corruptFile.toString()),
+            "Parser should throw an IOException because the block comment '{' is never closed");
+
+    assertTrue(
+        exception.getMessage().toLowerCase().contains("closed")
+            || exception.getMessage().toLowerCase().contains("Corrupted"),
+        "The exception message should explain that the comment block wasn't closed");
+  }
+
+  @Test
+  @DisplayName("Builder should enforce the presence of all section flags")
+  void testBuilderMissingSectionFlags() {
+    GameSaveBuilder builder = new GameSaveBuilder();
+
+    builder.markGameSection();
+    builder.markHistorySection();
+
+    builder.setCurrentPlayer(Color.WHITE);
+    builder.addBoardLine(". . .");
+
+    Exception exception =
+        assertThrows(
+            IOException.class,
+            builder::build,
+            "Builder should throw an exception if [settings] section flag is false");
+
+    assertTrue(
+        exception.getMessage().contains("Settings"),
+        "The error message should explicitly mention the missing [settings] section");
+  }
+
+  @Test
+  @DisplayName("Should correctly serialize and parse history moves containing capture notation")
+  void testHistoryWithCaptures() throws IOException {
+    GameConfig config = new GameConfig();
+    List<String> boardLines = List.of(". . .");
+
+    List<String> complexMoves = Arrays.asList("X c3 c2 (O c1, q d5)", "Q f5 f6", "O a1 a2 (X c3)");
+
+    GameSaveData data = new GameSaveData(config, Color.WHITE, boardLines, complexMoves);
+    Path captureFile = tempDir.resolve("captures_save.asv");
+
+    GameSaveSerializer serializer = new GameSaveSerializer();
+    serializer.save(data, captureFile.toString());
+
+    String fileContent = Files.readString(captureFile);
+    assertTrue(
+        fileContent.contains("X c3 c2 (O c1, q d5); Q f5 f6;\nO a1 a2 (X c3);\n"),
+        "Serializer should correctly format complex moves with semicolons and newlines");
+
+    GameSaveParser parser = new GameSaveParser();
+    GameSaveData loadedData = parser.parse(captureFile.toString());
+
+    List<String> loadedMoves = loadedData.getHistoryMoves();
+    assertNotNull(loadedMoves);
+    assertEquals(3, loadedMoves.size(), "Should have exactly 3 moves");
+    assertEquals("X c3 c2 (O c1, q d5)", loadedMoves.get(0), "First move should match exactly");
+    assertEquals("Q f5 f6", loadedMoves.get(1), "Second move should match exactly");
+    assertEquals("O a1 a2 (X c3)", loadedMoves.get(2), "Third move should match exactly");
+  }
+
+  @Test
+  @DisplayName("HistoryState parser should preserve internal spacing in capture parentheses")
+  void testMessyCaptureSpacing() throws IOException {
+    Path messyCaptureFile = tempDir.resolve("messy_captures.asv");
+
+    String content =
+        "[settings]\n"
+            + "[game]\n"
+            + "X\n"
+            + ". .\n"
+            + "[history]\n"
+            + "X c3 c2 (  O c1 , q d5 ) ; \n"
+            + " Q f5 f6 ;  \n"
+            + "O a1 a2 (X c3);\n";
+
+    Files.writeString(messyCaptureFile, content);
+
+    GameSaveParser parser = new GameSaveParser();
+    GameSaveData loadedData = parser.parse(messyCaptureFile.toString());
+
+    List<String> loadedMoves = loadedData.getHistoryMoves();
+    assertEquals(3, loadedMoves.size());
+
+    assertEquals(
+        "X c3 c2 (  O c1 , q d5 )", loadedMoves.get(0), "Should preserve internal spacing");
+    assertEquals("Q f5 f6", loadedMoves.get(1));
+    assertEquals("O a1 a2 (X c3)", loadedMoves.get(2));
   }
 }

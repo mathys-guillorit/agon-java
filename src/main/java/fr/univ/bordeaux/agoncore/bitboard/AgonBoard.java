@@ -96,14 +96,16 @@ public interface AgonBoard extends RestrictedAgonBoard {
      */
     List<HistoryInformations> getHistory();
 
-    /**
-     * Converts the current board state into a list of ASCII strings.
-     *
-     * <p>This representation is used for saving the game state to a file.
-     *
-     * @return A list of strings representing the board visually.
-     */
-    List<String> toTextList();
+      List<String> getHistoryAsText();
+
+      /**
+       * Converts the current board state into a list of ASCII strings.
+       *
+       * <p>This representation is used for saving the game state to a file.
+       *
+       * @return A list of strings representing the board visually.
+       */
+      List<String> toTextList();
 
     boolean hasPiecesToRelocate(Color color);
 }

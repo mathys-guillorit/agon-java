@@ -1,8 +1,8 @@
 package fr.univ.bordeaux.technical.io.storage;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.technical.config.GameConfig;
 import fr.univ.bordeaux.technical.io.Serializer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -68,9 +68,13 @@ public class GameSaveSerializer implements Serializer<GameSaveData> {
     writer.write("ai = " + config.isAiActive() + "\n");
 
     String colorStr = "NONE";
-    if (config.isWhiteAi() && config.isBlackAi()) colorStr = "ALL";
-    else if (config.isWhiteAi()) colorStr = "WHITE";
-    else if (config.isBlackAi()) colorStr = "BLACK";
+    if (config.isWhiteAi() && config.isBlackAi()) {
+      colorStr = "ALL";
+    } else if (config.isWhiteAi()) {
+      colorStr = "WHITE";
+    } else if (config.isBlackAi()) {
+      colorStr = "BLACK";
+    }
     writer.write("ai_color = " + colorStr + "\n");
 
     writer.write("ai_mode = " + config.getAiMode() + "\n");

@@ -68,7 +68,9 @@ public class MinimaxStrategy extends AbstractAgonAi {
     this.timeoutReached = false;
 
     List<Move> legalMoves = board.generateLegalMoves(this.color);
-    if (legalMoves.isEmpty()) return null;
+    if (legalMoves.isEmpty()) {
+      return null;
+    }
 
     Move absoluteBestMove = legalMoves.getFirst();
 
@@ -188,7 +190,9 @@ public class MinimaxStrategy extends AbstractAgonAi {
 
         board.undoMove();
 
-        if (this.timeoutReached) return 0;
+        if (this.timeoutReached) {
+          return 0;
+        }
 
         maxEval = Math.max(maxEval, eval);
         alpha = Math.max(alpha, eval);
@@ -211,7 +215,9 @@ public class MinimaxStrategy extends AbstractAgonAi {
 
         board.undoMove();
 
-        if (this.timeoutReached) return 0;
+        if (this.timeoutReached) {
+          return 0;
+        }
 
         minEval = Math.min(minEval, eval);
         beta = Math.min(beta, eval);

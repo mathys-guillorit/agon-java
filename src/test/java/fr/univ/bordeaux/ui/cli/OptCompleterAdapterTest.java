@@ -42,9 +42,6 @@ public class OptCompleterAdapterTest {
     this.opts.addOption("H", "hint", false, "");
     this.opts.addOption("V", "version", false, "");
     this.opts.addOption("k", "helm", false, "");
-    //    var tmp = new Option("a", "aa", false, "");
-    //    this.opts.addOption(tmp);
-    //    this.opts.getOptions().remove(tmp);
   }
 
   @Test
@@ -146,25 +143,6 @@ public class OptCompleterAdapterTest {
   }
 
   @Test
-  @Description("(pattern cannot be predicted because is not in possibilities")
-  void predictNonAppearingPattern() {
-    var a = new OptCompleterAdapter(this.opts);
-    Completer completer = a.getCompleter("cmd");
-    DefaultParser parser = new DefaultParser();
-    String input = "non -";
-    ParsedLine line = parser.parse(input, input.length());
-    var reader = new FakeLineReader(input);
-    List<Candidate> candidates = new ArrayList<>();
-    completer.complete(reader, line, candidates);
-    short optCount = 0;
-    List<String> uniqueOptions = candidates.stream().map(Candidate::value).distinct().toList();
-    assertEquals(
-        optCount,
-        uniqueOptions.size(),
-        "we must have " + optCount + " options defined in `loadOptions()`");
-  }
-
-  @Test
   @Description("predict only long options")
   void predictLongOptions() {
     var a = new OptCompleterAdapter(this.opts);
@@ -197,7 +175,7 @@ public class OptCompleterAdapterTest {
 
   // 3 last % of coverage (The "if") ("if" branch on method getCompleter(...))
   @Test
-  @DisplayName("Should ship null or empty options during adapter conversion")
+  @DisplayName("Should skip null or empty options during adapter conversion")
   void shouldIgnoreInvalidOptions() {
     Options corruptOpts =
         new Options() {

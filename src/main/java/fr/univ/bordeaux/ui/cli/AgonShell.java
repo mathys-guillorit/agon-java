@@ -1,10 +1,12 @@
 package fr.univ.bordeaux.ui.cli;
 
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.ui.AbstractGameUi;
+import fr.univ.bordeaux.application.match.MoveDtO;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
+import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import fr.univ.bordeaux.ui.MatchObserver;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +32,7 @@ import org.jline.utils.AttributedStyle;
  * @author fr.univ.bordeaux
  * @version 1.0
  */
-public class AgonShell extends AbstractGameUi implements GameUserInterface {
+public class AgonShell implements GameUserInterface, MatchObserver {
 
   /** Atomic flag used to control the main execution loop of the shell. */
   private AtomicBoolean running;
@@ -45,19 +47,19 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   private String line;
 
   /** ANSI-styled header for application-wide messages: [AGON]. */
-  private final String msgHA;
+  private final String msgHa;
 
   /** ANSI-styled tag for informational messages: [INFO]. */
-  private final String msgBI;
+  private final String msgBi;
 
   /** ANSI-styled tag for warning alerts: [WARNING]. */
-  private final String msgBW;
+  private final String msgBw;
 
   /** ANSI-styled tag for critical error reports: [ERROR]. */
-  private final String msgBE;
+  private final String msgBe;
 
   /** Stores the ASCII art representation of the main menu. */
-  private String mainMenuASCII = "No default Menu set";
+  private String mainMenuAscii = "No default Menu set";
 
   /** The prompt string displayed at the beginning of each input line. */
   private String userPrompt = "> ";
@@ -81,7 +83,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
-    this.userPrompt = this.msgHA + "> ";
+    this.userPrompt = this.msgHa + "> ";
   }
 
   /**
@@ -96,10 +98,10 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
     super();
     this.terminal = term;
     this.reader = reader;
-    this.msgHA = this.cliLayer();
-    this.msgBI = this.cliInfo();
-    this.msgBW = this.cliWarn();
-    this.msgBE = this.cliError();
+    this.msgHa = this.cliLayer();
+    this.msgBi = this.cliInfo();
+    this.msgBw = this.cliWarn();
+    this.msgBe = this.cliError();
     this.init();
     this.cmds = cmds;
     reader
@@ -114,7 +116,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    * @param mainMenu The raw ASCII string to be loaded.
    */
   public void loadMainMenu(String mainMenu) {
-    this.mainMenuASCII = mainMenu;
+    this.mainMenuAscii = mainMenu;
   }
 
   /**
@@ -136,24 +138,49 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   }
 
   /**
-   * Captures a single line of input from the terminal. Intercepts {@link UserInterruptException}
-   * (Ctrl+C) to trigger the quit process.
+   * Captures a single line of input from the terminal.
    *
-   * @return The trimmed input string, or null if the input is empty or interrupted.
+   * <p>Handles special cases:
+   *
+   * <ul>
+   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
+   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
+   * </ul>
+   *
+   * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
    */
   public String getUserInput() {
     try {
-      line = this.reader.readLine(this.userPrompt).trim();
-    } catch (UserInterruptException e) {
-      this.quit();
-      return null;
-    }
-    if (line.isEmpty()) {
-      return null;
-    }
+      String readLine = this.reader.readLine(this.userPrompt);
+      if (readLine == null) {
+        return "quit";
+      }
+      line = readLine.trim();
+      if (line.isEmpty()) {
+        return null;
+      }
+      this.reader.getHistory().add(line);
+      return line;
 
-    this.reader.getHistory().add(line);
-    return line;
+    } catch (UserInterruptException e) {
+      // Si le thread est interrompu par le chrono, on ne veut pas quitter
+      if (Thread.currentThread().isInterrupted()) {
+        return null;
+      }
+      // Sinon, c'est un vrai Ctrl+C -> on déclenche la sauvegarde via CmdQuit
+      return "quit";
+
+    } catch (org.jline.reader.EndOfFileException e) {
+      // Ctrl+D
+      if (Thread.currentThread().isInterrupted()) {
+        return null;
+      }
+      return "quit";
+
+    } catch (Exception e) {
+      // Autre erreur ou interruption système
+      return null;
+    }
   }
 
   /**
@@ -263,7 +290,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
   @Override
   public void showError(String msg) {
-    this.cliW(this.msgHA + this.msgBE + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBe + " " + msg + "\n");
   }
 
   /**
@@ -273,7 +300,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void showInfo(String msg) {
-    this.cliW(this.msgHA + this.msgBI + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
 
   /**
@@ -283,7 +310,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void showWarn(String msg) {
-    this.cliW(this.msgHA + this.msgBW + " " + msg + "\n");
+    this.cliW(this.msgHa + this.msgBw + " " + msg + "\n");
   }
 
   /**
@@ -308,7 +335,7 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
 
   /** Displays the help menu art to the terminal. */
   public void showHelp() {
-    this.cliWln(this.mainMenuASCII);
+    this.cliWln(this.mainMenuAscii);
   }
 
   /**
@@ -317,29 +344,31 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void quit() {
-    this.showWarn("Unsaved changes may be lost. Save game now? [y/n]");
-    String input = this.getUserInput();
-    if (input != null && input.equalsIgnoreCase("y")) {
-      this.saveGame();
-      this.showInfo("Game saved successfully.");
-    }
     this.leave();
   }
 
   /**
-   * Renders the current state of the game board using the ConsoleRenderer.
+   * Renders the current state of the game board and match information.
    *
-   * @param board The restricted board view to render.
+   * @param match The read-only match view to render.
    */
   @Override
-  public void updateBoard(RestrictedAgonBoard board) {
-    String renderedBoard = ConsoleRenderer.getBoardRepresentation(board);
+  public void onMatchUpdate(ReadOnlyMatch match) {
+    String renderedBoard = ConsoleRenderer.getBoardRepresentation(match.getAgonBoard());
 
     if (boardFooter != null && !boardFooter.isBlank()) {
-      renderedBoard = renderedBoard + "\n" + boardFooter;
+      renderedBoard += "\n" + boardFooter;
     }
 
     this.cliWln(renderedBoard);
+
+    if (match.isMatchOver()) {
+      Player winner = match.getWinner();
+      String winnerInfo = (winner != null) ? winner.getColor().toString() : "UNKNOWN";
+      this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
+    } else {
+      this.showInfo("Current turn: " + match.getCurrentPlayer().getColor());
+    }
   }
 
   /**
@@ -383,6 +412,48 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   public AtomicBoolean getRunning() {
     return running;
+  }
+
+  /**
+   * Explicit.
+   *
+   * @param moves {@link List}
+   */
+  public void displayHistory(List<MoveDtO> moves) {
+    List<MoveDtO> history = moves;
+
+    if (history.isEmpty()) {
+      this.showInfo("The history is currently empty.");
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("[history]\n");
+
+    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
+    for (int i = 0; i < history.size(); i += 2) {
+      // Coup du joueur O (Premier joueur du tour)
+      MoveDtO moveO = history.get(i);
+      sb.append("O ")
+          .append(moveO.from().toLowerCase())
+          .append(" ")
+          .append(moveO.to().toLowerCase())
+          .append(";");
+
+      // Coup du joueur X (S'il existe déjà dans la liste)
+      if (i + 1 < history.size()) {
+        MoveDtO moveX = history.get(i + 1);
+        sb.append(" X ")
+            .append(moveX.from().toLowerCase())
+            .append(" ")
+            .append(moveX.to().toLowerCase())
+            .append(";");
+      }
+
+      sb.append("\n");
+    }
+
+    this.showMessage(sb.toString());
   }
 
   public void clearBoardDisplay() {
