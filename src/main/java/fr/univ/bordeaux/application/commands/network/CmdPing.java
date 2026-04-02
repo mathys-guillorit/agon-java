@@ -31,11 +31,23 @@ public class CmdPing extends Cmd {
         );
     }
 
+    /**
+     * Creates a new instance of the ping command.
+     *
+     * @param args command arguments (unused)
+     * @return a new {@code CmdPing} command
+     */
     @Override
     public CmdAction createNew(String[] args) {
         return new CmdPing(getCtx(), context);
     }
 
+    /**
+     * Executes the ping command.
+     *
+     * @param match current match manager (unused)
+     * @return true if the command was executed, false if the client is not connected
+     */
     @Override
     public boolean execute(MatchManager match) {
 

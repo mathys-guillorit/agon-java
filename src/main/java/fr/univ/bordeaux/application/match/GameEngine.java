@@ -198,6 +198,12 @@ public class GameEngine {
     this.appContext = appContext;
   }
 
+  /**
+   * Clears the current board preview from the user interface.
+   *
+   * <p>If the current UI is an {@code AgonShell}, this method removes
+   * the board footer and clears the displayed board area.
+   */
   public void clearBoardPreview() {
     if (ui instanceof fr.univ.bordeaux.ui.cli.AgonShell shell) {
       shell.setBoardFooter("");
@@ -205,6 +211,15 @@ public class GameEngine {
     }
   }
 
+  /**
+   * Checks whether a command is forbidden during an online match.
+   *
+   * <p>Some local commands are disabled in online mode because they would
+   * conflict with the synchronized game state managed by the server.
+   *
+   * @param action the command to check
+   * @return true if the command is forbidden in online mode, false otherwise
+   */
   private boolean isForbiddenOnlineCommand(CmdAction action) {
     if (action == null) {
       return false;
@@ -222,12 +237,24 @@ public class GameEngine {
             || name.equalsIgnoreCase("load");
   }
 
+  /**
+   * Refreshes the board preview for the current online match.
+   *
+   * <p>This method updates the displayed board only if an online match
+   * is currently active in the application context.
+   */
   private void refreshOnlineBoard() {
     if (appContext != null && appContext.getCurrentOnlineMatch() != null) {
       previewMatch(appContext.getCurrentOnlineMatch());
     }
   }
 
+  /**
+   * Refreshes the currently relevant board preview.
+   *
+   * <p>If an online match is active, the online board is displayed.
+   * Otherwise, the local match board is refreshed when available.
+   */
   private void refreshCurrentBoard() {
     if (appContext != null
             && appContext.isOnlineGameActive()

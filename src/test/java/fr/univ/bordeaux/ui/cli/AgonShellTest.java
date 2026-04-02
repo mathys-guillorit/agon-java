@@ -36,6 +36,7 @@ import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -77,7 +78,7 @@ public class AgonShellTest {
   @BeforeEach
   void setUp() {
     cmds = new AgonRegister<>();
-    context = new AppContext();
+    context = new AppContext(new LocalProfile("test"));
 
     GameConfig config = new GameConfig();
     LineReader reader = new FakeLineReader("n");
@@ -89,7 +90,7 @@ public class AgonShellTest {
 
       // Local / gameplay commands
       cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-      cmds.register("quit", new CmdQuit(userInterface));
+      cmds.register("quit", new CmdQuit(userInterface, context));
       cmds.register("hint", new CmdHint(userInterface));
       cmds.register("show", new CmdShow(userInterface, config));
       cmds.register("load", new CmdLoad(userInterface, gameEngine));

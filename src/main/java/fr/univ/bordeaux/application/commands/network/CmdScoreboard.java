@@ -36,11 +36,26 @@ public class CmdScoreboard extends Cmd {
         );
     }
 
+    /**
+     * Creates a new instance of the scoreboard command.
+     *
+     * @param args command arguments (unused)
+     * @return a new {@code CmdScoreboard} command
+     */
     @Override
     public CmdAction createNew(String[] args) {
         return new CmdScoreboard(getCtx(), context);
     }
 
+    /**
+     * Executes the scoreboard command.
+     *
+     * <p>This method checks whether the client is connected, sends a request
+     * to retrieve the server scoreboard, and displays the result to the user.
+     *
+     * @param match current match manager (unused)
+     * @return true if the command executed, false if the client is not connected
+     */
     @Override
     public boolean execute(MatchManager match) {
 

@@ -16,16 +16,35 @@ public class NetworkPlayer extends AbstractPlayer {
         super(name, color);
     }
 
+    /**
+     * Returns the next action to perform for this player.
+     *
+     * <p>This implementation is unused for network players, as their moves
+     * are received from the server rather than generated locally.
+     *
+     * @param cmds command registry (unused)
+     * @return always null
+     */
     @Override
     public CmdAction getAction(AgonRegister<CmdAction> cmds) {
         return null;
     }
 
+    /**
+     * Returns the color assigned to this player.
+     *
+     * @return the player's color
+     */
     @Override
     public Color getColor() {
         return color;
     }
 
+    /**
+     * Returns the name of this player.
+     *
+     * @return the player's name
+     */
     @Override
     public String getName() {
         return name;

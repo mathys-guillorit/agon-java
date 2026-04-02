@@ -710,6 +710,16 @@ public class AgonClient {
         }
     }
 
+    /**
+     * Sends a full move to the server using internal board indices.
+     *
+     * <p>The move is converted to protocol coordinate format before being sent
+     * as a {@code MOVE} command.
+     *
+     * @param from source board index
+     * @param to destination board index
+     * @return true if the move was sent successfully, false otherwise
+     */
     public boolean sendMove(int from, int to) {
         if (!isConnected()) {
             return false;
@@ -732,6 +742,15 @@ public class AgonClient {
         }
     }
 
+    /**
+     * Sends a raw move string directly to the server.
+     *
+     * <p>This method is mainly used for moves already formatted according
+     * to the network protocol, such as relocation moves.
+     *
+     * @param rawMove move text to send
+     * @return true if the move was sent successfully, false otherwise
+     */
     public boolean sendRawMove(String rawMove) {
         if (!isConnected() || rawMove == null || rawMove.isBlank()) {
             return false;
@@ -748,6 +767,11 @@ public class AgonClient {
         }
     }
 
+    /**
+     * Sends a resignation request to the server for the current online game.
+     *
+     * <p>If the client is not connected, this method does nothing.
+     */
     public void resignGame() {
         if (!isConnected()) {
             return;

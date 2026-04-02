@@ -430,6 +430,17 @@ public class AgonServer {
         return session;
     }
 
+    /**
+     * Finishes an active game session and updates the server state.
+     *
+     * <p>This method removes the game from the active sessions, resets both
+     * players to idle status, updates the scoreboard, and notifies the winner
+     * and loser with a final {@code GAME_OVER} message.
+     *
+     * @param session the game session to finish
+     * @param winnerPlayerId the ID of the winning player
+     * @param reason the reason associated with the game end
+     */
     public synchronized void finishGame(ServerGameSession session, int winnerPlayerId, String reason) {
         if (session == null) {
             return;

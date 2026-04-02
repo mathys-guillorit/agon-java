@@ -246,6 +246,15 @@ public class ServerGameSession {
         return match.move(normalMove);
     }
 
+    /**
+     * Checks whether the given player must perform a replacement move.
+     *
+     * <p>A replacement move is required when the underlying match indicates
+     * that the player still has pieces to relocate instead of playing a normal move.
+     *
+     * @param playerId the ID of the player to check
+     * @return true if the player must perform a replacement move, false otherwise
+     */
     private boolean isReplacementMoveRequired(int playerId) {
         if (match == null) return false;
 
@@ -255,6 +264,11 @@ public class ServerGameSession {
         return match.isReplacementMoveRequired(color);
     }
 
+    /**
+     * Indicates whether this game session has ended.
+     *
+     * @return true if the underlying match is over, false otherwise
+     */
     public boolean isGameOver() {
         return match != null && match.isMatchOver();
     }

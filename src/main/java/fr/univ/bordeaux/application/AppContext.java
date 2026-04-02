@@ -176,22 +176,47 @@ public class AppContext implements OnlineGameStartListener {
 
     }
 
+    /**
+     * Indicates whether an online game is currently active.
+     *
+     * @return true if an online match is active, false otherwise
+     */
     public boolean isOnlineGameActive() {
         return onlineGameActive;
     }
 
+    /**
+     * Returns the identifier of the current online game.
+     *
+     * @return the current online game ID, or -1 if none is active
+     */
     public int getCurrentOnlineGameId() {
         return currentOnlineGameId;
     }
 
+    /**
+     * Returns the color assigned to the local player in the online match.
+     *
+     * @return the local player's color
+     */
     public Color getLocalOnlineColor() {
         return localOnlineColor;
     }
 
+    /**
+     * Indicates whether it is currently the local player's turn.
+     *
+     * @return true if it is the local player's turn, false otherwise
+     */
     public boolean isMyOnlineTurn() {
         return myOnlineTurn;
     }
 
+    /**
+     * Returns the current local visual representation of the online match.
+     *
+     * @return the current online match, or null if none is active
+     */
     public Match getCurrentOnlineMatch() {
         return currentOnlineMatch;
     }
@@ -305,6 +330,12 @@ public class AppContext implements OnlineGameStartListener {
         }
     }
 
+    /**
+     * Leaves the current online game and clears the associated local state.
+     *
+     * <p>This method resets online game flags, stops the local visual match,
+     * and clears the board preview from the game engine.
+     */
     public void leaveOnlineGame() {
         this.onlineGameActive = false;
         this.currentOnlineGameId = -1;
@@ -321,11 +352,24 @@ public class AppContext implements OnlineGameStartListener {
         }
     }
 
+    /**
+     * Called when the server notifies that the online game is over.
+     *
+     * <p>This method clears the current online game state.
+     *
+     * @param line the raw protocol message describing the game result
+     */
     @Override
     public void onGameOver(String line) {
         leaveOnlineGame();
     }
 
+    /**
+     * Called when the online board display needs to be refreshed.
+     *
+     * <p>If an online match is currently available, its board is previewed again
+     * through the game engine.
+     */
     @Override
     public void onOnlineBoardRefreshRequested() {
         if (gameEngine != null && currentOnlineMatch != null) {

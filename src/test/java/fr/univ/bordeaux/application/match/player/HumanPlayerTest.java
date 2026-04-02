@@ -2,6 +2,8 @@ package fr.univ.bordeaux.application.match.player;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
@@ -45,8 +47,10 @@ public class HumanPlayerTest {
   void setUp() {
     fakeUi = new FakeUserInterface();
     cmds = new AgonRegister<>();
+
+    AppContext context = new AppContext(new LocalProfile("test"));
     // On enregistre au moins une commande pour le test du parseur
-    cmds.register("quit", new CmdQuit(fakeUi));
+    cmds.register("quit", new CmdQuit(fakeUi, context));
 
     humanPlayer = new HumanPlayer("Jean", Color.BLACK, fakeUi);
   }

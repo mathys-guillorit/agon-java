@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -32,8 +34,9 @@ public class CmdHelpTest {
       Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
 
+      AppContext context = new AppContext(new LocalProfile("test"));
       cmds.register("help", new CmdHelp(gameUserInterface, cmds));
-      cmds.register("quit", new CmdQuit(gameUserInterface));
+      cmds.register("quit", new CmdQuit(gameUserInterface, context));
 
     } catch (Exception e) {
       fail("Setup failed: " + e.getMessage());
@@ -66,7 +69,8 @@ public class CmdHelpTest {
     String output = outContent.toString();
 
     assertTrue(output.contains("HELP: QUIT"));
-    assertTrue(output.contains("Exits the game"));
+    assertTrue(output.contains("Usage: quit"));
+    assertTrue(output.contains("disconnects from it"));
   }
 
   @Test

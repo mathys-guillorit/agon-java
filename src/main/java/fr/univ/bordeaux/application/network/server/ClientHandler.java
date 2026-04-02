@@ -183,6 +183,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Sends a server message to the connected client.
+     *
+     * <p>This method is a public wrapper around the internal send operation
+     * and is used by other server-side components to push protocol messages
+     * to this client handler.
+     *
+     * @param msg the message to send
+     * @throws IOException if the message cannot be written to the socket
+     */
     public void sendFromServer(String msg) throws IOException {
         send(msg);
     }
@@ -360,6 +370,15 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Handles RESIGN command.
+     *
+     * <p>This method checks that the player is logged in and currently involved
+     * in a game, retrieves the opponent, and finishes the game by declaring
+     * the opponent as the winner.
+     *
+     * @throws IOException if sending a response fails
+     */
     private void handleResign() throws IOException {
         if (player == null) {
             send("ERROR MESSAGE=NOT_LOGGED_IN");

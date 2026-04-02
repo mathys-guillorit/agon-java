@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.application.commands.AgonRegister;
@@ -74,7 +76,9 @@ public class GameEngineTest {
       gameEngine = new GameEngine(gameUserInterface, cmds);
 
       cmds.register("new", new CmdCreate(gameUserInterface, config, gameEngine));
-      cmds.register("quit", new CmdQuit(gameUserInterface));
+
+      AppContext context = new AppContext(new LocalProfile("test"));
+      cmds.register("quit", new CmdQuit(gameUserInterface, context));
       gameEngine.start();
 
       assertNotNull(

@@ -7,6 +7,7 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
+
 /**
  * Command responsible for handling exit behavior in the application.
  *

@@ -39,11 +39,27 @@ public class CmdServerList extends Cmd {
         );
     }
 
+    /**
+     * Creates a new instance of the server list command.
+     *
+     * @param args command arguments (unused)
+     * @return a new {@code CmdServerList} command
+     */
     @Override
     public CmdAction createNew(String[] args) {
         return new CmdServerList(getCtx(), context);
     }
 
+    /**
+     * Executes the server list command.
+     *
+     * <p>This method ensures that the discovery service is running,
+     * retrieves the list of available servers on the local network,
+     * and displays them to the user.
+     *
+     * @param match current match manager (unused)
+     * @return true if execution completes, false if discovery fails
+     */
     @Override
     public boolean execute(MatchManager match) {
 

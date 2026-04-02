@@ -26,7 +26,18 @@ public interface OnlineGameStartListener {
      */
     void onOpponentMoveReceived(String rawMove);
 
+    /**
+     * Called when the server notifies that the current online game has ended.
+     *
+     * @param line the raw protocol message describing the game result
+     */
     void onGameOver(String line);
 
+    /**
+     * Called when the client should refresh the online board display.
+     *
+     * <p>This is typically triggered after an error or state update requiring
+     * a visual synchronization with the server.
+     */
     void onOnlineBoardRefreshRequested();
 }

@@ -2,6 +2,8 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.application.commands.AgonRegister;
@@ -45,7 +47,8 @@ public class CmdQuitTest {
     gameUserInterface = createUiWithInput("n");
     MatchManager match = createRealMatch(gameUserInterface);
 
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface).createNew(null);
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface,context).createNew(null);
     boolean result = cmdQuit.execute(match);
 
     assertTrue(result);
@@ -61,7 +64,8 @@ public class CmdQuitTest {
     MatchManager match = createRealMatch(gameUserInterface);
     match.setIsSaved(false);
 
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface).createNew(null);
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
     cmdQuit.execute(match);
 
     assertTrue(match.isSaved(), "Le match devrait être marqué comme sauvegardé");
@@ -79,7 +83,8 @@ public class CmdQuitTest {
     MatchManager match = createRealMatch(gameUserInterface);
     match.setIsSaved(false);
 
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface).createNew(null);
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
     cmdQuit.execute(match);
 
     assertTrue(match.isSaved());
@@ -92,7 +97,9 @@ public class CmdQuitTest {
   @DisplayName("Quitter alors qu'aucun match n'est en cours")
   void testQuitNoActiveMatch() throws Exception {
     gameUserInterface = createUiWithInput("");
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface).createNew(null);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
 
     // Si match est null, on quitte directement (branche if(match != null) sautée)
     boolean result = cmdQuit.execute(null);
@@ -108,7 +115,8 @@ public class CmdQuitTest {
     MatchManager match = createRealMatch(gameUserInterface);
     match.setIsSaved(true); // Déjà sauvegardé, ne doit pas demander
 
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface).createNew(null);
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
     cmdQuit.execute(match);
 
     assertFalse(gameUserInterface.isRunning());
@@ -121,7 +129,9 @@ public class CmdQuitTest {
   @DisplayName("Vérification de la description")
   void testDescription() throws Exception {
     gameUserInterface = createUiWithInput("");
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context);
     assertTrue(cmdQuit.getDescription().contains("Usage: quit"));
   }
 

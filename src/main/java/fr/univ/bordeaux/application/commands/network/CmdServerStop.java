@@ -36,11 +36,26 @@ public class CmdServerStop extends Cmd {
         );
     }
 
+    /**
+     * Creates a new instance of the server stop command.
+     *
+     * @param args command arguments (unused)
+     * @return a new {@code CmdServerStop} command
+     */
     @Override
     public CmdAction createNew(String[] args) {
         return new CmdServerStop(getCtx(), context);
     }
 
+    /**
+     * Executes the server stop command.
+     *
+     * <p>This method checks whether a local server is currently running,
+     * stops it if present, and removes it from the application context.
+     *
+     * @param match current match manager (unused)
+     * @return true if the server was stopped, false if no server was running
+     */
     @Override
     public boolean execute(MatchManager match) {
 
