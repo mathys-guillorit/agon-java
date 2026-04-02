@@ -71,6 +71,8 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
   private AtomicBoolean debug;
 
+  private String boardFooter = "";
+
   /**
    * Internal initialization method. Sets default states for flags and constructs the default user
    * prompt.
@@ -331,7 +333,13 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
    */
   @Override
   public void updateBoard(RestrictedAgonBoard board) {
-    this.cliWln(ConsoleRenderer.getBoardRepresentation(board));
+    String renderedBoard = ConsoleRenderer.getBoardRepresentation(board);
+
+    if (boardFooter != null && !boardFooter.isBlank()) {
+      renderedBoard = renderedBoard + "\n" + boardFooter;
+    }
+
+    this.cliWln(renderedBoard);
   }
 
   /**
@@ -376,4 +384,13 @@ public class AgonShell extends AbstractGameUi implements GameUserInterface {
   public AtomicBoolean getRunning() {
     return running;
   }
+
+  public void clearBoardDisplay() {
+    this.cliWln("");
+  }
+
+  public void setBoardFooter(String boardFooter) {
+    this.boardFooter = (boardFooter == null) ? "" : boardFooter;
+  }
+
 }

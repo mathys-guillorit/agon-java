@@ -5,6 +5,9 @@ import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.application.network.protocol.MoveProtocolParser;
+import fr.univ.bordeaux.application.network.protocol.MoveParsed;
 
 /**
  * Represents a single active game session on the server.
@@ -180,5 +183,79 @@ public class ServerGameSession {
      */
     public String describeRoles() {
         return "WHITE=" + whitePlayer.getName() + " BLACK=" + blackPlayer.getName();
+    }
+
+    /**
+     * Applies a move to the underlying server-side match.
+     *
+     * @param playerId the ID of the player attempting the move
+     * @param rawMove the compact move text (e.g. "e2e4")
+     * @return true if the move was accepted and applied, false otherwise
+     */
+    public boolean playMove(int playerId, String rawMove) {
+        if (!containsPlayer(playerId)) {
+            return false;
+        }
+
+        if (match == null) {
+            return false;
+        }
+
+        if (!isPlayersTurn(playerId)) {
+            return false;
+        }
+
+        MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
+        if (parsedMove == null) {
+            return false;
+        }
+
+        Color playerColor = getColorOfPlayer(playerId);
+        if (playerColor == null) {
+            return false;
+        }
+
+        boolean replacementRequired = isReplacementMoveRequired(playerId);
+
+        // Replacement phase: only short format like "e3" is allowed
+        if (replacementRequired) {
+            if (parsedMove.hasSource()) {
+                return false;
+            }
+
+            Move replacementMove = new Move(
+                    -1,
+                    parsedMove.getToIndex(),
+                    playerColor
+            );
+
+            return match.move(replacementMove);
+        }
+
+        // Normal phase: only full format like "j5i4" is allowed
+        if (!parsedMove.hasSource()) {
+            return false;
+        }
+
+        Move normalMove = new Move(
+                parsedMove.getFromIndex(),
+                parsedMove.getToIndex(),
+                playerColor
+        );
+
+        return match.move(normalMove);
+    }
+
+    private boolean isReplacementMoveRequired(int playerId) {
+        if (match == null) return false;
+
+        Color color = getColorOfPlayer(playerId);
+        if (color == null) return false;
+
+        return match.isReplacementMoveRequired(color);
+    }
+
+    public boolean isGameOver() {
+        return match != null && match.isMatchOver();
     }
 }

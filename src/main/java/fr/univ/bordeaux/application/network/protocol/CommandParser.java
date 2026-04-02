@@ -33,22 +33,23 @@ public class CommandParser {
         CommandType type = CommandType.convertCommandType(parts[0]);
 
         Map<String, String> args = new HashMap<>();
+        String rawArg = null;
         for (int i = 1; i < parts.length; i++) {
             String token = parts[i];
             int eq = token.indexOf('=');
 
-            if (eq <= 0) {
-                continue;
-            }
+            if (eq > 0) {
+                String key = token.substring(0, eq);
+                String value = token.substring(eq + 1);
 
-            String key = token.substring(0, eq);
-            String value = token.substring(eq + 1);
-
-            if (!key.isEmpty()) {
-                args.put(key, value);
+                if (!key.isEmpty()) {
+                    args.put(key, value);
+                }
+            } else if (rawArg == null) {
+                rawArg = token;
             }
         }
 
-        return new Command(type, args);
+        return new Command(type, args, rawArg);
     }
 }

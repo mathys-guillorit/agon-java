@@ -313,20 +313,16 @@ public class AgonServer {
         }
 
         StringBuilder sb = new StringBuilder();
-
         sb.append("=== SCOREBOARD ===\n");
-        for (ServerPlayerStats stats : scoreboard.getAllStats()) {
-            OnlinePlayer player = playersByName.get(stats.getPlayerName().toLowerCase());
 
-            if (player != null) {
-                sb.append("ID=").append(player.getId())
-                        .append(" NAME=").append(stats.getPlayerName())
-                        .append(" WINS=").append(stats.getWins())
-                        .append(" LOSSES=").append(stats.getLosses())
-                        .append(" GAMES=").append(stats.getGames())
-                        .append("\n");
-            }
+        for (ServerPlayerStats stats : scoreboard.getAllStats()) {
+            sb.append("NAME=").append(stats.getPlayerName())
+                    .append(" WINS=").append(stats.getWins())
+                    .append(" LOSSES=").append(stats.getLosses())
+                    .append(" GAMES=").append(stats.getGames())
+                    .append("\n");
         }
+
         sb.append("==================\n");
         sb.append("END");
         return sb.toString();
@@ -432,5 +428,57 @@ public class AgonServer {
         target.setStatus(PlayerStatus.INGAME);
 
         return session;
+    }
+
+    public synchronized void finishGame(ServerGameSession session, int winnerPlayerId, String reason) {
+        if (session == null) {
+            return;
+        }
+
+        int gameId = session.getGameId();
+
+        ServerGameSession removed = activeGames.remove(gameId);
+        if (removed == null) {
+            return;
+        }
+
+        OnlinePlayer white = removed.getwhitePlayer();
+        OnlinePlayer black = removed.getblackPlayer();
+
+        playerToGame.remove(white.getId());
+        playerToGame.remove(black.getId());
+
+        white.setStatus(PlayerStatus.IDLE);
+        black.setStatus(PlayerStatus.IDLE);
+
+        OnlinePlayer loser = removed.getOpponent(winnerPlayerId);
+        OnlinePlayer winner = null;
+
+        if (white.getId() == winnerPlayerId) {
+            winner = white;
+        } else if (black.getId() == winnerPlayerId) {
+            winner = black;
+        }
+
+        if (winner != null && loser != null) {
+            scoreboard.getOrCreateStats(winner.getName()).addWin();
+            scoreboard.getOrCreateStats(loser.getName()).addLoss();
+
+            if (winner.getHandler() != null) {
+                try {
+                    winner.getHandler().sendFromServer(
+                            "GAME_OVER RESULT=WIN REASON=" + reason + " OPPONENT=" + loser.getName()
+                    );
+                } catch (IOException ignored) {}
+            }
+
+            if (loser.getHandler() != null) {
+                try {
+                    loser.getHandler().sendFromServer(
+                            "GAME_OVER RESULT=LOSS REASON=" + reason + " OPPONENT=" + winner.getName()
+                    );
+                } catch (IOException ignored) {}
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@ public class Command {
 
     private final CommandType type;
     private final Map<String, String> args;
+    private final String rawArg;
 
     /**
      * Creates a new Command instance.
@@ -18,6 +19,20 @@ public class Command {
     public Command(CommandType type, Map<String, String> args) {
         this.type = type;
         this.args = args;
+        this.rawArg = null;
+    }
+
+    /**
+     * Creates a new command.
+     *
+     * @param type the parsed command type
+     * @param args parsed key=value arguments
+     * @param rawArgument optional raw argument
+     */
+    public Command(CommandType type, Map<String, String> args, String rawArgument) {
+        this.type = type;
+        this.args = args;
+        this.rawArg = rawArgument;
     }
 
     /**
@@ -44,5 +59,16 @@ public class Command {
      */
     public Map<String, String> getArgs() {
         return args;
+    }
+
+    /**
+     * Returns the optional raw argument.
+     *
+     * <p>This is mainly used for move-related messages such as "MOVE e2e4".
+     *
+     * @return the raw argument, or null if none exists
+     */
+    public String getRawArgument() {
+        return rawArg;
     }
 }

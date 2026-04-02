@@ -1,5 +1,12 @@
 package fr.univ.bordeaux.application.network.client;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.application.network.OnlineGameInfo;
+import fr.univ.bordeaux.application.network.OnlineGameStartListener;
+
+import java.util.Map;
+import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -28,30 +35,11 @@ public class AgonClient {
 
     /** Local profile containing the player's name and server ids. */
     private final LocalProfile profile;
-
-    // =========================
-    // KEEP ALIVE MANAGEMENT
-    // =========================
-
-    /** Thread responsible for sending periodic PING messages */
     private Thread keepAliveThread;
-
-    /** Flag used to control the keep-alive loop */
     private volatile boolean keepAliveRunning = false;
 
-    // =========================
-    // READER THREAD MANAGEMENT
-    // =========================
-
-    /** Dedicated thread that continuously reads incoming server messages */
     private Thread readerThread;
-
-    /** Flag used to control the reader loop */
     private volatile boolean readerRunning = false;
-
-    // =========================
-    // RESPONSE STORAGE
-    // =========================
 
     /**
      * Stores synchronous server responses in arrival order.
@@ -69,6 +57,8 @@ public class AgonClient {
      * <p>This avoids mixing PLAYERS / SCOREBOARD / PING / NEW replies.
      */
     private final Object commandLock = new Object();
+
+    private OnlineGameStartListener onlineGameStartListener;
 
     /**
      * Constructor with a local profile.
@@ -192,21 +182,80 @@ public class AgonClient {
      */
     private boolean isAsyncEvent(String line) {
         return line.startsWith("GAME_STARTED")
+                || line.startsWith("NEW_OK")
+                || line.startsWith("MOVE_OK")
                 || line.startsWith("OPPONENT_MOVE")
                 || line.startsWith("GAME_OVER")
-                || line.startsWith("YOUR_TURN");
+                || line.startsWith("YOUR_TURN")
+                || line.startsWith("ERROR MESSAGE=");
     }
 
     /**
      * Handles asynchronous events sent by the server.
      *
-     * <p>For now this only prints the event. Later it can notify the UI
-     * or the online match layer.
-     *
      * @param line async event line
      */
     private void handleAsyncEvent(String line) {
-        System.out.println("[CLIENT EVENT] " + line);
+        if (line.startsWith("NEW_OK") || line.startsWith("GAME_STARTED")) {
+            System.out.println("[ONLINE] " + line);
+            handleGameStartMessage(line);
+            return;
+        }
+
+        if (line.startsWith("MOVE_OK")) {
+            String moveText = line.substring("MOVE_OK".length()).trim();
+            System.out.println("[ONLINE] Move accepted: " + moveText);
+
+            if (onlineGameStartListener != null && !moveText.isBlank()) {
+                onlineGameStartListener.onLocalMoveConfirmed(moveText);
+            }
+            return;
+        }
+
+        if (line.startsWith("OPPONENT_MOVE")) {
+            String moveText = line.substring("OPPONENT_MOVE".length()).trim();
+            System.out.println("[ONLINE] Opponent played: " + moveText);
+
+            if (onlineGameStartListener != null && !moveText.isBlank()) {
+                onlineGameStartListener.onOpponentMoveReceived(moveText);
+            }
+            return;
+        }
+
+        if (line.startsWith("GAME_OVER")) {
+            if (line.contains("RESULT=WIN") && line.contains("REASON=OPPONENT_LEFT")) {
+                System.out.println("[ONLINE] Opponent left the game. You win by forfeit.");
+            } else if (line.contains("RESULT=LOSS") && line.contains("REASON=OPPONENT_LEFT")) {
+                System.out.println("[ONLINE] You resigned. You lose the game.");
+            } else if (line.contains("RESULT=WIN")) {
+                System.out.println("[ONLINE] You win.");
+            } else if (line.contains("RESULT=LOSS")) {
+                System.out.println("[ONLINE] You lose.");
+            } else {
+                System.out.println("[ONLINE] " + line);
+            }
+
+            if (onlineGameStartListener != null) {
+                onlineGameStartListener.onGameOver(line);
+            }
+            return;
+        }
+
+        if (line.startsWith("ERROR MESSAGE=")) {
+            String msg = line.substring("ERROR MESSAGE=".length()).trim();
+
+            switch (msg) {
+                case "INVALID_MOVE" -> System.out.println("[SERVER] Illegal move.");
+                case "NOT_YOUR_TURN" -> System.out.println("[SERVER] Not your turn.");
+                case "MISSING_MOVE" -> System.out.println("[SERVER] Missing move.");
+                case "NOT_IN_GAME" -> System.out.println("[SERVER] You are not in a game.");
+                case "GAME_NOT_FOUND" -> System.out.println("[SERVER] Game not found.");
+                default -> System.out.println("[SERVER] " + msg);
+            }
+            return;
+        }
+
+        System.out.println("[SERVER] " + line);
     }
 
     /**
@@ -411,14 +460,7 @@ public class AgonClient {
         synchronized (commandLock) {
             try {
                 sendLine("NEW PLAYER_ID=" + targetPlayerId);
-
-                String response = waitResponse(5000);
-
-                if (response == null) {
-                    return null;
-                }
-
-                return response;
+                return "[CLIENT] New game request sent.";
 
             } catch (IOException e) {
                 disconnectSilently();
@@ -569,5 +611,144 @@ public class AgonClient {
         }
 
         return null;
+    }
+
+    /**
+     * Registers a listener notified when an online game starts.
+     *
+     * @param listener the listener to notify
+     */
+    public void setOnlineGameStartListener(OnlineGameStartListener listener) {
+        this.onlineGameStartListener = listener;
+    }
+
+    /**
+     * Parses a protocol line formatted as:
+     * COMMAND KEY=VALUE KEY=VALUE ...
+     *
+     * @param line the protocol line
+     * @return a map of parsed key/value pairs
+     */
+    private Map<String, String> parseProtocolArgs(String line) {
+        Map<String, String> args = new HashMap<>();
+
+        if (line == null || line.isBlank()) {
+            return args;
+        }
+
+        String[] parts = line.trim().split("\\s+");
+
+        for (int i = 1; i < parts.length; i++) {
+            String token = parts[i];
+            int eq = token.indexOf('=');
+
+            if (eq <= 0) {
+                continue;
+            }
+
+            String key = token.substring(0, eq);
+            String value = token.substring(eq + 1);
+
+            if (!key.isEmpty()) {
+                args.put(key, value);
+            }
+        }
+
+        return args;
+    }
+
+    /**
+     * Handles a game-start protocol message and notifies the registered listener.
+     *
+     * <p>Supported messages:
+     * <ul>
+     *   <li>NEW_OK ...</li>
+     *   <li>GAME_STARTED ...</li>
+     * </ul>
+     *
+     * @param line the received protocol line
+     */
+    private void handleGameStartMessage(String line) {
+        Map<String, String> args = parseProtocolArgs(line);
+
+        try {
+            String gameIdValue = args.get("GAME_ID");
+            String colorValue = args.get("COLOR");
+            String whiteName = args.get("WHITE");
+            String blackName = args.get("BLACK");
+
+            if (gameIdValue == null || colorValue == null || whiteName == null || blackName == null) {
+                System.err.println("[CLIENT] Invalid game start message: " + line);
+                return;
+            }
+
+            int gameId = Integer.parseInt(gameIdValue);
+            Color localColor = Color.valueOf(colorValue.toUpperCase());
+
+            // At game start, WHITE always starts.
+            boolean myTurn = (localColor == Color.WHITE);
+
+            OnlineGameInfo info = new OnlineGameInfo(
+                    gameId,
+                    localColor,
+                    whiteName,
+                    blackName,
+                    myTurn
+            );
+
+            if (onlineGameStartListener != null) {
+                onlineGameStartListener.onOnlineGameStarted(info);
+            }
+
+        } catch (Exception e) {
+            System.err.println("[CLIENT] Failed to parse game start message: " + line);
+        }
+    }
+
+    public boolean sendMove(int from, int to) {
+        if (!isConnected()) {
+            return false;
+        }
+
+        try {
+            String moveText =
+                    CoordinateMapper.toAbaPro(from).toLowerCase()
+                            + CoordinateMapper.toAbaPro(to).toLowerCase();
+
+            synchronized (commandLock) {
+                sendLine("MOVE " + moveText);
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            disconnectSilently();
+            return false;
+        }
+    }
+
+    public boolean sendRawMove(String rawMove) {
+        if (!isConnected() || rawMove == null || rawMove.isBlank()) {
+            return false;
+        }
+
+        try {
+            sendLine("MOVE " + rawMove.trim().toUpperCase());
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public void resignGame() {
+        if (!isConnected()) {
+            return;
+        }
+
+        try {
+            sendLine("RESIGN");
+        } catch (IOException e) {
+            System.err.println("[CLIENT] Failed to resign from online match: " + e.getMessage());
+        }
     }
 }

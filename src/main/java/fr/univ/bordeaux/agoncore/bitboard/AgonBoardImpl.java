@@ -867,7 +867,8 @@ public class AgonBoardImpl implements AgonBoard {
    * @param color The {@link Color} of the player to check.
    * @return {@code true} if at least one piece is pending relocation; {@code false} otherwise.
    */
-  private boolean hasPiecesToRelocate(Color color) {
+  @Override
+  public boolean hasPiecesToRelocate(Color color) {
     if (color == Color.WHITE) {
       return whiteQueenToRelocate || whitePawnsToRelocate > 0;
     }
@@ -980,4 +981,8 @@ public class AgonBoardImpl implements AgonBoard {
   public List<HistoryInformations> getHistory() {
     return history.toList();
   }
+
+
 }
+
+

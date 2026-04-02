@@ -303,6 +303,8 @@ public class GameLauncher {
         shellRef[0] = (AgonShell) userInterface;
 
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
+        context.setGameEngine(gameEngine);
+        gameEngine.setAppContext(context);
 
         // =========================
         // Local / gameplay commands

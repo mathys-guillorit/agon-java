@@ -104,4 +104,6 @@ public interface AgonBoard extends RestrictedAgonBoard {
      * @return A list of strings representing the board visually.
      */
     List<String> toTextList();
+
+    boolean hasPiecesToRelocate(Color color);
 }

@@ -16,6 +16,10 @@ public enum CommandType {
     SCOREBOARD,
     NEW,
     NEW_OK,
+    MOVE,
+    MOVE_OK,
+    OPPONENT_MOVE,
+    RESIGN,
     UNKNOWN;
 
     /**

@@ -7,6 +7,9 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.jline.reader.Completer;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Command responsible for executing a player's move on the board.
@@ -24,6 +27,10 @@ public class CmdMove extends Cmd {
 
   /** The target index/coordinate. */
   private int destination;
+
+  /** Pattern for compact move format such as F1F2 or e10f11. */
+  private static final Pattern MOVE_INPUT_PATTERN =
+          Pattern.compile("^([a-kA-K])(\\d{1,2})([a-kA-K])(\\d{1,2})$");
 
   /**
    * Constructs a move command using a pre-built {@link Move} object.
@@ -84,6 +91,30 @@ public class CmdMove extends Cmd {
   }
 
   /**
+   * Returns the source index of the move.
+   *
+   * @return the source index
+   */
+  public int getFrom() {
+    if (this.move != null) {
+      return this.move.getFrom();
+    }
+    return this.from;
+  }
+
+  /**
+   * Returns the destination index of the move.
+   *
+   * @return the destination index
+   */
+  public int getDestination() {
+    if (this.move != null) {
+      return this.move.getDestination();
+    }
+    return this.destination;
+  }
+
+  /**
    * Factory method to create a new move action from CLI arguments. * @param args Arguments provided
    * (e.g., from and destination).
    *
@@ -91,8 +122,32 @@ public class CmdMove extends Cmd {
    */
   @Override
   public CmdAction createNew(String[] args) {
-    // Note: Implementation depends on how you parse "move A1 B2"
-    return null;
+    if (args == null || args.length < 1) {
+      return null;
+    }
+
+    String rawMove = args[0].trim();
+    Matcher matcher = MOVE_INPUT_PATTERN.matcher(rawMove);
+
+    if (!matcher.matches()) {
+      return null;
+    }
+
+    try {
+      char fromLetter = Character.toUpperCase(matcher.group(1).charAt(0));
+      int fromNumber = Integer.parseInt(matcher.group(2));
+
+      char toLetter = Character.toUpperCase(matcher.group(3).charAt(0));
+      int toNumber = Integer.parseInt(matcher.group(4));
+
+      int fromIndex = CoordinateMapper.toIndex(fromLetter, fromNumber);
+      int toIndex = CoordinateMapper.toIndex(toLetter, toNumber);
+
+      return new CmdMove(fromIndex, toIndex, getCtx());
+
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   /**

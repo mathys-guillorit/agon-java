@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
@@ -124,5 +125,9 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;
+  }
+
+  public boolean isReplacementMoveRequired(Color color) {
+    return agonBoard != null && agonBoard.hasPiecesToRelocate(color);
   }
 }

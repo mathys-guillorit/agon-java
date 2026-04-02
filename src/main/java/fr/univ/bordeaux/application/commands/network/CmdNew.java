@@ -1,9 +1,10 @@
-package fr.univ.bordeaux.application.commands.specialized;
+package fr.univ.bordeaux.application.commands.network;
 
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;

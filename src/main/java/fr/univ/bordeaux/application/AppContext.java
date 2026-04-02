@@ -1,28 +1,37 @@
 package fr.univ.bordeaux.application;
 
+import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.ClientDiscovery;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.application.network.server.AgonServer;
+import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.application.match.Match;
+import fr.univ.bordeaux.application.match.MatchFactory;
+import fr.univ.bordeaux.application.network.OnlineGameInfo;
+import fr.univ.bordeaux.application.network.OnlineGameStartListener;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
+import fr.univ.bordeaux.application.network.protocol.MoveProtocolParser;
+import fr.univ.bordeaux.application.network.protocol.MoveParsed;
 
 /**
  * Application shared context.
  */
-public class AppContext {
+public class AppContext implements OnlineGameStartListener {
 
-    /** Local profile of the current user. */
     private final LocalProfile profile;
-
-    /** Shared TCP client instance. */
     private final AgonClient client;
-
-    /** Current local server instance. */
     private AgonServer server;
-
-    /** UDP discovery instance. */
     private ClientDiscovery discovery;
-
     private AppMode mode = AppMode.LOCAL;
+
+    // For the OnlineGame part
+    private boolean onlineGameActive = false;
+    private int currentOnlineGameId = -1;
+    private Color localOnlineColor;
+    private boolean myOnlineTurn = false;
+    private Match currentOnlineMatch;
+    private GameEngine gameEngine;
 
     /**
      * Creates an application context from an existing local profile.
@@ -32,6 +41,7 @@ public class AppContext {
     public AppContext(LocalProfile profile) {
         this.profile = profile;
         this.client = new AgonClient(profile);
+        this.client.setOnlineGameStartListener(this);
     }
 
     /**
@@ -116,5 +126,203 @@ public class AppContext {
      */
     public void setMode(AppMode mode) {
         this.mode = mode;
+    }
+
+    /**
+     * Registers the game engine associated with this application context.
+     *
+     * @param gameEngine the application game engine
+     */
+    public void setGameEngine(GameEngine gameEngine) {
+        this.gameEngine = gameEngine;
+    }
+
+    /**
+     * Called when an online game has started.
+     *
+     * <p>This method creates the local visual match used by the UI,
+     * stores the online game state, and injects the match into the game engine.
+     *
+     * @param info the parsed online game information
+     */
+    @Override
+    public void onOnlineGameStarted(OnlineGameInfo info) {
+        Match localMatch = MatchFactory.createOnlineMatch(
+                info.getWhitePlayerName(),
+                info.getBlackPlayerName()
+        );
+
+        this.onlineGameActive = true;
+        this.currentOnlineGameId = info.getGameId();
+        this.localOnlineColor = info.getLocalColor();
+        this.myOnlineTurn = info.isMyTurn();
+        this.currentOnlineMatch = localMatch;
+
+        System.out.println("[ONLINE] Game started. GAME_ID=" + info.getGameId());
+        System.out.println("[ONLINE] You are " + info.getLocalColor());
+        System.out.println("[ONLINE] WHITE=" + info.getWhitePlayerName()
+                + " BLACK=" + info.getBlackPlayerName());
+
+        if (gameEngine != null) {
+            gameEngine.previewMatch(localMatch);
+        }
+
+        if (myOnlineTurn) {
+            System.out.println("[ONLINE] Your turn");
+        }
+        else {
+            System.out.println("[ONLINE] Opponent turn");
+        }
+
+    }
+
+    public boolean isOnlineGameActive() {
+        return onlineGameActive;
+    }
+
+    public int getCurrentOnlineGameId() {
+        return currentOnlineGameId;
+    }
+
+    public Color getLocalOnlineColor() {
+        return localOnlineColor;
+    }
+
+    public boolean isMyOnlineTurn() {
+        return myOnlineTurn;
+    }
+
+    public Match getCurrentOnlineMatch() {
+        return currentOnlineMatch;
+    }
+
+    /**
+     * Updates the local online turn flag.
+     *
+     * @param myOnlineTurn true if it is now the local player's turn
+     */
+    public void setMyOnlineTurn(boolean myOnlineTurn) {
+        this.myOnlineTurn = myOnlineTurn;
+    }
+
+    /**
+     * Called when the server confirms a move played by the local player.
+     *
+     * <p>The confirmed move is applied to the local visual online match,
+     * the board is refreshed, and the turn is passed to the opponent.
+     *
+     * @param rawMove compact move text (e.g. "e2e4")
+     */
+    @Override
+    public void onLocalMoveConfirmed(String rawMove) {
+        if (currentOnlineMatch == null) {
+            return;
+        }
+
+        MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
+        if (parsedMove == null) {
+            System.err.println("[ONLINE] Failed to parse confirmed move: " + rawMove);
+            return;
+        }
+
+        Move move;
+
+        if (parsedMove.hasSource()) {
+            move = new Move(
+                    parsedMove.getFromIndex(),
+                    parsedMove.getToIndex(),
+                    localOnlineColor
+            );
+        } else {
+            move = new Move(
+                    -1,
+                    parsedMove.getToIndex(),
+                    localOnlineColor
+            );
+        }
+
+        boolean ok = currentOnlineMatch.move(move);
+        if (!ok) {
+            System.err.println("[ONLINE] Failed to apply confirmed local move: " + rawMove);
+            return;
+        }
+
+        myOnlineTurn = false;
+
+        if (gameEngine != null) {
+            gameEngine.previewMatch(currentOnlineMatch);
+        }
+    }
+
+    /**
+     * Called when the client receives a move played by the opponent.
+     *
+     * <p>The move is applied to the local visual online match,
+     * the board is refreshed, and the turn is passed to the local player.
+     *
+     * @param rawMove compact move text (e.g. "e7e5")
+     */
+    @Override
+    public void onOpponentMoveReceived(String rawMove) {
+        if (currentOnlineMatch == null) {
+            return;
+        }
+
+        MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
+        if (parsedMove == null) {
+            System.err.println("[ONLINE] Failed to parse opponent move: " + rawMove);
+            return;
+        }
+
+        Color opponentColor =
+                (localOnlineColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
+
+        Move move;
+        if (parsedMove.hasSource()) {
+            move = new Move(
+                    parsedMove.getFromIndex(),
+                    parsedMove.getToIndex(),
+                    opponentColor
+            );
+        } else {
+            move = new Move(
+                    -1,
+                    parsedMove.getToIndex(),
+                    opponentColor
+            );
+        }
+
+        boolean ok = currentOnlineMatch.move(move);
+        if (!ok) {
+            System.err.println("[ONLINE] Failed to apply opponent move: " + rawMove);
+            return;
+        }
+
+        myOnlineTurn = true;
+
+        if (gameEngine != null) {
+            gameEngine.previewMatch(currentOnlineMatch);
+        }
+    }
+
+    public void leaveOnlineGame() {
+        this.onlineGameActive = false;
+        this.currentOnlineGameId = -1;
+        this.myOnlineTurn = false;
+
+        if (this.currentOnlineMatch != null) {
+            this.currentOnlineMatch.quit();
+        }
+
+        this.currentOnlineMatch = null;
+
+        if (this.gameEngine != null) {
+            this.gameEngine.clearBoardPreview();
+        }
+    }
+
+    @Override
+    public void onGameOver(String line) {
+        leaveOnlineGame();
     }
 }

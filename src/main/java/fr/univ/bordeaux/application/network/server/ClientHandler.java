@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.network.player.PlayerStatus;
 import fr.univ.bordeaux.application.network.protocol.Command;
 import fr.univ.bordeaux.application.network.protocol.CommandParser;
 import fr.univ.bordeaux.application.network.protocol.CommandType;
+import fr.univ.bordeaux.application.network.server.ServerGameSession;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -126,6 +127,12 @@ public class ClientHandler implements Runnable {
                 }  else if (cmd.getType() == CommandType.NEW) {
                     handleNew(cmd);
 
+                } else if (cmd.getType() == CommandType.MOVE) {
+                    handleMove(cmd);
+
+                } else if (cmd.getType() == CommandType.RESIGN) {
+                    handleResign();
+
                 } else if (cmd.getType() == CommandType.QUIT) {
                     break;
                 }
@@ -136,12 +143,28 @@ public class ClientHandler implements Runnable {
                 System.err.println("[SERVER] ClientHandler error: " + e.getMessage());
             }
         } finally {
-            if (player != null) {
+            if (player != null && server != null) {
+                Integer gameId = server.getGameIdByPlayer(player.getId());
+
+                if (gameId != null) {
+                    ServerGameSession session = server.getGameById(gameId);
+
+                    if (session != null) {
+                        OnlinePlayer opponent = session.getOpponent(player.getId());
+
+                        if (opponent != null) {
+                            server.finishGame(session, opponent.getId(), "OPPONENT_LEFT");
+                        }
+                    }
+                }
+
                 server.removePlayer(player);
             }
+
             if (server != null) {
                 server.removeClient(this);
             }
+
             stop();
         }
     }
@@ -158,6 +181,10 @@ public class ClientHandler implements Runnable {
             out.write('\n');
             out.flush();
         }
+    }
+
+    public void sendFromServer(String msg) throws IOException {
+        send(msg);
     }
 
     /**
@@ -201,13 +228,7 @@ public class ClientHandler implements Runnable {
      * Handles NEW command.
      *
      * <p>This method validates the target player, creates a new online match
-     * on the server, and notifies both players of:
-     * <ul>
-     *   <li>the game ID,</li>
-     *   <li>the opponent information,</li>
-     *   <li>their assigned color,</li>
-     *   <li>the white/black role distribution.</li>
-     * </ul>
+     * on the server, and notifies both players.
      *
      * @param cmd parsed NEW command
      * @throws IOException if sending a response fails
@@ -284,5 +305,85 @@ public class ClientHandler implements Runnable {
                             + " " + roles
             );
         }
+    }
+
+    /**
+     * Handles MOVE command.
+     *
+     * @param cmd parsed MOVE command
+     * @throws IOException if sending a response fails
+     */
+    private void handleMove(Command cmd) throws IOException {
+        if (player == null) {
+            send("ERROR MESSAGE=NOT_LOGGED_IN");
+            return;
+        }
+
+        Integer gameId = server.getGameIdByPlayer(player.getId());
+        if (gameId == null) {
+            send("ERROR MESSAGE=NOT_IN_GAME");
+            return;
+        }
+
+        ServerGameSession session = server.getGameById(gameId);
+        if (session == null) {
+            send("ERROR MESSAGE=GAME_NOT_FOUND");
+            return;
+        }
+
+        String rawMove = cmd.getRawArgument();
+        if (rawMove == null || rawMove.isBlank()) {
+            send("ERROR MESSAGE=MISSING_MOVE");
+            return;
+        }
+
+        boolean ok = session.playMove(player.getId(), rawMove);
+
+        if (!ok) {
+            if (!session.isPlayersTurn(player.getId())) {
+                send("ERROR MESSAGE=NOT_YOUR_TURN");
+            } else {
+                send("ERROR MESSAGE=INVALID_MOVE");
+            }
+            return;
+        }
+
+        send("MOVE_OK " + rawMove);
+
+        OnlinePlayer opponent = session.getOpponent(player.getId());
+        if (opponent != null && opponent.getHandler() != null) {
+            opponent.getHandler().send("OPPONENT_MOVE " + rawMove);
+        }
+
+        if (session.isGameOver()) {
+            server.finishGame(session, player.getId(), "NORMAL_END");
+        }
+    }
+
+    private void handleResign() throws IOException {
+        if (player == null) {
+            send("ERROR MESSAGE=NOT_LOGGED_IN");
+            return;
+        }
+
+        Integer gameId = server.getGameIdByPlayer(player.getId());
+        if (gameId == null) {
+            send("ERROR MESSAGE=NOT_IN_GAME");
+            return;
+        }
+
+        ServerGameSession session = server.getGameById(gameId);
+        if (session == null) {
+            send("ERROR MESSAGE=GAME_NOT_FOUND");
+            return;
+        }
+
+        OnlinePlayer opponent = session.getOpponent(player.getId());
+        if (opponent == null) {
+            send("ERROR MESSAGE=OPPONENT_NOT_FOUND");
+            return;
+        }
+
+        server.finishGame(session, opponent.getId(), "OPPONENT_LEFT");
     }
 }

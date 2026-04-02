@@ -5,6 +5,9 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.UIPromptParser;
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.commands.specialized.CmdMove;
+import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 
 /**
  * The core engine of the Agon application. This class manages the main execution loop. It switches
@@ -27,6 +30,9 @@ public class GameEngine {
 
   /** The registry containing all available CLI commands. */
   private final AgonRegister<CmdAction> cmds;
+
+  /** Shared application context, used to detect online game state. */
+  private AppContext appContext;
 
   /**
    * Constructs the game engine with the required UI and command registry.
@@ -64,15 +70,62 @@ public class GameEngine {
 
       if (action != null) {
 
-        action.execute(this.matchManager);
+        if (appContext != null
+                && appContext.isOnlineGameActive()
+                && action instanceof CmdMove onlineMove) {
 
-        if (matchManager != null) {
-          ui.updateBoard(matchManager.getAgonBoard());
+          if (!appContext.isMyOnlineTurn()) {
+            ui.showWarn("[ONLINE] It is not your turn.\n");
+            if (appContext.getCurrentOnlineMatch() != null) {
+              ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
+            }
+            continue;
+          }
+
+          boolean sent;
+
+          if (onlineMove.getFrom() == -1) {
+            String rawMove =
+                    CoordinateMapper.toAbaPro(onlineMove.getDestination()).toLowerCase();
+
+            sent = appContext.getClient().sendRawMove(rawMove);
+          } else {
+            sent = appContext.getClient().sendMove(
+                    onlineMove.getFrom(),
+                    onlineMove.getDestination()
+            );
+          }
+
+          if (!sent) {
+            ui.showError("[ONLINE] Failed to send move.\n");
+            if (appContext.getCurrentOnlineMatch() != null) {
+              ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
+            }
+          }
+
+        } else {
+          if (appContext != null
+                  && appContext.isOnlineGameActive()
+                  && isForbiddenOnlineCommand(action)) {
+            ui.showWarn("[ONLINE] This command is disabled during an online match.\n");
+            continue;
+          }
+
+          action.execute(this.matchManager);
+
+          if (appContext != null
+                  && appContext.isOnlineGameActive()
+                  && appContext.getCurrentOnlineMatch() != null) {
+            ui.updateBoard(appContext.getCurrentOnlineMatch().getAgonBoard());
+          } else if (matchManager != null) {
+            ui.updateBoard(matchManager.getAgonBoard());
+          }
         }
-      } else {
 
+      } else {
         ui.showError("Unknown command. Type 'help' to see available commands.\n");
       }
+
     }
   }
 
@@ -86,5 +139,50 @@ public class GameEngine {
    */
   public void setMatchManager(MatchManager matchManager) {
     this.matchManager = matchManager;
+  }
+
+  /**
+   * Displays the board of a match manager without injecting it into the main engine loop.
+   *
+   * <p>This is useful for online games during the initialization phase.
+   * @param matchManager the match whose board should be displayed
+   */
+  public void previewMatch(MatchManager matchManager) {
+    if (matchManager != null) {
+      ui.updateBoard(matchManager.getAgonBoard());
+    }
+  }
+
+  /**
+   * Registers the shared application context used by this engine.
+   *
+   * @param appContext the application context
+   */
+  public void setAppContext(AppContext appContext) {
+    this.appContext = appContext;
+  }
+
+  public void clearBoardPreview() {
+    if (ui instanceof fr.univ.bordeaux.ui.cli.AgonShell shell) {
+      shell.setBoardFooter("");
+      shell.clearBoardDisplay();
+    }
+  }
+
+  private boolean isForbiddenOnlineCommand(CmdAction action) {
+    if (action == null) {
+      return false;
+    }
+
+    String name = action.getName();
+    if (name == null) {
+      return false;
+    }
+
+    return name.equalsIgnoreCase("undo")
+            || name.equalsIgnoreCase("redo")
+            || name.equalsIgnoreCase("pause")
+            || name.equalsIgnoreCase("save")
+            || name.equalsIgnoreCase("load");
   }
 }

@@ -79,24 +79,29 @@ public class CmdQuit extends Cmd {
 
     AgonClient client = context.getClient();
 
-    // ===== CASE 1: A MATCH IS RUNNING =====
+    // ===== CASE 1: ONLINE MATCH RUNNING =====
+    if (context.isOnlineGameActive() && context.getCurrentOnlineMatch() != null) {
+      client.resignGame();
+      return true;
+    }
+
+    // ===== CASE 2: LOCAL MATCH RUNNING =====
     if (match != null) {
-      match.quit(); // terminate current game session
+      match.quit();
       this.getCtx().showMessage("[GAME] Match ended.\n");
       return true;
     }
 
-    // ===== CASE 2: CLIENT CONNECTED TO SERVER =====
+    // ===== CASE 3: CLIENT CONNECTED TO SERVER =====
     if (client != null && client.isConnected()) {
-      client.quit(); // send disconnection signal to server
+      client.quit();
       this.getCtx().showMessage("[CLIENT] Disconnected from server.\n");
       return true;
     }
 
-    // ===== CASE 3: EXIT APPLICATION =====
+    // ===== CASE 4: EXIT APPLICATION =====
     this.getCtx().showMessage("[APP] Exiting application.\n");
     this.getCtx().quit();
-
     return true;
   }
 
