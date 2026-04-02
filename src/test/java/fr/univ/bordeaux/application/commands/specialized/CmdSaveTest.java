@@ -16,7 +16,6 @@ import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
@@ -43,12 +42,12 @@ public class CmdSaveTest {
       ui = new AgonShell(terminal, reader, cmds);
 
       // On crée un vrai match pour avoir des données à sauvegarder
-      match = new StandardMatch(
-          new AgonBoardImpl(),
-          new HumanPlayer("J1", Color.WHITE, ui),
-          new HumanPlayer("J2", Color.BLACK, ui),
-          new GameConfig()
-      );
+      match =
+          new StandardMatch(
+              new AgonBoardImpl(),
+              new HumanPlayer("J1", Color.WHITE, ui),
+              new HumanPlayer("J2", Color.BLACK, ui),
+              new GameConfig());
 
       cmds.register("save", new CmdSave(ui));
     } catch (Exception e) {
@@ -85,7 +84,7 @@ public class CmdSaveTest {
     cmd.execute(match);
     // On vérifie qu'un fichier "default_save" a été créé
     File defaultFile = new File("default_save");
-    if(defaultFile.exists()) {
+    if (defaultFile.exists()) {
       defaultFile.delete(); // Nettoyage car il n'est pas dans tempDir
     }
   }

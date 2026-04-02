@@ -7,7 +7,6 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
 import fr.univ.bordeaux.technical.io.storage.GameSaveSerializer;
 import fr.univ.bordeaux.ui.GameUserInterface;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -66,7 +65,9 @@ public final class CmdSave extends Cmd {
     AgonBoard board = match.getAgonBoard();
     List<String> boardText = board.toTextList();
     List<String> historyText = board.getHistoryAsText();
-    GameSaveData saveData = new GameSaveData(match.getGameConfig(), match.getCurrentPlayer().getColor(), boardText, historyText);
+    GameSaveData saveData =
+        new GameSaveData(
+            match.getGameConfig(), match.getCurrentPlayer().getColor(), boardText, historyText);
 
     GameSaveSerializer serializer = new GameSaveSerializer();
     try {

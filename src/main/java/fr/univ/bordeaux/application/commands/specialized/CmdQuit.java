@@ -54,7 +54,7 @@ public class CmdQuit extends Cmd {
             filename = "default_save";
           }
           CmdSave saveCmd = new CmdSave(this.getCtx());
-          saveCmd.createNew(new String[]{filename}).execute(match);
+          saveCmd.createNew(new String[] {filename}).execute(match);
           if (match.isSaved()) {
             resolved = true;
           } else {

@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.ui.cli.tools;
 
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
@@ -25,9 +24,6 @@ public class FakeShell extends AgonShell {
   public void quit() {}
 
   @Override
-  public void updateBoard(RestrictedAgonBoard agonBoard) {}
-
-  @Override
   public void showMessage(String message) {}
 
   @Override
@@ -49,9 +45,6 @@ public class FakeShell extends AgonShell {
 
   @Override
   public void setVerbose(boolean state) {}
-
-  @Override
-  public void saveGame() {}
 
   @Override
   public String getUserInput() {

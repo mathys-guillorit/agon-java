@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application.match;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,9 +81,11 @@ public class BlitzMatchTest {
   @DisplayName("Initialisation avec le joueur Noir (branche else du constructeur)")
   void testConstructorWithBlackStarting() {
     // On force le début avec les Noirs pour passer dans le 'else' du constructeur
-    BlitzMatch blackStartMatch = new BlitzMatch(board, whitePlayer, blackPlayer, 1, new GameConfig(), Color.BLACK);
+    BlitzMatch blackStartMatch =
+        new BlitzMatch(board, whitePlayer, blackPlayer, 1, new GameConfig(), Color.BLACK);
 
-    // Le timer noir doit être celui qui est actif (on vérifie via getRemainingTime qui appelle blackTimer)
+    // Le timer noir doit être celui qui est actif (on vérifie via getRemainingTime qui appelle
+    // blackTimer)
     assertNotNull(blackStartMatch.getRemainingTime());
     // On vérifie que le statut est bien géré
     assertFalse(blackStartMatch.isMatchOver());
@@ -127,6 +130,4 @@ public class BlitzMatchTest {
     // (Couvre la branche 'else' du ternaire dans getRemainingTime)
     assertNotNull(match.getRemainingTime());
   }
-
-
 }

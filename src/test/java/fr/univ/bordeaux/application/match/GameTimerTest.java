@@ -2,9 +2,9 @@ package fr.univ.bordeaux.application.match;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayName;
@@ -98,13 +98,15 @@ public class GameTimerTest {
 
   @Test
   @DisplayName("Le constructeur doit empêcher un temps négatif")
-    void testNegativeTimeConstructor() {
+  void testNegativeTimeConstructor() {
 
-      assertThrows(IllegalArgumentException.class, () -> {
-        new GameTimer(-10, TimeUnit.SECONDS, null);
-      }, "Le constructeur aurait dû rejeter un temps de -10s");
-    }
-
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          new GameTimer(-10, TimeUnit.SECONDS, null);
+        },
+        "Le constructeur aurait dû rejeter un temps de -10s");
+  }
 
   @Test
   @DisplayName("Test de la transition vers zéro pendant l'exécution")

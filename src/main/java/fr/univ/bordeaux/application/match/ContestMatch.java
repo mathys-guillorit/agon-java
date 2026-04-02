@@ -57,7 +57,7 @@ public class ContestMatch {
       throw new Exception("Failed to parse save data.");
     }
     History loadedHistory = new History(state.getHistoryMoves());
-    AgonBoard board = new AgonBoardImpl(state.getBoardLines(),loadedHistory);
+    AgonBoard board = new AgonBoardImpl(state.getBoardLines(), loadedHistory);
     Color playerColor = state.getCurrentPlayer();
     char playerChar = (playerColor == Color.BLACK) ? 'X' : 'O';
     AbstractAgonAi aiStrategy = AiFactory.createHintAi(playerColor);

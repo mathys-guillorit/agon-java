@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application.match;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
@@ -53,7 +54,7 @@ public class GameEngineTest {
   @DisplayName("Vérifier que createNew génère une action non nulle")
   void createNewTest() {
     // On simule l'appel 'create' sans arguments
-    CmdAction cmdCreate = cmds.get("new").get().createNew(new String[]{});
+    CmdAction cmdCreate = cmds.get("new").get().createNew(new String[] {});
     cmdCreate.execute(null);
     assertNotNull(gameEngine.getMatchManager());
   }
@@ -108,22 +109,27 @@ public class GameEngineTest {
   void stopTest() throws Exception {
     AtomicBoolean interruptedReceived = new AtomicBoolean(false);
 
-    Player slowPlayer = new HumanPlayer("Slow", Color.WHITE, null) {
-      @Override
-      public CmdAction getAction(AgonRegister<CmdAction> cmds) {
-        try {
-          Thread.sleep(5000);
-        } catch (InterruptedException e) {
-          interruptedReceived.set(true);
-          return null;
-        }
-        return null;
-      }
-    };
+    Player slowPlayer =
+        new HumanPlayer("Slow", Color.WHITE, null) {
+          @Override
+          public CmdAction getAction(AgonRegister<CmdAction> cmds) {
+            try {
+              Thread.sleep(5000);
+            } catch (InterruptedException e) {
+              interruptedReceived.set(true);
+              return null;
+            }
+            return null;
+          }
+        };
 
     // 2. Initialisation du match et de l'engine
-    StandardMatch match = new StandardMatch(new AgonBoardImpl(), slowPlayer,
-        new HumanPlayer("J2", Color.BLACK, null), new GameConfig());
+    StandardMatch match =
+        new StandardMatch(
+            new AgonBoardImpl(),
+            slowPlayer,
+            new HumanPlayer("J2", Color.BLACK, null),
+            new GameConfig());
     gameEngine.setMatchManager(match);
 
     // 3. On lance l'engine dans un thread à part pour ne pas bloquer le TEST
@@ -140,7 +146,8 @@ public class GameEngineTest {
     Thread.sleep(500);
 
     // 7. VERIFICATION
-    assertTrue(interruptedReceived.get(),
+    assertTrue(
+        interruptedReceived.get(),
         "Le thread du joueur aurait dû être interrompu par futureAction.cancel(true)");
 
     // Nettoyage

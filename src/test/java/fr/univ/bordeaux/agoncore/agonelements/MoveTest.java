@@ -81,7 +81,8 @@ public class MoveTest {
   void testEqualsEdgeCases() {
     Move move = new Move(10, 20, Color.WHITE);
 
-    // Vérifier le comportement face à null ou un autre objet (provoque un ClassCastException selon ton code actuel)
+    // Vérifier le comportement face à null ou un autre objet (provoque un ClassCastException selon
+    // ton code actuel)
     // Note : Ton implémentation actuelle de equals fait (Move) obj directement sans instanceOf.
     // Si tu veux un coverage propre, il faut tester ce qui se passe.
 

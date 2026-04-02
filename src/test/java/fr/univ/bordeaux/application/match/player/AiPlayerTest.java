@@ -28,9 +28,7 @@ public class AiPlayerTest {
     }
 
     @Override
-    public void setTimeLimit(long millis) {
-
-    }
+    public void setTimeLimit(long millis) {}
   }
 
   @BeforeEach
@@ -61,6 +59,5 @@ public class AiPlayerTest {
     // Vérifications
     assertNotNull(action, "L'action ne doit pas être nulle");
     assertTrue(action instanceof CmdMove, "L'action retournée doit être une instance de CmdMove");
-
   }
 }

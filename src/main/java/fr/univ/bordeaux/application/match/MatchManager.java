@@ -1,11 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
 import fr.univ.bordeaux.agoncore.agonelements.Move;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
-import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.io.config.GameConfig;
-import java.util.List;
 
 /** Represent Match Behavior. */
 public interface MatchManager extends ReadOnlyMatch {
@@ -43,5 +38,6 @@ public interface MatchManager extends ReadOnlyMatch {
 
   /** Quit the game. */
   void quit();
+
   void startTurn();
 }

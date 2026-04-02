@@ -112,7 +112,8 @@ public class CmdQuitTest {
     cmdQuit.execute(match);
 
     assertFalse(gameUserInterface.isRunning());
-    assertFalse(outContent.toString().contains("Save the game before quitting?"),
+    assertFalse(
+        outContent.toString().contains("Save the game before quitting?"),
         "Ne devrait pas demander de sauvegarde si déjà fait");
   }
 

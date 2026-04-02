@@ -28,5 +28,4 @@ public interface Player {
    * @return {@link Color}
    */
   Color getColor();
-
 }

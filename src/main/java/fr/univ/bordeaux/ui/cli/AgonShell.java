@@ -2,8 +2,8 @@ package fr.univ.bordeaux.ui.cli;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
-import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
@@ -139,9 +139,10 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * Captures a single line of input from the terminal.
    *
    * <p>Handles special cases:
+   *
    * <ul>
-   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.</li>
-   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.</li>
+   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
+   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
    * </ul>
    *
    * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
@@ -158,7 +159,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       }
       this.reader.getHistory().add(line);
       return line;
-      
+
     } catch (UserInterruptException e) {
       // Si le thread est interrompu par le chrono, on ne veut pas quitter
       if (Thread.currentThread().isInterrupted()) {
@@ -166,14 +167,14 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       }
       // Sinon, c'est un vrai Ctrl+C -> on déclenche la sauvegarde via CmdQuit
       return "quit";
-      
+
     } catch (org.jline.reader.EndOfFileException e) {
       // Ctrl+D
       if (Thread.currentThread().isInterrupted()) {
         return null;
       }
       return "quit";
-      
+
     } catch (Exception e) {
       // Autre erreur ou interruption système
       return null;

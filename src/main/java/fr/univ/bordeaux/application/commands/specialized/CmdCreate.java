@@ -78,11 +78,11 @@ public class CmdCreate extends Cmd {
     try {
       CommandLine cmd = parser.parse(super.getOptions(), args);
       GameConfig matchConfig = this.gameConfig.copy();
-      ConfigBinder.bindOptionsToConfig(cmd, matchConfig,super.getCtx());
+      ConfigBinder.bindOptionsToConfig(cmd, matchConfig, super.getCtx());
 
       // On lance le nouveau match
       MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
-      ((ObservableMatch)match).setObserver((MatchObserver) super.getCtx());
+      ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());

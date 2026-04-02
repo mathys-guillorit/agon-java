@@ -92,7 +92,10 @@ public class BlitzMatch extends Match {
   private synchronized void handleTimeout() {
     if (this.getMatchStatus() != MatchStatus.FINISHED) {
       this.setMatchStatus(MatchStatus.FINISHED);
-      this.setWinner((this.getCurrentPlayer().getColor()==Color.BLACK)?getWhitePlayer():getBlackPlayer());
+      this.setWinner(
+          (this.getCurrentPlayer().getColor() == Color.BLACK)
+              ? getWhitePlayer()
+              : getBlackPlayer());
       whiteTimer.kill();
       blackTimer.kill();
       this.notifyUi();

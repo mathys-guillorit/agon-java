@@ -10,7 +10,6 @@ import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jline.reader.LineReader;
@@ -115,7 +114,9 @@ public class CmdLoadTest {
     boolean result = cmd.execute(null);
 
     assertFalse(result);
-    assertTrue(outContent.toString().contains("Failed to load game"), "L'UI doit afficher une erreur de lecture");
+    assertTrue(
+        outContent.toString().contains("Failed to load game"),
+        "L'UI doit afficher une erreur de lecture");
   }
 
   @Test

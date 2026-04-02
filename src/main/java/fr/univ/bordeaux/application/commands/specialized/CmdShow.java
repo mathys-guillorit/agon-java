@@ -179,10 +179,9 @@ public final class CmdShow extends Cmd {
    * @return true.
    */
   private boolean showConfiguration(MatchManager match) {
-    if  (match != null) {
+    if (match != null) {
       this.getCtx().showMessage(match.getGameConfig().toString() + "\n");
-    }
-    else{
+    } else {
       super.getCtx().showMessage(this.gameConfig.toString() + "\n");
     }
     return true;

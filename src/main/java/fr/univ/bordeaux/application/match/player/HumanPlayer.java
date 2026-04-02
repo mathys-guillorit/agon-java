@@ -31,10 +31,8 @@ public class HumanPlayer extends AbstractPlayer {
     return UiPromptParser.parse(input, cmds, ui);
   }
 
-
   @Override
   public String getName() {
     return name;
   }
-
 }

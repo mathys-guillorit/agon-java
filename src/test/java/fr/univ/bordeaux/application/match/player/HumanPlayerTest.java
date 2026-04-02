@@ -6,7 +6,6 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
@@ -26,7 +25,10 @@ public class HumanPlayerTest {
     private String simulatedInput;
 
     public FakeUserInterface() {
-      super(new FakeTerminal(new ByteArrayOutputStream()), new FakeLineReader(), new AgonRegister<>());
+      super(
+          new FakeTerminal(new ByteArrayOutputStream()),
+          new FakeLineReader(),
+          new AgonRegister<>());
     }
 
     @Override

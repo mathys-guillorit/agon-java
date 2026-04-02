@@ -63,7 +63,7 @@ public class GameEngine {
         action = UiPromptParser.parse(input, this.cmds, ui);
       } else {
         Player p = matchManager.getCurrentPlayer();
-        //ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
+        // ui.showMessage("\n>> Current Player: " + p.getName() + " (" + p.getColor() + ")\n");
         matchManager.startTurn();
 
         Future<CmdAction> futureAction = playerExecutor.submit(() -> p.getAction(this.cmds));

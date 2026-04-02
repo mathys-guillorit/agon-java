@@ -5,7 +5,6 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import fr.univ.bordeaux.application.ai.strategy.AgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
@@ -25,7 +24,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   private final Player player2;
   private MatchStatus status;
   private final GameConfig gameConfig;
-  private boolean isSaved=false;
+  private boolean isSaved = false;
   private MatchObserver UiObserver;
   private Player winner;
 
@@ -79,7 +78,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * @return true succeeded else false
    */
   public boolean move(Move move) {
-    //this.startActions();
+    // this.startActions();
     if (this.status == MatchStatus.FINISHED) {
       return false;
     }
@@ -164,10 +163,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return res1 && res2;
   }
 
-  /**
-   * Notify the UI about a state change in the match.
-   */
-  public void notifyUi(){
+  /** Notify the UI about a state change in the match. */
+  public void notifyUi() {
     if (this.UiObserver != null) {
       this.UiObserver.onMatchUpdate(this);
     }
@@ -286,7 +283,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return gameConfig;
   }
 
-  public void startTurn(){}
+  public void startTurn() {}
 
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;

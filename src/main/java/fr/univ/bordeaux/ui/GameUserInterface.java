@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.ui;
 
-import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
