@@ -97,9 +97,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
-          <configuration>
-              <reuseForks>false</reuseForks>
-          </configuration>
       </plugin>
       <!--
       jacoco plugin  (my constraints and to test for pdp)

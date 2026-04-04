@@ -179,8 +179,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public void quit() {
     running.set(false);
 
-    String cp = System.getProperty("java.class.path").toLowerCase();
-    if (!cp.contains("junit") && !cp.contains("surefire")) {
+      if (!"true".equals(System.getProperty("IS_TEST_ENV"))) {
       Platform.exit();
       System.exit(0);
     }
