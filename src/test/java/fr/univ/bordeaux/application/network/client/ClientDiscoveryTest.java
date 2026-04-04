@@ -16,6 +16,10 @@ import org.junit.jupiter.api.Test;
 
 class ClientDiscoveryTest {
 
+  private static final long POLL_INTERVAL_MS = 10;
+  private static final long DISCOVERY_TIMEOUT_MS = 1000;
+  private static final long INVALID_PACKET_WAIT_MS = 100;
+
   private ClientDiscovery discovery;
 
   @AfterEach
@@ -29,15 +33,8 @@ class ClientDiscoveryTest {
     try (DatagramSocket socket = new DatagramSocket()) {
       byte[] data = payload.getBytes();
       socket.send(
-          new DatagramPacket(
-              data, data.length, InetAddress.getByName("127.0.0.1"), ClientDiscovery.UDP_PORT));
-    }
-  }
-
-  private void sendUdpSeveralTimes(String payload, int count, long pauseMs) throws Exception {
-    for (int i = 0; i < count; i++) {
-      sendUdp(payload);
-      Thread.sleep(pauseMs);
+              new DatagramPacket(
+                      data, data.length, InetAddress.getByName("127.0.0.1"), ClientDiscovery.UDP_PORT));
     }
   }
 
@@ -47,34 +44,9 @@ class ClientDiscoveryTest {
       if (condition.getAsBoolean()) {
         return;
       }
-      Thread.sleep(25);
+      Thread.sleep(POLL_INTERVAL_MS);
     }
     fail("Condition non atteinte dans le délai");
-  }
-
-  @SuppressWarnings("unchecked")
-  private Map<Object, ServerInfo> getInternalServersMap(ClientDiscovery target) throws Exception {
-    for (Field f : target.getClass().getDeclaredFields()) {
-      f.setAccessible(true);
-      Object value = f.get(target);
-      if (value instanceof Map<?, ?> map && !map.isEmpty()) {
-        Object firstValue = map.values().iterator().next();
-        if (firstValue instanceof ServerInfo) {
-          return (Map<Object, ServerInfo>) map;
-        }
-      }
-    }
-
-    for (Field f : target.getClass().getDeclaredFields()) {
-      f.setAccessible(true);
-      Object value = f.get(target);
-      if (value instanceof Map<?, ?> map) {
-        return (Map<Object, ServerInfo>) map;
-      }
-    }
-
-    fail("Impossible de trouver la map interne des serveurs");
-    return null;
   }
 
   @Test
@@ -86,12 +58,14 @@ class ClientDiscoveryTest {
     ServerDiscovery server = new ServerDiscovery("TestServer", 9999);
     server.start();
 
-    waitUntil(() -> !discovery.getServers().isEmpty(), 3000);
+    try {
+      waitUntil(() -> !discovery.getServers().isEmpty(), DISCOVERY_TIMEOUT_MS);
 
-    List<ServerInfo> servers = discovery.getServers();
-    assertFalse(servers.isEmpty());
-
-    server.stop();
+      List<ServerInfo> servers = discovery.getServers();
+      assertFalse(servers.isEmpty());
+    } finally {
+      server.stop();
+    }
   }
 
   @Test
@@ -101,7 +75,7 @@ class ClientDiscoveryTest {
     discovery.start();
 
     sendUdp("invalid-payload-without-required-format");
-    Thread.sleep(300);
+    Thread.sleep(INVALID_PACKET_WAIT_MS);
 
     assertTrue(discovery.getServers().isEmpty());
   }
@@ -112,12 +86,12 @@ class ClientDiscoveryTest {
     discovery = new ClientDiscovery();
 
     assertDoesNotThrow(
-        () -> {
-          discovery.stop();
-          discovery.start();
-          discovery.stop();
-          discovery.stop();
-        });
+            () -> {
+              discovery.stop();
+              discovery.start();
+              discovery.stop();
+              discovery.stop();
+            });
 
     assertTrue(discovery.getServers().isEmpty());
   }
