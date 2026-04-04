@@ -35,7 +35,7 @@ public class CmdPlayers extends Cmd {
     this.setDesc(
         "Usage: players [PLAYER_ID]\n"
             + "Description: displays the list of connected players "
-                + "or the details of a specific player.\n"
+            + "or the details of a specific player.\n"
             + "Requires an active connection.\n");
   }
 
