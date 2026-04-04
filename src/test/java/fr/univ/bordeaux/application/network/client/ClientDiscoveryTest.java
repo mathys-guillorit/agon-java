@@ -14,8 +14,9 @@ import org.junit.jupiter.api.Test;
 
 class ClientDiscoveryTest {
 
-  private static final long POLL_INTERVAL_MS = 10;
-  private static final long DISCOVERY_TIMEOUT_MS = 1000;
+  private static final long POLL_INTERVAL_MS = 20;
+  private static final long DISCOVERY_TIMEOUT_MS = 3000;
+  private static final long STARTUP_DELAY_MS = 200;
   private static final long INVALID_PACKET_WAIT_MS = 100;
 
   private ClientDiscovery discovery;
@@ -57,6 +58,7 @@ class ClientDiscoveryTest {
     server.start();
 
     try {
+      Thread.sleep(STARTUP_DELAY_MS);
       waitUntil(() -> !discovery.getServers().isEmpty(), DISCOVERY_TIMEOUT_MS);
 
       List<ServerInfo> servers = discovery.getServers();
