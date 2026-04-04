@@ -2,6 +2,8 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.network.CmdAway;
+import fr.univ.bordeaux.application.commands.network.CmdBack;
 import fr.univ.bordeaux.application.commands.network.CmdJoin;
 import fr.univ.bordeaux.application.commands.network.CmdNew;
 import fr.univ.bordeaux.application.commands.network.CmdPing;
@@ -238,6 +240,7 @@ public class GameLauncher {
       AppContext context) {
 
     cmds.register("new", new CmdNew(ui, context, config, engine));
+
     cmds.register("hint", new CmdHint(ui));
     cmds.register("show", new CmdShow(ui, config));
     cmds.register("load", new CmdLoad(ui, engine));
@@ -253,8 +256,10 @@ public class GameLauncher {
     cmds.register("server_stop", new CmdServerStop(ui, context));
     cmds.register("server_list", new CmdServerList(ui, context));
     cmds.register("server_status", new CmdServerStatus(ui, context));
-    cmds.register("players", new CmdPlayers(ui, context));
+    cmds.register("players", new CmdPlayers(ui, context, new String[0]));
     cmds.register("scoreboard", new CmdScoreboard(ui, context));
+    cmds.register("away", new CmdAway(ui, context));
+    cmds.register("back", new CmdBack(ui, context));
 
     cmds.register("quit", new CmdQuit(ui, context));
   }

@@ -784,4 +784,75 @@ public class AgonClient {
       System.err.println("[CLIENT] Failed to resign from online match: " + e.getMessage());
     }
   }
+
+  /**
+   * Requests the detailed information of a specific player.
+   *
+   * @param playerId the id of the player to query
+   * @return the raw server response if successful, null otherwise
+   */
+  public String requestPlayerDetails(int playerId) {
+    if (!isConnected()) {
+      return null;
+    }
+
+    synchronized (commandLock) {
+      try {
+        sendLine("PLAYERS " + playerId);
+        String resp = waitResponse(5000);
+
+        if (resp == null) {
+          return null;
+        }
+
+        return resp;
+
+      } catch (IOException e) {
+        disconnectSilently();
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Requests the server to set the local player status to away.
+   *
+   * @return the raw server response if successful, null otherwise
+   */
+  public String setAway() {
+    if (!isConnected()) {
+      return null;
+    }
+
+    synchronized (commandLock) {
+      try {
+        sendLine("AWAY");
+        return waitResponse(5000);
+      } catch (IOException e) {
+        disconnectSilently();
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Requests the server to set the local player status back to idle.
+   *
+   * @return the raw server response if successful, null otherwise
+   */
+  public String setBack() {
+    if (!isConnected()) {
+      return null;
+    }
+
+    synchronized (commandLock) {
+      try {
+        sendLine("BACK");
+        return waitResponse(5000);
+      } catch (IOException e) {
+        disconnectSilently();
+        return null;
+      }
+    }
+  }
 }

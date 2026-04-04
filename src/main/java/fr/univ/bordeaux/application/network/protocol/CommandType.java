@@ -18,6 +18,8 @@ public enum CommandType {
   MOVE_OK,
   OPPONENT_MOVE,
   RESIGN,
+  AWAY,
+  BACK,
   UNKNOWN;
 
   /**

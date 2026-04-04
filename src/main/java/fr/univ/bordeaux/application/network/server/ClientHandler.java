@@ -122,7 +122,7 @@ public class ClientHandler implements Runnable {
           handleLogin(cmd);
 
         } else if (cmd.getType() == CommandType.PLAYERS) {
-          send(server.getPlayersList());
+          handlePlayers(cmd);
 
         } else if (cmd.getType() == CommandType.SCOREBOARD) {
           send(server.getScoreboard());
@@ -135,6 +135,12 @@ public class ClientHandler implements Runnable {
 
         } else if (cmd.getType() == CommandType.RESIGN) {
           handleResign();
+
+        } else if (cmd.getType() == CommandType.AWAY) {
+          handleAway();
+
+        } else if (cmd.getType() == CommandType.BACK) {
+          handleBack();
 
         } else if (cmd.getType() == CommandType.QUIT) {
           break;
@@ -420,5 +426,73 @@ public class ClientHandler implements Runnable {
     }
 
     server.finishGame(session, opponent.getId(), "OPPONENT_LEFT");
+  }
+
+  /**
+   * Handles PLAYERS command.
+   *
+   * <p>If no player id is provided, this method returns the list of connected players. Otherwise,
+   * it returns the detailed information of the specified player.
+   *
+   * @param cmd parsed PLAYERS command
+   * @throws IOException if sending a response fails
+   */
+  private void handlePlayers(Command cmd) throws IOException {
+    String playerIdValue = cmd.getRawArgument();
+
+    if (playerIdValue == null || playerIdValue.isBlank()) {
+      send(server.getPlayersList());
+      return;
+    }
+
+    int playerId;
+    try {
+      playerId = Integer.parseInt(playerIdValue);
+    } catch (NumberFormatException e) {
+      send("ERROR MESSAGE=INVALID_PLAYER_ID");
+      return;
+    }
+
+    send(server.getPlayerDetails(playerId));
+  }
+
+  /**
+   * Handles AWAY command.
+   *
+   * @throws IOException if sending a response fails
+   */
+  private void handleAway() throws IOException {
+    if (player == null) {
+      send("ERROR MESSAGE=NOT_LOGGED_IN");
+      return;
+    }
+
+    if (player.getStatus() == PlayerStatus.INGAME) {
+      send("ERROR MESSAGE=CANNOT_SET_AWAY_INGAME");
+      return;
+    }
+
+    player.setStatus(PlayerStatus.AWAY);
+    send("AWAY_OK STATUS=away");
+  }
+
+  /**
+   * Handles BACK command.
+   *
+   * @throws IOException if sending a response fails
+   */
+  private void handleBack() throws IOException {
+    if (player == null) {
+      send("ERROR MESSAGE=NOT_LOGGED_IN");
+      return;
+    }
+
+    if (player.getStatus() == PlayerStatus.INGAME) {
+      send("ERROR MESSAGE=CANNOT_SET_BACK_INGAME");
+      return;
+    }
+
+    player.setStatus(PlayerStatus.IDLE);
+    send("BACK_OK STATUS=idle");
   }
 }

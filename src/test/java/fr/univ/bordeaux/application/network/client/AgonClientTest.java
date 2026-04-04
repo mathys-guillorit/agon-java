@@ -99,7 +99,9 @@ class AgonClientTest {
     for (int i = 0; i < 200; i++) {
       try {
         String s = CoordinateMapper.toAbaPro(i);
-        if (s != null && !s.isBlank()) return i;
+        if (s != null && !s.isBlank()) {
+          return i;
+        }
       } catch (Exception ignored) {
       }
     }
@@ -109,10 +111,14 @@ class AgonClientTest {
 
   private int secondValidCoordDifferentFrom(int first) {
     for (int i = 0; i < 200; i++) {
-      if (i == first) continue;
+      if (i == first) {
+        continue;
+      }
       try {
         String s = CoordinateMapper.toAbaPro(i);
-        if (s != null && !s.isBlank()) return i;
+        if (s != null && !s.isBlank()) {
+          return i;
+        }
       } catch (Exception ignored) {
       }
     }
@@ -185,19 +191,27 @@ class AgonClientTest {
                               socket.getOutputStream(), StandardCharsets.US_ASCII));
 
                   String login = in.readLine();
-                  if (login != null) receivedLines.add(login);
+                  if (login != null) {
+                    receivedLines.add(login);
+                  }
 
-                  if (firstResponse != null) sendLine(firstResponse);
+                  if (firstResponse != null) {
+                    sendLine(firstResponse);
+                  }
 
                   while (running && socket != null && !socket.isClosed()) {
                     String line = in.readLine();
-                    if (line == null) break;
+                    if (line == null) {
+                      break;
+                    }
 
                     receivedLines.add(line);
 
                     String cmd = line.trim().isEmpty() ? "" : line.trim().split("\\s+")[0];
                     List<String> responses = scriptedResponses.get(cmd);
-                    if (responses == null) continue;
+                    if (responses == null) {
+                      continue;
+                    }
 
                     for (String response : responses) {
                       if ("<<CLOSE>>".equals(response)) {
@@ -242,11 +256,15 @@ class AgonClientTest {
       while ((out == null || socket == null) && System.currentTimeMillis() < deadline) {
         Thread.sleep(10);
       }
-      if (out == null || socket == null) throw new IllegalStateException("Server not connected");
+      if (out == null || socket == null) {
+        throw new IllegalStateException("Server not connected");
+      }
     }
 
     private synchronized void sendLine(String line) throws IOException {
-      if (out == null) return;
+      if (out == null) {
+        return;
+      }
       out.write(line);
       out.write('\n');
       out.flush();
@@ -256,7 +274,9 @@ class AgonClientTest {
     public void close() throws Exception {
       running = false;
       try {
-        if (socket != null) socket.close();
+        if (socket != null) {
+          socket.close();
+        }
       } catch (Exception ignored) {
       }
       try {
@@ -316,6 +336,77 @@ class AgonClientTest {
     FakeTcpServer badScore = newServer();
     badScore.script("SCOREBOARD", "=== SCOREBOARD ===", "<<CLOSE>>");
     assertNull(connectedClient(badScore).requestScoreboard());
+  }
+
+  @Test
+  @DisplayName("player detail and status commands")
+  void player_detail_and_status_commands() throws Exception {
+    FakeTcpServer ok = newServer();
+    ok.script("PLAYERS", "PLAYER ID=2 NAME=Bob CLIENT_ID=cid2 STATUS=away WINS=3 LOSSES=1 GAMES=4");
+    ok.script("AWAY", "AWAY_OK STATUS=away");
+    ok.script("BACK", "BACK_OK STATUS=idle");
+
+    AgonClient client = connectedClient(ok);
+
+    String playerDetails = client.requestPlayerDetails(2);
+    assertNotNull(playerDetails);
+    assertTrue(playerDetails.contains("PLAYER ID=2"));
+    assertTrue(playerDetails.contains("NAME=Bob"));
+    assertTrue(playerDetails.contains("STATUS=away"));
+
+    String awayResponse = client.setAway();
+    assertEquals("AWAY_OK STATUS=away", awayResponse);
+
+    String backResponse = client.setBack();
+    assertEquals("BACK_OK STATUS=idle", backResponse);
+
+    client.disconnectSilently();
+  }
+
+  @Test
+  @DisplayName("player detail and status commands return null when disconnected")
+  void player_detail_and_status_commands_when_disconnected() {
+    AgonClient client = new AgonClient(new LocalProfile("Alice"));
+
+    assertNull(client.requestPlayerDetails(2));
+    assertNull(client.setAway());
+    assertNull(client.setBack());
+  }
+
+  @Test
+  @DisplayName("player detail and status commands handle io failure")
+  void player_detail_and_status_commands_io_failure() throws Exception {
+    FakeTcpServer server = newServer();
+    AgonClient client = connectedClient(server);
+
+    replaceWriterWithFailingOne(client);
+
+    assertNull(client.requestPlayerDetails(2));
+    assertFalse(client.isConnected());
+
+    FakeTcpServer server2 = newServer();
+    AgonClient client2 = connectedClient(server2);
+    replaceWriterWithFailingOne(client2);
+
+    assertNull(client2.setAway());
+    assertFalse(client2.isConnected());
+
+    FakeTcpServer server3 = newServer();
+    AgonClient client3 = connectedClient(server3);
+    replaceWriterWithFailingOne(client3);
+
+    assertNull(client3.setBack());
+    assertFalse(client3.isConnected());
+  }
+
+  @Test
+  @DisplayName("player detail command returns null when response is missing")
+  void player_detail_returns_null_when_response_is_missing() throws Exception {
+    FakeTcpServer server = newServer();
+    server.script("PLAYERS", "<<CLOSE>>");
+
+    AgonClient client = connectedClient(server);
+    assertNull(client.requestPlayerDetails(2));
   }
 
   @Test
@@ -404,8 +495,11 @@ class AgonClientTest {
 
     assertNull(client.requestServerStatus());
     assertNull(client.requestPlayers());
+    assertNull(client.requestPlayerDetails(1));
     assertNull(client.requestScoreboard());
     assertNull(client.requestNewGame(1));
+    assertNull(client.setAway());
+    assertNull(client.setBack());
     assertFalse(client.isAlive());
     assertNull(client.pingRttMs());
     assertFalse(client.sendMove(0, 1));

@@ -92,4 +92,22 @@ public class OnlinePlayer {
   public void setHandler(ClientHandler handler) {
     this.handler = handler;
   }
+
+  /**
+   * Returns whether the player is available for a new game.
+   *
+   * @return true if the player status is IDLE, false otherwise
+   */
+  public boolean isAvailable() {
+    return status == PlayerStatus.IDLE;
+  }
+
+  /**
+   * Returns whether the player is currently away.
+   *
+   * @return true if the player status is AWAY, false otherwise
+   */
+  public boolean isAway() {
+    return status == PlayerStatus.AWAY;
+  }
 }

@@ -3,10 +3,14 @@ package fr.univ.bordeaux.application.network.server;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
+import fr.univ.bordeaux.application.network.player.PlayerStatus;
+import fr.univ.bordeaux.application.network.protocol.Command;
+import fr.univ.bordeaux.application.network.protocol.CommandType;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
@@ -24,7 +28,9 @@ class ClientHandlerTest {
   @AfterEach
   void cleanup() {
     try {
-      if (server != null) server.stop();
+      if (server != null) {
+        server.stop();
+      }
     } catch (Exception ignored) {
     }
     server = null;
@@ -87,7 +93,9 @@ class ClientHandlerTest {
       String line;
       while ((line = in.readLine()) != null) {
         sb.append(line).append('\n');
-        if ("END".equals(line)) break;
+        if ("END".equals(line)) {
+          break;
+        }
       }
       return sb.toString();
     }
@@ -161,6 +169,63 @@ class ClientHandlerTest {
     assertTrue(started.startsWith("GAME_STARTED"));
 
     return new GameSetup(c1, c2, id1, id2, newOk.contains("COLOR=WHITE"));
+  }
+
+  private ClientHandler newPrivateTestHandler() throws Exception {
+    if (server == null) {
+      server = new AgonServer(freePort(), "TestServer");
+    }
+    return new ClientHandler(null, server);
+  }
+
+  private OnlinePlayer newPlayer(
+      int id, String clientId, String name, PlayerStatus status, ClientHandler handler) {
+    return new OnlinePlayer(id, clientId, name, status, handler);
+  }
+
+  private String invokePrivateNoArgHandlerAndCaptureOutput(ClientHandler handler, String methodName)
+      throws Exception {
+    StringWriter sink = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(sink);
+
+    setField(handler, "out", writer);
+
+    Method method = ClientHandler.class.getDeclaredMethod(methodName);
+    method.setAccessible(true);
+    method.invoke(handler);
+
+    writer.flush();
+    return sink.toString().trim();
+  }
+
+  private String invokeHandlePlayersAndCaptureOutput(ClientHandler handler, String rawArgument)
+      throws Exception {
+    StringWriter sink = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(sink);
+
+    setField(handler, "out", writer);
+
+    Command cmd = new Command(CommandType.PLAYERS, Map.of(), rawArgument);
+
+    Method method = ClientHandler.class.getDeclaredMethod("handlePlayers", Command.class);
+    method.setAccessible(true);
+    method.invoke(handler, cmd);
+
+    writer.flush();
+    return sink.toString().trim();
+  }
+
+  private void assertPrivateStatusCommandResponse(
+      String methodName, OnlinePlayer player, String expectedResponse) throws Exception {
+    ClientHandler handler = newPrivateTestHandler();
+
+    if (player != null) {
+      player.setHandler(handler);
+      setField(handler, "player", player);
+    }
+
+    String response = invokePrivateNoArgHandlerAndCaptureOutput(handler, methodName);
+    assertEquals(expectedResponse, response);
   }
 
   @Test
@@ -504,5 +569,85 @@ class ClientHandlerTest {
 
       assertDoesNotThrow(() -> send.invoke(handler, "HELLO"));
     }
+  }
+
+  @Test
+  @DisplayName("PLAYERS with player id returns detailed player information")
+  void players_with_id_returns_player_details() throws Exception {
+    int port = startServer();
+
+    try (RawClient client = new RawClient("127.0.0.1", port)) {
+      int id = client.loginAndExtractId("Alice", "cid1");
+
+      client.send("PLAYERS " + id);
+      String response = client.readLine();
+
+      assertNotNull(response);
+      assertTrue(response.contains("PLAYER ID=" + id));
+      assertTrue(response.contains("NAME=Alice"));
+      assertTrue(response.contains("STATUS=idle"));
+      assertTrue(response.contains("WINS=0"));
+      assertTrue(response.contains("LOSSES=0"));
+      assertTrue(response.contains("GAMES=0"));
+    }
+  }
+
+  @Test
+  @DisplayName("handleAway returns not logged in when player is null")
+  void handle_away_not_logged_in() throws Exception {
+    assertPrivateStatusCommandResponse("handleAway", null, "ERROR MESSAGE=NOT_LOGGED_IN");
+  }
+
+  @Test
+  @DisplayName("handleBack returns not logged in when player is null")
+  void handle_back_not_logged_in() throws Exception {
+    assertPrivateStatusCommandResponse("handleBack", null, "ERROR MESSAGE=NOT_LOGGED_IN");
+  }
+
+  @Test
+  @DisplayName("handleAway refuses when player is in game")
+  void handle_away_ingame_refused() throws Exception {
+    OnlinePlayer player = newPlayer(1, "cid-test", "Alice", PlayerStatus.INGAME, null);
+
+    assertPrivateStatusCommandResponse(
+        "handleAway", player, "ERROR MESSAGE=CANNOT_SET_AWAY_INGAME");
+  }
+
+  @Test
+  @DisplayName("handleBack refuses when player is in game")
+  void handle_back_ingame_refused() throws Exception {
+    OnlinePlayer player = newPlayer(1, "cid-test", "Alice", PlayerStatus.INGAME, null);
+
+    assertPrivateStatusCommandResponse(
+        "handleBack", player, "ERROR MESSAGE=CANNOT_SET_BACK_INGAME");
+  }
+
+  @Test
+  @DisplayName("handlePlayers returns invalid player id when raw argument is not numeric")
+  void handle_players_invalid_id() throws Exception {
+    ClientHandler handler = newPrivateTestHandler();
+
+    String response = invokeHandlePlayersAndCaptureOutput(handler, "abc");
+
+    assertEquals("ERROR MESSAGE=INVALID_PLAYER_ID", response);
+  }
+
+  @Test
+  @DisplayName("handlePlayers returns detailed player information when id is valid")
+  void handle_players_valid_id() throws Exception {
+    if (server == null) {
+      server = new AgonServer(freePort(), "TestServer");
+    }
+
+    ClientHandler handler = new ClientHandler(null, server);
+
+    OnlinePlayer player = server.registerPlayer("cid1", "Alice", handler);
+    assertNotNull(player);
+
+    String response = invokeHandlePlayersAndCaptureOutput(handler, String.valueOf(player.getId()));
+
+    assertNotNull(response);
+    assertTrue(response.contains("PLAYER ID=" + player.getId()));
+    assertTrue(response.contains("NAME=Alice"));
   }
 }

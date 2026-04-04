@@ -512,4 +512,36 @@ public class AgonServer {
       }
     }
   }
+
+  /**
+   * Returns the formatted details of a connected player.
+   *
+   * <p>The returned information includes the player id, name, client id, current status, and
+   * scoreboard statistics.
+   *
+   * @param playerId the id of the player to describe
+   * @return a formatted string describing the player, or an error message if not found
+   */
+  public String getPlayerDetails(int playerId) {
+    OnlinePlayer player = players.get(playerId);
+
+    if (player == null) {
+      return "ERROR MESSAGE=PLAYER_NOT_FOUND";
+    }
+
+    ServerPlayerStats stats = scoreboard.getOrCreateStats(player.getName());
+
+    return "PLAYER ID="
+        + player.getId()
+        + " NAME="
+        + player.getName()
+        + " STATUS="
+        + player.getStatus().name().toLowerCase()
+        + " WINS="
+        + stats.getWins()
+        + " LOSSES="
+        + stats.getLosses()
+        + " GAMES="
+        + stats.getGames();
+  }
 }

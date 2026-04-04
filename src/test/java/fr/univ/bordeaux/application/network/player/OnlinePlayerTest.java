@@ -65,4 +65,32 @@ class OnlinePlayerTest {
 
     assertEquals(fakeHandler, player.getHandler());
   }
+
+  @Test
+  @DisplayName("isAvailable returns true only when status is IDLE")
+  void is_available_test() {
+    OnlinePlayer player = new OnlinePlayer(6, "client111", "Frank", PlayerStatus.IDLE, null);
+
+    assertTrue(player.isAvailable());
+
+    player.setStatus(PlayerStatus.INGAME);
+    assertFalse(player.isAvailable());
+
+    player.setStatus(PlayerStatus.AWAY);
+    assertFalse(player.isAvailable());
+  }
+
+  @Test
+  @DisplayName("isAway returns true only when status is AWAY")
+  void is_away_test() {
+    OnlinePlayer player = new OnlinePlayer(7, "client222", "Grace", PlayerStatus.IDLE, null);
+
+    assertFalse(player.isAway());
+
+    player.setStatus(PlayerStatus.AWAY);
+    assertTrue(player.isAway());
+
+    player.setStatus(PlayerStatus.INGAME);
+    assertFalse(player.isAway());
+  }
 }

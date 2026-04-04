@@ -298,4 +298,121 @@ class AppContextTest {
 
     assertTrue(context.isOnlineGameActive());
   }
+
+  @Test
+  @DisplayName("ensureDiscoveryStarted does not recreate discovery when already initialized")
+  void ensureDiscoveryStartedAlreadyInitialized() throws Exception {
+    assertNull(context.getDiscovery());
+
+    context.ensureDiscoveryStarted();
+    Object firstDiscovery = context.getDiscovery();
+
+    assertNotNull(firstDiscovery);
+
+    context.ensureDiscoveryStarted();
+    Object secondDiscovery = context.getDiscovery();
+
+    assertSame(firstDiscovery, secondDiscovery);
+  }
+
+  @Test
+  @DisplayName("onLocalMoveConfirmed valid move works without game engine")
+  void onLocalMoveConfirmedValidWithoutEngine() {
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    context.onOnlineGameStarted(info);
+
+    context.setGameEngine(null);
+
+    context.onLocalMoveConfirmed("k10j10");
+
+    assertTrue(context.isOnlineGameActive());
+    assertFalse(context.isMyOnlineTurn());
+    assertNotNull(context.getCurrentOnlineMatch());
+  }
+
+  @Test
+  @DisplayName("onLocalMoveConfirmed relocation move reaches no-source branch and fails cleanly")
+  void onLocalMoveConfirmedRelocationBranchFailure() {
+    FakeGameEngine engine = new FakeGameEngine();
+    context.setGameEngine(engine);
+
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    context.onOnlineGameStarted(info);
+
+    Match beforeMatch = context.getCurrentOnlineMatch();
+    boolean beforeTurn = context.isMyOnlineTurn();
+    engine.previewCalled = false;
+
+    context.onLocalMoveConfirmed("a1");
+
+    assertSame(beforeMatch, context.getCurrentOnlineMatch());
+    assertEquals(beforeTurn, context.isMyOnlineTurn());
+    assertFalse(engine.previewCalled);
+  }
+
+  @Test
+  @DisplayName("onOpponentMoveReceived valid move works without game engine")
+  void onOpponentMoveReceivedValidWithoutEngine() {
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false);
+    context.onOnlineGameStarted(info);
+
+    context.setGameEngine(null);
+
+    context.onOpponentMoveReceived("k10j10");
+
+    assertTrue(context.isOnlineGameActive());
+    assertTrue(context.isMyOnlineTurn());
+    assertNotNull(context.getCurrentOnlineMatch());
+  }
+
+  @Test
+  @DisplayName("onOpponentMoveReceived black branch fails cleanly when move cannot be applied")
+  void onOpponentMoveReceivedBlackBranchFailure() {
+    FakeGameEngine engine = new FakeGameEngine();
+    context.setGameEngine(engine);
+
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", false);
+    context.onOnlineGameStarted(info);
+
+    Match beforeMatch = context.getCurrentOnlineMatch();
+    engine.previewCalled = false;
+
+    context.onOpponentMoveReceived("k10j10");
+
+    assertSame(beforeMatch, context.getCurrentOnlineMatch());
+  }
+
+  @Test
+  @DisplayName("onOpponentMoveReceived relocation move reaches no-source branch and fails cleanly")
+  void onOpponentMoveReceivedRelocationBranchFailure() {
+    FakeGameEngine engine = new FakeGameEngine();
+    context.setGameEngine(engine);
+
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false);
+    context.onOnlineGameStarted(info);
+
+    Match beforeMatch = context.getCurrentOnlineMatch();
+    boolean beforeTurn = context.isMyOnlineTurn();
+    engine.previewCalled = false;
+
+    context.onOpponentMoveReceived("a1");
+
+    assertSame(beforeMatch, context.getCurrentOnlineMatch());
+    assertEquals(beforeTurn, context.isMyOnlineTurn());
+    assertFalse(engine.previewCalled);
+  }
+
+  @Test
+  @DisplayName("leaveOnlineGame works safely without match and without engine")
+  void leaveOnlineGameWithoutMatchAndWithoutEngine() {
+    context.setMyOnlineTurn(true);
+    context.setGameEngine(null);
+
+    assertDoesNotThrow(() -> context.leaveOnlineGame());
+
+    assertFalse(context.isOnlineGameActive());
+    assertEquals(-1, context.getCurrentOnlineGameId());
+    assertFalse(context.isMyOnlineTurn());
+    assertNull(context.getCurrentOnlineMatch());
+  }
 }

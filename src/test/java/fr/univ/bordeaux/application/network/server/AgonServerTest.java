@@ -303,4 +303,34 @@ class AgonServerTest {
     assertTrue(scoreboard.contains("WINS=0"));
     assertTrue(scoreboard.contains("LOSSES=0"));
   }
+
+  @Test
+  @DisplayName("getPlayerDetails returns error when player is not found")
+  void get_player_details_player_not_found() {
+    AgonServer s = new AgonServer(33349, "TestServer");
+
+    String result = s.getPlayerDetails(999);
+
+    assertEquals("ERROR MESSAGE=PLAYER_NOT_FOUND", result);
+  }
+
+  @Test
+  @DisplayName("getPlayerDetails returns formatted details for an existing player")
+  void get_player_details_existing_player() {
+    AgonServer s = new AgonServer(33350, "TestServer");
+
+    OnlinePlayer player = s.registerPlayer("client-1", "Alice", null);
+    assertNotNull(player);
+
+    player.setStatus(PlayerStatus.AWAY);
+
+    String result = s.getPlayerDetails(player.getId());
+
+    assertTrue(result.contains("PLAYER ID=" + player.getId()));
+    assertTrue(result.contains("NAME=Alice"));
+    assertTrue(result.contains("STATUS=away"));
+    assertTrue(result.contains("WINS=0"));
+    assertTrue(result.contains("LOSSES=0"));
+    assertTrue(result.contains("GAMES=0"));
+  }
 }

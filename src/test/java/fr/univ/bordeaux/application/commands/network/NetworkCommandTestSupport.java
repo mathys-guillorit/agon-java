@@ -104,8 +104,10 @@ final class NetworkCommandTestSupport {
     String scoreboardResponse;
     String serverStatusResponse;
     String newGameResponse;
-
     Integer requestedNewGamePlayerId;
+    String playerDetailsResponse;
+    String awayResponse;
+    String backResponse;
 
     FakeAgonClient() {
       super(new LocalProfile("TestPlayer")); // ✅ IMPORTANT
@@ -159,6 +161,21 @@ final class NetworkCommandTestSupport {
     public String requestNewGame(int targetPlayerId) {
       requestedNewGamePlayerId = targetPlayerId;
       return newGameResponse;
+    }
+
+    @Override
+    public String requestPlayerDetails(int playerId) {
+      return playerDetailsResponse;
+    }
+
+    @Override
+    public String setAway() {
+      return awayResponse;
+    }
+
+    @Override
+    public String setBack() {
+      return backResponse;
     }
   }
 }
