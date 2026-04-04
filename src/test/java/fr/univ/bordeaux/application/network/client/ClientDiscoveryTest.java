@@ -3,12 +3,10 @@ package fr.univ.bordeaux.application.network.client;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.application.network.server.ServerDiscovery;
-import java.lang.reflect.Field;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +31,8 @@ class ClientDiscoveryTest {
     try (DatagramSocket socket = new DatagramSocket()) {
       byte[] data = payload.getBytes();
       socket.send(
-              new DatagramPacket(
-                      data, data.length, InetAddress.getByName("127.0.0.1"), ClientDiscovery.UDP_PORT));
+          new DatagramPacket(
+              data, data.length, InetAddress.getByName("127.0.0.1"), ClientDiscovery.UDP_PORT));
     }
   }
 
@@ -86,12 +84,12 @@ class ClientDiscoveryTest {
     discovery = new ClientDiscovery();
 
     assertDoesNotThrow(
-            () -> {
-              discovery.stop();
-              discovery.start();
-              discovery.stop();
-              discovery.stop();
-            });
+        () -> {
+          discovery.stop();
+          discovery.start();
+          discovery.stop();
+          discovery.stop();
+        });
 
     assertTrue(discovery.getServers().isEmpty());
   }
