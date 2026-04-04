@@ -2,12 +2,12 @@ package fr.univ.bordeaux.application.match.player;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.application.AppContext;
-import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;

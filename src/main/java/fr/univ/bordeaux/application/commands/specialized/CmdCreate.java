@@ -15,7 +15,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jline.reader.Completer;
 
 /** Command responsible for initializing a new game session. */
 public class CmdCreate extends Cmd {

@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdNew;
 import fr.univ.bordeaux.application.commands.network.CmdPing;
 import fr.univ.bordeaux.application.commands.network.CmdPlayers;
 import fr.univ.bordeaux.application.commands.network.CmdScoreboard;
@@ -13,7 +14,6 @@ import fr.univ.bordeaux.application.commands.network.CmdServerStop;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
 import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.network.CmdNew;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
 import fr.univ.bordeaux.application.commands.specialized.CmdSave;
@@ -29,6 +29,9 @@ import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -41,13 +44,7 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Scanner;
-
-/**
- * The GameLauncher class is the entry point for the Agon application.
- */
+/** The GameLauncher class is the entry point for the Agon application. */
 public class GameLauncher {
 
   /** The definitions of all allowed command-line options. */
@@ -68,9 +65,17 @@ public class GameLauncher {
     options.addOption("d", "debug", false, "Enables debug mode.");
     options.addOption("g", "gui", false, "Starts the graphical interface.");
     options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
-    options.addOption("c", "contest", false, "Launches contest mode (reads file and outputs move).");
+    options.addOption(
+        "c", "contest", false, "Launches contest mode (reads file and outputs move).");
   }
 
+  /**
+   * Launches the application by parsing command-line arguments and initializing the game state.
+   * This method handles configuration loading, mode selection, and branches into specific execution
+   * paths like help display, version info, or contest mode.
+   *
+   * @param args The command-line arguments provided at startup.
+   */
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
     CommandLineParser parser = new DefaultParser();
@@ -117,7 +122,7 @@ public class GameLauncher {
 
         if (!file.exists() || file.isDirectory()) {
           System.err.println(
-                  "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
+              "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
 
@@ -140,7 +145,7 @@ public class GameLauncher {
         return;
       }
 
-      startGame(config, cmd, cmds, filePath, context);
+      startGame(config, cmd, cmds, context);
 
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
@@ -184,11 +189,7 @@ public class GameLauncher {
   }
 
   private void startGame(
-          GameConfig config,
-          CommandLine cmd,
-          AgonRegister<CmdAction> cmds,
-          String filePathToLoad,
-          AppContext context) {
+      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, AppContext context) {
 
     System.out.println("Starting Agon Shell...");
 
@@ -201,15 +202,15 @@ public class GameLauncher {
       final AgonShell[] shellRef = new AgonShell[1];
 
       Completer strategyCompleter =
-              (reader, line, candidates) -> {
-                if (shellRef[0] != null) {
-                  shellRef[0].globalCompleter(reader, line, candidates);
-                }
-              };
+          (reader, line, candidates) -> {
+            if (shellRef[0] != null) {
+              shellRef[0].globalCompleter(reader, line, candidates);
+            }
+          };
 
       Terminal terminal = TerminalBuilder.builder().dumb(true).build();
       LineReader reader =
-              LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
+          LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
       AgonShell userInterface = new AgonShell(terminal, reader, cmds);
       shellRef[0] = userInterface;
@@ -230,16 +231,16 @@ public class GameLauncher {
   }
 
   private void fillRegister(
-          AgonRegister<CmdAction> cmds,
-          GameUserInterface ui,
-          GameConfig config,
-          GameEngine engine,
-          AppContext context) {
+      AgonRegister<CmdAction> cmds,
+      GameUserInterface ui,
+      GameConfig config,
+      GameEngine engine,
+      AppContext context) {
 
     cmds.register("new", new CmdNew(ui, context, config, engine));
     cmds.register("hint", new CmdHint(ui));
     cmds.register("show", new CmdShow(ui, config));
-    cmds.register("load", new CmdLoad(ui,engine));
+    cmds.register("load", new CmdLoad(ui, engine));
     cmds.register("save", new CmdSave(ui));
     cmds.register("set", new CmdSet(ui, config));
     cmds.register("undo", new CmdUndo(ui));
@@ -264,16 +265,19 @@ public class GameLauncher {
 
     System.out.println("\nCOMMANDES DISPONIBLES DANS LE SHELL :");
     cmds.getKeys()
-            .forEach(
-                    name ->
-                            cmds.get(name)
-                                    .ifPresent(cmd -> System.out.printf("  %-12s : %s%n", name, cmd.getDescription())));
+        .forEach(
+            name ->
+                cmds.get(name)
+                    .ifPresent(
+                        cmd -> System.out.printf("  %-12s : %s%n", name, cmd.getDescription())));
 
     System.out.println(
-            "\nHow to move your pieces : \n\n"
-                    + "[letter1][col1][letter2][col2] to move your piece from letter1-col1 to letter2-col2\n"
-                    + "if you have a piece to relocate you have to enter the tile where you want to put it [letter][col]\n"
-                    + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
+        "\nHow to move your pieces : \n\n"
+            + "[letter1][col1][letter2][col2] to move "
+            + "your piece from letter1-col1 to letter2-col2\n"
+            + "if you have a piece to relocate you have to enter the tile"
+            + "where you want to put it [letter][col]\n"
+            + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
   }
 
   private void printVersion() {
@@ -282,7 +286,7 @@ public class GameLauncher {
     } catch (IOException e) {
       System.err.println("[WARNING] version.txt not found.");
       System.out.println(
-              "Agon Game - CLI Launcher\n(c) 2026 University of Bordeaux\nversion 1.0.0");
+          "Agon Game - CLI Launcher\n(c) 2026 University of Bordeaux\nversion 1.0.0");
     }
   }
 

@@ -23,23 +23,25 @@ public class CoordinateMapper {
    * @return The corresponding 0-indexed position in the 1D bitboard array.
    */
   public static int toIndex(char letter, int col) {
-    if (letter > 'K' || letter < 'A' || col > 11 || col < 1) return -1;
+    if (letter > 'K' || letter < 'A' || col > 11 || col < 1) {
+      return -1;
+    }
     int base = 'A';
-    return (((int) letter - base) * (11)) + (col - 1);
+    return ((int) letter - base) * 11 + col - 1;
   }
 
-    /**
-     * Converts a linear BitBoard index into AbaPro coordinate notation. AbaPro notation uses a letter
-     * for the ring or zone (A, B, C...) followed by a number for the column (1 to 11).
-     *
-     * @param index the numerical identifier of the cell.
-     * @return a {@link String} representing the coordinate in letter + digit format.
-     */
-    public static String toAbaPro(int index) {
-        char letter = (char) ('A' + (index / 11));
-        int col = (index % 11) + 1;
-        return "" + letter + col;
-    }
+  /**
+   * Converts a linear BitBoard index into AbaPro coordinate notation. AbaPro notation uses a letter
+   * for the ring or zone (A, B, C...) followed by a number for the column (1 to 11).
+   *
+   * @param index the numerical identifier of the cell.
+   * @return a {@link String} representing the coordinate in letter + digit format.
+   */
+  public static String toAbaPro(int index) {
+    char letter = (char) ('A' + (index / 11));
+    int col = (index % 11) + 1;
+    return "" + letter + col;
+  }
 
   /**
    * Converts a 1D bitboard index back into a human-readable coordinate string (e.g., "c3").
@@ -59,15 +61,15 @@ public class CoordinateMapper {
     return "" + letter + col;
   }
 
-    /**
-     * Helper method to convert a string coordinate directly to an index. * @param coord The
-     * coordinate string (e.g., "c3" or "C3").
-     *
-     * @return The bitboard index.
-     */
-    public static int fromCoordinateString(String coord) {
-        char letter = Character.toUpperCase(coord.charAt(0));
-        int col = Integer.parseInt(coord.substring(1));
-        return toIndex(letter, col);
-    }
+  /**
+   * Helper method to convert a string coordinate directly to an index. * @param coord The
+   * coordinate string (e.g., "c3" or "C3").
+   *
+   * @return The bitboard index.
+   */
+  public static int fromCoordinateString(String coord) {
+    char letter = Character.toUpperCase(coord.charAt(0));
+    int col = Integer.parseInt(coord.substring(1));
+    return toIndex(letter, col);
+  }
 }

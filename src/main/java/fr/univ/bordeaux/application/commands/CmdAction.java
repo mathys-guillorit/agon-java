@@ -35,12 +35,12 @@ public interface CmdAction {
    *
    * @return String command name
    */
-  public String getName();
+  String getName();
 
   /**
    * Get options of the command.
    *
    * @return {@link Options}
    */
-  public Options getOptions();
+  Options getOptions();
 }

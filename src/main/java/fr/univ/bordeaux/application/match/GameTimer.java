@@ -17,6 +17,13 @@ public class GameTimer {
   private final Runnable onTimeout;
   private volatile boolean alive = true;
 
+  /**
+   * Initializes and starts a countdown timer.
+   *
+   * @param time The duration of the timer in minutes.
+   * @param onTimeout A callback to be executed when the timer reaches zero.
+   * @throws IllegalArgumentException If the provided time is negative.
+   */
   public GameTimer(long time, Runnable onTimeout) {
     if (time < 0) {
       throw new IllegalArgumentException("Le temps ne peut pas être négatif : " + time);
@@ -30,11 +37,12 @@ public class GameTimer {
   }
 
   /**
-   * Test Constructor
+   * Constructs a custom timer with a specific time unit and starts the countdown thread.
    *
-   * @param time
-   * @param unit
-   * @param onTimeout
+   * @param time The duration of the timer.
+   * @param unit The time unit for the duration (e.g., SECONDS, MINUTES).
+   * @param onTimeout The action to perform when the timer expires.
+   * @throws IllegalArgumentException If the provided time is negative.
    */
   GameTimer(long time, TimeUnit unit, Runnable onTimeout) {
     if (time < 0) {
@@ -63,7 +71,9 @@ public class GameTimer {
           lock.unlock();
         }
 
-        if (!alive) break;
+        if (!alive) {
+          break;
+        }
         long currentRemaining = getRemainingTimeMillis();
 
         if (currentRemaining <= 0) {
@@ -77,6 +87,10 @@ public class GameTimer {
     }
   }
 
+  /**
+   * Resumes or starts the timer countdown. Signals the internal thread to begin decreasing the
+   * remaining time.
+   */
   public void start() {
     lock.lock();
     try {
@@ -90,6 +104,7 @@ public class GameTimer {
     }
   }
 
+  /** Pauses the timer countdown. Calculates and saves the remaining time before stopping. */
   public void stop() {
     lock.lock();
     try {
@@ -119,6 +134,11 @@ public class GameTimer {
     }
   }
 
+  /**
+   * Calculates the current remaining time in milliseconds.
+   *
+   * @return The remaining time, ensuring it is never negative.
+   */
   public long getRemainingTimeMillis() {
     if (isRunning) {
       long elapsedSinceLastStart = System.currentTimeMillis() - lastStartTime;
@@ -127,6 +147,10 @@ public class GameTimer {
     return remainingTimeMillis;
   }
 
+  /**
+   * Permanently terminates the timer thread. Once killed, the timer thread will exit its execution
+   * loop.
+   */
   public void kill() {
     alive = false;
     lock.lock();
@@ -141,6 +165,11 @@ public class GameTimer {
     return getRemainingTimeMillis() <= 0;
   }
 
+  /**
+   * Formats the remaining time into a human-readable string.
+   *
+   * @return A string formatted as "MM:SS".
+   */
   public String getFormattedRemainingTime() {
     long totalSeconds = getRemainingTimeMillis() / 1000;
     long minutes = totalSeconds / 60;

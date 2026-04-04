@@ -7,9 +7,6 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.jline.reader.Completer;
-import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Command responsible for executing a player's move on the board. */
 public class CmdMove extends Cmd {
@@ -22,10 +19,6 @@ public class CmdMove extends Cmd {
 
   /** The target index/coordinate. */
   private int destination;
-
-  /** Pattern for compact move format such as F1F2 or e10f11. */
-  private static final Pattern MOVE_INPUT_PATTERN =
-          Pattern.compile("^([a-kA-K])(\\d{1,2})([a-kA-K])(\\d{1,2})$");
 
   /**
    * Constructs a move command using a pre-built Move object.

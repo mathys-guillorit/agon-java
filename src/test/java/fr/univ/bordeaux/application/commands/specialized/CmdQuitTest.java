@@ -2,15 +2,15 @@ package fr.univ.bordeaux.application.commands.specialized;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.application.AppContext;
-import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
@@ -48,7 +48,7 @@ public class CmdQuitTest {
     MatchManager match = createRealMatch(gameUserInterface);
 
     AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface,context).createNew(null);
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
     boolean result = cmdQuit.execute(match);
 
     assertTrue(result);
@@ -133,6 +133,55 @@ public class CmdQuitTest {
     AppContext context = new AppContext(new LocalProfile("test"));
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context);
     assertTrue(cmdQuit.getDescription().contains("Usage: quit"));
+  }
+
+  @Test
+  @DisplayName("Quit disconnects client when connected")
+  void testQuitClientConnected() throws Exception {
+    gameUserInterface = createUiWithInput("");
+
+    AppContext context =
+        new AppContext(new LocalProfile("test")) {
+          @Override
+          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
+            return new fr.univ.bordeaux.application.network.client.AgonClient(getProfile()) {
+              boolean connected = true;
+              boolean quitCalled = false;
+
+              @Override
+              public boolean isConnected() {
+                return true;
+              }
+
+              @Override
+              public void quit() {
+                quitCalled = true;
+              }
+            };
+          }
+        };
+
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+    boolean result = cmdQuit.execute(null);
+
+    assertTrue(result);
+    assertTrue(outContent.toString().contains("Disconnected from server"));
+  }
+
+  @Test
+  @DisplayName("Quit exits application when no match and no client")
+  void testQuitExitApplicationFallback() throws Exception {
+    gameUserInterface = createUiWithInput("");
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+    cmdQuit.execute(null);
+
+    String output = outContent.toString();
+
+    assertTrue(output.contains("Exiting application"));
+    assertFalse(gameUserInterface.isRunning());
   }
 
   // --- Helpers ---

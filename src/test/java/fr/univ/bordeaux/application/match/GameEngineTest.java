@@ -1,26 +1,29 @@
 package fr.univ.bordeaux.application.match;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.application.AppContext;
-import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
+import org.apache.commons.cli.Options;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,49 +32,103 @@ import org.junit.jupiter.api.Test;
 
 public class GameEngineTest {
 
-  private AgonRegister<CmdAction> cmds = new AgonRegister<>();
+  private AgonRegister<CmdAction> cmds;
   private GameUserInterface gameUserInterface;
   private GameConfig config;
   private GameEngine gameEngine;
 
   @BeforeEach
   void setUp() {
+    cmds = new AgonRegister<>();
     config = new GameConfig();
     LineReader reader = new FakeLineReader("n");
 
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
       gameUserInterface = new AgonShell(terminal, reader, cmds);
-
       gameEngine = new GameEngine(gameUserInterface, cmds);
 
       cmds.register("new", new CmdCreate(gameUserInterface, config, gameEngine));
-
     } catch (Exception e) {
       fail("Le setup a échoué : " + e.getMessage());
+    }
+  }
+
+  private StandardMatch createMatch() {
+    return new StandardMatch(
+        new AgonBoardImpl(),
+        new HumanPlayer("J1", Color.WHITE, null),
+        new HumanPlayer("J2", Color.BLACK, null),
+        new GameConfig());
+  }
+
+  private Object getPrivateField(Object target, String fieldName) throws Exception {
+    Field field = target.getClass().getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field.get(target);
+  }
+
+  private Object invokePrivateMethod(
+      Object target, String methodName, Class<?>[] paramTypes, Object... args) throws Exception {
+    Method method = target.getClass().getDeclaredMethod(methodName, paramTypes);
+    method.setAccessible(true);
+    return method.invoke(target, args);
+  }
+
+  private static class FakeCmdAction implements CmdAction {
+    private final String name;
+
+    FakeCmdAction(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public boolean execute(MatchManager matchManager) {
+      return true;
+    }
+
+    @Override
+    public CmdAction createNew(String[] args) {
+      return this;
+    }
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public Options getOptions() {
+      return null;
+    }
+
+    @Override
+    public String getDescription() {
+      return "fake command";
+    }
+
+    @Nonnull
+    @Override
+    public Completer getAutoCompleter() {
+      return null;
     }
   }
 
   @Test
   @DisplayName("Vérifier que createNew génère une action non nulle")
   void createNewTest() {
-    // On simule l'appel 'create' sans arguments
     CmdAction cmdCreate = cmds.get("new").get().createNew(new String[] {});
-    cmdCreate.execute(null);
+    assertTrue(cmdCreate.execute(null));
     assertNotNull(gameEngine.getMatchManager());
   }
 
   @Test
   @DisplayName("Test de la boucle principale : Menu -> Create -> Match")
   void loopTest() {
-    // On configure le FakeLineReader pour simuler une séquence de touches :
-    // 1. "create" pour lancer un match
-    // 2. null ou une commande de sortie pour arrêter la boucle
     LineReader reader = new FakeLineReader("new", "quit");
 
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
-      // On recrée l'interface avec ce reader spécifique
       gameUserInterface = new AgonShell(terminal, reader, cmds);
       gameEngine = new GameEngine(gameUserInterface, cmds);
 
@@ -79,6 +136,7 @@ public class GameEngineTest {
 
       AppContext context = new AppContext(new LocalProfile("test"));
       cmds.register("quit", new CmdQuit(gameUserInterface, context));
+
       gameEngine.start();
 
       assertNotNull(
@@ -86,30 +144,12 @@ public class GameEngineTest {
           "La boucle aurait dû exécuter 'create' et initialiser le match");
       gameUserInterface.quit();
     } catch (Exception e) {
+      fail("La boucle principale a levé une exception : " + e.getMessage());
     }
   }
 
-  /*@Test
-  void stopThreadTest() {
-    LineReader reader = new FakeLineReader("");
-    try {
-      Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
-      // On recrée l'interface avec ce reader spécifique
-      gameUserInterface = new AgonShell(terminal, reader, cmds);
-      gameEngine = new GameEngine(gameUserInterface, cmds);
-      StandardMatch matchManager = new StandardMatch(new AgonBoardImpl(),
-          new HumanPlayer("J1", Color.WHITE, null), new HumanPlayer("J1", Color.BLACK, null),
-          new GameConfig());
-      gameEngine.setMatchManager(matchManager);
-      gameEngine.start();
-      matchManager.setMatchStatus(MatchStatus.FINISHED);
-
-    } catch (Exception e) {
-
-    }
-  }*/
-
   @Test
+  @DisplayName("stop : interrompt le joueur bloqué quand le match se termine")
   void stopTest() throws Exception {
     AtomicBoolean interruptedReceived = new AtomicBoolean(false);
 
@@ -127,7 +167,6 @@ public class GameEngineTest {
           }
         };
 
-    // 2. Initialisation du match et de l'engine
     StandardMatch match =
         new StandardMatch(
             new AgonBoardImpl(),
@@ -136,26 +175,208 @@ public class GameEngineTest {
             new GameConfig());
     gameEngine.setMatchManager(match);
 
-    // 3. On lance l'engine dans un thread à part pour ne pas bloquer le TEST
-    Thread engineThread = new Thread(() -> gameEngine.start());
+    Thread engineThread = new Thread(gameEngine::start);
     engineThread.start();
 
-    // 4. On attend 200ms pour être SÛR que l'engine est entré dans la phase FutureAction.get()
     Thread.sleep(200);
 
-    // 5. ON COUPE LE MATCH
     match.setMatchStatus(MatchStatus.FINISHED);
 
-    // 6. On attend que l'engine traite l'info
     Thread.sleep(500);
 
-    // 7. VERIFICATION
     assertTrue(
         interruptedReceived.get(),
         "Le thread du joueur aurait dû être interrompu par futureAction.cancel(true)");
 
-    // Nettoyage
     gameUserInterface.quit();
     engineThread.join(1000);
+  }
+
+  @Test
+  @DisplayName("previewMatch : ne doit rien faire si le matchManager est null")
+  void previewMatchWithNullDoesNothing() {
+    assertDoesNotThrow(() -> gameEngine.previewMatch(null));
+  }
+
+  @Test
+  @DisplayName("previewMatch : fonctionne avec un match valide")
+  void previewMatchWithValidMatch() {
+    StandardMatch match = createMatch();
+    assertDoesNotThrow(() -> gameEngine.previewMatch(match));
+  }
+
+  @Test
+  @DisplayName("setAppContext : enregistre correctement le contexte")
+  void setAppContextStoresContext() throws Exception {
+    AppContext context = new AppContext(new LocalProfile("test"));
+    gameEngine.setAppContext(context);
+
+    Object stored = getPrivateField(gameEngine, "appContext");
+    assertSame(context, stored);
+  }
+
+  @Test
+  @DisplayName("clearBoardPreview : ne lève pas d'exception")
+  void clearBoardPreviewTest() {
+    assertDoesNotThrow(() -> gameEngine.clearBoardPreview());
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : retourne false si action est null")
+  void isForbiddenOnlineCommandNull() throws Exception {
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine,
+                "isForbiddenOnlineCommand",
+                new Class<?>[] {CmdAction.class},
+                new Object[] {null});
+
+    assertFalse(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : retourne false si le nom est null")
+  void isForbiddenOnlineCommandNameNull() throws Exception {
+    CmdAction action = new FakeCmdAction(null);
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertFalse(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : undo doit être interdit")
+  void isForbiddenOnlineCommandUndo() throws Exception {
+    CmdAction action = new FakeCmdAction("undo");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertTrue(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : redo doit être interdit")
+  void isForbiddenOnlineCommandRedo() throws Exception {
+    CmdAction action = new FakeCmdAction("redo");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertTrue(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : pause doit être interdit")
+  void isForbiddenOnlineCommandPause() throws Exception {
+    CmdAction action = new FakeCmdAction("pause");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertTrue(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : save doit être interdit")
+  void isForbiddenOnlineCommandSave() throws Exception {
+    CmdAction action = new FakeCmdAction("save");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertTrue(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : load doit être interdit")
+  void isForbiddenOnlineCommandLoad() throws Exception {
+    CmdAction action = new FakeCmdAction("load");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertTrue(result);
+  }
+
+  @Test
+  @DisplayName("isForbiddenOnlineCommand : une commande normale ne doit pas être interdite")
+  void isForbiddenOnlineCommandAllowed() throws Exception {
+    CmdAction action = new FakeCmdAction("help");
+
+    Boolean result =
+        (Boolean)
+            invokePrivateMethod(
+                gameEngine, "isForbiddenOnlineCommand", new Class<?>[] {CmdAction.class}, action);
+
+    assertFalse(result);
+  }
+
+  @Test
+  @DisplayName("refreshOnlineBoard : ne fait rien si appContext est null")
+  void refreshOnlineBoardWithoutContext() {
+    assertDoesNotThrow(
+        () -> invokePrivateMethod(gameEngine, "refreshOnlineBoard", new Class<?>[] {}));
+  }
+
+  @Test
+  @DisplayName("setMatchManager / getMatchManager : conservent la référence")
+  void setAndGetMatchManager() {
+    StandardMatch match = createMatch();
+    gameEngine.setMatchManager(match);
+
+    assertSame(match, gameEngine.getMatchManager());
+  }
+
+  @Test
+  @DisplayName("start : ne plante pas avec une UI qui s'arrête rapidement")
+  void startWithImmediateQuit() {
+    LineReader reader = new FakeLineReader("quit");
+
+    try {
+      Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
+      gameUserInterface = new AgonShell(terminal, reader, cmds);
+      gameEngine = new GameEngine(gameUserInterface, cmds);
+
+      AppContext context = new AppContext(new LocalProfile("test"));
+      cmds.register("quit", new CmdQuit(gameUserInterface, context));
+
+      assertDoesNotThrow(() -> gameEngine.start());
+    } catch (Exception e) {
+      fail("Le test a échoué : " + e.getMessage());
+    }
+  }
+
+  @Test
+  @DisplayName("start : accepte une commande inconnue sans planter")
+  void startWithUnknownCommand() {
+    LineReader reader = new FakeLineReader("commande_inconnue", "quit");
+
+    try {
+      Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
+      gameUserInterface = new AgonShell(terminal, reader, cmds);
+      gameEngine = new GameEngine(gameUserInterface, cmds);
+
+      AppContext context = new AppContext(new LocalProfile("test"));
+      cmds.register("quit", new CmdQuit(gameUserInterface, context));
+
+      assertDoesNotThrow(() -> gameEngine.start());
+    } catch (Exception e) {
+      fail("Le test a échoué : " + e.getMessage());
+    }
   }
 }

@@ -26,7 +26,6 @@ public class LangService implements LangTranslationProvider {
 
   private ResourceBundle resBundle;
   private Locale locale;
-  private final String defaultFilepath = "lang.default";
   private String lastMessage = "";
 
   /**

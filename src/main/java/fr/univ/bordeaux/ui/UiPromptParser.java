@@ -79,9 +79,9 @@ public class UiPromptParser {
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
     return registry
-            .get(firstWord)
-            .map(action -> action.createNew(options))
-            .orElseGet(() -> handleDefault(line, ui));
+        .get(firstWord)
+        .map(action -> action.createNew(options))
+        .orElseGet(() -> handleDefault(line, ui));
   }
 
   /**

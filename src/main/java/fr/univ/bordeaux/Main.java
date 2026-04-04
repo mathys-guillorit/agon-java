@@ -1,27 +1,25 @@
 package fr.univ.bordeaux;
 
-import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.agoncore.agonelements.Move;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
-import fr.univ.bordeaux.agoncore.bitboard.BitBoard;
-import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.GameLauncher;
 import fr.univ.bordeaux.application.network.server.AgonServer;
-import fr.univ.bordeaux.ui.cli.AgonShell;
 
+/** Entry point of the application. */
 public class Main {
 
   private static final int DEFAULT_PORT = 12345;
 
+  /**
+   * Launches the application.
+   *
+   * @param args command-line arguments.
+   */
   public static void main(String[] args) throws Exception {
 
     // =========================================================
     // CASE 1: Daemon mode (-d / --daemon)
     // Starts the server without launching the interactive shell.
     // =========================================================
-    if (args != null
-            && args.length > 0
-            && ("-d".equals(args[0]) || "--daemon".equals(args[0]))) {
+    if (args != null && args.length > 0 && ("-d".equals(args[0]) || "--daemon".equals(args[0]))) {
 
       String owner;
       try {
@@ -50,9 +48,7 @@ public class Main {
     // CASE 2: Server mode (-s [PORT] / --server [PORT])
     // Starts the server directly on the given port.
     // =========================================================
-    if (args != null
-            && args.length > 0
-            && ("-s".equals(args[0]) || "--server".equals(args[0]))) {
+    if (args != null && args.length > 0 && ("-s".equals(args[0]) || "--server".equals(args[0]))) {
 
       int port = DEFAULT_PORT;
 
@@ -94,7 +90,7 @@ public class Main {
     GameLauncher launcher = new GameLauncher();
     launcher.launch(args);
 
-    //System.out.println("prog principal OK + ajout JUnit");
+    // System.out.println("prog principal OK + ajout JUnit");
 
     /*BitBoard whiteQueen=new BitBoard();
     BitBoard blackQueen=new BitBoard();

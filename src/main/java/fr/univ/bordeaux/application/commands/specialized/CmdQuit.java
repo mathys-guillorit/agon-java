@@ -7,39 +7,41 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
-
 /**
  * Command responsible for handling exit behavior in the application.
  *
  * <p>This command supports three hierarchical exit levels:
+ *
  * <ul>
- *     <li><b>Match level:</b> If a game is currently running, it will be terminated.</li>
- *     <li><b>Network level:</b> If connected to a remote server, the client will disconnect.</li>
- *     <li><b>Application level:</b> If no match and no connection exist, the application will close.</li>
+ *   <li><b>Match level:</b> If a game is currently running, it will be terminated.
+ *   <li><b>Network level:</b> If connected to a remote server, the client will disconnect.
+ *   <li><b>Application level:</b> If no match and no connection exist, the application will close.
  * </ul>
  *
  * <p>This ensures a consistent and intuitive user experience across local and network modes.
  *
  * <p>Usage:
+ *
  * <ul>
- *     <li>{@code quit}</li>
+ *   <li>{@code quit}
  * </ul>
  *
  * <p>Notes:
+ *
  * <ul>
- *     <li>The command does not require any arguments.</li>
- *     <li>The behavior adapts dynamically depending on the current state.</li>
+ *   <li>The command does not require any arguments.
+ *   <li>The behavior adapts dynamically depending on the current state.
  * </ul>
  */
 public class CmdQuit extends Cmd {
 
-  /** Shared application context (used for network state access) */
+  /** Shared application context (used for network state access). */
   private final AppContext context;
 
   /**
    * Constructs a new Quit command.
    *
-   * @param uictx   The user interface context
+   * @param uictx The user interface context
    * @param context The application context (network + global state)
    */
   public CmdQuit(GameUserInterface uictx, AppContext context) {
@@ -56,20 +58,21 @@ public class CmdQuit extends Cmd {
   @Override
   public String getDescription() {
     return "Usage: quit\n"
-            + "Description:\n"
-            + "- If in a match: quits the current game\n"
-            + "- If connected to a server: disconnects from it\n"
-            + "- Otherwise: exits the application\n";
+        + "Description:\n"
+        + "- If in a match: quits the current game\n"
+        + "- If connected to a server: disconnects from it\n"
+        + "- Otherwise: exits the application\n";
   }
 
   /**
    * Executes the quit command.
    *
    * <p>The behavior depends on the current application state:
+   *
    * <ul>
-   *     <li>If a match is active → quit the match</li>
-   *     <li>Else if connected → disconnect from server</li>
-   *     <li>Else → exit application</li>
+   *   <li>If a match is active → quit the match
+   *   <li>Else if connected → disconnect from server
+   *   <li>Else → exit application
    * </ul>
    *
    * @param match The current match manager (may be null)

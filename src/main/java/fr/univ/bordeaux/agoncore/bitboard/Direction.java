@@ -74,12 +74,12 @@ public enum Direction {
    */
   public static Direction getOpposite(Direction d) {
     return switch (d) {
-      case East -> Direction.West;
-      case West -> Direction.East;
-      case NorthEast -> Direction.SouthWest;
-      case SouthWest -> Direction.NorthEast;
-      case NorthWest -> Direction.SouthEast;
-      case SouthEast -> Direction.NorthWest;
+      case East -> West;
+      case West -> East;
+      case NorthEast -> SouthWest;
+      case SouthWest -> NorthEast;
+      case NorthWest -> SouthEast;
+      case SouthEast -> NorthWest;
     };
   }
 

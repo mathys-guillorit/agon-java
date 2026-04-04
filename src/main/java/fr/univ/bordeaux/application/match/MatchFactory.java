@@ -77,8 +77,7 @@ public class MatchFactory {
   /**
    * Creates an online match for two remote human players.
    *
-   * <p>This method does not use UI, config, or AI.
-   * It is intended for server-side network matches.
+   * <p>This method does not use UI, config, or AI. It is intended for server-side network matches.
    */
   public static Match createOnlineMatch(String whitePlayerName, String blackPlayerName) {
     AgonBoard agonBoard = new AgonBoardImpl();

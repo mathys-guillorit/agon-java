@@ -70,9 +70,10 @@ public class AgonShellTest {
    * Initializes a fresh command registry before each test.
    *
    * <p>This setup registers both:
+   *
    * <ul>
-   *   <li>standard/local commands</li>
-   *   <li>network commands</li>
+   *   <li>standard/local commands
+   *   <li>network commands
    * </ul>
    */
   @BeforeEach

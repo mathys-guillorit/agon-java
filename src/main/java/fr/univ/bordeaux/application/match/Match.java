@@ -25,7 +25,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   private MatchStatus status;
   private final GameConfig gameConfig;
   private boolean isSaved = false;
-  private MatchObserver UiObserver;
+  private MatchObserver uiObserver;
   private Player winner;
 
   /**
@@ -83,10 +83,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
       return false;
     }
     PieceType piece = agonBoard.getPieceAt(move.getFrom());
-    if (piece != null) {
-      if (piece.getColor() != currentPlayer.getColor()) {
-        return false;
-      }
+    if (piece != null && piece.getColor() != currentPlayer.getColor()) {
+      return false;
     }
     if (agonBoard.applyMove(move)) {
       if (agonBoard.isGameWon(currentPlayer.getColor())) {
@@ -185,8 +183,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /** Notify the UI about a state change in the match. */
   public void notifyUi() {
-    if (this.UiObserver != null) {
-      this.UiObserver.onMatchUpdate(this);
+    if (this.uiObserver != null) {
+      this.uiObserver.onMatchUpdate(this);
     }
   }
 
@@ -297,7 +295,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    */
   @Override
   public void setObserver(MatchObserver observer) {
-    this.UiObserver = observer;
+    this.uiObserver = observer;
   }
 
   /**
@@ -321,16 +319,14 @@ public abstract class Match implements MatchManager, ObservableMatch {
   /**
    * Performs actions at the beginning of a player's turn.
    *
-   * <p>This default implementation does nothing and may be overridden
-   * by subclasses that need turn-specific behavior.
+   * <p>This default implementation does nothing and may be overridden by subclasses that need
+   * turn-specific behavior.
    */
   public void startTurn() {}
 
-  /**
-   * Switches the current player to the other player in the match.
-   */
+  /** Switches the current player to the other player in the match. */
   protected void switchPlayer() {
-    currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;
+    currentPlayer = currentPlayer.equals(player1) ? player2 : player1;
   }
 
   /**

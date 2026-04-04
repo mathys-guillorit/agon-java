@@ -78,7 +78,7 @@ public abstract class AbstractHeuristic implements Heuristic {
       } else {
         pieceValue = factor * pawnWeight;
       }
-      boolean isWhitePiece = (piece == PieceType.WHITE_PAWN || piece == PieceType.WHITE_QUEEN);
+      boolean isWhitePiece = piece == PieceType.WHITE_PAWN || piece == PieceType.WHITE_QUEEN;
       if (aiColor == Color.WHITE) {
         score += (isWhitePiece ? pieceValue : -pieceValue);
       } else {

@@ -463,5 +463,4 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   public void setBoardFooter(String boardFooter) {
     this.boardFooter = (boardFooter == null) ? "" : boardFooter;
   }
-
 }

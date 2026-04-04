@@ -32,5 +32,5 @@ public interface Heuristic {
    *     player).
    * @return A {@code long} integer representing the heuristic score.
    */
-  public long evaluate(AgonBoard board, Color aiColor);
+  long evaluate(AgonBoard board, Color aiColor);
 }
