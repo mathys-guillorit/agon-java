@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.agoncore.bitboard;
 
+import fr.univ.bordeaux.technical.utils.GameLogger;
+
 /**
  * A high-performance 128-bit bitset implementation optimized for Agon's hexagonal grid.
  *
@@ -103,6 +105,7 @@ public class BitBoard {
         this.low &= ~(1L << index);
       }
     }
+    GameLogger.debug("BitBoard: bit " + index + " set to " + value);
   }
 
   /**
@@ -126,7 +129,7 @@ public class BitBoard {
    * carry-over between the {@code low} and {@code high} segments.
    *
    * @param n The shift offset (corresponds to {@link Direction#getValue()}). Positive moves bits
-   *     toward higher indices, negative toward lower.
+   * toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(final int n) {
@@ -141,6 +144,7 @@ public class BitBoard {
     } else {
       shiftedBitBoard = this;
     }
+    GameLogger.debug("BitBoard: performing shift of " + n);
     return shiftedBitBoard;
   }
 
@@ -188,6 +192,7 @@ public class BitBoard {
    * @return A new {@link BitBoard} representing the dilated area.
    */
   public BitBoard dilation() {
+    GameLogger.debug("BitBoard: calculating dilation (hexagonal neighbors)...");
     BitBoard dilatedBoard = new BitBoard();
     for (Direction d : Direction.values()) {
       dilatedBoard = dilatedBoard.orOperation(this.shiftBitboard(d.getValue()));

@@ -6,6 +6,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
 import fr.univ.bordeaux.technical.io.storage.GameSaveSerializer;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
 import java.util.List;
@@ -62,6 +63,11 @@ public final class CmdSave extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
+    GameLogger.info("Executing 'save' command for file: " + this.filename);
+    if (match == null || match.isMatchOver()) {
+      this.getCtx().showError("No active match found you can't use save now.\n");
+      return false;
+    }
     AgonBoard board = match.getAgonBoard();
     List<String> boardText = board.toTextList();
     List<String> historyText = board.getHistoryAsText();
@@ -72,8 +78,10 @@ public final class CmdSave extends Cmd {
     GameSaveSerializer serializer = new GameSaveSerializer();
     try {
       serializer.save(saveData, filename);
+      GameLogger.info("CmdSave: Partie sauvegardée avec succès dans " + filename);
       match.setIsSaved(true);
     } catch (IOException e) {
+      GameLogger.error("CmdSave: Erreur lors de l'écriture du fichier : " + e.getMessage());
       super.getCtx().showError("Something went wrong while saving the game please try again.\n");
       return false;
     }

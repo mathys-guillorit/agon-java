@@ -30,8 +30,9 @@ public interface ReadOnlyMatch {
   /**
    * @return the remaining time if applicable.
    */
-  String getRemainingTime();
+  String getCurrentPlayerRemainingTime();
 
+  String[] getAllPlayersRemainingTime();
   /**
    * @return true if the match is finished.
    */

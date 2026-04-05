@@ -46,7 +46,7 @@ public class CmdQuit extends Cmd {
       while (!resolved) {
         this.getCtx().showMessage("Save the game before quitting? [y/N] \n");
         String response = this.getCtx().getUserInput();
-        System.out.println("la reponse utilisateur est : " + response);
+        fr.univ.bordeaux.technical.utils.GameLogger.debug("User response for save before quit: " + response);
         if (response != null && (response.equalsIgnoreCase("y"))) {
           this.getCtx().showMessage("Enter filename: \n");
           String filename = this.getCtx().getUserInput();

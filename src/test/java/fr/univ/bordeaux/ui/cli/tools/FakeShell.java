@@ -37,15 +37,6 @@ public class FakeShell extends AgonShell {
 
   @Override
   public void showInfo(String msg) {}
-
-  @Override
-  public AtomicBoolean getDebugMode() {
-    return new AtomicBoolean(false);
-  }
-
-  @Override
-  public void setVerbose(boolean state) {}
-
   @Override
   public String getUserInput() {
     return "";

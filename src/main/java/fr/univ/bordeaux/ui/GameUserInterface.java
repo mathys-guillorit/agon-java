@@ -71,12 +71,6 @@ public interface GameUserInterface {
    */
   void showInfo(String msg);
 
-  /** Explicit. */
-  AtomicBoolean getDebugMode();
-
-  /** Explicit. */
-  void setVerbose(boolean state);
-
   /**
    * Retrieve from ui/CLi some text.
    *

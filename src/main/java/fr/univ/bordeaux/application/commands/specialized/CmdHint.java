@@ -5,6 +5,7 @@ import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
 /** Command providing strategic suggestions to the player. */
@@ -53,6 +54,7 @@ public final class CmdHint extends Cmd {
                   + CoordinateMapper.toAbaPro(hint.getDestination())
                   + "\n");
     } else {
+      GameLogger.info("No hint found.");
       super.getCtx().showError("No hint available for the current state.\n");
     }
     return false;

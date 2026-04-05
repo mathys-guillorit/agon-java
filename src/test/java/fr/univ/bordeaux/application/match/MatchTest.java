@@ -213,6 +213,6 @@ class MatchTest {
 
   @Test
   void testRemainingTime() {
-    assertNull(match.getRemainingTime());
+    assertNull(match.getCurrentPlayerRemainingTime());
   }
 }

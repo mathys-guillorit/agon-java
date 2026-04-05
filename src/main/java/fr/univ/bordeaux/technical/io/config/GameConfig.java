@@ -12,7 +12,7 @@ public class GameConfig {
   private boolean blitzMode = false;
   private boolean manualPlacement = false;
   private int timeout = 30;
-  private boolean aiActive = true;
+  private boolean aiActive = false;
   private String aiMode = "minimax";
   private int aiDepth = 4;
   private int aiTimeLimit = 5;

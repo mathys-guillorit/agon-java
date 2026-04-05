@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
 /** Command responsible for executing a player's move on the board. */
@@ -49,7 +50,8 @@ public class CmdMove extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match == null) {
+    if (match == null || match.isMatchOver()) {
+      GameLogger.debug("Can't execute move because match is null or over CmdMove.");
       this.getCtx().showError("No active match to execute move.");
       return false;
     }

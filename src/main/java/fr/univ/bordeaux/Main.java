@@ -1,6 +1,7 @@
 package fr.univ.bordeaux;
 
 import fr.univ.bordeaux.application.GameLauncher;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 
 /** EntryPoint class. */
 public class Main {
@@ -26,17 +27,17 @@ public class Main {
     //        whiteQueen, blackQueen, whitePawns, blackPawns
     // );
     // board.printBoard();
-    // System.out.println(board.applyMove(new Move(
+    // GameLogger.info(board.applyMove(new Move(
     //  CoordinateMapper.toIndex('G',9),
     //  CoordinateMapper.toIndex('F',9),
     //  Color.BLACK
     // )));
-    // System.out.println(board.applyMove(new Move(
+    // GameLogger.info(board.applyMove(new Move(
     //  CoordinateMapper.toIndex('F',8),
     //  CoordinateMapper.toIndex('F',7),
     //  Color.WHITE
     // )));
-    // System.out.println(board.applyMove(new Move(
+    // GameLogger.info(board.applyMove(new Move(
     //  CoordinateMapper.toIndex('F',9),
     //  CoordinateMapper.toIndex('E',8),
     //  Color.BLACK
@@ -44,14 +45,14 @@ public class Main {
     // board.printBoard();
     // board.undoMove();
     // board.printBoard();
-    // System.out.println("board avant mouvement");
+    // GameLogger.info("board avant mouvement");
     // board.printBoard();
     // board.applyMove(new Move(
     //  CoordinateMapper.toIndex('G',9),
     //  CoordinateMapper.toIndex('F',8),
     //  Color.BLACK
     // ));
-    // System.out.println("board après mouvement");
+    // GameLogger.info("board après mouvement");
     // board.printBoard();
     /*var a = new GUIExample();
     a.launch(GUIExample.class, arg);*/

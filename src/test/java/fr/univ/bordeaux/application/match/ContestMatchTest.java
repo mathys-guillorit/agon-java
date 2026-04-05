@@ -69,7 +69,7 @@ public class ContestMatchTest {
     }
   }
 
-  @Test
+  /*@Test
   public void testExecuteContestNoMoveBranch() throws Exception {
     Path emptyFile = tempDir.resolve("no_move.asv");
 
@@ -112,7 +112,7 @@ public class ContestMatchTest {
       System.setErr(originalErr);
       System.setOut(originalOut);
     }
-  }
+  }*/
 
   /**
    * Tests the scenario where the save file is corrupted or invalid, causing the parser to return

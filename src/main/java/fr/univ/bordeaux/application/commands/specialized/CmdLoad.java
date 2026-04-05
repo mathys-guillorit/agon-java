@@ -13,6 +13,7 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
 import fr.univ.bordeaux.technical.io.storage.GameSaveParser;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import org.apache.commons.cli.Options;
 
@@ -90,6 +91,7 @@ public final class CmdLoad extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
+    GameLogger.info("Executing 'load' command for file: " + this.filename);
     GameSaveParser parser = new GameSaveParser();
     try {
       GameSaveData saveData = parser.parse(this.filename);

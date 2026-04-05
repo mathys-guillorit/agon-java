@@ -36,7 +36,7 @@ public class BlitzMatchTest {
   @DisplayName("Le timer du joueur courant doit être actif")
   void testTimerStatus() {
     assertTrue(match.isRunning(), "Le match doit être en cours");
-    String time = match.getRemainingTime();
+    String time = match.getCurrentPlayerRemainingTime();
     assertNotNull(time);
     assertTrue(time.startsWith("01:00") || time.startsWith("00:59"));
   }
@@ -61,11 +61,11 @@ public class BlitzMatchTest {
   @DisplayName("Vérifier que le temps diminue réellement avec le passage des millisecondes")
   void testTimeElapsing() throws InterruptedException {
 
-    String timeAtStart = match.getRemainingTime();
+    String timeAtStart = match.getCurrentPlayerRemainingTime();
 
     Thread.sleep(1200);
 
-    String timeAfterWait = match.getRemainingTime();
+    String timeAfterWait = match.getCurrentPlayerRemainingTime();
 
     assertNotSame(
         timeAtStart,
@@ -80,14 +80,9 @@ public class BlitzMatchTest {
   @Test
   @DisplayName("Initialisation avec le joueur Noir (branche else du constructeur)")
   void testConstructorWithBlackStarting() {
-    // On force le début avec les Noirs pour passer dans le 'else' du constructeur
     BlitzMatch blackStartMatch =
         new BlitzMatch(board, whitePlayer, blackPlayer, 1, new GameConfig(), Color.BLACK);
-
-    // Le timer noir doit être celui qui est actif (on vérifie via getRemainingTime qui appelle
-    // blackTimer)
-    assertNotNull(blackStartMatch.getRemainingTime());
-    // On vérifie que le statut est bien géré
+    assertNotNull(blackStartMatch.getCurrentPlayerRemainingTime());
     assertFalse(blackStartMatch.isMatchOver());
   }
 
@@ -108,7 +103,7 @@ public class BlitzMatchTest {
 
     // On vérifie que getRemainingTime pointe bien sur le timer Noir
     // (Dans tes images, Color.WHITE ? whiteTimer : blackTimer)
-    assertNotNull(match.getRemainingTime());
+    assertNotNull(match.getCurrentPlayerRemainingTime());
   }
 
   @Test
@@ -128,6 +123,6 @@ public class BlitzMatchTest {
 
     // On vérifie que le temps affiché est bien celui du joueur noir maintenant
     // (Couvre la branche 'else' du ternaire dans getRemainingTime)
-    assertNotNull(match.getRemainingTime());
+    assertNotNull(match.getCurrentPlayerRemainingTime());
   }
 }

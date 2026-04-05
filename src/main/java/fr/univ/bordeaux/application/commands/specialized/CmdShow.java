@@ -127,6 +127,10 @@ public final class CmdShow extends Cmd {
    * @return false.
    */
   private boolean showHistory(MatchManager match) {
+    if (match==null|| match.isMatchOver()) {
+      this.getCtx().showError("Cannot show history because you are not currently in match.\n");
+      return false;
+    }
     this.getCtx().displayHistory(match.getHistory());
     return false;
   }
@@ -138,7 +142,7 @@ public final class CmdShow extends Cmd {
    * @return false.
    */
   private boolean showBoard(MatchManager match) {
-    if (match == null) {
+    if (match == null || match.isMatchOver()) {
       this.getCtx().showError("Error: No active match. Please create or load a game first.\n");
       return false;
     } else {
@@ -155,11 +159,11 @@ public final class CmdShow extends Cmd {
    */
   private boolean showTime(MatchManager match) {
     GameUserInterface ui = this.getCtx();
-    if (match == null) {
-      ui.showMessage("This command can only be used when you are currently in a blitz match");
+    if (match == null || match.isMatchOver()) {
+      ui.showMessage("This command can only be used when you are currently in a blitz match.\n");
       return false;
     } else {
-      String playerTimer = match.getRemainingTime();
+      String playerTimer = match.getCurrentPlayerRemainingTime();
       Player currentPlayer = match.getCurrentPlayer();
       ui.showMessage(
           "Remaining time for : "
@@ -180,7 +184,7 @@ public final class CmdShow extends Cmd {
    */
   private boolean showConfiguration(MatchManager match) {
     if (match != null) {
-      this.getCtx().showMessage(match.getGameConfig().toString() + "\n");
+      this.getCtx().showMessage("This is the configuration for the match you are playing it may have some differences between the real configuration if you have used the SET command.\n"+match.getGameConfig().toString() + "\n");
     } else {
       super.getCtx().showMessage(this.gameConfig.toString() + "\n");
     }

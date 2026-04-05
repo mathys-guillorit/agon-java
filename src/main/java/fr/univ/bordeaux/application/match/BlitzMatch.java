@@ -4,23 +4,31 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 
-/** Represents a match played in Blitz mode, where each player has a limited amount of time. */
+/**
+ * Represents a match played in Blitz mode, where each player has a limited amount of time.
+ * <p>This class extends {@link Match} by adding management for two distinct timers.
+ * If a timer expires, the match ends immediately, and the opposing player is
+ * declared the winner by timeout.</p>
+ */
 public class BlitzMatch extends Match {
 
-  /** Represents a Timer for the WhitePlayer. */
+  /** The timer dedicated to the White player. */
   private final GameTimer whiteTimer;
 
-  /** Represents a Timer for the BlackPlayer. */
+  /** The timer dedicated to the Black player. */
   private final GameTimer blackTimer;
 
   /**
    * Constructs a BlitzMatch with the specified board, players, and time limit.
+   * By default, the White player starts the game.
    *
    * @param agonBoard The board used for the match.
-   * @param player1 The first player.
-   * @param player2 The second player.
+   * @param player1 The first player (White).
+   * @param player2 The second player (Black).
    * @param time The time limit for each player in minutes.
+   * @param gameConfig The global game configuration.
    */
   public BlitzMatch(
       AgonBoard agonBoard, Player player1, Player player2, long time, GameConfig gameConfig) {
@@ -28,14 +36,14 @@ public class BlitzMatch extends Match {
   }
 
   /**
-   * Constructs a BlitzMatch with the specified board, players, time limit and starting player.
+   * Constructs a full BlitzMatch by specifying the starting player color.
    *
    * @param agonBoard The board used for the match.
    * @param player1 The first player.
    * @param player2 The second player.
    * @param time The time limit for each player in minutes.
-   * @param gameConfig Game configuration.
-   * @param startingColor The color of the player who starts.
+   * @param gameConfig The game configuration.
+   * @param startingColor The color of the player who starts the match.
    */
   public BlitzMatch(
       AgonBoard agonBoard,
@@ -48,29 +56,38 @@ public class BlitzMatch extends Match {
 
     this.whiteTimer = new GameTimer(time, this::handleTimeout);
     this.blackTimer = new GameTimer(time, this::handleTimeout);
+
+    GameLogger.info("BlitzMatch: Starting new blitz game with " + time + " minutes per player.");
+
     if (startingColor == Color.WHITE) {
+      GameLogger.debug("BlitzMatch: Starting White timer.");
       this.whiteTimer.start();
     } else {
+      GameLogger.debug("BlitzMatch: Starting Black timer.");
       this.blackTimer.start();
     }
   }
 
   /**
-   * Gets the timer for the current player.
+   * Retrieves the timer corresponding to the player whose turn it currently is.
    *
-   * @return The current player's GameTimer.
+   * @return The {@link GameTimer} of the current player.
    */
   private GameTimer getCurrentTimer() {
     return (super.getCurrentPlayer().getColor() == Color.WHITE) ? whiteTimer : blackTimer;
   }
 
-  /** Actions to perform at the start of a turn, specifically managing the timer. */
+  /** * Actions to perform at the start of a turn.
+   * <p>Checks if the match is finished, ensures the current timer is running,
+   * and handles immediate expiration if necessary.</p>
+   */
   @Override
   public void startActions() {
     if (this.getMatchStatus() == MatchStatus.FINISHED) {
       return;
     }
     if (!getCurrentTimer().isRunning()) {
+      GameLogger.debug("BlitzMatch: Resuming " + super.getCurrentPlayer().getColor() + " timer.");
       getCurrentTimer().start();
     }
     if (getCurrentTimer().isExpired()) {
@@ -81,31 +98,44 @@ public class BlitzMatch extends Match {
   /**
    * Pauses the current player's timer.
    *
-   * @return true if the timer was successfully paused.
+   * @return {@code true} if the timer was successfully stopped.
    */
   public boolean pause() {
+    GameLogger.info("BlitzMatch: Game paused.");
     this.getCurrentTimer().stop();
     return true;
   }
 
-  /** Handles the expiration of a player's timer. */
+  /** * Handles the expiration of a player's timer.
+   * <p>This method is synchronized to prevent state conflicts. It sets the match
+   * status to FINISHED, assigns the winner based on who timed out, terminates
+   * timer threads, and notifies the UI.</p>
+   */
   private synchronized void handleTimeout() {
     if (this.getMatchStatus() != MatchStatus.FINISHED) {
+      GameLogger.info("BlitzMatch: TIMEOUT! " + this.getCurrentPlayer().getColor() + " ran out of time.");
+
       this.setMatchStatus(MatchStatus.FINISHED);
       this.setWinner(
           (this.getCurrentPlayer().getColor() == Color.BLACK)
               ? getWhitePlayer()
               : getBlackPlayer());
+
       whiteTimer.kill();
       blackTimer.kill();
+      GameLogger.debug("BlitzMatch: Timer threads terminated.");
       this.notifyUi();
     }
   }
 
-  /** Actions to perform at the end of a turn, specifically switching players. */
+  /** * Actions to perform at the end of a turn.
+   * <p>Stops the timers if the match is finished; otherwise, switches to the
+   * next player.</p>
+   */
   @Override
   public void endActions() {
     if (this.getMatchStatus() == MatchStatus.FINISHED) {
+      GameLogger.debug("BlitzMatch: Stopping all timers (Match Finished).");
       whiteTimer.stop();
       blackTimer.stop();
       return;
@@ -113,26 +143,47 @@ public class BlitzMatch extends Match {
     this.switchPlayer();
   }
 
-  /** Switches the current player and manages the timers accordingly. */
+  /** * Switches the current player while managing timer transitions.
+   * <p>Stops the current player's clock before invoking the superclass
+   * player switch logic.</p>
+   */
+  @Override
   public void switchPlayer() {
+    Color previous = super.getCurrentPlayer().getColor();
     getCurrentTimer().stop();
+
     super.switchPlayer();
+
+    Color current = super.getCurrentPlayer().getColor();
+    GameLogger.debug("BlitzMatch: Switched timer from " + previous + " to " + current);
   }
 
+  /**
+   * Starts the current player's timer at the beginning of their gameplay phase.
+   */
   @Override
   public void startTurn() {
+    GameLogger.debug("BlitzMatch: Starting turn for " + super.getCurrentPlayer().getColor());
     getCurrentTimer().start();
   }
 
   /**
    * Gets the formatted remaining time for the current player.
    *
-   * @return A string representing the remaining time (mm:ss).
+   * @return A string representing the remaining time (format mm:ss).
    */
   @Override
-  public String getRemainingTime() {
+  public String getCurrentPlayerRemainingTime() {
     return (getCurrentPlayer().getColor() == Color.WHITE)
         ? whiteTimer.getFormattedRemainingTime()
         : blackTimer.getFormattedRemainingTime();
+  }
+
+  /**
+   * Gets the formatted remaining time for all players.
+   * * @return An array of strings with remaining times.
+   */
+  public String[] getAllPlayersRemainingTime() {
+    return new String[]{whiteTimer.getFormattedRemainingTime(), blackTimer.getFormattedRemainingTime()};
   }
 }

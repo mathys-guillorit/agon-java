@@ -15,6 +15,7 @@ import fr.univ.bordeaux.application.commands.specialized.CmdShow;
 import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
+import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
@@ -81,6 +82,9 @@ public class GameLauncher {
     options.addOption("v", "verbose", false, "Enables verbose output.");
     options.addOption("d", "debug", false, "Enables debug mode.");
     options.addOption("g", "gui", false, "Starts the graphical interface.");
+    options.addOption("b", "blitz", false, "Starts the game in Blitz mode.");
+    options.addOption("t", "time", true, "Sets the time limit for each player (in minutes).");
+    options.addOption("a", "ai", true, "Replace the given color by an Ai. Can be both using A for color.");
     options.addOption(
         "c", "contest", false, "Launches contest mode (reads file and outputs move).");
   }
@@ -97,6 +101,10 @@ public class GameLauncher {
    */
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
+
+    // Initialize Logger with default config
+    fr.univ.bordeaux.technical.utils.GameLogger.getInstance().setDebugMode(config.isDebug());
+
     CommandLineParser parser = new DefaultParser();
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
     try {
@@ -111,44 +119,37 @@ public class GameLauncher {
         printVersion();
         return;
       }
-      if (cmd.hasOption("v")) {
-        config.setVerbose(true);
-        System.out.println("[INFO] Verbose mode enabled.");
-      }
-      if (cmd.hasOption("d")) {
-        config.setDebug(true);
-        System.out.println("[DEBUG] Debug mode enabled.");
-      }
+
       String[] fileArg = cmd.getArgs();
       String filePath = null;
       if (fileArg.length > 0) {
         filePath = fileArg[0];
         File file = new File(filePath);
         if (!file.exists() || file.isDirectory()) {
-          System.err.println(
-              "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
+          fr.univ.bordeaux.technical.utils.GameLogger.error(
+              "The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
         if (cmd.hasOption("c")) {
-          System.out.println("[INFO] Contest mode detected.");
+          fr.univ.bordeaux.technical.utils.GameLogger.info("Contest mode detected.");
           try {
             ContestMatch.executeContest(fileArg[0]);
           } catch (Exception e) {
-            System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
+            fr.univ.bordeaux.technical.utils.GameLogger.error("Contest mode failed : " + e.getMessage());
           }
           return;
         }
-        System.out.println("[INFO] File argument detected: " + filePath);
+        fr.univ.bordeaux.technical.utils.GameLogger.info("File argument detected: " + filePath);
 
       } else if (cmd.hasOption("c")) {
-        System.err.println("[ERROR] Contest mode requires a file argument.");
+        fr.univ.bordeaux.technical.utils.GameLogger.error("Contest mode requires a file argument.");
         this.fillRegister(cmds, null, null, null);
         printHelp(cmds);
         return;
       }
       startGame(config, cmd, cmds, filePath);
     } catch (ParseException e) {
-      System.err.println("Argument Error : " + e.getMessage());
+      fr.univ.bordeaux.technical.utils.GameLogger.error("Argument Error : " + e.getMessage());
       printHelp(cmds);
     }
   }
@@ -166,7 +167,7 @@ public class GameLauncher {
     try {
       return configParser.parse(configPath);
     } catch (IOException e) {
-      System.out.println("No config file found. Creating a default file...");
+      fr.univ.bordeaux.technical.utils.GameLogger.info("No config file found. Creating a default file...");
       createDefaultConfigFile();
       return new GameConfig();
     }
@@ -181,9 +182,9 @@ public class GameLauncher {
     ConfigSerializer serializer = new ConfigSerializer();
     try {
       serializer.createDefault(configPath);
-      System.out.println("[INFO] Minimal configuration file created at: " + configPath);
+      fr.univ.bordeaux.technical.utils.GameLogger.info("Minimal configuration file created at: " + configPath);
     } catch (IOException e) {
-      System.err.println("[ERROR] Failed to save default config: " + e.getMessage());
+      fr.univ.bordeaux.technical.utils.GameLogger.error("Failed to save default config: " + e.getMessage());
     }
   }
 
@@ -199,7 +200,7 @@ public class GameLauncher {
    */
   private void startGame(
       GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad) {
-    System.out.println("Starting Agon Shell...");
+    fr.univ.bordeaux.technical.utils.GameLogger.info("Starting Agon Shell...");
     AgonShell userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
@@ -221,9 +222,18 @@ public class GameLauncher {
         shellRef[0] = userInterface;
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
         this.fillRegister(cmds, userInterface, config, gameEngine);
-        /*if (filePathToLoad != null) {
-          loadCmd.execute(null);
-        }*/
+        // Bind CLI options to config
+        ConfigBinder.bindOptionsToConfig(cmd, config, userInterface);
+
+        if (config.isBlitzMode()) {
+          CmdCreate create = new CmdCreate(userInterface, config, gameEngine);
+          create.execute(null);
+        }
+
+        if (filePathToLoad != null) {
+          CmdAction loadcmd=cmds.get("load").get().createNew(new String[]{filePathToLoad});
+          loadcmd.execute(null);
+        }
 
         gameEngine.start();
       } catch (Exception e) {
@@ -256,14 +266,14 @@ public class GameLauncher {
   private void printHelp(AgonRegister<CmdAction> cmds) {
     HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("agon [OPTIONS]", options);
-    System.out.println("\nCOMMANDES DISPONIBLES DANS LE SHELL :");
+    System.out.println("\nAVAILABLE COMMAND IN CLI MODE :");
     cmds.getKeys()
         .forEach(
             name -> {
               cmds.get(name)
                   .ifPresent(
                       cmd -> {
-                        System.out.printf("  %-12s : %s%n", name, cmd.getDescription());
+                        System.out.println(String.format("  %-12s : %s", name, cmd.getDescription()));
                       });
             });
     System.out.println(
@@ -283,8 +293,6 @@ public class GameLauncher {
       System.out.println(getVersionContent());
     } catch (IOException e) {
       System.err.println("[WARNING] version.txt not found.");
-      System.out.println(
-          "Agon Game - CLI Launcher\n(c) 2026 University of Bordeaux\nversion 1.0.0");
     }
   }
 
