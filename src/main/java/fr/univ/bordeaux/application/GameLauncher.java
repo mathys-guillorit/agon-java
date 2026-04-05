@@ -2,6 +2,17 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.network.CmdAway;
+import fr.univ.bordeaux.application.commands.network.CmdBack;
+import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdNew;
+import fr.univ.bordeaux.application.commands.network.CmdPing;
+import fr.univ.bordeaux.application.commands.network.CmdPlayers;
+import fr.univ.bordeaux.application.commands.network.CmdScoreboard;
+import fr.univ.bordeaux.application.commands.network.CmdServerList;
+import fr.univ.bordeaux.application.commands.network.CmdServerStart;
+import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
+import fr.univ.bordeaux.application.commands.network.CmdServerStop;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
@@ -16,6 +27,7 @@ import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
@@ -24,6 +36,7 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -37,34 +50,15 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-/**
- * The GameLauncher class is the entry point for the Agon application.
- *
- * <p>It acts as the bootstrapper that handles:
- *
- * <ul>
- *   <li>Defining valid command-line options (CLI).
- *   <li>Loading persistent settings from the local configuration file (.agonrc).
- *   <li>Parsing arguments provided by the user at startup.
- *   <li>Resolving conflicts between file loading and manual options.
- *   <li>Initializing the appropriate User Interface (CLI or GUI).
- * </ul>
- *
- * @version 1.0
- * @see GameConfig
- */
+/** The GameLauncher class is the entry point for the Agon application. */
 public class GameLauncher {
+
   /** The definitions of all allowed command-line options. */
   private final Options options;
 
-  /** The path to the persistent configuration file, located in the user's working directory. */
+  /** The path to the persistent configuration file. */
   private final String configPath = System.getProperty("user.dir") + File.separator + ".agonrc";
 
-  /**
-   * Constructs a new GameLauncher.
-   *
-   * <p>Initializes the option definitions immediately upon creation.
-   */
   public GameLauncher() {
     this.options = new Options();
     this.setupOptions();
@@ -90,14 +84,11 @@ public class GameLauncher {
   }
 
   /**
-   * Main launch sequence that processes arguments, updates configuration, and starts the game.
+   * Launches the application by parsing command-line arguments and initializing the game state.
+   * This method handles configuration loading, mode selection, and branches into specific execution
+   * paths like help display, version info, or contest mode.
    *
-   * <p>This method parses the raw arguments. If informational flags (-h, -V) are present, it
-   * displays the info and returns. Otherwise, it updates the {@link GameConfig} and proceeds to
-   * start the game engine. If an invalid argument is provided, it catches the {@link
-   * ParseException} and displays the help menu.
-   *
-   * @param args The raw command-line arguments passed at startup.
+   * @param args The command-line arguments provided at startup.
    */
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
@@ -107,14 +98,24 @@ public class GameLauncher {
 
     CommandLineParser parser = new DefaultParser();
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
+
+    String playerName = askPlayerName();
+    AppMode mode = askApplicationMode();
+    System.out.println("[INFO] Mode selected: " + mode);
+
+    LocalProfile profile = new LocalProfile(playerName);
+    AppContext context = new AppContext(profile);
+    context.setMode(mode);
+
     try {
       CommandLine cmd = parser.parse(options, args);
 
       if (cmd.hasOption("h")) {
-        this.fillRegister(cmds, null, null, null);
+        this.fillRegister(cmds, null, null, null, context);
         printHelp(cmds);
         return;
       }
+
       if (cmd.hasOption("V")) {
         printVersion();
         return;
@@ -122,14 +123,17 @@ public class GameLauncher {
 
       String[] fileArg = cmd.getArgs();
       String filePath = null;
+
       if (fileArg.length > 0) {
         filePath = fileArg[0];
         File file = new File(filePath);
+
         if (!file.exists() || file.isDirectory()) {
           fr.univ.bordeaux.technical.utils.GameLogger.error(
               "The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
+
         if (cmd.hasOption("c")) {
           fr.univ.bordeaux.technical.utils.GameLogger.info("Contest mode detected.");
           try {
@@ -143,11 +147,11 @@ public class GameLauncher {
 
       } else if (cmd.hasOption("c")) {
         fr.univ.bordeaux.technical.utils.GameLogger.error("Contest mode requires a file argument.");
-        this.fillRegister(cmds, null, null, null);
+        this.fillRegister(cmds, null, null, null,null);
         printHelp(cmds);
         return;
       }
-      startGame(config, cmd, cmds, filePath);
+      startGame(config, cmd, cmds, filePath,context);
     } catch (ParseException e) {
       fr.univ.bordeaux.technical.utils.GameLogger.error("Argument Error : " + e.getMessage());
       printHelp(cmds);
@@ -188,18 +192,22 @@ public class GameLauncher {
     }
   }
 
-  /**
-   * Initializes the application layers and starts the selected user interface.
-   *
-   * <p>Chooses between the CLI ({@link fr.univ.bordeaux.ui.cli.AgonShell}) and the GUI ({@link
-   * fr.univ.bordeaux.ui.gui}) based on the provided command-line options.
-   *
-   * @param config The final configuration to be used by the UI and the engine.
-   * @param cmd The parsed command line, used to check for the GUI flag (-g).
-   * @param filePathToLoad The path to the save file to load automatically, or null if none.
-   */
+  private String askPlayerName() {
+    Scanner scanner = new Scanner(System.in);
+
+    System.out.print("Enter your player name: ");
+    String name = scanner.nextLine().trim();
+
+    while (name.isEmpty()) {
+      System.out.print("Name cannot be empty. Enter your player name: ");
+      name = scanner.nextLine().trim();
+    }
+
+    return name;
+  }
+
   private void startGame(
-      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad) {
+      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, String filePathToLoad,AppContext context) {
     fr.univ.bordeaux.technical.utils.GameLogger.info("Starting Agon Shell...");
     AgonShell userInterface;
     if (cmd.hasOption("g")) {
@@ -221,7 +229,9 @@ public class GameLauncher {
         userInterface = new AgonShell(terminal, reader, cmds);
         shellRef[0] = userInterface;
         GameEngine gameEngine = new GameEngine(userInterface, cmds);
-        this.fillRegister(cmds, userInterface, config, gameEngine);
+        context.setGameEngine(gameEngine);
+        gameEngine.setAppContext(context);
+        this.fillRegister(cmds, userInterface, config, gameEngine,context);
         // Bind CLI options to config
         ConfigBinder.bindOptionsToConfig(cmd, config, userInterface);
 
@@ -243,9 +253,14 @@ public class GameLauncher {
   }
 
   private void fillRegister(
-      AgonRegister<CmdAction> cmds, GameUserInterface ui, GameConfig config, GameEngine engine) {
-    cmds.register("new", new CmdCreate(ui, config, engine));
-    cmds.register("quit", new CmdQuit(ui));
+      AgonRegister<CmdAction> cmds,
+      GameUserInterface ui,
+      GameConfig config,
+      GameEngine engine,
+      AppContext context) {
+
+    cmds.register("new", new CmdNew(ui, context, config, engine));
+
     cmds.register("hint", new CmdHint(ui));
     cmds.register("show", new CmdShow(ui, config));
     cmds.register("load", new CmdLoad(ui, engine));
@@ -255,6 +270,17 @@ public class GameLauncher {
     cmds.register("redo", new CmdRedo(ui));
     cmds.register("help", new CmdHelp(ui, cmds));
     cmds.register("pause", new CmdPause(ui));
+    cmds.register("join", new CmdJoin(ui, context));
+    cmds.register("ping", new CmdPing(ui, context));
+    cmds.register("server_start", new CmdServerStart(ui, context));
+    cmds.register("server_stop", new CmdServerStop(ui, context));
+    cmds.register("server_list", new CmdServerList(ui, context));
+    cmds.register("server_status", new CmdServerStatus(ui, context));
+    cmds.register("players", new CmdPlayers(ui, context, new String[0]));
+    cmds.register("scoreboard", new CmdScoreboard(ui, context));
+    cmds.register("away", new CmdAway(ui, context));
+    cmds.register("back", new CmdBack(ui, context));
+    cmds.register("quit", new CmdQuit(ui, context));
   }
 
   /**
@@ -321,5 +347,27 @@ public class GameLauncher {
    */
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
+  }
+
+  private AppMode askApplicationMode() {
+    Scanner scanner = new Scanner(System.in);
+
+    System.out.println("Select mode:");
+    System.out.println("1 - Local");
+    System.out.println("2 - Online");
+    System.out.print("Your choice: ");
+
+    String input = scanner.nextLine().trim();
+
+    while (!input.equals("1") && !input.equals("2")) {
+      System.out.print("Invalid choice. Enter 1 (Local) or 2 (Online): ");
+      input = scanner.nextLine().trim();
+    }
+
+    if (input.equals("2")) {
+      return AppMode.ONLINE;
+    }
+
+    return AppMode.LOCAL;
   }
 }

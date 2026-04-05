@@ -98,13 +98,14 @@ public class GameTimer {
           lock.unlock();
         }
 
-        if (!alive) break;
+        if (!alive) {
+          break;
+        }
         long currentRemaining = getRemainingTimeMillis();
 
         if (currentRemaining <= 0) {
           handleTimeout();
         } else {
-          // On vérifie toutes les 100ms pour être précis sur l'affichage
           Thread.sleep(100);
         }
       }
@@ -174,7 +175,8 @@ public class GameTimer {
 
   /**
    * Calculates the current remaining time in milliseconds.
-   * * @return The remaining time (ms). Returns 0 if time has expired.
+   *
+   * @return The remaining time, ensuring it is never negative.
    */
   public long getRemainingTimeMillis() {
     if (isRunning) {
@@ -210,9 +212,9 @@ public class GameTimer {
   }
 
   /**
-   * Returns the remaining time as a formatted string.
+   * Formats the remaining time into a human-readable string.
    *
-   * @return A string in "mm:ss" format.
+   * @return A string formatted as "MM:SS".
    */
   public String getFormattedRemainingTime() {
     long totalSeconds = getRemainingTimeMillis() / 1000;

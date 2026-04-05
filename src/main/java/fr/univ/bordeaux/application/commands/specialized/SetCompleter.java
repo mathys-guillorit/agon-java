@@ -37,7 +37,6 @@ public class SetCompleter implements Completer {
   /** JLine fill this method. */
   @Override
   public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
-    String word = line.word();
     int wordIndex = line.wordIndex();
     // after "set" (cmdName)
     if (wordIndex != 1) {

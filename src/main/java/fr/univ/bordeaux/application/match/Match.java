@@ -306,4 +306,14 @@ public abstract class Match implements MatchManager, ObservableMatch {
   public String[] getAllPlayersRemainingTime() {
     return null;
   }
+  /**
+   * Checks whether the given player color must perform a replacement move.
+   *
+   * @param color the color to check
+   * @return true if a replacement move is required, false otherwise
+   */
+  public boolean isReplacementMoveRequired(Color color) {
+    return agonBoard != null && agonBoard.hasPiecesToRelocate(color);
+  }
+
 }

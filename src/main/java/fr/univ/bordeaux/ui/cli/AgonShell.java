@@ -24,25 +24,62 @@ import org.jline.utils.AttributedStyle;
 
 /**
  * The AgonShell class acts as the primary Command Line Interface (CLI) manager for the Agon game.
+ * It integrates the JLine library to provide advanced terminal features such as command history,
+ * real-time autocompletion (tab-completion), and styled ANSI output.
+ *
+ * <p>This class implements {@link GameUserInterface} to bridge the gap between the core game logic
+ * and the user's terminal session.
+ *
+ * @author fr.univ.bordeaux
+ * @version 1.0
  */
 public class AgonShell implements GameUserInterface, MatchObserver {
 
+  /** Atomic flag used to control the main execution loop of the shell. */
   private AtomicBoolean running;
+
+  /** The low-level JLine Terminal instance handling I/O streams. */
   private Terminal terminal;
+
+  /** The high-level JLine LineReader responsible for parsing user input and managing history. */
   private LineReader reader;
+
+  /** Buffers the last line of input received from the user. */
   private String line;
 
+  /** ANSI-styled header for application-wide messages: [AGON]. */
   private final String msgHa;
+
+  /** ANSI-styled tag for informational messages: [INFO]. */
   private final String msgBi;
+
+  /** ANSI-styled tag for warning alerts: [WARNING]. */
   private final String msgBw;
+
+  /** ANSI-styled tag for critical error reports: [ERROR]. */
   private final String msgBe;
 
+  /** Stores the ASCII art representation of the main menu. */
   private String mainMenuAscii = "No default Menu set";
+
+  /** The prompt string displayed at the beginning of each input line. */
   private String userPrompt = "> ";
+
+  /** Registry containing all executable commands available in the shell. */
   private AgonRegister<CmdAction> cmds;
+
+  /** If true, the shell outputs detailed operational feedback. */
   private boolean verbose;
+
+  /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
   private AtomicBoolean debug;
 
+  private String boardFooter = "";
+
+  /**
+   * Internal initialization method. Sets default states for flags and constructs the default user
+   * prompt.
+   */
   private void init() {
     this.verbose = false;
     this.debug = new AtomicBoolean(false);
@@ -51,6 +88,14 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     GameLogger.info("AgonShell: CLI components initialized.");
   }
 
+  /**
+   * Constructs a new AgonShell and configures the JLine environment. Binds "Ctrl+R" for incremental
+   * history search by default.
+   *
+   * @param term The {@link Terminal} to be used for physical I/O.
+   * @param reader The {@link LineReader} used for capturing user input.
+   * @param cmds The {@link AgonRegister} containing the command set.
+   */
   public AgonShell(Terminal term, LineReader reader, AgonRegister<CmdAction> cmds) {
     super();
     this.terminal = term;
@@ -68,21 +113,47 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     GameLogger.info("AgonShell: Terminal session started.");
   }
 
+  /**
+   * Updates the main menu ASCII art displayed via the {@link #showHelp()} method.
+   *
+   * @param mainMenu The raw ASCII string to be loaded.
+   */
   public void loadMainMenu(String mainMenu) {
     this.mainMenuAscii = mainMenu;
     GameLogger.debug("AgonShell: Main menu ASCII loaded.");
   }
 
+  /**
+   * Signals the application to terminate the main loop and triggers the terminal's graceful
+   * shutdown.
+   */
   public void leave() {
     GameLogger.info("AgonShell: Requesting application shutdown.");
     this.running.set(false);
     this.safeCloseTerminal();
   }
 
+  /**
+   * Checks if the shell is currently active and accepting input.
+   *
+   * @return true if the shell's running state is active.
+   */
   public boolean isRunning() {
     return this.running.get();
   }
 
+  /**
+   * Captures a single line of input from the terminal.
+   *
+   * <p>Handles special cases:
+   *
+   * <ul>
+   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
+   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
+   * </ul>
+   *
+   * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
+   */
   public String getUserInput() {
     try {
       String readLine = this.reader.readLine(this.userPrompt);
@@ -105,6 +176,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       return line;
 
     } catch (UserInterruptException e) {
+      // Si le thread est interrompu par le chrono, on ne veut pas quitter
       if (Thread.currentThread().isInterrupted()) {
         GameLogger.debug("AgonShell: Input interrupted by match timer.");
         Thread.interrupted(); // Nettoie le flag d'interruption
@@ -123,6 +195,10 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       return null;
     }
   }
+
+  /**
+   * Closes the terminal and its associated streams. Logs an error if the closing operation fails.
+   */
   public void safeCloseTerminal() {
     try {
       this.cliWln("System: Terminal session closed. Bye!");
@@ -134,6 +210,15 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     }
   }
 
+  /**
+   * Core completion logic for JLine. 1. If input is empty, provides a list of all available
+   * commands. 2. If a partial command is typed, suggests matching command keys. 3. If a command is
+   * fully recognized, delegates completion to the command's own completer.
+   *
+   * @param reader The current LineReader instance.
+   * @param line The parsed input line containing words and cursor position.
+   * @param candidates The list to be populated with completion suggestions.
+   */
   public void globalCompleter(LineReader reader, ParsedLine line, List<Candidate> candidates) {
     List<String> words = line.words();
     if (words.isEmpty() || words.getFirst().isEmpty()) {
@@ -157,6 +242,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     }
   }
 
+  /**
+   * Generates a styled [ERROR] tag using ANSI red foreground.
+   *
+   * @return ANSI formatted string.
+   */
   private String cliError() {
     return new AttributedStringBuilder()
         .append("[")
@@ -167,6 +257,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .toAnsi();
   }
 
+  /**
+   * Generates a styled [AGON] tag using ANSI magenta foreground.
+   *
+   * @return ANSI formatted string.
+   */
   private String cliLayer() {
     return new AttributedStringBuilder()
         .append("[")
@@ -177,6 +272,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .toAnsi();
   }
 
+  /**
+   * Generates a styled [INFO] tag using ANSI blue foreground.
+   *
+   * @return ANSI formatted string.
+   */
   private String cliInfo() {
     return new AttributedStringBuilder()
         .append("[")
@@ -187,6 +287,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .toAnsi();
   }
 
+  /**
+   * Generates a styled [WARNING] tag using ANSI yellow foreground.
+   *
+   * @return ANSI formatted string.
+   */
   private String cliWarn() {
     return new AttributedStringBuilder()
         .append("[")
@@ -203,6 +308,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.cliW(this.msgHa + this.msgBe + " " + msg + "\n");
   }
 
+  /**
+   * Displays an informational message with full CLI branding.
+   *
+   * @param msg The info content.
+   */
   @Override
   public void showInfo(String msg) {
     // On ne loggue pas systématiquement en INFO ici car c'est souvent de l'affichage pur
@@ -211,35 +321,67 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
 
+  /**
+   * Displays a warning message with full CLI branding.
+   *
+   * @param msg The warning content.
+   */
   @Override
   public void showWarn(String msg) {
     GameLogger.debug("AgonShell (UI Display Warning): " + msg);
     this.cliW(this.msgHa + this.msgBw + " " + msg + "\n");
   }
 
+  /**
+   * Internal write method that flushes the terminal buffer immediately.
+   *
+   * @param msg String to print.
+   */
   private void cliWln(String msg) {
     this.terminal.writer().println(msg);
     this.terminal.flush();
   }
 
+  /**
+   * Internal write method without an automatic newline.
+   *
+   * @param msg String to print.
+   */
   private void cliW(String msg) {
     this.terminal.writer().print(msg);
     this.terminal.flush();
   }
 
+  /** Displays the help menu art to the terminal. */
   public void showHelp() {
     GameLogger.debug("AgonShell: Displaying help menu.");
     this.cliWln(this.mainMenuAscii);
   }
 
+  /**
+   * Initiates the shutdown sequence. Asks the user for a save confirmation before flipping the
+   * running state.
+   */
   @Override
   public void quit() {
     this.leave();
   }
 
+  /**
+   * Renders the current state of the game board and match information.
+   *
+   * @param match The read-only match view to render.
+   */
   @Override
   public void onMatchUpdate(ReadOnlyMatch match) {
-    this.cliWln(ConsoleRenderer.getBoardRepresentation(match.getAgonBoard()));
+    String renderedBoard = ConsoleRenderer.getBoardRepresentation(match.getAgonBoard());
+
+    if (boardFooter != null && !boardFooter.isBlank()) {
+      renderedBoard += "\n" + boardFooter;
+    }
+
+    this.cliWln(renderedBoard);
+
     if (match.isMatchOver()) {
       Player winner = match.getWinner();
       String winnerInfo = (winner != null) ? winner.getColor().toString() : "UNKNOWN";
@@ -255,18 +397,35 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     }
   }
 
+  /**
+   * Prints a raw message to the terminal without specific CLI tags.
+   *
+   * @param message The content to display.
+   */
   @Override
   public void showMessage(String message) {
     this.cliW(message);
   }
 
+
+
+  /**
+   * Returns the execution state of the shell.
+   *
+   * @return AtomicBoolean reference.
+   */
   public AtomicBoolean getRunning() {
     return running;
   }
 
-  public void displayHistory(List<MoveDtO> moves) {
-    GameLogger.debug("AgonShell: Displaying history with " + moves.size() + " moves.");
-    if (moves.isEmpty()) {
+  /**
+   * Explicit.
+   *
+   * @param history {@link List}
+   */
+  public void displayHistory(List<MoveDtO> history) {
+    GameLogger.debug("AgonShell: Displaying history with " + history.size() + " moves.");
+    if (history.isEmpty()) {
       this.showInfo("The history is currently empty.");
       return;
     }
@@ -274,25 +433,37 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     StringBuilder sb = new StringBuilder();
     sb.append("[history]\n");
 
-    for (int i = 0; i < moves.size(); i += 2) {
-      MoveDtO moveO = moves.get(i);
+    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
+    for (int i = 0; i < history.size(); i += 2) {
+      // Coup du joueur O (Premier joueur du tour)
+      MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
           .append(" ")
           .append(moveO.to().toLowerCase())
           .append(";");
 
-      if (i + 1 < moves.size()) {
-        MoveDtO moveX = moves.get(i + 1);
+      // Coup du joueur X (S'il existe déjà dans la liste)
+      if (i + 1 < history.size()) {
+        MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")
             .append(moveX.from().toLowerCase())
             .append(" ")
             .append(moveX.to().toLowerCase())
             .append(";");
       }
+
       sb.append("\n");
     }
 
     this.showMessage(sb.toString());
+  }
+
+  public void clearBoardDisplay() {
+    this.cliWln("");
+  }
+
+  public void setBoardFooter(String boardFooter) {
+    this.boardFooter = (boardFooter == null) ? "" : boardFooter;
   }
 }

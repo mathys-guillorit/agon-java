@@ -51,7 +51,8 @@ public final class CmdSave extends Cmd {
   @Override
   public String getDescription() {
     return "Usage: save [filename]\n"
-        + "Description: Saves the current game state to the specified file, if there is no filename save by default in default_save.\n"
+        + "Description: Saves the current game state to the specified file,"
+        + "if there is no filename save by default in default_save.\n"
         + "Example: save myparty.txt\n";
   }
 

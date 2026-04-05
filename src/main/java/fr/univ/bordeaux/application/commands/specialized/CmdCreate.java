@@ -20,10 +20,13 @@ import org.apache.commons.cli.ParseException;
 /** Command responsible for initializing a new game session. */
 public class CmdCreate extends Cmd {
 
+  /** Configuration object to store player types and colors. */
   private GameConfig gameConfig;
 
+  /** The core game engine to be updated with the new match manager. */
   private GameEngine gameEngine;
 
+  /** Arguments passed by the user (e.g., -p1Ia true). */
   private String[] args;
 
   /**
