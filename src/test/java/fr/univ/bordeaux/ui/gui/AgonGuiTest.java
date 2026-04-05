@@ -197,7 +197,7 @@ public class AgonGuiTest {
 
   @BeforeAll
   static void initJFX() throws InterruptedException {
-      System.setProperty("IS_TEST_ENV", "true");
+    System.setProperty("IS_TEST_ENV", "true");
     CountDownLatch latch = new CountDownLatch(1);
     try {
       Platform.startup(
@@ -235,27 +235,30 @@ public class AgonGuiTest {
     latch.await(2, TimeUnit.SECONDS);
   }
 
-    @AfterEach
-    void tearDown() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(() -> {
-            try {
-                // 1. Détache le contrôleur
-                Field controllerField = AgonApp.class.getDeclaredField("controller");
-                controllerField.setAccessible(true);
-                controllerField.set(null, null);
+  @AfterEach
+  void tearDown() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            // 1. Détache le contrôleur
+            Field controllerField = AgonApp.class.getDeclaredField("controller");
+            controllerField.setAccessible(true);
+            controllerField.set(null, null);
 
-                // 2. NETTOYAGE CRITIQUE : Ferme toutes les fenêtres restées ouvertes !
-                for (javafx.stage.Window window : new java.util.ArrayList<>(javafx.stage.Window.getWindows())) {
-                    if (window instanceof javafx.stage.Stage) {
-                        ((javafx.stage.Stage) window).close();
-                    }
-                }
-            } catch (Exception e) { }
-            latch.countDown();
+            // 2. NETTOYAGE CRITIQUE : Ferme toutes les fenêtres restées ouvertes !
+            for (javafx.stage.Window window :
+                new java.util.ArrayList<>(javafx.stage.Window.getWindows())) {
+              if (window instanceof javafx.stage.Stage) {
+                ((javafx.stage.Stage) window).close();
+              }
+            }
+          } catch (Exception e) {
+          }
+          latch.countDown();
         });
-        latch.await(2, java.util.concurrent.TimeUnit.SECONDS);
-    }
+    latch.await(2, java.util.concurrent.TimeUnit.SECONDS);
+  }
 
   private void waitForRunLater() throws InterruptedException {
     CountDownLatch latch = new CountDownLatch(1);

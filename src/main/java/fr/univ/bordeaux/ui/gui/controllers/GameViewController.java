@@ -32,7 +32,7 @@ public class GameViewController {
    *
    * @param agonGui The AgonGui instance managing the game state.
    */
-  public void setAgonGUI(AgonGui agonGui) {
+  public void setAgonGui(AgonGui agonGui) {
     this.agonGui = agonGui;
   }
 
@@ -54,7 +54,6 @@ public class GameViewController {
     hexCanvas = new HexagonCanvas();
     hexCanvas.setMoveRequestListener(
         move -> {
-          ;
           if (agonGui != null) {
             agonGui.sendCommand(move);
           }

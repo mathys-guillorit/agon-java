@@ -1,7 +1,6 @@
 package fr.univ.bordeaux.ui.gui;
 
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.match.BlitzMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
@@ -29,10 +28,8 @@ import javafx.util.Duration;
  */
 public class AgonGui implements GameUserInterface, MatchObserver {
 
-  private AgonBoardImpl board;
   private final AtomicBoolean debugMode = new AtomicBoolean(false);
   private final AtomicBoolean running = new AtomicBoolean(true);
-  private boolean verbose = false;
   private final GameConfig config;
   private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
   private ReadOnlyMatch currentMatch;
@@ -87,24 +84,13 @@ public class AgonGui implements GameUserInterface, MatchObserver {
       MoveDtO m = moves.get(i);
       sb.append(
           String.format(
-              "%d. %s : %s -> %s\n",
-              (i / 2) + 1, (i % 2 == 0 ? "White" : "Black"), m.from(), m.to()));
+              "%d. %s : %s -> %s\n", i / 2 + 1, i % 2 == 0 ? "White" : "Black", m.from(), m.to()));
     }
     showInfo(sb.toString());
   }
 
-  /**
-   * Binds the core game board to the UI.
-   *
-   * @param board The main game board implementation.
-   */
-  public void setBoard(AgonBoardImpl board) {
-    this.board = board;
-  }
-
   /** Initializes and launches the JavaFX application thread. */
   public void start() {
-    AgonApp.setBoard(this.board);
     AgonApp.setGui(this);
     new Thread(() -> Application.launch(AgonApp.class)).start();
   }
@@ -179,7 +165,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public void quit() {
     running.set(false);
 
-      if (!"true".equals(System.getProperty("IS_TEST_ENV"))) {
+    if (!"true".equals(System.getProperty("IS_TEST_ENV"))) {
       Platform.exit();
       System.exit(0);
     }
@@ -189,7 +175,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public void onMatchUpdate(ReadOnlyMatch match) {
     this.currentMatch = match;
     if (match != null) {
-      updateBoard((RestrictedAgonBoard) match.getAgonBoard());
+      updateBoard(match.getAgonBoard());
 
       if (match.isMatchOver()) {
         if (blitzTimeline != null) blitzTimeline.stop();
@@ -224,7 +210,5 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void setVerbose(boolean state) {
-    this.verbose = state;
-  }
+  public void setVerbose(boolean state) {}
 }

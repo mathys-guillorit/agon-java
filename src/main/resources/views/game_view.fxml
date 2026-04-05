@@ -20,7 +20,7 @@
                 <MenuItem mnemonicParsing="false" onAction="#saveGame" text="Save Game"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem mnemonicParsing="false" onAction="#showConfig" text="Configuration"/>
-                <MenuItem mnemonicParsing="false" onAction="#showVersion" text="Version"/>
+                <MenuItem mnemonicParsing="false" onAction="#showVersion" text="Info"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem mnemonicParsing="false" onAction="#quitGame" text="Quit"/>
             </Menu>

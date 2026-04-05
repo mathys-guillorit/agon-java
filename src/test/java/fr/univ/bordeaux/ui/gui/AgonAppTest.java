@@ -2,9 +2,9 @@ package fr.univ.bordeaux.ui.gui;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.*;
@@ -19,13 +19,12 @@ public class AgonAppTest {
     } catch (Exception e) {
       latch.countDown();
     }
-    latch.await();
+    latch.await(2, TimeUnit.SECONDS);
   }
 
   @BeforeEach
   void resetAgonApp() throws Exception {
     setPrivateStaticField(AgonApp.class, "controller", null);
-    setPrivateStaticField(AgonApp.class, "agonBoard", null);
     setPrivateStaticField(AgonApp.class, "agonGui", null);
   }
 
@@ -38,12 +37,8 @@ public class AgonAppTest {
 
   @Test
   void testStaticGettersAndSetters() {
-    AgonBoardImpl board = new AgonBoardImpl();
     AgonGui gui = new AgonGui(null);
-
-    AgonApp.setBoard(board);
     AgonApp.setGui(gui);
-
     assertNull(AgonApp.getController());
   }
 
@@ -63,6 +58,6 @@ public class AgonAppTest {
             latch.countDown();
           }
         });
-    latch.await();
+    latch.await(2, TimeUnit.SECONDS);
   }
 }

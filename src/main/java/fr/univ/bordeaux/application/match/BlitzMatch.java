@@ -14,6 +14,8 @@ public class BlitzMatch extends Match {
   /** Represents a Timer for the BlackPlayer. */
   private final GameTimer blackTimer;
 
+  private boolean isPaused = false;
+
   /**
    * Constructs a BlitzMatch with the specified board, players, and time limit.
    *
@@ -70,7 +72,7 @@ public class BlitzMatch extends Match {
     if (this.getMatchStatus() == MatchStatus.FINISHED) {
       return;
     }
-    if (!getCurrentTimer().isRunning()) {
+    if (!isPaused && !getCurrentTimer().isRunning()) {
       getCurrentTimer().start();
     }
     if (getCurrentTimer().isExpired()) {
@@ -84,7 +86,12 @@ public class BlitzMatch extends Match {
    * @return true if the timer was successfully paused.
    */
   public boolean pause() {
-    this.getCurrentTimer().stop();
+    isPaused = !isPaused;
+    if (isPaused) {
+      this.getCurrentTimer().stop();
+    } else {
+      this.getCurrentTimer().start();
+    }
     return true;
   }
 
@@ -121,7 +128,9 @@ public class BlitzMatch extends Match {
 
   @Override
   public void startTurn() {
-    getCurrentTimer().start();
+    if (!isPaused) {
+      getCurrentTimer().start();
+    }
   }
 
   /**

@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.ui.gui;
 
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import javafx.stage.Stage;
 public class AgonApp extends Application {
   private static GameViewController controller;
   private static Scene scene;
-  private static AgonBoardImpl agonBoard;
   private static AgonGui agonGui;
 
   @Override
@@ -28,9 +26,8 @@ public class AgonApp extends Application {
     stage.setTitle("Agon - GUI Mode");
     stage.setScene(scene);
     stage.show();
-    // temporarily
-    AgonApp.controller = loader.getController();
-    AgonApp.controller.setAgonGUI(agonGui);
+    controller = loader.getController();
+    controller.setAgonGui(agonGui);
     this.setupShortcuts();
   }
 
@@ -40,33 +37,23 @@ public class AgonApp extends Application {
   private void setupShortcuts() {
     Map<KeyCombination, Runnable> shortcuts = new HashMap<>();
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::startNewGame);
+        new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN), controller::startNewGame);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.L, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::loadGame);
+        new KeyCodeCombination(KeyCode.L, KeyCombination.CONTROL_DOWN), controller::loadGame);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::saveGame);
+        new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN), controller::saveGame);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.COMMA, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::showConfig);
+        new KeyCodeCombination(KeyCode.COMMA, KeyCombination.CONTROL_DOWN), controller::showConfig);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::showVersion);
+        new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN), controller::showVersion);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::quitGame);
+        new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN), controller::quitGame);
+    shortcuts.put(new KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN), controller::undo);
+    shortcuts.put(new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN), controller::redo);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN), AgonApp.controller::undo);
+        new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN), controller::pauseGame);
     shortcuts.put(
-        new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN), AgonApp.controller::redo);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::pauseGame);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN),
-        AgonApp.controller::requestHint);
+        new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN), controller::requestHint);
     shortcuts.forEach(
         (keyCombination, runnable) -> {
           scene.getAccelerators().put(keyCombination, runnable);
@@ -74,10 +61,6 @@ public class AgonApp extends Application {
   }
 
   ///  getters and setters
-
-  public static void setBoard(AgonBoardImpl board) {
-    agonBoard = board;
-  }
 
   public static GameViewController getController() {
     return controller;

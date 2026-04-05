@@ -86,15 +86,15 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
   private String pixelToHex(double x, double y) {
     double ptX = x - (getWidth() / 2);
     double ptY = y - (getHeight() / 2);
-    double qFrac = (SQRT_3 / 3.0 * ptX - 1.0 / 3.0 * ptY) / HEX_SIZE;
-    double rFrac = (2.0 / 3.0 * ptY) / HEX_SIZE;
+    double fracQ = (SQRT_3 / 3.0 * ptX - 1.0 / 3.0 * ptY) / HEX_SIZE;
+    double fracR = 2.0 / 3.0 * ptY / HEX_SIZE;
 
-    int[] rounded = axialRound(qFrac, rFrac);
+    int[] rounded = axialRound(fracQ, fracR);
     int q = rounded[0];
     int r = rounded[1];
 
     if (Math.abs(q) <= 5 && Math.abs(r) <= 5 && Math.abs(-q - r) <= 5) {
-      char rowChar = (char) (65 + (5 - r));
+      char rowChar = (char) (65 + 5 - r);
       int logicalCol = q + 6;
       return "" + rowChar + logicalCol;
     }
@@ -132,7 +132,7 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
       for (int[] coord : getBoardCoordinates()) {
         int q = coord[0];
         int r = coord[1];
-        char rowChar = (char) (65 + (5 - r));
+        char rowChar = (char) (65 + 5 - r);
         int logicalCol = q + 6;
         try {
           int index = CoordinateMapper.toIndex(rowChar, logicalCol);
@@ -140,8 +140,8 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
           if (piece != null) {
             snap.put("" + rowChar + logicalCol, piece);
           }
-        } catch (Exception e) {
-          // Ignore out of bounds
+        } catch (Exception ignored) {
+          continue;
         }
       }
     }
@@ -177,12 +177,12 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
       int q = coord[0];
       int r = coord[1];
 
-      double xOffset = HEX_SIZE * SQRT_3 * (q + r / 2.0);
-      double yOffset = HEX_SIZE * 1.5 * r;
-      double hexX = centerX + xOffset;
-      double hexY = centerY + yOffset;
+      double offsetX = HEX_SIZE * SQRT_3 * (q + r / 2.0);
+      double offsetY = HEX_SIZE * 1.5 * r;
+      double hexX = centerX + offsetX;
+      double hexY = centerY + offsetY;
 
-      char rowChar = (char) (65 + (5 - r));
+      char rowChar = (char) (65 + 5 - r);
       int logicalCol = q + 6;
       String currentCoord = "" + rowChar + logicalCol;
 
@@ -203,10 +203,8 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
       drawHexagon(gc, hexX, hexY, HEX_SIZE, fillColor, strokeColor, lineWidth);
 
       PieceType piece = boardSnapshot.get(currentCoord);
-      if (piece != null) {
-        if (!currentCoord.equals(selectedHex) || draggedPiece == null) {
-          drawPiece(gc, hexX, hexY, piece);
-        }
+      if (piece != null && (!currentCoord.equals(selectedHex) || draggedPiece == null)) {
+        drawPiece(gc, hexX, hexY, piece);
       }
     }
 
@@ -216,14 +214,14 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
     gc.setTextBaseline(VPos.CENTER);
     int boardRadius = 5;
     for (int r = -boardRadius; r <= boardRadius; r++) {
-      char rowChar = (char) (65 + (5 - r));
+      char rowChar = (char) (65 + 5 - r);
       int minQ = Math.max(-boardRadius, -boardRadius - r);
 
-      double xOffset = HEX_SIZE * SQRT_3 * (minQ + r / 2.0);
-      double yOffset = HEX_SIZE * 1.5 * r;
+      double offsetX = HEX_SIZE * SQRT_3 * (minQ + r / 2.0);
+      double offsetY = HEX_SIZE * 1.5 * r;
 
-      double finalX = centerX + xOffset - (SQRT_3 * HEX_SIZE);
-      double finalY = centerY + yOffset;
+      double finalX = centerX + offsetX - (SQRT_3 * HEX_SIZE);
+      double finalY = centerY + offsetY;
 
       gc.fillText(String.valueOf(rowChar), finalX, finalY);
     }
@@ -231,10 +229,10 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
     for (int q = -boardRadius; q <= boardRadius; q++) {
       int logicalCol = q + 6;
       int maxR = Math.min(boardRadius, boardRadius - q);
-      double xOffset = HEX_SIZE * SQRT_3 * (q + maxR / 2.0);
-      double yOffset = HEX_SIZE * 1.5 * maxR;
-      double finalX = centerX + xOffset + (HEX_SIZE * SQRT_3 * 0.5);
-      double finalY = centerY + yOffset + (HEX_SIZE * 1.5);
+      double offsetX = HEX_SIZE * SQRT_3 * (q + maxR / 2.0);
+      double offsetY = HEX_SIZE * 1.5 * maxR;
+      double finalX = centerX + offsetX + (HEX_SIZE * SQRT_3 * 0.5);
+      double finalY = centerY + offsetY + (HEX_SIZE * 1.5);
       gc.fillText(String.valueOf(logicalCol), finalX, finalY);
     }
     if (draggedPiece != null) {
@@ -260,19 +258,19 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
       Color fill,
       Color stroke,
       double lineWidth) {
-    double[] xPoints = new double[6];
-    double[] yPoints = new double[6];
+    double[] pointsX = new double[6];
+    double[] pointsY = new double[6];
     for (int i = 0; i < 6; i++) {
       double angle_deg = 60 * i - 30;
       double angle_rad = Math.PI / 180 * angle_deg;
-      xPoints[i] = centerX + size * Math.cos(angle_rad);
-      yPoints[i] = centerY + size * Math.sin(angle_rad);
+      pointsX[i] = centerX + size * Math.cos(angle_rad);
+      pointsY[i] = centerY + size * Math.sin(angle_rad);
     }
     gc.setFill(fill);
-    gc.fillPolygon(xPoints, yPoints, 6);
+    gc.fillPolygon(pointsX, pointsY, 6);
     gc.setStroke(stroke);
     gc.setLineWidth(lineWidth);
-    gc.strokePolygon(xPoints, yPoints, 6);
+    gc.strokePolygon(pointsX, pointsY, 6);
   }
 
   /**
@@ -292,7 +290,7 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
       double originalW = img.getWidth();
       double originalH = img.getHeight();
       double pieceSizeMultiplier = 3.5;
-      double scale = (HEX_SIZE * pieceSizeMultiplier) / Math.max(originalW, originalH);
+      double scale = HEX_SIZE * pieceSizeMultiplier / Math.max(originalW, originalH);
       double drawW = originalW * scale;
       double drawH = originalH * scale;
       double drawX = centerX - drawW / 2;
@@ -341,13 +339,13 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
     int r = (int) Math.round(rFrac);
     int s = (int) Math.round(sFrac);
 
-    double qDiff = Math.abs(q - qFrac);
-    double rDiff = Math.abs(r - rFrac);
-    double sDiff = Math.abs(s - sFrac);
+    double diffQ = Math.abs(q - qFrac);
+    double diffR = Math.abs(r - rFrac);
+    double diffS = Math.abs(s - sFrac);
 
-    if (qDiff > rDiff && qDiff > sDiff) {
+    if (diffQ > diffR && diffQ > diffS) {
       q = -r - s;
-    } else if (rDiff > sDiff) {
+    } else if (diffR > diffS) {
       r = -q - s;
     }
 
