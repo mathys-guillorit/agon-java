@@ -59,7 +59,6 @@ public class AgonGuiTest {
       lastInfo = m;
     }
 
-    // Interceptions pour éviter les popups bloquantes pendant les tests
     @Override
     public void showError(String m) {
       lastError = m;
@@ -241,12 +240,10 @@ public class AgonGuiTest {
     Platform.runLater(
         () -> {
           try {
-            // 1. Détache le contrôleur
             Field controllerField = AgonApp.class.getDeclaredField("controller");
             controllerField.setAccessible(true);
             controllerField.set(null, null);
 
-            // 2. NETTOYAGE CRITIQUE : Ferme toutes les fenêtres restées ouvertes !
             for (javafx.stage.Window window :
                 new java.util.ArrayList<>(javafx.stage.Window.getWindows())) {
               if (window instanceof javafx.stage.Stage) {

@@ -11,11 +11,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -52,8 +50,12 @@ public class GameViewControllerTest {
             Platform.setImplicitExit(false);
             latch.countDown();
           });
-    } catch (Exception e) {
-      Platform.runLater(latch::countDown);
+    } catch (IllegalStateException e) {
+      Platform.runLater(
+          () -> {
+            Platform.setImplicitExit(false);
+            latch.countDown();
+          });
     }
     latch.await(2, TimeUnit.SECONDS);
   }
@@ -103,10 +105,10 @@ public class GameViewControllerTest {
     }
   }
 
-  private TextField findTextField(javafx.scene.Node node) {
+  private TextField findTextField(Node node) {
     if (node instanceof TextField) return (TextField) node;
-    if (node instanceof javafx.scene.Parent) {
-      for (javafx.scene.Node child : ((javafx.scene.Parent) node).getChildrenUnmodifiable()) {
+    if (node instanceof Parent) {
+      for (Node child : ((Parent) node).getChildrenUnmodifiable()) {
         TextField tf = findTextField(child);
         if (tf != null) return tf;
       }
@@ -114,11 +116,11 @@ public class GameViewControllerTest {
     return null;
   }
 
-  private javafx.scene.control.CheckBox findCheckBox(javafx.scene.Node node) {
-    if (node instanceof javafx.scene.control.CheckBox) return (javafx.scene.control.CheckBox) node;
-    if (node instanceof javafx.scene.Parent) {
-      for (javafx.scene.Node child : ((javafx.scene.Parent) node).getChildrenUnmodifiable()) {
-        javafx.scene.control.CheckBox cb = findCheckBox(child);
+  private CheckBox findCheckBox(Node node) {
+    if (node instanceof CheckBox) return (CheckBox) node;
+    if (node instanceof Parent) {
+      for (Node child : ((Parent) node).getChildrenUnmodifiable()) {
+        CheckBox cb = findCheckBox(child);
         if (cb != null) return cb;
       }
     }
@@ -183,9 +185,8 @@ public class GameViewControllerTest {
                                 }
 
                                 if (match) {
-                                  javafx.scene.Node btnNode = pane.lookupButton(type);
-                                  if (btnNode instanceof javafx.scene.control.Button btn
-                                      && !btn.isDisabled()) {
+                                  Node btnNode = pane.lookupButton(type);
+                                  if (btnNode instanceof Button btn && !btn.isDisabled()) {
                                     btn.fire();
                                     success[0] = true;
                                     return;
@@ -350,21 +351,20 @@ public class GameViewControllerTest {
 
                             Object[] combos = pane.lookupAll(".combo-box").toArray();
                             if (combos.length >= 3) {
-                              ((javafx.scene.control.ComboBox<String>) combos[0]).setValue("AI");
-                              ((javafx.scene.control.ComboBox<String>) combos[1]).setValue("Black");
-                              ((javafx.scene.control.ComboBox<String>) combos[2]).setValue("Human");
+                              ((ComboBox<String>) combos[0]).setValue("AI");
+                              ((ComboBox<String>) combos[1]).setValue("Black");
+                              ((ComboBox<String>) combos[2]).setValue("Human");
                             }
 
-                            javafx.scene.control.CheckBox cb = findCheckBox(pane);
+                            CheckBox cb = findCheckBox(pane);
                             if (cb != null && !cb.isSelected()) {
                               cb.fire();
                             }
 
                             for (ButtonType type : pane.getButtonTypes()) {
                               if (type.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-                                javafx.scene.Node btnNode = pane.lookupButton(type);
-                                if (btnNode instanceof javafx.scene.control.Button btn
-                                    && !btn.isDisabled()) {
+                                Node btnNode = pane.lookupButton(type);
+                                if (btnNode instanceof Button btn && !btn.isDisabled()) {
                                   btn.fire();
                                 }
                               }
@@ -408,7 +408,7 @@ public class GameViewControllerTest {
                             && window.getScene() != null) {
                           if (window.getScene().getRoot() instanceof DialogPane pane) {
 
-                            javafx.scene.control.CheckBox cb = findCheckBox(pane);
+                            CheckBox cb = findCheckBox(pane);
                             if (cb != null) {
                               cb.fire();
                               cb.fire();
@@ -417,9 +417,8 @@ public class GameViewControllerTest {
                             for (ButtonType type : pane.getButtonTypes()) {
                               if (type == ButtonType.CANCEL
                                   || type.getButtonData().isCancelButton()) {
-                                javafx.scene.Node btnNode = pane.lookupButton(type);
-                                if (btnNode instanceof javafx.scene.control.Button btn
-                                    && !btn.isDisabled()) {
+                                Node btnNode = pane.lookupButton(type);
+                                if (btnNode instanceof Button btn && !btn.isDisabled()) {
                                   btn.fire();
                                   handled.set(true);
                                 }

@@ -40,11 +40,20 @@ public class HexagonCanvasTest {
    */
   @BeforeAll
   static void initJFX() throws InterruptedException {
+    System.setProperty("IS_TEST_ENV", "true");
     CountDownLatch latch = new CountDownLatch(1);
     try {
-      Platform.startup(latch::countDown);
+      Platform.startup(
+          () -> {
+            Platform.setImplicitExit(false);
+            latch.countDown();
+          });
     } catch (IllegalStateException e) {
-      // JavaFX is already initialized
+      Platform.runLater(
+          () -> {
+            Platform.setImplicitExit(false);
+            latch.countDown();
+          });
     }
     latch.await(2, TimeUnit.SECONDS);
   }
