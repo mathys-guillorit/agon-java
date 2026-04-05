@@ -74,7 +74,6 @@ class AgonClientTest {
   private void replaceWriterWithFailingOne(AgonClient client) throws Exception {
     Field outField = AgonClient.class.getDeclaredField("out");
     outField.setAccessible(true);
-
     BufferedWriter failingWriter =
         new BufferedWriter(
             new Writer() {
@@ -91,7 +90,6 @@ class AgonClientTest {
               @Override
               public void close() {}
             });
-
     outField.set(client, failingWriter);
   }
 
@@ -99,9 +97,7 @@ class AgonClientTest {
     for (int i = 0; i < 200; i++) {
       try {
         String s = CoordinateMapper.toAbaPro(i);
-        if (s != null && !s.isBlank()) {
-          return i;
-        }
+        if (s != null && !s.isBlank()) return i;
       } catch (Exception ignored) {
       }
     }
@@ -111,14 +107,10 @@ class AgonClientTest {
 
   private int secondValidCoordDifferentFrom(int first) {
     for (int i = 0; i < 200; i++) {
-      if (i == first) {
-        continue;
-      }
+      if (i == first) continue;
       try {
         String s = CoordinateMapper.toAbaPro(i);
-        if (s != null && !s.isBlank()) {
-          return i;
-        }
+        if (s != null && !s.isBlank()) return i;
       } catch (Exception ignored) {
       }
     }
@@ -162,20 +154,16 @@ class AgonClientTest {
   private static class FakeTcpServer implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final Thread thread;
-
     private volatile boolean running = true;
     private volatile Socket socket;
     private volatile BufferedReader in;
     private volatile BufferedWriter out;
-
     private final BlockingQueue<String> receivedLines = new LinkedBlockingQueue<>();
     private final Map<String, List<String>> scriptedResponses = new ConcurrentHashMap<>();
-
     private volatile String firstResponse = "WELCOME ID=1 NAME=Alice STATUS=idle";
 
     FakeTcpServer() throws Exception {
       serverSocket = new ServerSocket(0);
-
       thread =
           new Thread(
               () -> {
@@ -191,28 +179,16 @@ class AgonClientTest {
                               socket.getOutputStream(), StandardCharsets.US_ASCII));
 
                   String login = in.readLine();
-                  if (login != null) {
-                    receivedLines.add(login);
-                  }
-
-                  if (firstResponse != null) {
-                    sendLine(firstResponse);
-                  }
+                  if (login != null) receivedLines.add(login);
+                  if (firstResponse != null) sendLine(firstResponse);
 
                   while (running && socket != null && !socket.isClosed()) {
                     String line = in.readLine();
-                    if (line == null) {
-                      break;
-                    }
-
+                    if (line == null) break;
                     receivedLines.add(line);
-
                     String cmd = line.trim().isEmpty() ? "" : line.trim().split("\\s+")[0];
                     List<String> responses = scriptedResponses.get(cmd);
-                    if (responses == null) {
-                      continue;
-                    }
-
+                    if (responses == null) continue;
                     for (String response : responses) {
                       if ("<<CLOSE>>".equals(response)) {
                         socket.close();
@@ -225,7 +201,6 @@ class AgonClientTest {
                 }
               },
               "FakeTcpServer");
-
       thread.setDaemon(true);
       thread.start();
     }
@@ -253,18 +228,13 @@ class AgonClientTest {
 
     private void waitUntilConnected() throws Exception {
       long deadline = System.currentTimeMillis() + 3000;
-      while ((out == null || socket == null) && System.currentTimeMillis() < deadline) {
+      while ((out == null || socket == null) && System.currentTimeMillis() < deadline)
         Thread.sleep(10);
-      }
-      if (out == null || socket == null) {
-        throw new IllegalStateException("Server not connected");
-      }
+      if (out == null || socket == null) throw new IllegalStateException("Server not connected");
     }
 
     private synchronized void sendLine(String line) throws IOException {
-      if (out == null) {
-        return;
-      }
+      if (out == null) return;
       out.write(line);
       out.write('\n');
       out.flush();
@@ -274,9 +244,7 @@ class AgonClientTest {
     public void close() throws Exception {
       running = false;
       try {
-        if (socket != null) {
-          socket.close();
-        }
+        if (socket != null) socket.close();
       } catch (Exception ignored) {
       }
       try {
@@ -307,7 +275,6 @@ class AgonClientTest {
     FakeTcpServer bad = newServer();
     bad.setFirstResponse("ERROR MESSAGE=LOGIN_FAILED");
     assertFalse(new AgonClient(new LocalProfile("Alice")).connect("127.0.0.1", bad.getPort()));
-
     assertFalse(new AgonClient(new LocalProfile("Alice")).connect("127.0.0.1", 65001));
   }
 
@@ -347,19 +314,13 @@ class AgonClientTest {
     ok.script("BACK", "BACK_OK STATUS=idle");
 
     AgonClient client = connectedClient(ok);
-
     String playerDetails = client.requestPlayerDetails(2);
     assertNotNull(playerDetails);
     assertTrue(playerDetails.contains("PLAYER ID=2"));
     assertTrue(playerDetails.contains("NAME=Bob"));
     assertTrue(playerDetails.contains("STATUS=away"));
-
-    String awayResponse = client.setAway();
-    assertEquals("AWAY_OK STATUS=away", awayResponse);
-
-    String backResponse = client.setBack();
-    assertEquals("BACK_OK STATUS=idle", backResponse);
-
+    assertEquals("AWAY_OK STATUS=away", client.setAway());
+    assertEquals("BACK_OK STATUS=idle", client.setBack());
     client.disconnectSilently();
   }
 
@@ -367,7 +328,6 @@ class AgonClientTest {
   @DisplayName("player detail and status commands return null when disconnected")
   void player_detail_and_status_commands_when_disconnected() {
     AgonClient client = new AgonClient(new LocalProfile("Alice"));
-
     assertNull(client.requestPlayerDetails(2));
     assertNull(client.setAway());
     assertNull(client.setBack());
@@ -378,23 +338,19 @@ class AgonClientTest {
   void player_detail_and_status_commands_io_failure() throws Exception {
     FakeTcpServer server = newServer();
     AgonClient client = connectedClient(server);
-
     replaceWriterWithFailingOne(client);
-
     assertNull(client.requestPlayerDetails(2));
     assertFalse(client.isConnected());
 
     FakeTcpServer server2 = newServer();
     AgonClient client2 = connectedClient(server2);
     replaceWriterWithFailingOne(client2);
-
     assertNull(client2.setAway());
     assertFalse(client2.isConnected());
 
     FakeTcpServer server3 = newServer();
     AgonClient client3 = connectedClient(server3);
     replaceWriterWithFailingOne(client3);
-
     assertNull(client3.setBack());
     assertFalse(client3.isConnected());
   }
@@ -404,7 +360,6 @@ class AgonClientTest {
   void player_detail_returns_null_when_response_is_missing() throws Exception {
     FakeTcpServer server = newServer();
     server.script("PLAYERS", "<<CLOSE>>");
-
     AgonClient client = connectedClient(server);
     assertNull(client.requestPlayerDetails(2));
   }
@@ -416,8 +371,7 @@ class AgonClientTest {
     server.script("QUIT", "BYE");
 
     AgonClient client = connectedClient(server);
-    server.takeReceived(1000); // LOGIN
-
+    server.takeReceived(1000);
     assertEquals("[CLIENT] New game request sent.", client.requestNewGame(7));
     assertEquals("NEW PLAYER_ID=7", server.takeReceived(1000));
 
@@ -430,12 +384,72 @@ class AgonClientTest {
   }
 
   @Test
+  @DisplayName("accept decline cancel choose mode")
+  void invitation_and_mode_commands() throws Exception {
+    FakeTcpServer server = newServer();
+    AgonClient client = connectedClient(server);
+    server.takeReceived(1000);
+
+    assertTrue(client.acceptInvitation());
+    assertEquals("ACCEPT", server.takeReceived(1000));
+
+    assertTrue(client.declineInvitation());
+    assertEquals("DECLINE", server.takeReceived(1000));
+
+    assertTrue(client.cancelInvitation());
+    assertEquals("CANCEL", server.takeReceived(1000));
+
+    assertTrue(client.chooseMode("normal"));
+    assertEquals("MODE normal", server.takeReceived(1000));
+
+    assertTrue(client.chooseMode(" blitz "));
+    assertEquals("MODE blitz", server.takeReceived(1000));
+
+    assertFalse(client.chooseMode(null));
+    assertFalse(client.chooseMode(" "));
+    client.disconnectSilently();
+  }
+
+  @Test
+  @DisplayName("invitation and mode commands fail when disconnected or writer throws")
+  void invitation_and_mode_commands_failures() throws Exception {
+    AgonClient disconnected = new AgonClient(new LocalProfile("Alice"));
+    assertFalse(disconnected.acceptInvitation());
+    assertFalse(disconnected.declineInvitation());
+    assertFalse(disconnected.cancelInvitation());
+    assertFalse(disconnected.chooseMode("normal"));
+
+    FakeTcpServer s1 = newServer();
+    AgonClient c1 = connectedClient(s1);
+    replaceWriterWithFailingOne(c1);
+    assertFalse(c1.acceptInvitation());
+    assertFalse(c1.isConnected());
+
+    FakeTcpServer s2 = newServer();
+    AgonClient c2 = connectedClient(s2);
+    replaceWriterWithFailingOne(c2);
+    assertFalse(c2.declineInvitation());
+    assertFalse(c2.isConnected());
+
+    FakeTcpServer s3 = newServer();
+    AgonClient c3 = connectedClient(s3);
+    replaceWriterWithFailingOne(c3);
+    assertFalse(c3.cancelInvitation());
+    assertFalse(c3.isConnected());
+
+    FakeTcpServer s4 = newServer();
+    AgonClient c4 = connectedClient(s4);
+    replaceWriterWithFailingOne(c4);
+    assertFalse(c4.chooseMode("normal"));
+    assertFalse(c4.isConnected());
+  }
+
+  @Test
   @DisplayName("ping and alive")
   void ping_and_alive() throws Exception {
     FakeTcpServer pong = newServer();
     pong.script("PING", "PONG TIME=0ms");
     AgonClient c1 = connectedClient(pong);
-
     assertTrue(c1.isAlive());
     String resp = c1.pingRttMs();
     assertNotNull(resp);
@@ -458,21 +472,18 @@ class AgonClientTest {
   void send_move_success() throws Exception {
     FakeTcpServer server = newServer();
     AgonClient client = connectedClient(server);
-    server.takeReceived(1000); // LOGIN
+    server.takeReceived(1000);
 
     int from = firstValidCoord();
     int to = secondValidCoordDifferentFrom(from);
-
     assertDoesNotThrow(() -> client.sendMove(from, to));
 
     String maybeMove = server.takeReceived(200);
-    if (maybeMove != null) {
+    if (maybeMove != null)
       assertTrue(maybeMove.startsWith("move ") || maybeMove.startsWith("MOVE "));
-    }
 
     assertTrue(client.sendRawMove("  e2e4  "));
     assertEquals("MOVE E2E4", server.takeReceived(1000));
-
     client.disconnectSilently();
   }
 
@@ -481,9 +492,7 @@ class AgonClientTest {
   void send_raw_move_io_failure() throws Exception {
     FakeTcpServer server = newServer();
     AgonClient client = connectedClient(server);
-
     replaceWriterWithFailingOne(client);
-
     assertFalse(client.sendRawMove("e2e4"));
     assertFalse(client.isConnected());
   }
@@ -492,7 +501,6 @@ class AgonClientTest {
   @DisplayName("safe values when disconnected")
   void safe_values_when_disconnected() {
     AgonClient client = new AgonClient(new LocalProfile("Alice"));
-
     assertNull(client.requestServerStatus());
     assertNull(client.requestPlayers());
     assertNull(client.requestPlayerDetails(1));
@@ -505,9 +513,12 @@ class AgonClientTest {
     assertFalse(client.sendMove(0, 1));
     assertFalse(client.sendRawMove(null));
     assertFalse(client.sendRawMove(" "));
+    assertFalse(client.acceptInvitation());
+    assertFalse(client.declineInvitation());
+    assertFalse(client.cancelInvitation());
+    assertFalse(client.chooseMode("normal"));
     assertDoesNotThrow(client::quit);
     assertDoesNotThrow(client::resignGame);
-
     client.disconnectSilently();
     client.disconnectSilently();
     assertFalse(client.isConnected());
@@ -538,9 +549,10 @@ class AgonClientTest {
                 client,
                 "parseProtocolArgs",
                 new Class[] {String.class},
-                "GAME_STARTED GAME_ID=5 COLOR=WHITE WHITE=Alice BLACK=Bob");
+                "GAME_STARTED GAME_ID=5 COLOR=WHITE WHITE=Alice BLACK=Bob MODE=NORMAL");
     assertEquals("5", ok.get("GAME_ID"));
     assertEquals("WHITE", ok.get("COLOR"));
+    assertEquals("NORMAL", ok.get("MODE"));
 
     @SuppressWarnings("unchecked")
     Map<String, String> empty1 =
@@ -579,7 +591,54 @@ class AgonClientTest {
             invokePrivate(
                 client, "isAsyncEvent", new Class[] {String.class}, "GAME_OVER RESULT=WIN"));
     assertTrue(
-        (Boolean) invokePrivate(client, "isAsyncEvent", new Class[] {String.class}, "YOUR_TURN"));
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "INVITATION_SENT PLAYER=Bob TIMEOUT=300s"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "INVITATION_RECEIVED FROM=Alice EXPIRES=300s"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "INVITATION_ACCEPTED PLAYER=Bob"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "INVITATION_DECLINED PLAYER=Bob"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "INVITATION_CANCELED PLAYER=Alice"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client, "isAsyncEvent", new Class[] {String.class}, "LOBBY_JOINED HOST=Alice"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(client, "isAsyncEvent", new Class[] {String.class}, "WAITING_MODE"));
+    assertTrue(
+        (Boolean)
+            invokePrivate(
+                client,
+                "isAsyncEvent",
+                new Class[] {String.class},
+                "CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz"));
     assertTrue(
         (Boolean)
             invokePrivate(
@@ -601,25 +660,35 @@ class AgonClientTest {
         client,
         "handleGameStartMessage",
         new Class[] {String.class},
-        "GAME_STARTED GAME_ID=7 COLOR=WHITE WHITE=Alice BLACK=Bob");
+        "GAME_STARTED GAME_ID=7 COLOR=WHITE WHITE=Alice BLACK=Bob MODE=NORMAL");
     assertNotNull(listener.startedInfo);
     assertEquals(7, listener.startedInfo.getGameId());
     assertEquals(Color.WHITE, listener.startedInfo.getLocalColor());
+    assertFalse(listener.startedInfo.isBlitzMode());
 
     listener.startedInfo = null;
     invokePrivate(
         client,
         "handleGameStartMessage",
         new Class[] {String.class},
-        "GAME_STARTED GAME_ID=7 COLOR=WHITE WHITE=Alice");
+        "GAME_STARTED GAME_ID=7 COLOR=WHITE WHITE=Alice MODE=NORMAL");
     assertNull(listener.startedInfo);
 
     invokePrivate(
         client,
         "handleGameStartMessage",
         new Class[] {String.class},
-        "GAME_STARTED GAME_ID=X COLOR=WHITE WHITE=Alice BLACK=Bob");
+        "GAME_STARTED GAME_ID=X COLOR=WHITE WHITE=Alice BLACK=Bob MODE=NORMAL");
     assertNull(listener.startedInfo);
+
+    listener.startedInfo = null;
+    invokePrivate(
+        client,
+        "handleGameStartMessage",
+        new Class[] {String.class},
+        "GAME_STARTED GAME_ID=8 COLOR=BLACK WHITE=Bob BLACK=Alice MODE=BLITZ");
+    assertNotNull(listener.startedInfo);
+    assertTrue(listener.startedInfo.isBlitzMode());
 
     client.setOnlineGameStartListener(null);
     assertDoesNotThrow(
@@ -628,7 +697,7 @@ class AgonClientTest {
                 client,
                 "handleGameStartMessage",
                 new Class[] {String.class},
-                "GAME_STARTED GAME_ID=8 COLOR=BLACK WHITE=Bob BLACK=Alice"));
+                "GAME_STARTED GAME_ID=9 COLOR=BLACK WHITE=Bob BLACK=Alice MODE=BLITZ"));
   }
 
   @Test
@@ -646,7 +715,31 @@ class AgonClientTest {
         client,
         "handleAsyncEvent",
         new Class[] {String.class},
-        "NEW_OK GAME_ID=3 COLOR=BLACK WHITE=Bob BLACK=Alice");
+        "GAME_STARTED GAME_ID=3 COLOR=BLACK WHITE=Bob BLACK=Alice MODE=NORMAL");
+    invokePrivate(
+        client,
+        "handleAsyncEvent",
+        new Class[] {String.class},
+        "INVITATION_SENT PLAYER=Bob TIMEOUT=300s");
+    invokePrivate(
+        client,
+        "handleAsyncEvent",
+        new Class[] {String.class},
+        "INVITATION_RECEIVED FROM=Alice EXPIRES=300s");
+    invokePrivate(
+        client, "handleAsyncEvent", new Class[] {String.class}, "INVITATION_ACCEPTED PLAYER=Bob");
+    invokePrivate(
+        client, "handleAsyncEvent", new Class[] {String.class}, "INVITATION_DECLINED PLAYER=Bob");
+    invokePrivate(
+        client, "handleAsyncEvent", new Class[] {String.class}, "INVITATION_CANCELED PLAYER=Alice");
+    invokePrivate(
+        client, "handleAsyncEvent", new Class[] {String.class}, "LOBBY_JOINED HOST=Alice");
+    invokePrivate(
+        client,
+        "handleAsyncEvent",
+        new Class[] {String.class},
+        "CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
+    invokePrivate(client, "handleAsyncEvent", new Class[] {String.class}, "WAITING_MODE");
 
     assertEquals("e2e4", listener.localMove);
     assertEquals("e7e5", listener.opponentMove);
@@ -708,9 +801,7 @@ class AgonClientTest {
     server.sendAsync("BYE");
 
     long deadline = System.currentTimeMillis() + 3000;
-    while (client.isConnected() && System.currentTimeMillis() < deadline) {
-      Thread.sleep(20);
-    }
+    while (client.isConnected() && System.currentTimeMillis() < deadline) Thread.sleep(20);
 
     assertEquals("e2e4", listener.localMove);
     assertEquals("e7e5", listener.opponentMove);
@@ -719,7 +810,6 @@ class AgonClientTest {
 
     FakeTcpServer server2 = newServer();
     AgonClient client2 = connectedClient(server2);
-
     server2.sendAsync("STATUS_OK port=9999 clients=1");
     assertEquals(
         "STATUS_OK port=9999 clients=1",
@@ -737,7 +827,6 @@ class AgonClientTest {
     assertEquals(
         "STATUS_OK ok", invokePrivate(client2, "waitResponse", new Class[] {long.class}, 200L));
     assertNull(invokePrivate(client2, "waitResponse", new Class[] {long.class}, 50L));
-
     client2.disconnectSilently();
   }
 
@@ -752,9 +841,7 @@ class AgonClientTest {
 
     invokePrivate(client, "startReader", new Class[] {});
     Thread second = (Thread) getField(client, "readerThread");
-
     assertSame(first, second);
-
     client.disconnectSilently();
   }
 
@@ -763,12 +850,9 @@ class AgonClientTest {
   void start_reader_queues_normal_response() throws Exception {
     FakeTcpServer server = newServer();
     AgonClient client = connectedClient(server);
-
     server.sendAsync("STATUS_OK port=9999 clients=1");
-
     String result = (String) invokePrivate(client, "waitResponse", new Class[] {long.class}, 500L);
     assertEquals("STATUS_OK port=9999 clients=1", result);
-
     client.disconnectSilently();
   }
 
@@ -776,16 +860,12 @@ class AgonClientTest {
   @DisplayName("startKeepAlive already running branch")
   void start_keep_alive_already_running() throws Exception {
     AgonClient client = new AgonClient(new LocalProfile("Alice"));
-
     invokePrivate(client, "startKeepAlive", new Class[] {});
     Thread first = (Thread) getField(client, "keepAliveThread");
-
     invokePrivate(client, "startKeepAlive", new Class[] {});
     Thread second = (Thread) getField(client, "keepAliveThread");
-
     assertNotNull(first);
     assertSame(first, second);
-
     first.interrupt();
   }
 
@@ -793,14 +873,11 @@ class AgonClientTest {
   @DisplayName("keepAlive thread handles interruption branch")
   void start_keep_alive_interrupt_branch() throws Exception {
     AgonClient client = new AgonClient(new LocalProfile("Alice"));
-
     invokePrivate(client, "startKeepAlive", new Class[] {});
     Thread keepAlive = (Thread) getField(client, "keepAliveThread");
-
     assertNotNull(keepAlive);
     keepAlive.interrupt();
     keepAlive.join(500);
-
     assertTrue(true);
   }
 
@@ -810,7 +887,6 @@ class AgonClientTest {
     AgonClient client = new AgonClient(new LocalProfile("Alice"));
     Method m = AgonClient.class.getDeclaredMethod("sendLine", String.class);
     m.setAccessible(true);
-
     assertThrows(Exception.class, () -> m.invoke(client, "PING"));
   }
 }

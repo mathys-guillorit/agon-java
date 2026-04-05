@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * The AgonClient class manages the TCP connection to the game server.
  *
- * <p>This version is adapted for F39:
+ * <p>This version is adapted for F39/F40:
  *
  * <ul>
  *   <li>only one thread reads from the socket,
@@ -42,21 +42,13 @@ public class AgonClient {
   private Thread readerThread;
   private volatile boolean readerRunning = false;
 
-  /**
-   * Stores synchronous server responses in arrival order.
-   *
-   * <p>This is used by commands such as STATUS, PLAYERS, SCOREBOARD, NEW, PING.
-   */
+  /** Stores synchronous server responses in arrival order. */
   private final LinkedList<String> pendingResponses = new LinkedList<>();
 
   /** Lock used to wait for incoming responses. */
   private final Object responseLock = new Object();
 
-  /**
-   * Lock used to ensure only one synchronous command is active at a time.
-   *
-   * <p>This avoids mixing PLAYERS / SCOREBOARD / PING / NEW replies.
-   */
+  /** Lock used to ensure only one synchronous command is active at a time. */
   private final Object commandLock = new Object();
 
   private OnlineGameStartListener onlineGameStartListener;
@@ -73,8 +65,8 @@ public class AgonClient {
   /**
    * Connects to a TCP server and logs in using the local profile name.
    *
-   * @param host server host (e.g. "127.0.0.1")
-   * @param port server port (e.g. 12345)
+   * @param host server host
+   * @param port server port
    * @return true if the connection and login succeed, false otherwise
    */
   public boolean connect(String host, int port) {
@@ -84,8 +76,6 @@ public class AgonClient {
 
     try {
       socket = new Socket(host, port);
-
-      // No timeout on client read side: the reader thread can wait normally.
       socket.setSoTimeout(0);
 
       in =
@@ -95,10 +85,8 @@ public class AgonClient {
           new BufferedWriter(
               new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
 
-      // Send login request
       sendLine("LOGIN NAME=" + profile.getName() + " CLIENT_ID=" + profile.getClientId());
 
-      // Read first response directly before starting the reader thread
       String response = in.readLine();
 
       if (response == null || !response.startsWith("WELCOME")) {
@@ -114,7 +102,6 @@ public class AgonClient {
 
       startReader();
       startKeepAlive();
-
       return true;
 
     } catch (IOException e) {
@@ -132,11 +119,7 @@ public class AgonClient {
     return socket != null && socket.isConnected() && !socket.isClosed();
   }
 
-  /**
-   * Starts the unique reader thread.
-   *
-   * <p>This thread is the only one allowed to read incoming lines from the socket.
-   */
+  /** Starts the unique reader thread. */
   private void startReader() {
     if (readerRunning) {
       return;
@@ -193,7 +176,16 @@ public class AgonClient {
         || line.startsWith("OPPONENT_MOVE")
         || line.startsWith("GAME_OVER")
         || line.startsWith("YOUR_TURN")
-        || line.startsWith("ERROR MESSAGE=");
+        || line.startsWith("ERROR MESSAGE=")
+        || line.startsWith("INVITATION_SENT")
+        || line.startsWith("INVITATION_RECEIVED")
+        || line.startsWith("INVITATION_ACCEPTED")
+        || line.startsWith("INVITATION_DECLINED")
+        || line.startsWith("INVITATION_CANCELED")
+        || line.startsWith("LOBBY_JOINED")
+        || line.startsWith("WAITING_MODE")
+        || line.startsWith("CHOOSE_MODE")
+        || line.startsWith("DECLINE_OK");
   }
 
   /**
@@ -205,6 +197,22 @@ public class AgonClient {
     if (line.startsWith("NEW_OK") || line.startsWith("GAME_STARTED")) {
       System.out.println("[ONLINE] " + line);
       handleGameStartMessage(line);
+      return;
+    }
+
+    if (line.startsWith("INVITATION_SENT")
+        || line.startsWith("INVITATION_RECEIVED")
+        || line.startsWith("INVITATION_ACCEPTED")
+        || line.startsWith("INVITATION_DECLINED")
+        || line.startsWith("INVITATION_CANCELED")
+        || line.startsWith("LOBBY_JOINED")
+        || line.startsWith("CHOOSE_MODE")) {
+      System.out.println("[ONLINE] " + line);
+      return;
+    }
+
+    if (line.startsWith("WAITING_MODE")) {
+      System.out.println("[ONLINE] Waiting for host to choose mode.");
       return;
     }
 
@@ -262,7 +270,6 @@ public class AgonClient {
       if (onlineGameStartListener != null) {
         onlineGameStartListener.onOnlineBoardRefreshRequested();
       }
-
       return;
     }
 
@@ -282,14 +289,12 @@ public class AgonClient {
       while (isConnected()) {
         while (!pendingResponses.isEmpty()) {
           String line = pendingResponses.removeFirst();
-
           if (line != null && !line.isBlank()) {
             return line;
           }
         }
 
         long remaining = end - System.currentTimeMillis();
-
         if (remaining <= 0) {
           return null;
         }
@@ -305,10 +310,7 @@ public class AgonClient {
     }
   }
 
-  /**
-   * Starts a background thread that sends PING messages every 30 seconds. To prevent server-side
-   * timeout.
-   */
+  /** Starts a background thread that sends PING messages every 30 seconds. */
   private void startKeepAlive() {
     if (keepAliveRunning) {
       return;
@@ -329,7 +331,6 @@ public class AgonClient {
 
                   synchronized (commandLock) {
                     sendLine("PING");
-
                     String resp = waitResponse(5000);
 
                     if (resp == null || !resp.startsWith("PONG")) {
@@ -366,15 +367,8 @@ public class AgonClient {
     synchronized (commandLock) {
       try {
         sendLine("STATUS");
-
         String resp = waitResponse(5000);
-
-        if (resp == null || !resp.startsWith("STATUS_OK")) {
-          return null;
-        }
-
-        return resp;
-
+        return (resp != null && resp.startsWith("STATUS_OK")) ? resp : null;
       } catch (IOException e) {
         disconnectSilently();
         return null;
@@ -400,15 +394,12 @@ public class AgonClient {
 
         while (true) {
           String line = waitResponse(5000);
-
           if (line == null) {
             return null;
           }
-
           if ("END".equals(line)) {
             break;
           }
-
           sb.append(line).append("\n");
         }
 
@@ -439,15 +430,12 @@ public class AgonClient {
 
         while (true) {
           String line = waitResponse(5000);
-
           if (line == null) {
             return null;
           }
-
           if ("END".equals(line)) {
             break;
           }
-
           sb.append(line).append("\n");
         }
 
@@ -461,10 +449,32 @@ public class AgonClient {
   }
 
   /**
-   * Requests the server to start a new game against a specific player.
+   * Requests the detailed information of a specific player.
+   *
+   * @param playerId the id of the player to query
+   * @return the raw server response if successful, null otherwise
+   */
+  public String requestPlayerDetails(int playerId) {
+    if (!isConnected()) {
+      return null;
+    }
+
+    synchronized (commandLock) {
+      try {
+        sendLine("PLAYERS " + playerId);
+        return waitResponse(5000);
+      } catch (IOException e) {
+        disconnectSilently();
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Sends a new game invitation request.
    *
    * @param targetPlayerId the ID of the target player
-   * @return the raw server response if successful, null otherwise
+   * @return a local confirmation string, or null if sending fails
    */
   public String requestNewGame(int targetPlayerId) {
     if (!isConnected()) {
@@ -475,11 +485,95 @@ public class AgonClient {
       try {
         sendLine("NEW PLAYER_ID=" + targetPlayerId);
         return "[CLIENT] New game request sent.";
-
       } catch (IOException e) {
         disconnectSilently();
         return null;
       }
+    }
+  }
+
+  /**
+   * Sends ACCEPT to the server.
+   *
+   * @return true if sent successfully, false otherwise
+   */
+  public boolean acceptInvitation() {
+    if (!isConnected()) {
+      return false;
+    }
+
+    try {
+      synchronized (commandLock) {
+        sendLine("ACCEPT");
+      }
+      return true;
+    } catch (IOException e) {
+      disconnectSilently();
+      return false;
+    }
+  }
+
+  /**
+   * Sends DECLINE to the server.
+   *
+   * @return true if sent successfully, false otherwise
+   */
+  public boolean declineInvitation() {
+    if (!isConnected()) {
+      return false;
+    }
+
+    try {
+      synchronized (commandLock) {
+        sendLine("DECLINE");
+      }
+      return true;
+    } catch (IOException e) {
+      disconnectSilently();
+      return false;
+    }
+  }
+
+  /**
+   * Sends CANCEL to the server.
+   *
+   * @return true if sent successfully, false otherwise
+   */
+  public boolean cancelInvitation() {
+    if (!isConnected()) {
+      return false;
+    }
+
+    try {
+      synchronized (commandLock) {
+        sendLine("CANCEL");
+      }
+      return true;
+    } catch (IOException e) {
+      disconnectSilently();
+      return false;
+    }
+  }
+
+  /**
+   * Sends MODE to the server.
+   *
+   * @param mode selected mode
+   * @return true if sent successfully, false otherwise
+   */
+  public boolean chooseMode(String mode) {
+    if (!isConnected() || mode == null || mode.isBlank()) {
+      return false;
+    }
+
+    try {
+      synchronized (commandLock) {
+        sendLine("MODE " + mode.trim());
+      }
+      return true;
+    } catch (IOException e) {
+      disconnectSilently();
+      return false;
     }
   }
 
@@ -496,14 +590,12 @@ public class AgonClient {
     synchronized (commandLock) {
       try {
         sendLine("PING");
-
         String resp = waitResponse(5000);
 
         if (resp == null || !resp.startsWith("PONG")) {
           disconnectSilently();
           return false;
         }
-
         return true;
 
       } catch (IOException e) {
@@ -528,7 +620,6 @@ public class AgonClient {
     synchronized (commandLock) {
       try {
         sendLine("PING");
-
         String resp = waitResponse(5000);
 
         if (resp == null || !resp.startsWith("PONG")) {
@@ -671,13 +762,6 @@ public class AgonClient {
   /**
    * Handles a game-start protocol message and notifies the registered listener.
    *
-   * <p>Supported messages:
-   *
-   * <ul>
-   *   <li>NEW_OK ...
-   *   <li>GAME_STARTED ...
-   * </ul>
-   *
    * @param line the received protocol line
    */
   private void handleGameStartMessage(String line) {
@@ -688,8 +772,13 @@ public class AgonClient {
       String colorValue = args.get("COLOR");
       String whiteName = args.get("WHITE");
       String blackName = args.get("BLACK");
+      String modeValue = args.get("MODE");
 
-      if (gameIdValue == null || colorValue == null || whiteName == null || blackName == null) {
+      if (gameIdValue == null
+          || colorValue == null
+          || whiteName == null
+          || blackName == null
+          || modeValue == null) {
         System.err.println("[CLIENT] Invalid game start message: " + line);
         return;
       }
@@ -697,10 +786,11 @@ public class AgonClient {
       int gameId = Integer.parseInt(gameIdValue);
       Color localColor = Color.valueOf(colorValue.toUpperCase());
 
-      // At game start, WHITE always starts.
       boolean myTurn = localColor == Color.WHITE;
+      boolean blitzMode = "BLITZ".equalsIgnoreCase(modeValue);
 
-      OnlineGameInfo info = new OnlineGameInfo(gameId, localColor, whiteName, blackName, myTurn);
+      OnlineGameInfo info =
+          new OnlineGameInfo(gameId, localColor, whiteName, blackName, myTurn, blitzMode);
 
       if (onlineGameStartListener != null) {
         onlineGameStartListener.onOnlineGameStarted(info);
@@ -713,9 +803,6 @@ public class AgonClient {
 
   /**
    * Sends a full move to the server using internal board indices.
-   *
-   * <p>The move is converted to protocol coordinate format before being sent as a {@code MOVE}
-   * command.
    *
    * @param from source board index
    * @param to destination board index
@@ -746,9 +833,6 @@ public class AgonClient {
   /**
    * Sends a raw move string directly to the server.
    *
-   * <p>This method is mainly used for moves already formatted according to the network protocol,
-   * such as relocation moves.
-   *
    * @param rawMove move text to send
    * @return true if the move was sent successfully, false otherwise
    */
@@ -768,11 +852,7 @@ public class AgonClient {
     }
   }
 
-  /**
-   * Sends a resignation request to the server for the current online game.
-   *
-   * <p>If the client is not connected, this method does nothing.
-   */
+  /** Sends a resignation request to the server for the current online game. */
   public void resignGame() {
     if (!isConnected()) {
       return;
@@ -782,35 +862,6 @@ public class AgonClient {
       sendLine("RESIGN");
     } catch (IOException e) {
       System.err.println("[CLIENT] Failed to resign from online match: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Requests the detailed information of a specific player.
-   *
-   * @param playerId the id of the player to query
-   * @return the raw server response if successful, null otherwise
-   */
-  public String requestPlayerDetails(int playerId) {
-    if (!isConnected()) {
-      return null;
-    }
-
-    synchronized (commandLock) {
-      try {
-        sendLine("PLAYERS " + playerId);
-        String resp = waitResponse(5000);
-
-        if (resp == null) {
-          return null;
-        }
-
-        return resp;
-
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
-      }
     }
   }
 

@@ -2,9 +2,13 @@ package fr.univ.bordeaux.application;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.network.CmdAccept;
 import fr.univ.bordeaux.application.commands.network.CmdAway;
 import fr.univ.bordeaux.application.commands.network.CmdBack;
+import fr.univ.bordeaux.application.commands.network.CmdCancel;
+import fr.univ.bordeaux.application.commands.network.CmdDecline;
 import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdMode;
 import fr.univ.bordeaux.application.commands.network.CmdNew;
 import fr.univ.bordeaux.application.commands.network.CmdPing;
 import fr.univ.bordeaux.application.commands.network.CmdPlayers;
@@ -260,6 +264,10 @@ public class GameLauncher {
     cmds.register("scoreboard", new CmdScoreboard(ui, context));
     cmds.register("away", new CmdAway(ui, context));
     cmds.register("back", new CmdBack(ui, context));
+    cmds.register("accept", new CmdAccept(ui, context));
+    cmds.register("decline", new CmdDecline(ui, context));
+    cmds.register("cancel", new CmdCancel(ui, context));
+    cmds.register("mode", new CmdMode(ui, context));
 
     cmds.register("quit", new CmdQuit(ui, context));
   }

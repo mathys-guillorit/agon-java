@@ -105,7 +105,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(42, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(42, Color.WHITE, "Alice", "Bob", true, false);
 
     context.onOnlineGameStarted(info);
 
@@ -141,7 +141,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     Match beforeMatch = context.getCurrentOnlineMatch();
@@ -161,7 +161,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     Match beforeMatch = context.getCurrentOnlineMatch();
@@ -181,7 +181,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(7, Color.BLACK, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(7, Color.BLACK, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     Match current = context.getCurrentOnlineMatch();
@@ -203,7 +203,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(9, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(9, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     context.onGameOver("GAME_OVER");
@@ -220,7 +220,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(11, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(11, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     engine.previewCalled = false;
@@ -258,7 +258,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     engine.previewCalled = false;
@@ -276,7 +276,7 @@ class AppContextTest {
     context.setGameEngine(engine);
 
     // Si le local est BLACK, alors l'adversaire est WHITE.
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     engine.previewCalled = false;
@@ -291,7 +291,7 @@ class AppContextTest {
   @Test
   @DisplayName("onLocalMoveConfirmed parsing null")
   void onLocalMoveConfirmedParseFail() {
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     context.onLocalMoveConfirmed(""); // parse => null
@@ -318,7 +318,7 @@ class AppContextTest {
   @Test
   @DisplayName("onLocalMoveConfirmed valid move works without game engine")
   void onLocalMoveConfirmedValidWithoutEngine() {
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     context.setGameEngine(null);
@@ -336,7 +336,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     context.onOnlineGameStarted(info);
 
     Match beforeMatch = context.getCurrentOnlineMatch();
@@ -353,7 +353,7 @@ class AppContextTest {
   @Test
   @DisplayName("onOpponentMoveReceived valid move works without game engine")
   void onOpponentMoveReceivedValidWithoutEngine() {
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     context.setGameEngine(null);
@@ -371,7 +371,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     Match beforeMatch = context.getCurrentOnlineMatch();
@@ -388,7 +388,7 @@ class AppContextTest {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
-    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false);
+    OnlineGameInfo info = new OnlineGameInfo(1, Color.BLACK, "Alice", "Bob", false, false);
     context.onOnlineGameStarted(info);
 
     Match beforeMatch = context.getCurrentOnlineMatch();
@@ -414,5 +414,15 @@ class AppContextTest {
     assertEquals(-1, context.getCurrentOnlineGameId());
     assertFalse(context.isMyOnlineTurn());
     assertNull(context.getCurrentOnlineMatch());
+  }
+
+  @Test
+  @DisplayName("OnlineGameInfo exposes blitz mode flag")
+  void online_game_info_blitz_flag() {
+    OnlineGameInfo normal = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
+    OnlineGameInfo blitz = new OnlineGameInfo(2, Color.BLACK, "Alice", "Bob", false, true);
+
+    assertFalse(normal.isBlitzMode());
+    assertTrue(blitz.isBlitzMode());
   }
 }

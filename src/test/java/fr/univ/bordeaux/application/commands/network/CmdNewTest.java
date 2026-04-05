@@ -86,7 +86,6 @@ class CmdNewTest {
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
     ctx.setMode(AppMode.ONLINE);
-
     client.connected = true;
 
     assertThrows(

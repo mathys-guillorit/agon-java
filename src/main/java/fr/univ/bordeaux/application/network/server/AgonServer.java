@@ -49,6 +49,15 @@ public class AgonServer {
   private final Map<Integer, Integer> playerToGame = new ConcurrentHashMap<>();
   private final AtomicInteger nextGameId = new AtomicInteger(1);
 
+  private static final int INVITATION_TIMEOUT_SECONDS = 300;
+
+  private final Map<Integer, Invitation> invitationsByInviter = new ConcurrentHashMap<>();
+  private final Map<Integer, Invitation> invitationsByInvited = new ConcurrentHashMap<>();
+
+  private final Map<Integer, GameLobby> lobbiesByPlayer = new ConcurrentHashMap<>();
+
+  private Thread invitationCleanerThread;
+
   /**
    * Creates a new server with a specified owner name and port.
    *
@@ -94,6 +103,7 @@ public class AgonServer {
     running = true;
     acceptClientThread = new Thread(this::acceptClientLoop, "acceptClientThread");
     acceptClientThread.start();
+    startInvitationCleaner();
 
     return true;
   }
@@ -163,6 +173,10 @@ public class AgonServer {
       }
     } catch (IOException ignored) {
       // Ignored
+    }
+
+    if (invitationCleanerThread != null) {
+      invitationCleanerThread.interrupt();
     }
 
     return true;
@@ -256,19 +270,40 @@ public class AgonServer {
   }
 
   /**
-   * Detaches a player from the server without deleting their data.
+   * Detaches a player from the server.
    *
    * <p>The player remains stored for future reconnections, but is removed from the list of
    * currently active players.
    *
    * @param player the player to disconnect
    */
-  public void removePlayer(OnlinePlayer player) {
-    if (player != null) {
-      player.setHandler(null);
-      player.setStatus(PlayerStatus.IDLE);
-      players.remove(player.getId());
+  public synchronized void removePlayer(OnlinePlayer player) {
+    if (player == null) {
+      return;
     }
+
+    removeInvitation(player.getId());
+
+    GameLobby lobby = lobbiesByPlayer.remove(player.getId());
+    if (lobby != null) {
+      lobbiesByPlayer.remove(lobby.getHostId());
+      lobbiesByPlayer.remove(lobby.getGuestId());
+
+      OnlinePlayer host = players.get(lobby.getHostId());
+      OnlinePlayer guest = players.get(lobby.getGuestId());
+
+      if (host != null) {
+        host.setStatus(PlayerStatus.IDLE);
+      }
+
+      if (guest != null) {
+        guest.setStatus(PlayerStatus.IDLE);
+      }
+    }
+
+    player.setHandler(null);
+    player.setStatus(PlayerStatus.IDLE);
+    players.remove(player.getId());
   }
 
   /**
@@ -412,12 +447,12 @@ public class AgonServer {
    * @param targetId the opponent player
    * @return the created game session, or null if creation failed
    */
-  public ServerGameSession startNewGame(int requesterId, int targetId) {
+  public ServerGameSession startNewGame(int requesterId, int targetId, GameMode mode) {
 
     OnlinePlayer requester = players.get(requesterId);
     OnlinePlayer target = players.get(targetId);
 
-    if (requester == null || target == null) {
+    if (requester == null || target == null || mode == null) {
       return null;
     }
 
@@ -428,12 +463,12 @@ public class AgonServer {
     OnlinePlayer whitePlayer = requesterIsWhite ? requester : target;
     OnlinePlayer blackPlayer = requesterIsWhite ? target : requester;
 
-    Match match = MatchFactory.createOnlineMatch(whitePlayer.getName(), blackPlayer.getName());
-
+    Match match =
+        MatchFactory.createOnlineMatch(
+            whitePlayer.getName(), blackPlayer.getName(), mode == GameMode.BLITZ);
     ServerGameSession session = new ServerGameSession(gameId, whitePlayer, blackPlayer, match);
 
     activeGames.put(gameId, session);
-
     playerToGame.put(requester.getId(), gameId);
     playerToGame.put(target.getId(), gameId);
 
@@ -543,5 +578,241 @@ public class AgonServer {
         + stats.getLosses()
         + " GAMES="
         + stats.getGames();
+  }
+
+  /** Starts the background thread that removes expired invitations. */
+  private void startInvitationCleaner() {
+    invitationCleanerThread =
+        new Thread(
+            () -> {
+              while (running) {
+                try {
+                  Thread.sleep(1000);
+                  cleanExpiredInvitations();
+                } catch (InterruptedException ignored) {
+                  break;
+                }
+              }
+            },
+            "invitation-cleaner-thread");
+
+    invitationCleanerThread.start();
+  }
+
+  /** Removes all expired invitations from the server. */
+  private synchronized void cleanExpiredInvitations() {
+    List<Invitation> expiredInvitations = new ArrayList<>();
+
+    for (Invitation invitation : invitationsByInviter.values()) {
+      if (invitation.isExpired()) {
+        expiredInvitations.add(invitation);
+      }
+    }
+
+    for (Invitation invitation : expiredInvitations) {
+      invitationsByInviter.remove(invitation.getInviterId());
+      invitationsByInvited.remove(invitation.getInvitedId());
+
+      OnlinePlayer inviter = players.get(invitation.getInviterId());
+      OnlinePlayer invited = players.get(invitation.getInvitedId());
+
+      if (inviter != null && inviter.getStatus() == PlayerStatus.WAITGAME) {
+        inviter.setStatus(PlayerStatus.IDLE);
+      }
+
+      if (invited != null && invited.getStatus() == PlayerStatus.WAITGAME) {
+        invited.setStatus(PlayerStatus.IDLE);
+      }
+    }
+  }
+
+  /**
+   * Returns the invitation sent by a player.
+   *
+   * @param inviterId the inviter player ID
+   * @return the invitation, or null if none exists
+   */
+  public Invitation getInvitationByInviter(int inviterId) {
+    return invitationsByInviter.get(inviterId);
+  }
+
+  /**
+   * Returns the invitation received by a player.
+   *
+   * @param invitedId the invited player ID
+   * @return the invitation, or null if none exists
+   */
+  public Invitation getInvitationByInvited(int invitedId) {
+    return invitationsByInvited.get(invitedId);
+  }
+
+  /**
+   * Creates a new invitation between two players.
+   *
+   * @param inviterId the inviter player ID
+   * @param invitedId the invited player ID
+   * @return true if the invitation was created, false otherwise
+   */
+  public synchronized boolean createInvitation(int inviterId, int invitedId) {
+    OnlinePlayer inviter = players.get(inviterId);
+    OnlinePlayer invited = players.get(invitedId);
+
+    if (inviter == null || invited == null) {
+      return false;
+    }
+
+    if (inviterId == invitedId) {
+      return false;
+    }
+
+    if (inviter.getStatus() != PlayerStatus.IDLE || invited.getStatus() != PlayerStatus.IDLE) {
+      return false;
+    }
+
+    long expiresAt = System.currentTimeMillis() + INVITATION_TIMEOUT_SECONDS * 1000;
+    Invitation invitation = new Invitation(inviterId, invitedId, expiresAt);
+
+    invitationsByInviter.put(inviterId, invitation);
+    invitationsByInvited.put(invitedId, invitation);
+
+    inviter.setStatus(PlayerStatus.WAITGAME);
+    invited.setStatus(PlayerStatus.WAITGAME);
+
+    return true;
+  }
+
+  /**
+   * Removes an invitation and resets both players to idle.
+   *
+   * @param invitation the invitation to clear
+   */
+  private void clearInvitation(Invitation invitation) {
+    if (invitation == null) {
+      return;
+    }
+
+    invitationsByInviter.remove(invitation.getInviterId());
+    invitationsByInvited.remove(invitation.getInvitedId());
+
+    OnlinePlayer inviter = players.get(invitation.getInviterId());
+    OnlinePlayer invited = players.get(invitation.getInvitedId());
+
+    if (inviter != null) {
+      inviter.setStatus(PlayerStatus.IDLE);
+    }
+
+    if (invited != null) {
+      invited.setStatus(PlayerStatus.IDLE);
+    }
+  }
+
+  /**
+   * Declines or cancels a pending invitation.
+   *
+   * @param playerId the inviter or invited player ID
+   * @return the removed invitation, or null if none exists
+   */
+  public synchronized Invitation removeInvitation(int playerId) {
+    Invitation invitation = invitationsByInviter.get(playerId);
+
+    if (invitation == null) {
+      invitation = invitationsByInvited.get(playerId);
+    }
+
+    if (invitation == null) {
+      return null;
+    }
+
+    clearInvitation(invitation);
+    return invitation;
+  }
+
+  /**
+   * Accepts the pending invitation received by a player.
+   *
+   * @param invitedId the invited player ID
+   * @return the created lobby, or null if the invitation could not be accepted
+   */
+  public synchronized GameLobby acceptInvitation(int invitedId) {
+    Invitation invitation = invitationsByInvited.get(invitedId);
+
+    if (invitation == null) {
+      return null;
+    }
+
+    OnlinePlayer inviter = players.get(invitation.getInviterId());
+    OnlinePlayer invited = players.get(invitation.getInvitedId());
+
+    if (invitation.isExpired() || inviter == null || invited == null) {
+      clearInvitation(invitation);
+      return null;
+    }
+
+    invitationsByInviter.remove(invitation.getInviterId());
+    invitationsByInvited.remove(invitation.getInvitedId());
+
+    GameLobby lobby = new GameLobby(inviter.getId(), invited.getId());
+    lobbiesByPlayer.put(inviter.getId(), lobby);
+    lobbiesByPlayer.put(invited.getId(), lobby);
+
+    return lobby;
+  }
+
+  /**
+   * Returns the lobby associated with a player.
+   *
+   * @param playerId the player ID
+   * @return the lobby, or null if none exists
+   */
+  public GameLobby getLobbyByPlayer(int playerId) {
+    return lobbiesByPlayer.get(playerId);
+  }
+
+  /**
+   * Starts a game from a lobby using the selected mode.
+   *
+   * @param hostId the host player ID
+   * @param mode the selected game mode
+   * @return the created game session, or null if creation failed
+   */
+  /**
+   * Starts a game from a lobby using the selected mode.
+   *
+   * @param hostId the host player ID
+   * @param mode the selected game mode
+   * @return the created game session, or null if creation failed
+   */
+  public synchronized ServerGameSession chooseMode(int hostId, GameMode mode) {
+    if (mode == null) {
+      return null;
+    }
+
+    GameLobby lobby = lobbiesByPlayer.get(hostId);
+
+    if (lobby == null || lobby.getHostId() != hostId) {
+      return null;
+    }
+
+    int guestId = lobby.getGuestId();
+
+    lobbiesByPlayer.remove(hostId);
+    lobbiesByPlayer.remove(guestId);
+
+    ServerGameSession session = startNewGame(hostId, guestId, mode);
+
+    if (session == null) {
+      OnlinePlayer host = players.get(hostId);
+      OnlinePlayer guest = players.get(guestId);
+
+      if (host != null) {
+        host.setStatus(PlayerStatus.IDLE);
+      }
+
+      if (guest != null) {
+        guest.setStatus(PlayerStatus.IDLE);
+      }
+    }
+
+    return session;
   }
 }

@@ -15,6 +15,7 @@ public class OnlineGameInfo {
   private final String whitePlayerName;
   private final String blackPlayerName;
   private final boolean myTurn;
+  private final boolean blitzMode;
 
   /**
    * Creates a new online game description.
@@ -24,18 +25,21 @@ public class OnlineGameInfo {
    * @param whitePlayerName the display name of the white player
    * @param blackPlayerName the display name of the black player
    * @param myTurn true if it is initially the local player's turn
+   * @param blitzMode true if the game is a blitz match, false otherwise
    */
   public OnlineGameInfo(
       int gameId,
       Color localColor,
       String whitePlayerName,
       String blackPlayerName,
-      boolean myTurn) {
+      boolean myTurn,
+      boolean blitzMode) {
     this.gameId = gameId;
     this.localColor = localColor;
     this.whitePlayerName = whitePlayerName;
     this.blackPlayerName = blackPlayerName;
     this.myTurn = myTurn;
+    this.blitzMode = blitzMode;
   }
 
   /**
@@ -81,5 +85,14 @@ public class OnlineGameInfo {
    */
   public boolean isMyTurn() {
     return myTurn;
+  }
+
+  /**
+   * Indicates whether the game is played in blitz mode.
+   *
+   * @return true if the game is a blitz match, false otherwise
+   */
+  public boolean isBlitzMode() {
+    return blitzMode;
   }
 }
