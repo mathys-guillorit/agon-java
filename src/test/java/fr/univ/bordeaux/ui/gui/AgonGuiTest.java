@@ -216,7 +216,7 @@ public class AgonGuiTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    agonGui = new AgonGui(new GameConfig());
+    agonGui = new AgonGui(new GameConfig(), null);
     fakeController = new FakeGameViewController();
 
     CountDownLatch latch = new CountDownLatch(1);

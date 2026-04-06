@@ -19,7 +19,6 @@ default:
   image: $JDK_IMAGE
   tags:
     - Boursouflet
-    - docker
   before_script:
     - java -version
     - mvn -version
@@ -28,7 +27,6 @@ default:
 .test_java:
   tags:
     - Boursouflet
-    - docker
   before_script:
     - set -e
     - java -version
@@ -99,6 +97,7 @@ test-alpine:
   stage: testGNU_Linux
   script:
     - apk add xvfb
+    - xvfb-run mvn test || echo "apk introuvable, utilisation de xvfb-run existant"
     - xvfb-run mvn test
   image: alpine:3.19
 
@@ -106,7 +105,7 @@ test-fedora:
   extends: .test_java
   stage: testGNU_Linux
   script:
-    - dnf install -y xorg-x11-server-Xvfb
+    - dnf install -y xorg-x11-server-Xvfb || echo "dnf introuvable, utilisation de xvfb-run existant"
     - xvfb-run mvn test
   image: fedora:39
 
@@ -116,7 +115,7 @@ test-arch:
   extends: .test_java
   stage: testGNU_Linux
   script:
-    - pacman -Sy --noconfirm xorg-server-xvfb
+    - pacman -Sy --noconfirm xorg-server-xvfb || echo "pacman introuvable, utilisation de xvfb-run existant"
     - xvfb-run mvn test
   image: archlinux:base-20260201.0.486523
 

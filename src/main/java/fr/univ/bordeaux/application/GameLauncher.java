@@ -85,12 +85,7 @@ public class GameLauncher {
     this.setupOptions();
   }
 
-  /**
-   * Configures the available command-line options.
-   *
-   * <p>This method defines flags (like -h, -v). It uses {@link Option.Builder} for complex options
-   * to ensure clarity.
-   */
+
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
     options.addOption("V", "version", false, "Displays version information");
@@ -186,14 +181,7 @@ public class GameLauncher {
     }
   }
 
-  /**
-   * Loads the initial configuration from the .agonrc file.
-   *
-   * <p>If the file is missing or unreadable, a default configuration file is created and a default
-   * GameConfig object is returned.
-   *
-   * @return A {@link GameConfig} object populated with file settings or default values.
-   */
+
   private GameConfig loadInitialConfig() {
     ConfigParser configParser = new ConfigParser();
     try {
@@ -205,11 +193,7 @@ public class GameLauncher {
     }
   }
 
-  /**
-   * Persists a default configuration to the disk using the Serializer.
-   *
-   * <p>This ensures the user has a base template to modify for future runs.
-   */
+
   private void createDefaultConfigFile() {
     ConfigSerializer serializer = new ConfigSerializer();
     try {
@@ -220,7 +204,7 @@ public class GameLauncher {
     }
   }
 
-  private String askPlayerName() {
+  protected String askPlayerName() {
     Scanner scanner = new Scanner(System.in);
 
     System.out.print("Enter your player name: ");
@@ -234,49 +218,49 @@ public class GameLauncher {
     return name;
   }
 
-  private void startGame(
+  protected void startGame(
       GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, AppContext context) {
 
     System.out.println("Starting Agon Shell...");
 
     if (cmd.hasOption("g")) {
         System.out.println("[INFO] Starting Agon GUI...");
-        AgonGui gui = new AgonGui(config);
-        userInterface = (GameUserInterface) gui;
-        gameEngine = new GameEngine(userInterface, cmds);
-        this.fillRegister(cmds, userInterface, config, gameEngine);
+        AgonGui gui = new AgonGui(config, context);
+        GameEngine gameEngine = new GameEngine(gui, cmds);
+        this.fillRegister(cmds, gui, config, gameEngine, context);
         gui.start();
-    }
+    } else {
 
-    try {
-      final AgonShell[] shellRef = new AgonShell[1];
+      try {
+        final AgonShell[] shellRef = new AgonShell[1];
 
-      Completer strategyCompleter =
-          (reader, line, candidates) -> {
-            if (shellRef[0] != null) {
-              shellRef[0].globalCompleter(reader, line, candidates);
-            }
-          };
+        Completer strategyCompleter =
+            (reader, line, candidates) -> {
+              if (shellRef[0] != null) {
+                shellRef[0].globalCompleter(reader, line, candidates);
+              }
+            };
 
-      Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-      LineReader reader =
-          LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
+        Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+        LineReader reader =
+            LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
-      AgonShell userInterface = new AgonShell(terminal, reader, cmds);
-      shellRef[0] = userInterface;
+        AgonShell userInterface = new AgonShell(terminal, reader, cmds);
+        shellRef[0] = userInterface;
 
-      GameEngine gameEngine = new GameEngine(userInterface, cmds);
-      context.setGameEngine(gameEngine);
-      gameEngine.setAppContext(context);
+        GameEngine gameEngine = new GameEngine(userInterface, cmds);
+        context.setGameEngine(gameEngine);
+        gameEngine.setAppContext(context);
 
-      this.fillRegister(cmds, userInterface, config, gameEngine, context);
+        this.fillRegister(cmds, userInterface, config, gameEngine, context);
 
-      // if (filePathToLoad != null) { ... }
+        // if (filePathToLoad != null) { ... }
 
-      gameEngine.start();
+        gameEngine.start();
 
-    } catch (Exception e) {
-      e.printStackTrace();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -385,7 +369,7 @@ public class GameLauncher {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 
-  private AppMode askApplicationMode() {
+  protected AppMode askApplicationMode() {
     Scanner scanner = new Scanner(System.in);
 
     System.out.println("Select mode:");
@@ -407,12 +391,4 @@ public class GameLauncher {
     return AppMode.LOCAL;
   }
 
-  /** Extracted to protected method to allow Unit Testing of the Lambda execution. */
-  protected Completer createCompleter(AgonShell[] shellRef) {
-    return (reader, line, candidates) -> {
-      if (shellRef[0] != null) {
-        shellRef[0].globalCompleter(reader, line, candidates);
-      }
-    };
-  }
 }

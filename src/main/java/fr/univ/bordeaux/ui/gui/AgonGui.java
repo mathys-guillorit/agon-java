@@ -2,6 +2,7 @@ package fr.univ.bordeaux.ui.gui;
 
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.match.BlitzMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
@@ -31,6 +32,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   private final AtomicBoolean debugMode = new AtomicBoolean(false);
   private final AtomicBoolean running = new AtomicBoolean(true);
   private final GameConfig config;
+  private final AppContext context;
   private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
   private ReadOnlyMatch currentMatch;
   private Timeline blitzTimeline;
@@ -40,8 +42,9 @@ public class AgonGui implements GameUserInterface, MatchObserver {
    *
    * @param config The game configuration settings.
    */
-  public AgonGui(GameConfig config) {
-    this.config = config;
+  public AgonGui(GameConfig config,  AppContext context) {
+      this.config = config;
+      this.context = context;
   }
 
   /**
@@ -52,6 +55,15 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public GameConfig getConfig() {
     return this.config;
   }
+
+    /**
+     * Retrieves the current application context.
+     *
+     * @return The AppContext instance.
+     */
+    public AppContext getAppContext() {
+        return this.context;
+    }
 
   /**
    * Submits a command string to the processing queue.

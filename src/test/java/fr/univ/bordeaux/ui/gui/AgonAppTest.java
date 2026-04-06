@@ -68,7 +68,7 @@ public class AgonAppTest {
 
   @Test
   void testStaticGettersAndSetters() {
-    AgonGui gui = new AgonGui(null);
+    AgonGui gui = new AgonGui(null, null);
     AgonApp.setGui(gui);
     assertNull(AgonApp.getController());
   }
@@ -116,10 +116,10 @@ public class AgonAppTest {
                         AgonApp.setGui(null);
                         app.setupShortcuts();
 
-                        AgonApp.setGui(new AgonGui(null));
+                        AgonApp.setGui(new AgonGui(null, null));
                         app.setupShortcuts();
 
-                        AgonGui guiWithConfig = new AgonGui(new GameConfig());
+                        AgonGui guiWithConfig = new AgonGui(new GameConfig(), null);
                         AgonApp.setGui(guiWithConfig);
                         setPrivateStaticField(AgonApp.class, "controller", null);
                         app.setupShortcuts();

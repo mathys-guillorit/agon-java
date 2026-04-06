@@ -35,6 +35,12 @@
                 <MenuItem mnemonicParsing="false" onAction="#showHistory" text="History"/>
             </Menu>
 
+            <Menu mnemonicParsing="false" text="Network">
+<!--                <MenuItem mnemonicParsing="false" onAction="#showServerBrowser" text="Server Browser"/>-->
+<!--                <MenuItem mnemonicParsing="false" onAction="#showHostServerDialog" text="Host Game Server"/>-->
+<!--                <MenuItem mnemonicParsing="false" onAction="#showLobby" text="Multiplayer Lobby"/>-->
+            </Menu>
+
             <Menu mnemonicParsing="false">
                 <graphic>
                     <Label text="Help" onMouseClicked="#showHelp" style="-fx-cursor: hand;"/>

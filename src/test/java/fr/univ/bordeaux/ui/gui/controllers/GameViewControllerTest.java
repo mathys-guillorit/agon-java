@@ -32,7 +32,7 @@ public class GameViewControllerTest {
     public final List<String> sentCommands = new ArrayList<>();
 
     public FakeAgonGui() {
-      super(new GameConfig());
+      super(new GameConfig(), null);
     }
 
     @Override
