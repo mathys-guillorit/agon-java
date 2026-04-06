@@ -16,7 +16,7 @@ public class ConfigBinder {
    * @param cmd The parsed command line.
    * @param config The configuration object to update.
    */
-  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface Ui) {
+  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface ui) {
 
     // --- F4 & F31: Blitz Mode ---
     boolean isBlitz = cmd.hasOption("b");
@@ -27,10 +27,10 @@ public class ConfigBinder {
           int time = Integer.parseInt(cmd.getOptionValue("t"));
           config.setTimeout(time);
         } catch (NumberFormatException e) {
-          // Optionnel : logger ou ignorer
+          e.printStackTrace();
         }
       } else {
-        Ui.showInfo("Option 't' ignored because option blitz is missing.");
+        ui.showInfo("Option 't' ignored because option blitz is missing.");
       }
     }
 
@@ -38,7 +38,7 @@ public class ConfigBinder {
     if (cmd.hasOption("a")) {
       String aiValue = cmd.getOptionValue("a");
       if (aiValue == null) {
-        Ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
+        ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
         config.setBlackAi(true);
       } else {
         switch (aiValue.toLowerCase()) {
@@ -56,7 +56,7 @@ public class ConfigBinder {
             config.setBlackAi(true);
             break;
           default:
-            Ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
+            ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
             config.setBlackAi(true);
             break;
         }
@@ -81,6 +81,7 @@ public class ConfigBinder {
           config.setAiDepth(depth);
         }
       } catch (NumberFormatException ignored) {
+        // Ignored
       }
     }
 
@@ -98,6 +99,7 @@ public class ConfigBinder {
         int aiTime = Integer.parseInt(cmd.getOptionValue("ai-time"));
         config.setAiTimeLimit(aiTime);
       } catch (NumberFormatException ignored) {
+        // Ignored
       }
     }
 

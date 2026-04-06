@@ -1,10 +1,6 @@
 package fr.univ.bordeaux.application.match;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
@@ -43,7 +39,7 @@ class MatchTest {
     @Override
     public void endActions() {
       endCalled = true;
-      this.switchPlayer(); // On simule un comportement standard
+      this.switchPlayer();
     }
   }
 
@@ -57,16 +53,49 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Initialisation : Le joueur blanc doit commencer")
+  @DisplayName("Initialisation : le joueur blanc doit commencer")
   void testInitialPlayer() {
     assertEquals(Color.WHITE, match.getCurrentPlayer().getColor());
     assertTrue(match.isRunning());
+    assertFalse(match.isMatchOver());
+    assertEquals(MatchStatus.RUNNING, match.getMatchStatus());
   }
 
   @Test
-  @DisplayName("Move : Un mouvement valide doit changer de joueur")
+  @DisplayName("Getters : getwhitePlayer et getblackPlayer doivent retourner les bons joueurs")
+  void testGetWhiteAndBlackPlayer() {
+    assertEquals(p1, match.getWhitePlayer());
+    assertEquals(p2, match.getBlackPlayer());
+
+    assertEquals(Color.WHITE, match.getWhitePlayer().getColor());
+    assertEquals(Color.BLACK, match.getBlackPlayer().getColor());
+  }
+
+  @Test
+  @DisplayName(
+      "Getters : getwhitePlayer et getblackPlayer fonctionnent même si les joueurs sont inversés")
+  void testGetWhiteAndBlackPlayerReversed() {
+    Player blackFirst = new HumanPlayer("Noir", Color.BLACK, null);
+    Player whiteSecond = new HumanPlayer("Blanc", Color.WHITE, null);
+
+    TestMatch reversedMatch = new TestMatch(board, blackFirst, whiteSecond);
+
+    assertEquals(whiteSecond, reversedMatch.getWhitePlayer());
+    assertEquals(blackFirst, reversedMatch.getBlackPlayer());
+
+    assertEquals(Color.WHITE, reversedMatch.getWhitePlayer().getColor());
+    assertEquals(Color.BLACK, reversedMatch.getBlackPlayer().getColor());
+  }
+
+  @Test
+  @DisplayName("Winner : getWinner doit renvoyer null tant que le match n'est pas terminé")
+  void testGetWinnerInitiallyNull() {
+    assertNull(match.getWinner());
+  }
+
+  @Test
+  @DisplayName("Move : un mouvement valide doit changer de joueur")
   void testValidMove() {
-    // Pion blanc en K10 (index 120) vers J10 (index 109)
     int from = CoordinateMapper.toIndex('K', 10);
     int to = CoordinateMapper.toIndex('J', 10);
     Move move = new Move(from, to, Color.WHITE);
@@ -80,9 +109,8 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Move : On ne peut pas bouger une pièce adverse")
+  @DisplayName("Move : on ne peut pas bouger une pièce adverse")
   void testInvalidPieceColor() {
-    // On essaie de bouger un pion noir (K7) alors que c'est au blanc
     int from = CoordinateMapper.toIndex('K', 7);
     int to = CoordinateMapper.toIndex('J', 7);
     Move move = new Move(from, to, Color.BLACK);
@@ -94,39 +122,90 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Undo/Redo : Vérification de la cohérence de l'historique")
+  @DisplayName("Branche : move impossible si le match est déjà FINISHED")
+  void testMoveWhenFinished() {
+    match.quit();
+
+    Move move =
+        new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE);
+
+    boolean result = match.move(move);
+
+    assertFalse(result, "Le move doit échouer car le match est fini");
+  }
+
+  @Test
+  @DisplayName("Branche : move impossible si la pièce appartient à l'adversaire")
+  void testMoveOpponentPiece() {
+    int fromBlack = CoordinateMapper.toIndex('K', 7);
+    int to = CoordinateMapper.toIndex('J', 7);
+    Move move = new Move(fromBlack, to, Color.WHITE);
+
+    boolean result = match.move(move);
+
+    assertFalse(result, "Le move doit échouer car la pièce en K7 est noire");
+  }
+
+  @Test
+  @DisplayName("Branche : retourne false si applyMove échoue")
+  void testApplyMoveFails() {
+    int from = CoordinateMapper.toIndex('C', 2);
+    int to = CoordinateMapper.toIndex('C', 1);
+    Move illegalMove = new Move(from, to, Color.WHITE);
+
+    boolean result = match.move(illegalMove);
+
+    assertFalse(result, "Le move doit renvoyer false car applyMove a refusé le mouvement");
+  }
+
+  @Test
+  @DisplayName("Undo/Redo : vérification de la cohérence de l'historique")
   void testUndoRedo() {
-    // 1. Faire deux mouvements
     match.move(
         new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
     match.move(
         new Move(CoordinateMapper.toIndex('B', 7), CoordinateMapper.toIndex('C', 7), Color.BLACK));
 
-    // 2. Undo (doit annuler 2 undoMove() internes selon ton code)
     boolean undoRes = match.undo();
-    assertTrue(undoRes);
+    assertTrue(undoRes, "Le undo devrait fonctionner après des coups joués");
 
-    // 3. Redo (doit refaire 2 redoMove() internes)
     boolean redoRes = match.redo();
-    // Attention : Si ton redo renvoie false, c'est le problème de pile vide qu'on a vu avant !
-    // Mais ici, avec 2 moves réels, ça devrait passer si la pile est bien de taille 2.
-    assertTrue(redoRes, "Le redo devrait fonctionner si 2 moves ont été annulés");
+    assertTrue(redoRes, "Le redo devrait fonctionner si des coups ont été annulés");
   }
 
   @Test
-  @DisplayName("Quit : Le match doit s'arrêter")
+  @DisplayName("Undo : retourne false si aucun coup n'a été joué")
+  void testUndoWithoutHistory() {
+    assertFalse(match.undo());
+  }
+
+  @Test
+  @DisplayName("Redo : retourne false si aucun coup n'a été annulé")
+  void testRedoWithoutUndo() {
+    assertFalse(match.redo());
+  }
+
+  @Test
+  @DisplayName("Quit : le match doit s'arrêter")
   void testQuit() {
     match.quit();
     assertTrue(match.isMatchOver());
     assertFalse(match.isRunning());
+    assertEquals(MatchStatus.FINISHED, match.getMatchStatus());
   }
 
   @Test
-  @DisplayName("Hint : L'IA doit suggérer un mouvement")
+  @DisplayName("Hint : l'IA doit suggérer un mouvement")
   void testHint() {
     Move hint = match.hint();
     assertNotNull(hint, "L'IA devrait proposer un coup");
     assertEquals(Color.WHITE, hint.getColor(), "Le coup suggéré doit être pour le joueur actuel");
+  }
+
+  @Test
+  @DisplayName("History : getHistory doit être vide au début")
+  void testGetHistoryInitiallyEmpty() {
+    assertTrue(match.getHistory().isEmpty());
   }
 
   @Test
@@ -141,35 +220,11 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Branche : Move impossible si le match est déjà FINISHED")
-  void testMoveWhenFinished() {
-    match.quit(); // Force l'état à FINISHED
-
-    Move move =
-        new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE);
-    boolean result = match.move(move);
-
-    assertFalse(result, "Le move doit échouer car le match est fini");
-  }
-
-  @Test
-  @DisplayName("Branche : Move impossible si la pièce appartient à l'adversaire")
-  void testMoveOpponentPiece() {
-    // Supposons que Blanc commence. On essaie de bouger un pion NOIR.
-    int fromBlack = CoordinateMapper.toIndex('K', 7);
-    int to = CoordinateMapper.toIndex('J', 7);
-    Move move = new Move(fromBlack, to, Color.WHITE); // Le move dit que c'est le Blanc qui joue
-
-    boolean result = match.move(move);
-
-    assertFalse(result, "Le move doit échouer car la pièce en K7 est noire");
-  }
-
-  @Test
-  @DisplayName("Branche : Le match passe en FINISHED en cas de victoire")
+  @DisplayName("Branche : le match passe en FINISHED en cas de victoire")
   void testGameWinStatus() {
     BitBoard queenw = new BitBoard();
     BitBoard pawnw = new BitBoard();
+
     queenw.setBit(60, 1L);
     pawnw.setBit(59, 1L);
     pawnw.setBit(61, 1L);
@@ -177,41 +232,59 @@ class MatchTest {
     pawnw.setBit(CoordinateMapper.toIndex('G', 7), 1L);
     pawnw.setBit(CoordinateMapper.toIndex('E', 5), 1L);
     pawnw.setBit(CoordinateMapper.toIndex('E', 7), 1L);
-    AgonBoardImpl board = new AgonBoardImpl(queenw, new BitBoard(), pawnw, new BitBoard());
-    p1 = new HumanPlayer("Blanc", Color.WHITE, null);
-    p2 = new HumanPlayer("Noir", Color.BLACK, null);
-    TestMatch match1 = new TestMatch(board, p1, p2);
+
+    AgonBoardImpl customBoard = new AgonBoardImpl(queenw, new BitBoard(), pawnw, new BitBoard());
+    Player white = new HumanPlayer("Blanc", Color.WHITE, null);
+    Player black = new HumanPlayer("Noir", Color.BLACK, null);
+    TestMatch customMatch = new TestMatch(customBoard, white, black);
+
     Move winningMove =
-        new Move(
-            CoordinateMapper.toIndex('E', 7),
-            CoordinateMapper.toIndex('E', 6),
-            Color.WHITE); // Ton coup gagnant
-    match1.move(winningMove);
+        new Move(CoordinateMapper.toIndex('E', 7), CoordinateMapper.toIndex('E', 6), Color.WHITE);
 
-    assertEquals(MatchStatus.FINISHED, match1.getMatchStatus(), "Le status doit être FINISHED");
-    assertTrue(match1.isMatchOver());
+    customMatch.move(winningMove);
+
+    assertEquals(
+        MatchStatus.FINISHED, customMatch.getMatchStatus(), "Le status doit être FINISHED");
+    assertTrue(customMatch.isMatchOver());
   }
 
   @Test
-  @DisplayName("Branche : Retourne false si applyMove échoue (règles Agon non respectées)")
-  void testApplyMoveFails() {
-    // Un pion blanc ne peut pas reculer.
-    // Si on essaie de le faire reculer, applyMove renverra false.
-    int from = CoordinateMapper.toIndex('C', 2);
-    int to = CoordinateMapper.toIndex('C', 1); // Recul interdit
-    Move illegalMove = new Move(from, to, Color.WHITE);
+  @DisplayName("Winner : getWinner doit retourner le joueur gagnant après une victoire")
+  void testGetWinnerAfterWin() {
+    BitBoard queenw = new BitBoard();
+    BitBoard pawnw = new BitBoard();
 
-    boolean result = match.move(illegalMove);
+    queenw.setBit(60, 1L);
+    pawnw.setBit(59, 1L);
+    pawnw.setBit(61, 1L);
+    pawnw.setBit(CoordinateMapper.toIndex('G', 6), 1L);
+    pawnw.setBit(CoordinateMapper.toIndex('G', 7), 1L);
+    pawnw.setBit(CoordinateMapper.toIndex('E', 5), 1L);
+    pawnw.setBit(CoordinateMapper.toIndex('E', 7), 1L);
 
-    assertFalse(result, "Le move doit renvoyer false car applyMove a refusé le mouvement");
+    AgonBoardImpl customBoard = new AgonBoardImpl(queenw, new BitBoard(), pawnw, new BitBoard());
+    Player white = new HumanPlayer("Blanc", Color.WHITE, null);
+    Player black = new HumanPlayer("Noir", Color.BLACK, null);
+    TestMatch customMatch = new TestMatch(customBoard, white, black);
+
+    Move winningMove =
+        new Move(CoordinateMapper.toIndex('E', 7), CoordinateMapper.toIndex('E', 6), Color.WHITE);
+
+    boolean result = customMatch.move(winningMove);
+
+    assertTrue(result);
+    assertEquals(MatchStatus.FINISHED, customMatch.getMatchStatus());
+    assertEquals(white, customMatch.getWinner());
   }
 
   @Test
+  @DisplayName("Pause : retourne false")
   void testPause() {
     assertFalse(match.pause());
   }
 
   @Test
+  @DisplayName("Remaining time : retourne null")
   void testRemainingTime() {
     assertNull(match.getRemainingTime());
   }

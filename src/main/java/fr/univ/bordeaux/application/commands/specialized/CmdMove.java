@@ -5,14 +5,19 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import javax.annotation.Nonnull;
+import org.jline.reader.Completer;
 
 /** Command responsible for executing a player's move on the board. */
 public class CmdMove extends Cmd {
 
+  /** The move object to execute (optional if coordinates are provided). */
   private Move move;
 
+  /** The starting index/coordinate. */
   private int from;
 
+  /** The target index/coordinate. */
   private int destination;
 
   /**
@@ -70,6 +75,30 @@ public class CmdMove extends Cmd {
   }
 
   /**
+   * Returns the source index of the move.
+   *
+   * @return the source index
+   */
+  public int getFrom() {
+    if (this.move != null) {
+      return this.move.getFrom();
+    }
+    return this.from;
+  }
+
+  /**
+   * Returns the destination index of the move.
+   *
+   * @return the destination index
+   */
+  public int getDestination() {
+    if (this.move != null) {
+      return this.move.getDestination();
+    }
+    return this.destination;
+  }
+
+  /**
    * Factory method to create a new move action from CLI arguments.
    *
    * @param args Arguments provided (e.g., from and destination).
@@ -88,5 +117,16 @@ public class CmdMove extends Cmd {
   @Override
   public String getDescription() {
     return "Usage: move <from> <to>\nDescription: Moves a piece from one coordinate to another.\n";
+  }
+
+  /**
+   * Provides the autocompleter for moves.
+   *
+   * @return null (Could be implemented for coordinate completion).
+   */
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return super.getAutoCompleter();
   }
 }

@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.agoncore.bitboard;
 
+import java.util.Objects;
+
 /**
  * A high-performance 128-bit bitset implementation optimized for Agon's hexagonal grid.
  *
@@ -150,7 +152,17 @@ public class BitBoard {
    * @return {@code true} if all bits are 0.
    */
   public boolean isEmpty() {
-    return (this.low == 0 && this.high == 0);
+    return this.low == 0 && this.high == 0;
+  }
+
+  /**
+   * Return the hashCode.
+   *
+   * @return the hashCode
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hash(low, high);
   }
 
   /**

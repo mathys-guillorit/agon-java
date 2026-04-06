@@ -10,8 +10,15 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.commands.network.CmdJoin;
+import fr.univ.bordeaux.application.commands.network.CmdPing;
+import fr.univ.bordeaux.application.commands.network.CmdServerList;
+import fr.univ.bordeaux.application.commands.network.CmdServerStart;
+import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
+import fr.univ.bordeaux.application.commands.network.CmdServerStop;
 import fr.univ.bordeaux.application.commands.specialized.CmdCreate;
 import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
 import fr.univ.bordeaux.application.commands.specialized.CmdHint;
@@ -29,6 +36,7 @@ import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -55,16 +63,35 @@ import org.junit.jupiter.api.Test;
 public class AgonShellTest {
   private AgonRegister<CmdAction> cmds = new AgonRegister<>();
 
+  /** Shared application context for network-aware commands. */
+  private AppContext context;
+
+  /**
+   * Initializes a fresh command registry before each test.
+   *
+   * <p>This setup registers both:
+   *
+   * <ul>
+   *   <li>standard/local commands
+   *   <li>network commands
+   * </ul>
+   */
   @BeforeEach
   void setUp() {
+    cmds = new AgonRegister<>();
+    context = new AppContext(new LocalProfile("test"));
+
     GameConfig config = new GameConfig();
     LineReader reader = new FakeLineReader("n");
+
     try {
       Terminal terminal = createFakeTerminal();
       GameUserInterface userInterface = new AgonShell(terminal, reader, cmds);
       GameEngine gameEngine = new GameEngine(userInterface, cmds);
+
+      // Local / gameplay commands
       cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
-      cmds.register("quit", new CmdQuit(userInterface));
+      cmds.register("quit", new CmdQuit(userInterface, context));
       cmds.register("hint", new CmdHint(userInterface));
       cmds.register("show", new CmdShow(userInterface, config));
       cmds.register("load", new CmdLoad(userInterface, gameEngine));
@@ -73,10 +100,28 @@ public class AgonShellTest {
       cmds.register("undo", new CmdUndo(userInterface));
       cmds.register("redo", new CmdRedo(userInterface));
       cmds.register("help", new CmdHelp(userInterface, cmds));
+
+      // Network commands
+      cmds.register("join", new CmdJoin(userInterface, context));
+      cmds.register("ping", new CmdPing(userInterface, context));
+      cmds.register("server_start", new CmdServerStart(userInterface, context));
+      cmds.register("server_stop", new CmdServerStop(userInterface, context));
+      cmds.register("server_list", new CmdServerList(userInterface, context));
+      cmds.register("server_status", new CmdServerStatus(userInterface, context));
+
+      // Context-aware quit command
+      cmds.register("quit", new CmdQuit(userInterface, context));
+
     } catch (Exception e) {
+      throw new RuntimeException("Failed to initialize AgonShellTest setup", e);
     }
   }
 
+  /**
+   * Creates a fake terminal used to capture shell output during tests.
+   *
+   * @return a fake terminal backed by a byte array output stream
+   */
   private Terminal createFakeTerminal() {
     return new FakeTerminal(new ByteArrayOutputStream());
   }
@@ -232,7 +277,7 @@ public class AgonShellTest {
   @Test
   @DisplayName("test empty input does nothing (no error message)")
   void testEmptyInputDoesNothing() {
-    var out = new ByteArrayOutputStream();
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
     // On simule une entrée vide
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""), cmds);
@@ -262,7 +307,7 @@ public class AgonShellTest {
   @Test
   @DisplayName("test loadMainMenu updates displayed menu")
   void testLoadMainMenu() {
-    var out = new ByteArrayOutputStream();
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""), cmds);
     String newMenu =
@@ -302,6 +347,14 @@ public class AgonShellTest {
     assertTrue(results.contains("save"));
     assertTrue(results.contains("undo"));
     assertTrue(results.contains("redo"));
+
+    // network commands should also now be suggested
+    assertTrue(results.contains("join"));
+    assertTrue(results.contains("ping"));
+    assertTrue(results.contains("server_start"));
+    assertTrue(results.contains("server_stop"));
+    assertTrue(results.contains("server_list"));
+    assertTrue(results.contains("server_status"));
   }
 
   @Test

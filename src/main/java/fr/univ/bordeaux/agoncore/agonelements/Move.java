@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.agoncore.agonelements;
 
+import java.util.Objects;
+
 /**
  * Represents a single action performed by a player on the Agon board.
  *
@@ -96,6 +98,11 @@ public class Move {
 
   public boolean isRelocationMove() {
     return from == -1;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(from, destination, color, pieceType);
   }
 
   @Override

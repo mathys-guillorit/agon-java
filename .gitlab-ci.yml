@@ -19,6 +19,7 @@ default:
   image: $JDK_IMAGE
   tags:
     - Boursouflet
+    - docker
   before_script:
     - java -version
     - mvn -version
@@ -27,6 +28,7 @@ default:
 .test_java:
   tags:
     - Boursouflet
+    - docker
   before_script:
     - set -e
     - java -version

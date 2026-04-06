@@ -101,29 +101,27 @@ public class AgonBoardImpl implements AgonBoard {
       for (int c = 0; c < 11; c++) {
         int idx = rowIndex * 11 + c;
 
-        if (this.validZoneMask.isSet(idx)) {
-          if (charIndex < cleanLine.length()) {
-            char piece = cleanLine.charAt(charIndex);
-            switch (piece) {
-              case 'Q':
-                this.whiteQueen.setBit(idx, 1L);
-                break;
-              case 'q':
-                this.blackQueen.setBit(idx, 1L);
-                break;
-              case 'O':
-                this.whitePawns.setBit(idx, 1L);
-                break;
-              case 'X':
-                this.blackPawns.setBit(idx, 1L);
-                break;
-              case '.':
-                break;
-              default:
-                throw new IllegalArgumentException("impossible piece character: (" + piece + ")");
-            }
-            charIndex++;
+        if (this.validZoneMask.isSet(idx) && charIndex < cleanLine.length()) {
+          char piece = cleanLine.charAt(charIndex);
+          switch (piece) {
+            case 'Q':
+              this.whiteQueen.setBit(idx, 1L);
+              break;
+            case 'q':
+              this.blackQueen.setBit(idx, 1L);
+              break;
+            case 'O':
+              this.whitePawns.setBit(idx, 1L);
+              break;
+            case 'X':
+              this.blackPawns.setBit(idx, 1L);
+              break;
+            case '.':
+              break;
+            default:
+              throw new IllegalArgumentException("impossible piece character: (" + piece + ")");
           }
+          charIndex++;
         }
       }
       rowIndex--;
@@ -454,8 +452,8 @@ public class AgonBoardImpl implements AgonBoard {
   public boolean isGameWon(Color color) {
     BitBoard queen = (color == Color.WHITE) ? whiteQueen : blackQueen;
     BitBoard pawns = (color == Color.WHITE) ? whitePawns : blackPawns;
-    boolean queenOnThrone = (!circles[0].andOperation(queen).isEmpty());
-    boolean arePawnsSurroundingThrone = (pawns.andOperation(circles[1]).equals(circles[1]));
+    boolean queenOnThrone = !circles[0].andOperation(queen).isEmpty();
+    boolean arePawnsSurroundingThrone = pawns.andOperation(circles[1]).equals(circles[1]);
     return arePawnsSurroundingThrone && queenOnThrone;
   }
 
@@ -872,8 +870,8 @@ public class AgonBoardImpl implements AgonBoard {
   private boolean isFree(int index) {
     BitBoard indexMask = new BitBoard(index);
     BitBoard occupiedZone = getOccupiedTotal();
-    return (!validZoneMask.andOperation(indexMask).isEmpty())
-        && (occupiedZone.andOperation(indexMask).isEmpty());
+    return !validZoneMask.andOperation(indexMask).isEmpty()
+        && occupiedZone.andOperation(indexMask).isEmpty();
   }
 
   /**
@@ -883,7 +881,8 @@ public class AgonBoardImpl implements AgonBoard {
    * @param color The {@link Color} of the player to check.
    * @return {@code true} if at least one piece is pending relocation; {@code false} otherwise.
    */
-  private boolean hasPiecesToRelocate(Color color) {
+  @Override
+  public boolean hasPiecesToRelocate(Color color) {
     if (color == Color.WHITE) {
       return whiteQueenToRelocate || whitePawnsToRelocate > 0;
     }

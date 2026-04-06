@@ -77,7 +77,7 @@ public class History {
         }
 
         Move mainMove = new Move(fromIdx, toIdx, moveColor, type);
-        List<Move> turnMoves = new java.util.ArrayList<>();
+        List<Move> turnMoves = new ArrayList<>();
         turnMoves.add(mainMove);
 
         if (capturePart != null && !capturePart.isEmpty()) {
@@ -220,7 +220,7 @@ public class History {
    * @return A list of formatted strings, e.g., ["O c3 c5", "X e6 f5"]
    */
   public List<String> toTextList() {
-    List<String> textMoves = new java.util.ArrayList<>();
+    List<String> textMoves = new ArrayList<>();
 
     for (HistoryInformations info : this.undoStack) {
       if (info.getMoves().isEmpty()) {

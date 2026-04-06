@@ -73,6 +73,8 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
   private AtomicBoolean debug;
 
+  private String boardFooter = "";
+
   /**
    * Internal initialization method. Sets default states for flags and constructs the default user
    * prompt.
@@ -352,7 +354,14 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   @Override
   public void onMatchUpdate(ReadOnlyMatch match) {
-    this.cliWln(ConsoleRenderer.getBoardRepresentation(match.getAgonBoard()));
+    String renderedBoard = ConsoleRenderer.getBoardRepresentation(match.getAgonBoard());
+
+    if (boardFooter != null && !boardFooter.isBlank()) {
+      renderedBoard += "\n" + boardFooter;
+    }
+
+    this.cliWln(renderedBoard);
+
     if (match.isMatchOver()) {
       Player winner = match.getWinner();
       String winnerInfo = (winner != null) ? winner.getColor().toString() : "UNKNOWN";
@@ -445,5 +454,13 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     }
 
     this.showMessage(sb.toString());
+  }
+
+  public void clearBoardDisplay() {
+    this.cliWln("");
+  }
+
+  public void setBoardFooter(String boardFooter) {
+    this.boardFooter = (boardFooter == null) ? "" : boardFooter;
   }
 }
