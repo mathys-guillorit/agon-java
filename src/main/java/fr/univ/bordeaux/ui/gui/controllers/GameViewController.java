@@ -1,8 +1,11 @@
 package fr.univ.bordeaux.ui.gui.controllers;
 
+import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -347,4 +350,48 @@ public class GameViewController {
       agonGui.sendCommand("show -history");
     }
   }
+
+  @FXML
+    public void editShortcuts() {
+      if (agonGui == null) return;
+      Dialog<Map<String, String>> dialog = new Dialog<>();
+      dialog.setTitle("Keyboard Shortcuts");
+      dialog.setHeaderText("Modify your shortcuts (ex: Ctrl+N, Alt+N)");
+
+      ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+      dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+      GridPane grid = new GridPane();
+      grid.setHgap(10);
+      grid.setVgap(10);
+      grid.setPadding(new Insets(20, 150, 10, 10));
+
+      Map<String, String> currentShortcuts = agonGui.getConfig().getShortcuts();
+      Map<String, TextField> fields = new java.util.HashMap<>();
+      int row = 0;
+      for (String key : currentShortcuts.keySet()) {
+        grid.add(new Label(key.replace("shortcut_", "") + " :"), 0, row);
+        TextField tf = new TextField(currentShortcuts.get(key));
+        grid.add(tf, 1, row);
+        fields.put(key, tf);
+        row++;
+        }
+      dialog.getDialogPane().setContent(grid);
+
+      dialog.setResultConverter(dialogButton -> {
+        if (dialogButton == saveButtonType) {
+            Map<String, String> newShortcuts = new HashMap<>();
+            fields.forEach((key, tf) -> newShortcuts.put(key, tf.getText().trim()));
+            return newShortcuts;
+        }
+        return null;
+      });
+      Optional<Map<String, String>> result = dialog.showAndWait();
+      result.ifPresent(newShortcuts -> {
+          currentShortcuts.putAll(newShortcuts);
+          AgonApp.refreshShortcuts();
+          showInfo("Shortcuts updated successfully !");
+      });
+  }
+
 }

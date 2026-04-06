@@ -33,31 +33,40 @@ public class AgonApp extends Application {
 
   // shortcuts
 
+    public static void refreshShortcuts() {
+      if (scene != null && agonGui != null) {
+          scene.getAccelerators().clear();
+          new AgonApp().setupShortcuts();
+      }
+    }
+
   /** Add shortcuts to GUI. */
-  private void setupShortcuts() {
-    Map<KeyCombination, Runnable> shortcuts = new HashMap<>();
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN), controller::startNewGame);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.L, KeyCombination.CONTROL_DOWN), controller::loadGame);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN), controller::saveGame);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.COMMA, KeyCombination.CONTROL_DOWN), controller::showConfig);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN), controller::showVersion);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN), controller::quitGame);
-    shortcuts.put(new KeyCodeCombination(KeyCode.U, KeyCombination.CONTROL_DOWN), controller::undo);
-    shortcuts.put(new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN), controller::redo);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN), controller::pauseGame);
-    shortcuts.put(
-        new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN), controller::requestHint);
-    shortcuts.forEach(
-        (keyCombination, runnable) -> {
-          scene.getAccelerators().put(keyCombination, runnable);
-        });
+  void setupShortcuts() {
+      if ( agonGui == null || agonGui.getConfig() == null || controller == null || scene == null ) {
+          return;
+      }
+      Map<String, String> conf = agonGui.getConfig().getShortcuts();
+
+      bindShortcut(conf.get("shortcut_new"), controller::startNewGame);
+      bindShortcut(conf.get("shortcut_load"), controller::loadGame);
+      bindShortcut(conf.get("shortcut_save"), controller::saveGame);
+      bindShortcut(conf.get("shortcut_config"), controller::showConfig);
+      bindShortcut(conf.get("shortcut_info"), controller::showVersion);
+      bindShortcut(conf.get("shortcut_quit"), controller::quitGame);
+      bindShortcut(conf.get("shortcut_undo"), controller::undo);
+      bindShortcut(conf.get("shortcut_redo"), controller::redo);
+      bindShortcut(conf.get("shortcut_pause"), controller::pauseGame);
+      bindShortcut(conf.get("shortcut_hint"), controller::requestHint);
+  }
+
+  private void bindShortcut(String shortcut, Runnable runnable) {
+      if (shortcut != null &&  !shortcut.isBlank()) {
+          try {
+              scene.getAccelerators().put(KeyCombination.valueOf(shortcut), runnable);
+          } catch (IllegalArgumentException e) {
+              System.err.println("[WARNING] Invalid shortcut " + shortcut);
+          }
+      }
   }
 
   ///  getters and setters

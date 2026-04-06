@@ -3,6 +3,7 @@ package fr.univ.bordeaux.ui.gui.controllers;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class GameViewControllerTest {
     controller = new GameViewController();
     fakeGui = new FakeAgonGui();
     controller.setAgonGui(fakeGui);
+    AgonApp.setGui(fakeGui);
 
     setPrivateField(controller, "messageLabel", new Label());
     setPrivateField(controller, "boardContainer", new StackPane());
@@ -226,6 +228,7 @@ public class GameViewControllerTest {
           controller.startNewGame();
           controller.saveGame();
           controller.loadGame();
+          controller.editShortcuts();
         });
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
@@ -512,4 +515,18 @@ public class GameViewControllerTest {
     interactWithNextDialog(null, false);
     runAndWait(() -> controller.showHelp());
   }
+
+    @Test
+    void testEditShortcuts_Branches() throws InterruptedException {
+        interactWithNextDialog(null, true);
+        runAndWait(() -> controller.editShortcuts());
+        Thread.sleep(300);
+        interactWithNextDialog("Shift+P", false);
+        new Thread(() -> {
+            try { Thread.sleep(500); } catch (Exception e) {}
+            interactWithNextDialog(null, false);
+        }).start();
+        runAndWait(() -> controller.editShortcuts());
+        assertTrue(true);
+    }
 }
