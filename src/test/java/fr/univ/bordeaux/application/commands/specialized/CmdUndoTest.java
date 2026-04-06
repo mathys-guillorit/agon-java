@@ -107,7 +107,7 @@ public class CmdUndoTest {
             CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), gameUserInterface)
         .execute(match);
     new CmdMove(
-            CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), gameUserInterface)
+            CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), gameUserInterface)
         .execute(match);
 
     // On demande un undo de 2 coups

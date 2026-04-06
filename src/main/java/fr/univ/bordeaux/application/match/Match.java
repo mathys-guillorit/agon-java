@@ -228,20 +228,22 @@ public abstract class Match implements MatchManager, ObservableMatch {
    *
    * @return {@code true} if undo was successful.
    */
-  @Override
   public boolean undo() {
     GameLogger.info("Undoing round...");
-    boolean res1 = agonBoard.undoMove();
-    if (!res1) {
-      GameLogger.warn("Undo failed: No moves to undo.");
-      return false;
-    }
-    boolean res2 = agonBoard.undoMove();
-    if (!res2) {
-      GameLogger.debug("Partial undo detected! Rolling back (Redo)...");
+
+    // On mémorise si on a réussi à annuler le premier
+    boolean resNoir = agonBoard.undoMove();
+    if (!resNoir) return false;
+
+    boolean resBlanc = agonBoard.undoMove();
+
+    // Si le deuxième échoue, on doit remettre le premier ! (Rollback)
+    if (!resBlanc) {
+      GameLogger.warn("Partial undo! Restoring last move...");
       agonBoard.redoMove();
       return false;
     }
+
     this.isSaved = false;
     this.notifyUi();
     return true;
