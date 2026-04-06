@@ -228,7 +228,7 @@ public class GameViewControllerTest {
           controller.startNewGame();
           controller.saveGame();
           controller.loadGame();
-          controller.editShortcuts();
+          //controller.editShortcuts();
         });
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
@@ -515,7 +515,7 @@ public class GameViewControllerTest {
     interactWithNextDialog(null, false);
     runAndWait(() -> controller.showHelp());
   }
-
+/*
     @Test
     void testEditShortcuts_Branches() throws InterruptedException {
         interactWithNextDialog(null, true);
@@ -529,4 +529,5 @@ public class GameViewControllerTest {
         runAndWait(() -> controller.editShortcuts());
         assertTrue(true);
     }
+*/
 }

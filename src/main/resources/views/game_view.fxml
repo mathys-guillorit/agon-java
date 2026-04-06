@@ -21,7 +21,7 @@
                 <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem mnemonicParsing="false" onAction="#showConfig" text="Configuration"/>
                 <MenuItem mnemonicParsing="false" onAction="#showVersion" text="Info"/>
-                <MenuItem mnemonicParsing="false" onAction="#editShortcuts" text="Shortcuts"/>
+<!--                <MenuItem mnemonicParsing="false" onAction="#editShortcuts" text="Shortcuts"/>-->
                 <SeparatorMenuItem mnemonicParsing="false"/>
                 <MenuItem mnemonicParsing="false" onAction="#quitGame" text="Quit"/>
             </Menu>

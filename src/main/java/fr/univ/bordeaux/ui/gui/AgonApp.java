@@ -45,6 +45,7 @@ public class AgonApp extends Application {
       if ( agonGui == null || agonGui.getConfig() == null || controller == null || scene == null ) {
           return;
       }
+      /*
       Map<String, String> conf = agonGui.getConfig().getShortcuts();
 
       bindShortcut(conf.get("shortcut_new"), controller::startNewGame);
@@ -57,6 +58,7 @@ public class AgonApp extends Application {
       bindShortcut(conf.get("shortcut_redo"), controller::redo);
       bindShortcut(conf.get("shortcut_pause"), controller::pauseGame);
       bindShortcut(conf.get("shortcut_hint"), controller::requestHint);
+      */
   }
 
   private void bindShortcut(String shortcut, Runnable runnable) {

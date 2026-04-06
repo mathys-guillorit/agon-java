@@ -350,7 +350,7 @@ public class GameViewController {
       agonGui.sendCommand("show -history");
     }
   }
-
+/*
   @FXML
     public void editShortcuts() {
       if (agonGui == null) return;
@@ -388,10 +388,13 @@ public class GameViewController {
       });
       Optional<Map<String, String>> result = dialog.showAndWait();
       result.ifPresent(newShortcuts -> {
+          newShortcuts.forEach((key, tf) -> {
+              agonGui.getConfig().saveShortcuts(key, tf);
+          });
           currentShortcuts.putAll(newShortcuts);
           AgonApp.refreshShortcuts();
           showInfo("Shortcuts updated successfully !");
       });
   }
-
+*/
 }
