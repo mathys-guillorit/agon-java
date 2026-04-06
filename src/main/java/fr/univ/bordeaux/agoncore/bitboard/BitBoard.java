@@ -129,7 +129,7 @@ public class BitBoard {
    * carry-over between the {@code low} and {@code high} segments.
    *
    * @param n The shift offset (corresponds to {@link Direction#getValue()}). Positive moves bits
-   * toward higher indices, negative toward lower.
+   *     toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(final int n) {
@@ -241,5 +241,10 @@ public class BitBoard {
     this.low = bitBoard.low;
     this.high = bitBoard.high;
     return this;
+  }
+
+  /** Returns a string representation of the raw bits for hashing purposes. */
+  public String getRawValueString() {
+    return this.low + ":" + this.high;
   }
 }

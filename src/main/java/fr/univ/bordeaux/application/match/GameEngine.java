@@ -77,19 +77,26 @@ public class GameEngine {
         GameLogger.info("GameEngine: Current turn -> " + p.getName() + " (" + p.getColor() + ")");
         matchManager.startTurn();
 
-        Future<CmdAction> futureAction = playerExecutor.submit(() -> {
-          try {
-            return p.getAction(this.cmds);
-          } catch (Exception e) {
-            GameLogger.error("GameEngine: Error during player " + p.getName() + " action: " + e.getMessage());
-            return null;
-          }
-        });
+        Future<CmdAction> futureAction =
+            playerExecutor.submit(
+                () -> {
+                  try {
+                    return p.getAction(this.cmds);
+                  } catch (Exception e) {
+                    GameLogger.error(
+                        "GameEngine: Error during player "
+                            + p.getName()
+                            + " action: "
+                            + e.getMessage());
+                    return null;
+                  }
+                });
 
         try {
           while (!futureAction.isDone()) {
             if (matchManager.isMatchOver()) {
-              GameLogger.debug("GameEngine: Match ended while waiting for action. Cancelling task.");
+              GameLogger.debug(
+                  "GameEngine: Match ended while waiting for action. Cancelling task.");
               futureAction.cancel(true);
               break;
             }

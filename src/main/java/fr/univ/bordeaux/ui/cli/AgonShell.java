@@ -390,7 +390,13 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     } else {
       String[] timers = match.getAllPlayersRemainingTime();
       if (timers != null) {
-        this.showInfo("Current turn: " + match.getCurrentPlayer().getColor() + " Remaining time : White " + timers[0] + " Black " + timers[1]);
+        this.showInfo(
+            "Current turn: "
+                + match.getCurrentPlayer().getColor()
+                + " Remaining time : White "
+                + timers[0]
+                + " Black "
+                + timers[1]);
       } else {
         this.showInfo("Current turn: " + match.getCurrentPlayer().getColor());
       }
@@ -406,8 +412,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   public void showMessage(String message) {
     this.cliW(message);
   }
-
-
 
   /**
    * Returns the execution state of the shell.

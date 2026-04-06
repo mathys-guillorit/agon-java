@@ -143,7 +143,7 @@ public final class CmdSet extends Cmd {
             gameConfig.setBlackAi(val);
             feedback.append("  - Black is Ai: ").append(val).append("\n");
           }
-          default ->{
+          default -> {
             GameLogger.error("CmdSet: Unknown parameter attempted -> " + param);
             this.getCtx().showError("Unknown parameter: " + param);
             this.getCtx().showInfo(this.getDescription());

@@ -275,6 +275,7 @@ public class AgonShellTest {
     // mais si tu as modifié pour retourner "", ajuste ici :
     assertNull(result, "L'input devrait être null pour une ligne vide");
   }
+
   @Test
   @DisplayName("test init sets default values")
   void testInit() {
@@ -548,10 +549,13 @@ public class AgonShellTest {
   @Test
   @DisplayName("getUserInput : Ctrl+D (EOF) retourne 'quit'")
   void testGetUserInputEOF() throws Exception {
-    LineReader eofReader = new FakeLineReader("") {
-      @Override
-      public String readLine(String prompt) { return null; }
-    };
+    LineReader eofReader =
+        new FakeLineReader("") {
+          @Override
+          public String readLine(String prompt) {
+            return null;
+          }
+        };
 
     AgonShell shell = new AgonShell(createFakeTerminal(), eofReader, cmds);
     String result = shell.getUserInput();
@@ -599,13 +603,14 @@ public class AgonShellTest {
   @Test
   @DisplayName("getUserInput : Interruption Blitz (Thread interrupted) retourne null ou vide")
   void testGetUserInputBlitzTimeout() throws Exception {
-    LineReader reader = new FakeLineReader("") {
-      @Override
-      public String readLine(String prompt) {
-        Thread.currentThread().interrupt(); // Simule l'interruption
-        throw new UserInterruptException("Timeout");
-      }
-    };
+    LineReader reader =
+        new FakeLineReader("") {
+          @Override
+          public String readLine(String prompt) {
+            Thread.currentThread().interrupt(); // Simule l'interruption
+            throw new UserInterruptException("Timeout");
+          }
+        };
     AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
     String result = shell.getUserInput();
 

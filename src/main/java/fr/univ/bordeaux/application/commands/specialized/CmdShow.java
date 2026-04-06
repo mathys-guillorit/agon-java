@@ -127,7 +127,7 @@ public final class CmdShow extends Cmd {
    * @return false.
    */
   private boolean showHistory(MatchManager match) {
-    if (match==null|| match.isMatchOver()) {
+    if (match == null || match.isMatchOver()) {
       this.getCtx().showError("Cannot show history because you are not currently in match.\n");
       return false;
     }
@@ -184,7 +184,11 @@ public final class CmdShow extends Cmd {
    */
   private boolean showConfiguration(MatchManager match) {
     if (match != null) {
-      this.getCtx().showMessage("This is the configuration for the match you are playing it may have some differences between the real configuration if you have used the SET command.\n"+match.getGameConfig().toString() + "\n");
+      this.getCtx()
+          .showMessage(
+              "This is the configuration for the match you are playing it may have some differences between the real configuration if you have used the SET command.\n"
+                  + match.getGameConfig().toString()
+                  + "\n");
     } else {
       super.getCtx().showMessage(this.gameConfig.toString() + "\n");
     }

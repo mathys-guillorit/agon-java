@@ -4,9 +4,10 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 
 /**
  * Defines the control behaviors for an Agon match.
- * <p>This interface extends {@link ReadOnlyMatch} to provide write access and
- * game flow control, such as moving pieces, managing history (undo/redo),
- * and handling the match lifecycle (pause/quit).</p>
+ *
+ * <p>This interface extends {@link ReadOnlyMatch} to provide write access and game flow control,
+ * such as moving pieces, managing history (undo/redo), and handling the match lifecycle
+ * (pause/quit).
  */
 public interface MatchManager extends ReadOnlyMatch {
 
@@ -20,8 +21,9 @@ public interface MatchManager extends ReadOnlyMatch {
 
   /**
    * Reverts the last turn played.
-   * <p>This operation is only possible if there is enough move history (typically
-   * requiring at least one full turn to have been completed).</p>
+   *
+   * <p>This operation is only possible if there is enough move history (typically requiring at
+   * least one full turn to have been completed).
    *
    * @return {@code true} if the undo operation succeeded, {@code false} if no history is available.
    */
@@ -29,8 +31,9 @@ public interface MatchManager extends ReadOnlyMatch {
 
   /**
    * Replays a turn that was previously undone.
-   * <p>This operation is only possible if an {@link #undo()} was performed
-   * immediately prior and no new moves have been made since.</p>
+   *
+   * <p>This operation is only possible if an {@link #undo()} was performed immediately prior and no
+   * new moves have been made since.
    *
    * @return {@code true} if the redo operation succeeded, {@code false} otherwise.
    */
@@ -39,28 +42,27 @@ public interface MatchManager extends ReadOnlyMatch {
   /**
    * Suspends the current turn state, typically used for pausing timers in timed modes.
    *
-   * @return {@code true} if the match was successfully paused, {@code false} if the
-   * current match type does not support pausing.
+   * @return {@code true} if the match was successfully paused, {@code false} if the current match
+   *     type does not support pausing.
    */
   boolean pause();
 
   /**
    * Updates the persistence status of the match.
    *
-   * @param isSaved {@code true} if the current state has been synchronized with
-   * a save file, {@code false} otherwise.
+   * @param isSaved {@code true} if the current state has been synchronized with a save file, {@code
+   *     false} otherwise.
    */
   void setIsSaved(boolean isSaved);
 
-  /**
-   * Terminates the current match session and sets the status to finished.
-   */
+  /** Terminates the current match session and sets the status to finished. */
   void quit();
 
   /**
    * Initializes the beginning of a new turn.
-   * <p>This method handles setup logic such as starting turn-based timers
-   * or refreshing per-turn state variables.</p>
+   *
+   * <p>This method handles setup logic such as starting turn-based timers or refreshing per-turn
+   * state variables.
    */
   void startTurn();
 }

@@ -48,16 +48,14 @@ public class CmdSetTest {
     config.setDebug(false);
 
     // Simulation: set verbose=true debug=true
-    CmdAction cmd =
-        cmds.get("set").get().createNew(new String[] {"verbose=true", "debug=true"});
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"verbose=true", "debug=true"});
     boolean result = cmd.execute(null);
 
     assertTrue(result);
     assertTrue(config.isVerbose());
     assertTrue(config.isDebug());
     assertTrue(outContent.toString().contains("Verbose: true"));
-    cmd =
-        cmds.get("set").get().createNew(new String[] {"verbose=false", "debug=false"});
+    cmd = cmds.get("set").get().createNew(new String[] {"verbose=false", "debug=false"});
     cmd.execute(null);
     assertFalse(config.isVerbose());
     assertFalse(config.isDebug());
@@ -72,14 +70,14 @@ public class CmdSetTest {
             .get()
             .createNew(
                 new String[] {
-                    "aiDepth=8",
-                    "aiMode=minimax",
-                    "aiTimeLimit=1800",
-                    "aiIterativeDeepening=true",
-                    "aiHeuristic=mixed",
-                    "blitzmode=true",
-                    "aiActive=true",
-                    "timeout=10"
+                  "aiDepth=8",
+                  "aiMode=minimax",
+                  "aiTimeLimit=1800",
+                  "aiIterativeDeepening=true",
+                  "aiHeuristic=mixed",
+                  "blitzmode=true",
+                  "aiActive=true",
+                  "timeout=10"
                 });
     cmd.execute(null);
 
@@ -132,7 +130,8 @@ public class CmdSetTest {
     String desc = cmd.getDescription();
 
     // Check if the description reflects the new mandatory format
-    assertTrue(desc.contains("Usage: set PARAM=VALUE"), "Description should show the correct format");
+    assertTrue(
+        desc.contains("Usage: set PARAM=VALUE"), "Description should show the correct format");
     assertTrue(desc.contains("set aiDepth=5"), "Description should provide a valid example");
   }
 }

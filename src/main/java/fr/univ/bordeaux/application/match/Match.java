@@ -18,28 +18,36 @@ import java.util.List;
 
 /**
  * Abstract class representing an Agon Match between two players.
- * <p>This class manages the core game state, including the board, players,
- * turn switching, and move history. It implements the Observer pattern to
- * notify the UI of any state changes.</p>
+ *
+ * <p>This class manages the core game state, including the board, players, turn switching, and move
+ * history. It implements the Observer pattern to notify the UI of any state changes.
  */
 public abstract class Match implements MatchManager, ObservableMatch {
 
   /** The physical game board. */
   private final AgonBoard agonBoard;
+
   /** The player whose turn it is currently. */
   private Player currentPlayer;
+
   /** The first player participant. */
   private final Player player1;
+
   /** The second player participant. */
   private final Player player2;
+
   /** The current status of the match (RUNNING, FINISHED, etc.). */
   private MatchStatus status;
+
   /** Configuration settings for the current game. */
   private final GameConfig gameConfig;
+
   /** Flag indicating if the current state has been saved to a file. */
   private boolean isSaved = false;
+
   /** The UI observer to be notified of updates. */
   private MatchObserver UiObserver;
+
   /** The winner of the match, null if the game is ongoing or a draw. */
   private Player winner;
 
@@ -89,21 +97,27 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /**
    * Attempts to move a piece on the board.
-   * <p>Validates the move against the current player and the board state.
-   * If successful, it checks for win conditions and triggers end-of-turn actions.</p>
+   *
+   * <p>Validates the move against the current player and the board state. If successful, it checks
+   * for win conditions and triggers end-of-turn actions.
    *
    * @param move The move to be executed.
    * @return {@code true} if the move was successful and applied, {@code false} otherwise.
    */
   public boolean move(Move move) {
-    GameLogger.info("trying to play move "+move.toString());
+    GameLogger.info("trying to play move " + move.toString());
     if (this.status == MatchStatus.FINISHED) {
       return false;
     }
     PieceType piece = agonBoard.getPieceAt(move.getFrom());
     if (piece != null) {
       if (piece.getColor() != currentPlayer.getColor()) {
-        GameLogger.info("Move rejected: " + currentPlayer.getName() + " cannot move " + piece.getColor() + " pieces.");
+        GameLogger.info(
+            "Move rejected: "
+                + currentPlayer.getName()
+                + " cannot move "
+                + piece.getColor()
+                + " pieces.");
         return false;
       }
     }
@@ -131,17 +145,23 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return winner;
   }
 
-  /** @return The player playing with the White pieces. */
+  /**
+   * @return The player playing with the White pieces.
+   */
   public Player getWhitePlayer() {
     return (player1.getColor() == Color.WHITE) ? player1 : player2;
   }
 
-  /** @return The player playing with the Black pieces. */
+  /**
+   * @return The player playing with the Black pieces.
+   */
   public Player getBlackPlayer() {
     return (player1.getColor() == Color.BLACK) ? player1 : player2;
   }
 
-  /** @param winner The player to be set as the winner. */
+  /**
+   * @param winner The player to be set as the winner.
+   */
   protected void setWinner(Player winner) {
     this.winner = winner;
   }
@@ -178,7 +198,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /**
    * Replays the last undone move.
-   * <p>In Agon, this typically involves replaying a full round (two moves).</p>
+   *
+   * <p>In Agon, this typically involves replaying a full round (two moves).
    *
    * @return {@code true} if redo was successful.
    */
@@ -202,7 +223,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /**
    * Cancels the last moves performed.
-   * <p>In Agon, this typically undoes a full round (two moves).</p>
+   *
+   * <p>In Agon, this typically undoes a full round (two moves).
    *
    * @return {@code true} if undo was successful.
    */
@@ -210,20 +232,31 @@ public abstract class Match implements MatchManager, ObservableMatch {
   public boolean undo() {
     GameLogger.info("Undoing round...");
     boolean res1 = agonBoard.undoMove();
-    boolean res2 = agonBoard.undoMove();
-    if (res1 || res2) {
-      this.isSaved = false;
+    if (!res1) {
+      GameLogger.warn("Undo failed: No moves to undo.");
+      return false;
     }
+    boolean res2 = agonBoard.undoMove();
+    if (!res2) {
+      GameLogger.debug("Partial undo detected! Rolling back (Redo)...");
+      agonBoard.redoMove();
+      return false;
+    }
+    this.isSaved = false;
     this.notifyUi();
-    return res1 && res2;
+    return true;
   }
 
-  /** @return {@code true} if the current match state is saved to persistent storage. */
+  /**
+   * @return {@code true} if the current match state is saved to persistent storage.
+   */
   public boolean isSaved() {
     return isSaved;
   }
 
-  /** @param isSaved The new saved status of the match. */
+  /**
+   * @param isSaved The new saved status of the match.
+   */
   @Override
   public void setIsSaved(boolean isSaved) {
     this.isSaved = isSaved;
@@ -257,38 +290,52 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return null;
   }
 
-  /** @return The current {@link MatchStatus}. */
+  /**
+   * @return The current {@link MatchStatus}.
+   */
   public MatchStatus getMatchStatus() {
     return status;
   }
 
-  /** @return {@code true} if the match has reached a terminal state. */
+  /**
+   * @return {@code true} if the match has reached a terminal state.
+   */
   public boolean isMatchOver() {
     return this.status == MatchStatus.FINISHED;
   }
 
-  /** @param status The new status to be assigned to the match. */
+  /**
+   * @param status The new status to be assigned to the match.
+   */
   protected void setMatchStatus(MatchStatus status) {
     this.status = status;
   }
 
-  /** @return The {@link Player} who is currently active. */
+  /**
+   * @return The {@link Player} who is currently active.
+   */
   public Player getCurrentPlayer() {
     return currentPlayer;
   }
 
-  /** @param observer The observer to register for match updates. */
+  /**
+   * @param observer The observer to register for match updates.
+   */
   @Override
   public void setObserver(MatchObserver observer) {
     this.UiObserver = observer;
   }
 
-  /** @return The underlying board instance. */
+  /**
+   * @return The underlying board instance.
+   */
   public AgonBoard getAgonBoard() {
     return agonBoard;
   }
 
-  /** @return The game configuration associated with this match. */
+  /**
+   * @return The game configuration associated with this match.
+   */
   public GameConfig getGameConfig() {
     return gameConfig;
   }
@@ -299,13 +346,15 @@ public abstract class Match implements MatchManager, ObservableMatch {
   /** Switches the current active player. */
   protected void switchPlayer() {
     currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;
-    GameLogger.info("Turn switched to: " + currentPlayer.getName() + " (" + currentPlayer.getColor() + ")");
+    GameLogger.info(
+        "Turn switched to: " + currentPlayer.getName() + " (" + currentPlayer.getColor() + ")");
   }
 
   @Override
   public String[] getAllPlayersRemainingTime() {
     return null;
   }
+
   /**
    * Checks whether the given player color must perform a replacement move.
    *
@@ -315,5 +364,4 @@ public abstract class Match implements MatchManager, ObservableMatch {
   public boolean isReplacementMoveRequired(Color color) {
     return agonBoard != null && agonBoard.hasPiecesToRelocate(color);
   }
-
 }

@@ -64,6 +64,8 @@ public class CmdCreate extends Cmd {
     options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
     options.addOption(
         null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
+    options.addOption(
+        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
   }
 
   /**

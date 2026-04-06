@@ -9,7 +9,6 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 final class NetworkCommandTestSupport {
 

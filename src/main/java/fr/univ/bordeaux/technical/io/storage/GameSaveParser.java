@@ -64,7 +64,8 @@ public class GameSaveParser extends AbstractFileParser<GameSaveData> {
     try {
       return builder.build();
     } catch (IOException e) {
-      fr.univ.bordeaux.technical.utils.GameLogger.error("Failed to build save data: " + e.getMessage());
+      fr.univ.bordeaux.technical.utils.GameLogger.error(
+          "Failed to build save data: " + e.getMessage());
       return null;
     }
   }

@@ -171,21 +171,23 @@ class GameLauncherTest {
     org.apache.commons.cli.CommandLine cmd =
         new org.apache.commons.cli.DefaultParser().parse(options, new String[] {"-g"});
 
-    assertDoesNotThrow(() -> invokePrivate(
-        launcher,
-        "startGame",
-        new Class<?>[] {
-            GameConfig.class,
-            org.apache.commons.cli.CommandLine.class,
-            AgonRegister.class,
-            String.class, // AJOUT : pour filePathToLoad
-            AppContext.class
-        },
-        new GameConfig(),
-        cmd,
-        new AgonRegister<CmdAction>(),
-        null, // AJOUT : valeur pour filePathToLoad
-        new AppContext(new LocalProfile("Alice"))));
+    assertDoesNotThrow(
+        () ->
+            invokePrivate(
+                launcher,
+                "startGame",
+                new Class<?>[] {
+                  GameConfig.class,
+                  org.apache.commons.cli.CommandLine.class,
+                  AgonRegister.class,
+                  String.class, // AJOUT : pour filePathToLoad
+                  AppContext.class
+                },
+                new GameConfig(),
+                cmd,
+                new AgonRegister<CmdAction>(),
+                null, // AJOUT : valeur pour filePathToLoad
+                new AppContext(new LocalProfile("Alice"))));
   }
 
   @Test
@@ -245,6 +247,7 @@ class GameLauncherTest {
                 null, // <--- VALEUR MANQUANTE AJOUTÉE (filePathToLoad)
                 new AppContext(new LocalProfile("Alice"))));
   }
+
   @Test
   @DisplayName("createDefaultConfigFile ne plante pas")
   void createDefaultConfigFileTest() throws Exception {

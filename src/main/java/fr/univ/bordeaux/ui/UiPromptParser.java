@@ -82,14 +82,19 @@ public class UiPromptParser {
     // Try to find the command in the registry, otherwise fallback to move/relocation parsing
     return registry
         .get(firstWord)
-        .map(action -> {
-          GameLogger.debug("UiPromptParser: Recognized registered command '" + firstWord + "'");
-          return action.createNew(options);
-        })
-        .orElseGet(() -> {
-          GameLogger.debug("UiPromptParser: No registered command found for '" + firstWord + "', falling back to regex.");
-          return handleDefault(line, ui);
-        });
+        .map(
+            action -> {
+              GameLogger.debug("UiPromptParser: Recognized registered command '" + firstWord + "'");
+              return action.createNew(options);
+            })
+        .orElseGet(
+            () -> {
+              GameLogger.debug(
+                  "UiPromptParser: No registered command found for '"
+                      + firstWord
+                      + "', falling back to regex.");
+              return handleDefault(line, ui);
+            });
   }
 
   /**
@@ -141,7 +146,8 @@ public class UiPromptParser {
       }
     }
 
-    GameLogger.debug("UiPromptParser: Input '" + lowerInput + "' did not match any command or move pattern.");
+    GameLogger.debug(
+        "UiPromptParser: Input '" + lowerInput + "' did not match any command or move pattern.");
     ui.showError("Invalid command. Please use help to display more information.\n");
     return null;
   }

@@ -41,6 +41,7 @@ public interface ReadOnlyMatch {
   String getCurrentPlayerRemainingTime();
 
   String[] getAllPlayersRemainingTime();
+
   /**
    * Determines whether the game has reached a final state.
    *

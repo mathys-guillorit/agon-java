@@ -1,7 +1,5 @@
 package fr.univ.bordeaux.application.ai;
 
-import fr.univ.bordeaux.technical.utils.GameLogger;
-
 /** Run an Example using Ai. */
 public class AiExample {
 

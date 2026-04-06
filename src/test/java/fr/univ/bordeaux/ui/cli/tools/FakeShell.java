@@ -5,7 +5,6 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 
@@ -37,6 +36,7 @@ public class FakeShell extends AgonShell {
 
   @Override
   public void showInfo(String msg) {}
+
   @Override
   public String getUserInput() {
     return "";

@@ -7,10 +7,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * A thread-safe timer used to manage player reflection time during a game.
- * * <p>This timer runs in a background daemon thread. it uses a {@link ReentrantLock}
- * and a {@link Condition} to efficiently pause and resume countdowns without
- * busy-waiting. When the time reaches zero, a specified callback is executed.</p>
+ * A thread-safe timer used to manage player reflection time during a game. *
+ *
+ * <p>This timer runs in a background daemon thread. it uses a {@link ReentrantLock} and a {@link
+ * Condition} to efficiently pause and resume countdowns without busy-waiting. When the time reaches
+ * zero, a specified callback is executed.
  */
 public class GameTimer {
   /** The remaining time in milliseconds, updated whenever the timer stops. */
@@ -82,8 +83,8 @@ public class GameTimer {
 
   /**
    * The main loop for the background thread.
-   * <p>Handles the waiting phase when paused and periodically checks
-   * for expiration when running.</p>
+   *
+   * <p>Handles the waiting phase when paused and periodically checks for expiration when running.
    */
   private void runTimer() {
     try {
@@ -118,8 +119,9 @@ public class GameTimer {
 
   /**
    * Starts or resumes the timer.
-   * <p>Records the start time and signals the background thread to begin
-   * checking the remaining duration.</p>
+   *
+   * <p>Records the start time and signals the background thread to begin checking the remaining
+   * duration.
    */
   public void start() {
     lock.lock();
@@ -137,8 +139,9 @@ public class GameTimer {
 
   /**
    * Stops (pauses) the timer.
-   * <p>Calculates and saves the exact remaining time so it can be
-   * resumed later from the same point.</p>
+   *
+   * <p>Calculates and saves the exact remaining time so it can be resumed later from the same
+   * point.
    */
   public void stop() {
     lock.lock();
@@ -153,9 +156,10 @@ public class GameTimer {
     }
   }
 
-  /** * Handles time expiration in a synchronized manner.
-   * <p>Stops the countdown, sets remaining time to zero, and executes
-   * the timeout callback.</p>
+  /**
+   * * Handles time expiration in a synchronized manner.
+   *
+   * <p>Stops the countdown, sets remaining time to zero, and executes the timeout callback.
    */
   private void handleTimeout() {
     lock.lock();
@@ -188,8 +192,9 @@ public class GameTimer {
 
   /**
    * Permanently kills the timer thread.
-   * <p>Sets the alive flag to false and signals the condition to release
-   * the background thread from its waiting state.</p>
+   *
+   * <p>Sets the alive flag to false and signals the condition to release the background thread from
+   * its waiting state.
    */
   public void kill() {
     GameLogger.info("GameTimer: Killing background thread.");

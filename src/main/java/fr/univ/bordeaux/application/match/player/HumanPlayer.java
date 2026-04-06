@@ -8,9 +8,9 @@ import fr.univ.bordeaux.ui.UiPromptParser;
 
 /**
  * Represents a human participant in the Agon match.
- * <p>This class handles human behavior by interacting with the user interface
- * to retrieve input and delegating the parsing of that input to the
- * {@link UiPromptParser} to generate game actions.</p>
+ *
+ * <p>This class handles human behavior by interacting with the user interface to retrieve input and
+ * delegating the parsing of that input to the {@link UiPromptParser} to generate game actions.
  */
 public class HumanPlayer extends AbstractPlayer {
 
@@ -41,10 +41,10 @@ public class HumanPlayer extends AbstractPlayer {
 
   /**
    * Prompts the user for input and converts it into a command action.
-   * <p>This method retrieves a raw string from the UI. If the input is null,
-   * empty, or contains only whitespace, it returns null. Otherwise, it
-   * uses the {@link UiPromptParser} to map the input string to a specific
-   * {@link CmdAction}.</p>
+   *
+   * <p>This method retrieves a raw string from the UI. If the input is null, empty, or contains
+   * only whitespace, it returns null. Otherwise, it uses the {@link UiPromptParser} to map the
+   * input string to a specific {@link CmdAction}.
    *
    * @param cmds The registry of available commands to match against user input.
    * @return The interpreted {@link CmdAction}, or {@code null} if input is invalid or empty.

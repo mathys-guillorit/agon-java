@@ -1,10 +1,9 @@
 package fr.univ.bordeaux.technical.utils;
 
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.LogManager;
-import java.util.logging.Handler;
 
 public class GameLogger {
   private static GameLogger instance;
@@ -26,6 +25,7 @@ public class GameLogger {
     consoleHandler.setLevel(Level.OFF); // Éteint aussi le handler
     this.logger.addHandler(consoleHandler);
   }
+
   public static synchronized GameLogger getInstance() {
     if (instance == null) {
       instance = new GameLogger();

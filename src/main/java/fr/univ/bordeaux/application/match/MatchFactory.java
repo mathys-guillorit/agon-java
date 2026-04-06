@@ -16,8 +16,8 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Map;
 
 /**
- * Factory class responsible for instantiating the appropriate Match type based on game configuration.
- * It handles player creation (Human or AI) and board initialization.
+ * Factory class responsible for instantiating the appropriate Match type based on game
+ * configuration. It handles player creation (Human or AI) and board initialization.
  */
 public class MatchFactory {
 
@@ -64,7 +64,8 @@ public class MatchFactory {
   /**
    * Helper method to instantiate a Player (Human or AI) based on the AI strategy map.
    *
-   * @param aiMap A map containing AI strategies for each color (null strategy implies a Human player).
+   * @param aiMap A map containing AI strategies for each color (null strategy implies a Human
+   *     player).
    * @param color The {@link Color} of the player to create.
    * @param agonBoard The board the player will interact with (required for AI).
    * @param gameUi The UI used for human input.
@@ -77,7 +78,12 @@ public class MatchFactory {
       GameUserInterface gameUi) {
     AgonAi aiStrategy = aiMap.get(color);
     if (aiStrategy != null) {
-      GameLogger.info("MatchFactory: " + color + " player assigned to AI (" + aiStrategy.getClass().getSimpleName() + ")");
+      GameLogger.info(
+          "MatchFactory: "
+              + color
+              + " player assigned to AI ("
+              + aiStrategy.getClass().getSimpleName()
+              + ")");
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);
     } else {
       GameLogger.info("MatchFactory: " + color + " player assigned to HUMAN.");
