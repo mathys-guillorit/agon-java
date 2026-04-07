@@ -7,6 +7,7 @@ import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.ObservableMatch;
@@ -56,10 +57,6 @@ public class CmdCreate extends Cmd {
     this.args = args;
     Options options = super.getOptions();
     options.addOption("a", "ai", true, "Set the [Color] player with an Ai.\n");
-    options.addOption(
-        "p1Color", "player1Color", true, "Define the color for the player 1 (white/black)");
-    options.addOption(
-        "p2Color", "player2Color", true, "Define the color for the player 2 (white/black)");
     options.addOption("b", "blitz", false, "Set the game mode to blitz\n");
     options.addOption("t", "time", true, "Set the reflexion time for both player\n");
     options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
@@ -67,6 +64,8 @@ public class CmdCreate extends Cmd {
     options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
     options.addOption(
         null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
+    options.addOption(
+        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
   }
 
   /**
@@ -77,17 +76,17 @@ public class CmdCreate extends Cmd {
    */
   @Override
   public boolean execute(MatchManager unused) {
+    GameLogger.info("Executing 'new' command...");
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine cmd = parser.parse(super.getOptions(), args);
       GameConfig matchConfig = this.gameConfig.copy();
       ConfigBinder.bindOptionsToConfig(cmd, matchConfig, super.getCtx());
-
-      // On lance le nouveau match
       MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
+      GameLogger.error(e.getMessage());
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
       return false;
     }

@@ -40,7 +40,7 @@ public final class CmdPause extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match == null) {
+    if (match == null || match.isMatchOver()) {
       this.getCtx()
           .showInfo(
               "You must create a match before using this command. Type help for more informations");

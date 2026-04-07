@@ -57,14 +57,15 @@ public class GameSaveParser extends AbstractFileParser<GameSaveData> {
         this.currentState.parseLine(line, builder);
 
       } catch (IOException e) {
-        System.err.println("Save parsing error: " + e.getMessage());
+        fr.univ.bordeaux.technical.utils.GameLogger.error("Save parsing error: " + e.getMessage());
       }
     }
 
     try {
       return builder.build();
     } catch (IOException e) {
-      System.err.println("Failed to build save data: " + e.getMessage());
+      fr.univ.bordeaux.technical.utils.GameLogger.error(
+          "Failed to build save data: " + e.getMessage());
       return null;
     }
   }

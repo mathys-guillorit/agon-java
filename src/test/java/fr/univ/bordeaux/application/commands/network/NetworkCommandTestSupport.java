@@ -9,7 +9,6 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 final class NetworkCommandTestSupport {
 
@@ -70,14 +69,6 @@ final class NetworkCommandTestSupport {
 
     @Override
     public void showInfo(String msg) {}
-
-    @Override
-    public AtomicBoolean getDebugMode() {
-      return new AtomicBoolean(false);
-    }
-
-    @Override
-    public void setVerbose(boolean state) {}
 
     @Override
     public String getUserInput() {

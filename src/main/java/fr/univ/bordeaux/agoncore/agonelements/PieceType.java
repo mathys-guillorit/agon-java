@@ -97,6 +97,13 @@ public enum PieceType {
     return pawnType;
   }
 
+  /**
+   * Returns a human-readable string representation of the piece type. *
+   *
+   * <p>The format combines the color and the rank (e.g., "WhiteQueen", "BlackPawn").
+   *
+   * @return A {@link String} describing the piece.
+   */
   @Override
   public String toString() {
     if (this.isQueen) {

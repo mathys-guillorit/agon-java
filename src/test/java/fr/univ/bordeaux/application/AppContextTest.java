@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.application.match.MatchManager;
@@ -24,7 +25,7 @@ class AppContextTest {
     MatchManager lastPreviewed = null;
 
     FakeGameEngine() {
-      super(null, null);
+      super(null, new AgonRegister<>());
     }
 
     @Override

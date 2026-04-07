@@ -10,6 +10,7 @@ import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.technical.io.storage.GameSaveData;
 import fr.univ.bordeaux.technical.io.storage.GameSaveParser;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 
 /**
  * Independent executor for the "Contest" mode of the Agon game.
@@ -72,7 +73,7 @@ public class ContestMatch {
               + CoordinateMapper.toAbaPro(bestMove.getDestination());
       System.out.println(move);
     } else {
-      System.err.println("[ERROR] The AI could not find any valid move.");
+      GameLogger.error("[ERROR] The AI could not find any valid move.");
     }
   }
 }

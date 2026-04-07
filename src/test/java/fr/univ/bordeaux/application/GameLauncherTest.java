@@ -180,11 +180,13 @@ class GameLauncherTest {
                   GameConfig.class,
                   org.apache.commons.cli.CommandLine.class,
                   AgonRegister.class,
+                  String.class, // AJOUT : pour filePathToLoad
                   AppContext.class
                 },
                 new GameConfig(),
                 cmd,
                 new AgonRegister<CmdAction>(),
+                null, // AJOUT : valeur pour filePathToLoad
                 new AppContext(new LocalProfile("Alice"))));
   }
 
@@ -224,12 +226,14 @@ class GameLauncherTest {
     org.apache.commons.cli.CommandLine cmd =
         new org.apache.commons.cli.DefaultParser().parse(options, new String[] {"-g"});
 
+    // Correction ici : ajout de String.class pour filePathToLoad
     Method m =
         GameLauncher.class.getDeclaredMethod(
             "startGame",
             GameConfig.class,
             org.apache.commons.cli.CommandLine.class,
             AgonRegister.class,
+            String.class, // <--- PARAMÈTRE MANQUANT AJOUTÉ
             AppContext.class);
     m.setAccessible(true);
 
@@ -240,6 +244,7 @@ class GameLauncherTest {
                 new GameConfig(),
                 cmd,
                 new AgonRegister<CmdAction>(),
+                null, // <--- VALEUR MANQUANTE AJOUTÉE (filePathToLoad)
                 new AppContext(new LocalProfile("Alice"))));
   }
 

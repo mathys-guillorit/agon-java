@@ -286,6 +286,6 @@ class MatchTest {
   @Test
   @DisplayName("Remaining time : retourne null")
   void testRemainingTime() {
-    assertNull(match.getRemainingTime());
+    assertNull(match.getCurrentPlayerRemainingTime());
   }
 }

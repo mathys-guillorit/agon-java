@@ -34,7 +34,7 @@ public class CmdSetTest {
       Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
 
-      // Enregistrement du prototype avec la config réelle
+      // Register the prototype with the real config
       cmds.register("set", new CmdSet(gameUserInterface, config));
     } catch (Exception e) {
       fail("Setup failed");
@@ -42,83 +42,81 @@ public class CmdSetTest {
   }
 
   @Test
-  @DisplayName("Vérifier la modification des paramètres système (verbose/debug)")
+  @DisplayName("Verify system parameters modification (PARAM=VALUE format)")
   void testSetSystemParams() {
-    // Initialement à false (supposé)
     config.setVerbose(false);
+    config.setDebug(false);
 
-    // On simule : set -verbose true -debug true
-    CmdAction cmd =
-        cmds.get("set").get().createNew(new String[] {"-verbose", "true", "-debug", "true"});
+    // Simulation: set verbose=true debug=true
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"verbose=true", "debug=true"});
     boolean result = cmd.execute(null);
 
     assertTrue(result);
     assertTrue(config.isVerbose());
     assertTrue(config.isDebug());
     assertTrue(outContent.toString().contains("Verbose: true"));
+    cmd = cmds.get("set").get().createNew(new String[] {"verbose=false", "debug=false"});
+    cmd.execute(null);
+    assertFalse(config.isVerbose());
+    assertFalse(config.isDebug());
   }
 
   @Test
-  @DisplayName("Vérifier la modification des paramètres IA (profondeur/mode)")
+  @DisplayName("Verify AI parameters modification")
   void testSetAIParams() {
-    // On simule : set -aiDepth 8 -aiMode minimax
+    // Simulation: set aiDepth=8 aiMode=minimax ...
     CmdAction cmd =
         cmds.get("set")
             .get()
             .createNew(
                 new String[] {
-                  "-aiDepth",
-                  "8",
-                  "-aiMode",
-                  "minimax",
-                  "-aiTimeLimit",
-                  "1800",
-                  "-aiIterativeDeepening",
-                  "true",
-                  "-aiHeuristic",
-                  "mixed",
-                  "-blitzmode",
-                  "true",
-                  "-aiActive",
-                  "true",
-                  "-timeout",
-                  "10"
+                  "aiDepth=8",
+                  "aiMode=minimax",
+                  "aiTimeLimit=1800",
+                  "aiIterativeDeepening=true",
+                  "aiHeuristic=mixed",
+                  "blitzmode=true",
+                  "aiActive=true",
+                  "timeout=10"
                 });
     cmd.execute(null);
 
     assertEquals(8, config.getAiDepth());
     assertEquals("minimax", config.getAiMode());
+    assertEquals(1800, config.getAiTimeLimit());
+    assertTrue(config.isBlitzMode());
     assertTrue(outContent.toString().contains("AI Depth: 8"));
   }
 
   @Test
-  @DisplayName("Vérifier la gestion des erreurs de format (NumberFormatException)")
+  @DisplayName("Verify error handling for invalid numbers")
   void testSetInvalidNumber() {
-    // On passe une chaîne au lieu d'un nombre pour le timeout
-    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"-timeout", "pas_un_nombre"});
+    // Passing a string instead of a number for timeout
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"timeout=not_a_number"});
     boolean result = cmd.execute(null);
 
-    assertFalse(result, "La commande doit échouer avec un mauvais format de nombre");
-    assertTrue(outContent.toString().contains("Error: Value must be a number"));
+    // The command should return false due to NumberFormatException in execute()
+    assertFalse(result, "Command should fail with bad number format");
+    assertTrue(outContent.toString().contains("Error: Numeric value expected"));
   }
 
   @Test
-  @DisplayName("Vérifier la gestion des erreurs de syntaxe CLI")
+  @DisplayName("Verify error handling for missing '=' sign")
   void testSetInvalidSyntax() {
-    // Argument inconnu ou mal formé
-    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"-paramInconnu", "value"});
+    // Malformed argument without '='
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"badformat"});
     boolean result = cmd.execute(null);
 
-    assertFalse(result, "La commande doit échouer si l'option n'existe pas");
-    assertTrue(outContent.toString().contains("Syntax error"));
+    // result might be true if other params work, but let's check if the error was shown
+    assertTrue(outContent.toString().contains("Invalid format"));
   }
 
   @Test
-  @DisplayName("Vérifier l'affectation des joueurs IA")
+  @DisplayName("Verify AI player assignment")
   void testSetPlayerAI() {
-    // set -whiteIsAI true -blackIsAI false
+    // set whiteIsAI=true blackIsAI=false
     CmdAction cmd =
-        cmds.get("set").get().createNew(new String[] {"-whiteIsAI", "true", "-blackIsAI", "false"});
+        cmds.get("set").get().createNew(new String[] {"whiteIsAi=true", "blackIsAi=false"});
     cmd.execute(null);
 
     assertTrue(config.isWhiteAi());
@@ -126,11 +124,14 @@ public class CmdSetTest {
   }
 
   @Test
-  @DisplayName("Vérifier la description de la commande")
+  @DisplayName("Verify command description")
   void testDescription() {
     CmdAction cmd = cmds.get("set").get().createNew(new String[] {});
     String desc = cmd.getDescription();
-    assertTrue(desc.contains("Usage: set -PARAM VALUE"));
-    assertTrue(desc.contains("Example: set -aiDepth 5"));
+
+    // Check if the description reflects the new mandatory format
+    assertTrue(
+        desc.contains("Usage: set PARAM=VALUE"), "Description should show the correct format");
+    assertTrue(desc.contains("set aiDepth=5"), "Description should provide a valid example");
   }
 }

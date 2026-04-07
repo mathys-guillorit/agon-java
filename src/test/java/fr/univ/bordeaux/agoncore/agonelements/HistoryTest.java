@@ -43,7 +43,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should add HistoryInformations to undo stack")
   void testAddMove() {
-    history.add(move1);
+    history.add(move1, null);
     assertFalse(history.isEmptyUndo());
     assertEquals(move1, history.getHeadUndo());
   }
@@ -51,7 +51,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should move HistoryInformations from undo to redo stack on undo")
   void testUndo() {
-    history.add(move1);
+    history.add(move1, null);
     // On récupère l'objet complet qui contient la liste des mouvements
     HistoryInformations undoneInfo = history.undo();
 
@@ -64,7 +64,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should move HistoryInformations from redo back to undo on redo")
   void testRedo() {
-    history.add(move1);
+    history.add(move1, null);
     history.undo();
 
     HistoryInformations redoneInfo = history.redo();
@@ -85,9 +85,9 @@ class HistoryTest {
   @Test
   @DisplayName("Should handle multiple moves correctly (LIFO)")
   void testMultipleMoves() {
-    history.add(move1);
-    history.add(move2);
-    history.add(move3);
+    history.add(move1, null);
+    history.add(move2, null);
+    history.add(move3, null);
     assertEquals(move3, history.getHeadUndo());
 
     history.undo();
@@ -109,7 +109,7 @@ class HistoryTest {
     assertTrue(history.isEmptyUndo());
     assertTrue(history.isEmptyRedo());
 
-    history.add(move1);
+    history.add(move1, null);
     assertFalse(history.isEmptyUndo());
 
     history.undo();
@@ -119,8 +119,8 @@ class HistoryTest {
   @Test
   @DisplayName("Should correctly export history to ABA-pro text format (including Queens)")
   void testToTextList() {
-    history.add(move1);
-    history.add(move2);
+    history.add(move1, null);
+    history.add(move2, null);
 
     List<String> textList = history.toTextList();
 
@@ -190,7 +190,7 @@ class HistoryTest {
 
     HistoryInformations complexTurn =
         new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
-    complexHistory.add(complexTurn);
+    complexHistory.add(complexTurn, null);
 
     List<String> textList = complexHistory.toTextList();
 

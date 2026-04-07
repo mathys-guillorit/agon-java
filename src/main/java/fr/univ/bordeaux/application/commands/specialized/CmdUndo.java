@@ -61,8 +61,8 @@ public final class CmdUndo extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match == null) {
-      this.getCtx().showError("No active match found.\n");
+    if (match == null || match.isMatchOver()) {
+      this.getCtx().showError("No active match found you can't undo now.\n");
       return false;
     }
 

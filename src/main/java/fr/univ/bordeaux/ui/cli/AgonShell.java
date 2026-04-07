@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.player.Player;
+import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
 import java.io.IOException;
@@ -84,6 +85,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHa + "> ";
+    GameLogger.info("AgonShell: CLI components initialized.");
   }
 
   /**
@@ -108,6 +110,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .getKeyMaps()
         .get(LineReader.MAIN)
         .bind(new Reference(LineReader.HISTORY_INCREMENTAL_SEARCH_BACKWARD), KeyMap.ctrl('R'));
+    GameLogger.info("AgonShell: Terminal session started.");
   }
 
   /**
@@ -117,6 +120,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   public void loadMainMenu(String mainMenu) {
     this.mainMenuAscii = mainMenu;
+    GameLogger.debug("AgonShell: Main menu ASCII loaded.");
   }
 
   /**
@@ -124,6 +128,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * shutdown.
    */
   public void leave() {
+    GameLogger.info("AgonShell: Requesting application shutdown.");
     this.running.set(false);
     this.safeCloseTerminal();
   }
@@ -152,33 +157,41 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   public String getUserInput() {
     try {
       String readLine = this.reader.readLine(this.userPrompt);
+
+      // Cas du Ctrl+D (EOF)
       if (readLine == null) {
+        GameLogger.debug("AgonShell: EOF received (null input).");
         return "quit";
       }
+
+      // --- CORRECTION : TRIM ET VÉRIFICATION ---
       line = readLine.trim();
       if (line.isEmpty()) {
-        return null;
+        return null; // Retourne null pour les lignes vides (espaces inclus)
       }
+      // ------------------------------------------
+
       this.reader.getHistory().add(line);
+      GameLogger.debug("AgonShell: User entered command: " + line);
       return line;
 
     } catch (UserInterruptException e) {
       // Si le thread est interrompu par le chrono, on ne veut pas quitter
       if (Thread.currentThread().isInterrupted()) {
+        GameLogger.debug("AgonShell: Input interrupted by match timer.");
+        Thread.interrupted(); // Nettoie le flag d'interruption
         return null;
       }
-      // Sinon, c'est un vrai Ctrl+C -> on déclenche la sauvegarde via CmdQuit
+      GameLogger.info("AgonShell: User interrupted (Ctrl+C).");
       return "quit";
 
     } catch (org.jline.reader.EndOfFileException e) {
-      // Ctrl+D
-      if (Thread.currentThread().isInterrupted()) {
-        return null;
-      }
       return "quit";
 
     } catch (Exception e) {
-      // Autre erreur ou interruption système
+      if (e.getMessage() != null) {
+        GameLogger.error("AgonShell: Unexpected error: " + e.getMessage());
+      }
       return null;
     }
   }
@@ -190,7 +203,9 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     try {
       this.cliWln("System: Terminal session closed. Bye!");
       this.terminal.close();
+      GameLogger.info("AgonShell: Terminal closed successfully.");
     } catch (IOException e) {
+      GameLogger.error("AgonShell: Failed to close terminal: " + e.getMessage());
       this.showError("Failed to close terminal: " + e.getMessage());
     }
   }
@@ -221,7 +236,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       return;
     }
 
-    // Delegation to the specific command completer
     CmdAction cmd = cmdOpt.get();
     if (cmd.getAutoCompleter() != null) {
       cmd.getAutoCompleter().complete(reader, line, candidates);
@@ -290,6 +304,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
 
   @Override
   public void showError(String msg) {
+    GameLogger.error("AgonShell (UI Display): " + msg);
     this.cliW(this.msgHa + this.msgBe + " " + msg + "\n");
   }
 
@@ -300,6 +315,9 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   @Override
   public void showInfo(String msg) {
+    // On ne loggue pas systématiquement en INFO ici car c'est souvent de l'affichage pur
+    // pour l'utilisateur, mais on peut le mettre en DEBUG
+    GameLogger.debug("AgonShell (UI Display Info): " + msg);
     this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
 
@@ -310,6 +328,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   @Override
   public void showWarn(String msg) {
+    GameLogger.debug("AgonShell (UI Display Warning): " + msg);
     this.cliW(this.msgHa + this.msgBw + " " + msg + "\n");
   }
 
@@ -335,6 +354,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
 
   /** Displays the help menu art to the terminal. */
   public void showHelp() {
+    GameLogger.debug("AgonShell: Displaying help menu.");
     this.cliWln(this.mainMenuAscii);
   }
 
@@ -365,9 +385,21 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     if (match.isMatchOver()) {
       Player winner = match.getWinner();
       String winnerInfo = (winner != null) ? winner.getColor().toString() : "UNKNOWN";
+      GameLogger.info("AgonShell: Match over. Winner: " + winnerInfo);
       this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
     } else {
-      this.showInfo("Current turn: " + match.getCurrentPlayer().getColor());
+      String[] timers = match.getAllPlayersRemainingTime();
+      if (timers != null) {
+        this.showInfo(
+            "Current turn: "
+                + match.getCurrentPlayer().getColor()
+                + " Remaining time : White "
+                + timers[0]
+                + " Black "
+                + timers[1]);
+      } else {
+        this.showInfo("Current turn: " + match.getCurrentPlayer().getColor());
+      }
     }
   }
 
@@ -382,30 +414,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Toggles the verbosity of shell output.
-   *
-   * @param state true to enable detailed feedback.
-   */
-  public void setVerbose(boolean state) {
-    this.verbose = state;
-    this.showInfo("Verbosity is now " + (state ? "ON" : "OFF"));
-  }
-
-  public boolean getVerbose() {
-    return this.verbose;
-  }
-
-  /**
-   * Provides access to the debug mode state for external command logic.
-   *
-   * @return AtomicBoolean reference.
-   */
-  @Override
-  public AtomicBoolean getDebugMode() {
-    return this.debug;
-  }
-
-  /**
    * Returns the execution state of the shell.
    *
    * @return AtomicBoolean reference.
@@ -417,11 +425,10 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   /**
    * Explicit.
    *
-   * @param moves {@link List}
+   * @param history {@link List}
    */
-  public void displayHistory(List<MoveDtO> moves) {
-    List<MoveDtO> history = moves;
-
+  public void displayHistory(List<MoveDtO> history) {
+    GameLogger.debug("AgonShell: Displaying history with " + history.size() + " moves.");
     if (history.isEmpty()) {
       this.showInfo("The history is currently empty.");
       return;

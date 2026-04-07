@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
 /**
@@ -57,21 +58,20 @@ public class CmdQuit extends Cmd {
    */
   @Override
   public String getDescription() {
-    return "Usage: quit\n"
-        + "Description:\n"
-        + "- If in a match: quits the current game\n"
-        + "- If connected to a server: disconnects from it\n"
-        + "- Otherwise: exits the application\n";
+    final StringBuilder sb = new StringBuilder();
+    sb.append("Usage: quit (or Ctrl+C)\n");
+    sb.append("Description: Exits the application.");
+    sb.append("If connected to a server: disconnects from it.");
+    sb.append(" You will be prompted to save your current ");
+    sb.append("progress before leaving.\n");
+    return sb.toString();
   }
 
   /**
-   * Executes the quit command.
-   *
-   * <p>The behavior depends on the current application state:
+   * Executes the shutdown sequence.
    *
    * <ul>
-   *   <li>If a match is active → quit the match
-   *   <li>Else if connected → disconnect from server
+   *   <li>if connected → disconnect from server
    *   <li>Else → exit application
    * </ul>
    *
@@ -96,8 +96,8 @@ public class CmdQuit extends Cmd {
       while (!resolved) {
         this.getCtx().showMessage("Save the game before quitting? [y/N] \n");
         String response = this.getCtx().getUserInput();
-
-        if (response != null && response.equalsIgnoreCase("y")) {
+        GameLogger.debug("User response for save before quit: " + response);
+        if (response != null && (response.equalsIgnoreCase("y"))) {
           this.getCtx().showMessage("Enter filename: \n");
           String filename = this.getCtx().getUserInput();
 

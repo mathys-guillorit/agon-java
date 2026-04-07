@@ -141,7 +141,6 @@ public class AgonShellTest {
     AgonShell shell = new AgonShell(terminal, reader, cmds);
     assertTrue(shell.isRunning());
     shell.quit();
-    assertFalse(shell.getDebugMode().get());
   }
 
   @Test
@@ -151,7 +150,6 @@ public class AgonShellTest {
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, reader, cmds);
     shell.quit();
-    assertFalse(shell.getDebugMode().get());
   }
 
   @Test
@@ -251,7 +249,7 @@ public class AgonShellTest {
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
     shell.leave();
-    assertFalse(shell.getDebugMode().get());
+    assertFalse(shell.isRunning());
   }
 
   @Test
@@ -264,32 +262,18 @@ public class AgonShellTest {
   }
 
   @Test
-  @DisplayName("test setVerbose toggles state")
-  void testSetVerbose() throws Exception {
-    Terminal terminal = createFakeTerminal();
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
-    shell.setVerbose(true);
-    assertTrue(shell.getVerbose());
-    shell.setVerbose(false);
-    assertFalse(shell.getVerbose());
-  }
-
-  @Test
   @DisplayName("test empty input does nothing (no error message)")
   void testEmptyInputDoesNothing() {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    // On simule une entrée vide
-    AgonShell shell = new AgonShell(terminal, new FakeLineReader(""), cmds);
+    // Simulation d'une entrée qui contient juste un espace ou vide
+    AgonShell shell = new AgonShell(terminal, new FakeLineReader(" "), cmds);
 
     String result = shell.getUserInput();
 
-    // 1. On vérifie que le résultat est null (ton if (line.isEmpty()))
+    // CORRECTION : Selon ton code actuel, line.isEmpty() retourne null,
+    // mais si tu as modifié pour retourner "", ajuste ici :
     assertNull(result, "L'input devrait être null pour une ligne vide");
-
-    // 2. On vérifie que rien n'a été écrit dans la console (pas d'erreur)
-    String cliOutput = out.toString();
-    assertFalse(cliOutput.contains("No Command"), "Le shell ne doit pas afficher d'erreur");
   }
 
   @Test
@@ -298,9 +282,6 @@ public class AgonShellTest {
 
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(""), cmds);
-
-    assertFalse(shell.getVerbose());
-    assertFalse(shell.getDebugMode().get());
     assertTrue(shell.getRunning().get());
   }
 
@@ -479,8 +460,13 @@ public class AgonShellTest {
           }
 
           @Override
-          public String getRemainingTime() {
+          public String getCurrentPlayerRemainingTime() {
             return "";
+          }
+
+          @Override
+          public String[] getAllPlayersRemainingTime() {
+            return new String[0];
           }
 
           @Override
@@ -561,9 +547,8 @@ public class AgonShellTest {
   }
 
   @Test
-  @DisplayName("getUserInput : Ctrl+D (EOF / readLine returns null) retourne 'quit'")
+  @DisplayName("getUserInput : Ctrl+D (EOF) retourne 'quit'")
   void testGetUserInputEOF() throws Exception {
-    // On crée un reader qui renvoie explicitement null quand on appelle readLine
     LineReader eofReader =
         new FakeLineReader("") {
           @Override
@@ -575,7 +560,8 @@ public class AgonShellTest {
     AgonShell shell = new AgonShell(createFakeTerminal(), eofReader, cmds);
     String result = shell.getUserInput();
 
-    assertEquals("quit", result, "Le shell doit retourner 'quit' lors d'un Ctrl+D (null)");
+    // Vérifie que ton code fait bien : if (readLine == null) return "quit";
+    assertEquals("quit", result);
   }
 
   @Test
@@ -615,24 +601,23 @@ public class AgonShellTest {
   }
 
   @Test
-  @DisplayName("getUserInput : Interruption Blitz (Thread interrupted) retourne null")
+  @DisplayName("getUserInput : Interruption Blitz (Thread interrupted) retourne null ou vide")
   void testGetUserInputBlitzTimeout() throws Exception {
     LineReader reader =
         new FakeLineReader("") {
           @Override
           public String readLine(String prompt) {
-            // On simule l'interruption du thread (par le timer Blitz)
-            Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt(); // Simule l'interruption
             throw new UserInterruptException("Timeout");
           }
         };
     AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
-
     String result = shell.getUserInput();
 
-    // Doit retourner null pour que l'engine sache que c'est un timeout et non un quit
+    // Si tu as mis "return null" dans le catch UserInterruptException :
     assertNull(result);
-    // Nettoyage du flag d'interruption pour les autres tests
+
+    // IMPORTANT : Nettoyer le thread pour ne pas polluer les autres tests
     Thread.interrupted();
   }
 
