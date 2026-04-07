@@ -196,6 +196,11 @@ public class AgonRegisterTest {
     public Options getOptions() {
       return null;
     }
+
+    @Override
+    public String getHelp() {
+      return "";
+    }
   }
 
   private static class TestCmd implements CmdAction {
@@ -228,6 +233,11 @@ public class AgonRegisterTest {
     @Override
     public Options getOptions() {
       return null;
+    }
+
+    @Override
+    public String getHelp() {
+      return "";
     }
   }
 }

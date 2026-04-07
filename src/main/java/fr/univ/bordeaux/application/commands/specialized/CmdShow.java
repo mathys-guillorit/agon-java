@@ -186,7 +186,9 @@ public final class CmdShow extends Cmd {
     if (match != null) {
       this.getCtx()
           .showMessage(
-              "This is the configuration for the match you are playing it may have some differences between the real configuration if you have used the SET command.\n"
+              "This is the configuration for the match you are playing "
+                  + "it may have some differences between the real configuration "
+                  + "if you have used the SET command.\n"
                   + match.getGameConfig().toString()
                   + "\n");
     } else {
