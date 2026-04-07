@@ -5,31 +5,42 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-/** default for all commands (UI, GUI, etc..) */
+/** Default for all commands (UI, GUI, etc..). */
 public interface CmdAction {
 
-  /** execute actions provided by the specific command */
+  /** Execute actions provided by the specific command. */
   boolean execute(MatchManager match);
 
+  /**
+   * Create a new Game.
+   *
+   * @param args user input into the programm from CLI.
+   * @return {@link CmdAction}
+   */
   CmdAction createNew(String[] args);
 
-  /** show help for the specific sub (inherited) command */
+  /** Show help for the specific sub (inherited) command. */
   String getDescription();
 
   /**
-   * override in sub commands
+   * Override in sub commands.
    *
-   * @return Completer for completing user writing with tab keycap
+   * @return {@link Completer} for completing user writing with tab keycap
    */
   @Nonnull
   Completer getAutoCompleter();
 
   /**
-   * get command full name (it's not like options (example: -h --help) there is no reduced form)
+   * Get command full name (it's not like options (example: -h --help) there is no reduced form).
    *
    * @return String command name
    */
-  public String getName();
+  String getName();
 
-  public Options getOptions();
+  /**
+   * Get options of the command.
+   *
+   * @return {@link Options}
+   */
+  Options getOptions();
 }

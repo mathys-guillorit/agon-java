@@ -1,0 +1,19 @@
+[system]
+verbose = false
+debug = false
+placement = false
+
+[game]
+blitz = false
+timeout = 30
+
+[ai_setup]
+ai = true
+ai_color = NONE
+
+[ai_tuning]
+ai_mode = minimax
+ai_depth = 4
+ai_time_limit = 5
+ai_iterative_deepening = true
+ai_heuristic = mixed

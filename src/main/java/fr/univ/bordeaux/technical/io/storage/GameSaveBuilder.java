@@ -19,8 +19,9 @@ public class GameSaveBuilder {
 
   /**
    * Flags the {@code [settings]} section as present in the parsed save file.
-   * <p>This allows the builder to verify structural integrity, ensuring the section
-   * header exists even if its contents are malformed or missing.</p>
+   *
+   * <p>This allows the builder to verify structural integrity, ensuring the section header exists
+   * even if its contents are malformed or missing.
    */
   public void markSettingsSection() {
     this.hasSettingsSection = true;
@@ -28,8 +29,9 @@ public class GameSaveBuilder {
 
   /**
    * Flags the {@code [game]} section as present in the parsed save file.
-   * <p>This flag is checked during the {@link #build()} phase to prevent the creation
-   * of a game state from a structurally corrupted or truncated file.</p>
+   *
+   * <p>This flag is checked during the {@link #build()} phase to prevent the creation of a game
+   * state from a structurally corrupted or truncated file.
    */
   public void markGameSection() {
     this.hasGameSection = true;
@@ -37,9 +39,10 @@ public class GameSaveBuilder {
 
   /**
    * Flags the {@code [history]} section as present in the parsed save file.
-   * <p>This is crucial for distinguishing between a valid new game (where the section
-   * exists but contains no played moves yet) and a corrupted file (where the section
-   * is missing entirely due to an unclosed comment block or truncation).</p>
+   *
+   * <p>This is crucial for distinguishing between a valid new game (where the section exists but
+   * contains no played moves yet) and a corrupted file (where the section is missing entirely due
+   * to an unclosed comment block or truncation).
    */
   public void markHistorySection() {
     this.hasHistorySection = true;

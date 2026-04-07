@@ -1,9 +1,14 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -29,9 +34,9 @@ public class CmdHelpTest {
       Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
 
-      // On utilise tes VRAIES commandes pour le test
+      AppContext context = new AppContext(new LocalProfile("test"));
       cmds.register("help", new CmdHelp(gameUserInterface, cmds));
-      cmds.register("quit", new CmdQuit(gameUserInterface));
+      cmds.register("quit", new CmdQuit(gameUserInterface, context));
 
     } catch (Exception e) {
       fail("Setup failed: " + e.getMessage());
@@ -41,14 +46,13 @@ public class CmdHelpTest {
   @Test
   @DisplayName("Vérifier l'aide globale avec la liste des commandes")
   void testGlobalHelp() {
-    // Appel de "help" sans argument
+
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {});
     boolean result = cmd.execute(null);
 
     assertTrue(result);
     String output = outContent.toString();
 
-    // On vérifie que les têtes de colonnes et les commandes enregistrées sont là
     assertTrue(output.contains("AVAILABLE COMMANDS"));
     assertTrue(output.contains("help"));
     assertTrue(output.contains("quit"));
@@ -64,15 +68,15 @@ public class CmdHelpTest {
     assertTrue(result);
     String output = outContent.toString();
 
-    // On vérifie que le titre HELP: QUIT et sa vraie description apparaissent
     assertTrue(output.contains("HELP: QUIT"));
-    assertTrue(output.contains("Exits the game"));
+    assertTrue(output.contains("Usage: quit"));
+    assertTrue(output.contains("disconnects from it"));
   }
 
   @Test
   @DisplayName("Vérifier le message d'erreur pour une commande qui n'existe pas")
   void testTargetedHelpFailure() {
-    // Appel de "help nimportequoi"
+
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {"nimportequoi"});
     boolean result = cmd.execute(null);
 
@@ -85,7 +89,6 @@ public class CmdHelpTest {
   void testMetadata() {
     CmdAction cmd = cmds.get("help").get();
     assertEquals("help", cmd.getName());
-    // On vérifie que la description ne crash pas (renvoie "" selon ton code)
     assertNotNull(cmd.getDescription());
   }
 }

@@ -8,47 +8,101 @@ import fr.univ.bordeaux.application.ai.strategy.AgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.AiPlayer;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.match.player.NetworkPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Map;
 
+/**
+ * Factory class responsible for instantiating the appropriate Match type based on game
+ * configuration. It handles player creation (Human or AI) and board initialization.
+ */
 public class MatchFactory {
 
-  public static Match createMatch(GameConfig config, GameUserInterface gameUI) {
-    // 1. On récupère la map des cerveaux IA (certaines couleurs seront null)
-    Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
+  /**
+   * Creates a new match with a default board configuration.
+   *
+   * @param config The global {@link GameConfig} containing match rules.
+   * @param gameUi The {@link GameUserInterface} used for player interactions.
+   * @return A fully initialized {@link Match} instance.
+   */
+  public static Match createMatch(GameConfig config, GameUserInterface gameUi) {
     AgonBoard agonBoard = new AgonBoardImpl();
     agonBoard.initBaseConfiguration();
-
-    // 2. On crée les vrais objets Player
-    Player white = createPlayerFromAiMap(aiMap, Color.WHITE, agonBoard, gameUI);
-    Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUI);
-    /*if (config.isBlitzMode()) {
-      // On récupère les deux temps distincts dans la config
-      long whiteTime = config.getWhiteInitialTime();
-      long blackTime = config.getBlackInitialTime();
-
-      return new BlitzMatch(agonBoard,white, black, whiteTime, blackTime);
-    }
-    else if (mode.equals("contest")) {
-      return new ContestMatch(agonBoard,white, black);
-    } else {*/
-    return new StandardMatch(agonBoard, white, black);
+    GameLogger.debug("MatchFactory: Initialized default AgonBoard.");
+    return createMatch(config, gameUi, agonBoard, Color.WHITE);
   }
 
+  /**
+   * Creates a match with a specific board state and starting player.
+   *
+   * @param config The global {@link GameConfig}.
+   * @param gameUi The user interface.
+   * @param agonBoard A pre-initialized {@link AgonBoard}.
+   * @param startingColor The {@link Color} of the player who takes the first turn.
+   * @return A {@link BlitzMatch} or {@link StandardMatch} depending on the config.
+   */
+  public static Match createMatch(
+      GameConfig config, GameUserInterface gameUi, AgonBoard agonBoard, Color startingColor) {
+    GameLogger.info("MatchFactory: Creating new match instance...");
+    Map<Color, AbstractAgonAi> aiMap = AiFactory.createAiMap(config);
+
+    Player white = createPlayerFromAiMap(aiMap, Color.WHITE, agonBoard, gameUi);
+    Player black = createPlayerFromAiMap(aiMap, Color.BLACK, agonBoard, gameUi);
+
+    if (config.isBlitzMode()) {
+      GameLogger.info("MatchFactory: Mode = BLITZ (Timeout: " + config.getTimeout() + " min).");
+      return new BlitzMatch(agonBoard, white, black, config.getTimeout(), config, startingColor);
+    } else {
+      GameLogger.info("MatchFactory: Mode = STANDARD.");
+      return new StandardMatch(agonBoard, white, black, config, startingColor);
+    }
+  }
+
+  /**
+   * Helper method to instantiate a Player (Human or AI) based on the AI strategy map.
+   *
+   * @param aiMap A map containing AI strategies for each color (null strategy implies a Human
+   *     player).
+   * @param color The {@link Color} of the player to create.
+   * @param agonBoard The board the player will interact with (required for AI).
+   * @param gameUi The UI used for human input.
+   * @return A concrete {@link Player} instance.
+   */
   private static Player createPlayerFromAiMap(
       Map<Color, AbstractAgonAi> aiMap,
       Color color,
       AgonBoard agonBoard,
-      GameUserInterface gameUI) {
+      GameUserInterface gameUi) {
     AgonAi aiStrategy = aiMap.get(color);
     if (aiStrategy != null) {
-      // C'est une IA selon la factory de ton collègue
+      GameLogger.info(
+          "MatchFactory: "
+              + color
+              + " player assigned to AI ("
+              + aiStrategy.getClass().getSimpleName()
+              + ")");
       return new AiPlayer("IA_" + color, color, agonBoard, aiStrategy);
     } else {
-      // C'est null, donc c'est un humain
-      return new HumanPlayer("Joueur_" + color, color, gameUI);
+      GameLogger.info("MatchFactory: " + color + " player assigned to HUMAN.");
+      return new HumanPlayer("Joueur_" + color, color, gameUi);
     }
+  }
+
+  /**
+   * Creates an online match for two remote human players.
+   *
+   * <p>This method does not use UI, config, or AI. It is intended for server-side network matches.
+   */
+  public static Match createOnlineMatch(String whitePlayerName, String blackPlayerName) {
+    AgonBoard agonBoard = new AgonBoardImpl();
+    agonBoard.initBaseConfiguration();
+
+    Player white = new NetworkPlayer(whitePlayerName, Color.WHITE);
+    Player black = new NetworkPlayer(blackPlayerName, Color.BLACK);
+
+    return new StandardMatch(agonBoard, white, black, new GameConfig());
   }
 }

@@ -4,8 +4,11 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -31,8 +34,15 @@ public class History {
   /** Stack containing turns that were reverted and can be re-applied. */
   private final Stack<HistoryInformations> redoStack = new Stack<>();
 
+  private final Map<String, Integer> configurationCounts = new HashMap<>();
+  // On garde aussi une pile des signatures pour pouvoir les décrémenter lors d'un undo
+  private final Stack<String> signatureStack = new Stack<>();
+  private final Stack<String> redoSignatureStack = new Stack<>();
+
   /** Initializes an empty game history. */
-  public History() {}
+  public History() {
+    GameLogger.debug("History: New empty history initialized.");
+  }
 
   /**
    * Reconstructs the move history from a list of ABA-pro strings.
@@ -42,9 +52,12 @@ public class History {
    * @param textMoves The list of moves parsed from the save file.
    */
   public History(List<String> textMoves) {
+    GameLogger.debug("History: Reconstructing history from " + textMoves.size() + " lines.");
     for (String textMove : textMoves) {
       String cleanMove = textMove.trim();
-      if (cleanMove.isEmpty()) continue;
+      if (cleanMove.isEmpty()) {
+        continue;
+      }
 
       String mainPart = cleanMove;
       String capturePart = null;
@@ -68,14 +81,14 @@ public class History {
         PieceType type;
         if (pieceChar == 'Q') {
           type = PieceType.WHITE_QUEEN;
-        } else if(pieceChar == 'q') {
+        } else if (pieceChar == 'q') {
           type = PieceType.BLACK_QUEEN;
         } else {
           type = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
         }
 
         Move mainMove = new Move(fromIdx, toIdx, moveColor, type);
-        List<Move> turnMoves = new java.util.ArrayList<>();
+        List<Move> turnMoves = new ArrayList<>();
         turnMoves.add(mainMove);
 
         if (capturePart != null && !capturePart.isEmpty()) {
@@ -91,15 +104,17 @@ public class History {
                 char capPieceChar = capParts[0].charAt(0);
                 int capIdx = CoordinateMapper.fromCoordinateString(capParts[1]);
 
-                Color capColor = (capPieceChar == 'O' || capPieceChar == 'Q') ? Color.WHITE : Color.BLACK;
+                Color capColor =
+                    (capPieceChar == 'O' || capPieceChar == 'Q') ? Color.WHITE : Color.BLACK;
 
                 PieceType capType;
                 if (capPieceChar == 'Q') {
                   capType = PieceType.WHITE_QUEEN;
-                } else if(capPieceChar == 'q') {
+                } else if (capPieceChar == 'q') {
                   capType = PieceType.BLACK_QUEEN;
                 } else {
-                  capType = (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
+                  capType =
+                      (moveColor == Color.WHITE) ? PieceType.WHITE_PAWN : PieceType.BLACK_PAWN;
                 }
 
                 Move capMove = new Move(capIdx, -1, capColor, capType);
@@ -109,9 +124,11 @@ public class History {
           }
         }
 
+        GameLogger.debug("History: Parsing move " + cleanMove);
         this.undoStack.push(new HistoryInformations(turnMoves, type, moveColor));
       }
     }
+    GameLogger.info("History: Successfully loaded " + undoStack.size() + " turns from text.");
   }
 
   /**
@@ -142,9 +159,17 @@ public class History {
    *
    * @param informations The {@link HistoryInformations} containing the move sequence to record.
    */
-  public void add(HistoryInformations informations) {
+  public void add(HistoryInformations informations, String boardSignature) {
     undoStack.push(informations);
-    redoStack.clear();
+    signatureStack.push(boardSignature);
+
+    configurationCounts.put(
+        boardSignature, configurationCounts.getOrDefault(boardSignature, 0) + 1);
+    if (!redoStack.isEmpty()) {
+      GameLogger.debug("History: Clearing redo stack (new move played, branching timeline).");
+      redoStack.clear();
+      redoSignatureStack.clear();
+    }
   }
 
   /**
@@ -157,10 +182,27 @@ public class History {
    */
   public HistoryInformations undo() {
     if (undoStack.isEmpty()) {
+      GameLogger.debug("History: Undo requested but stack is empty.");
       return null;
+    }
+    if (!signatureStack.isEmpty()) {
+      String lastSig = signatureStack.pop();
+      redoSignatureStack.push(lastSig);
+
+      int count = configurationCounts.getOrDefault(lastSig, 0);
+      if (count <= 1) {
+        configurationCounts.remove(lastSig);
+      } else {
+        configurationCounts.put(lastSig, count - 1);
+      }
     }
     HistoryInformations informations = undoStack.pop();
     redoStack.push(informations);
+    GameLogger.info(
+        "History: Undone turn ("
+            + informations.getColor()
+            + "). UndoStack size: "
+            + undoStack.size());
     return informations;
   }
 
@@ -173,8 +215,22 @@ public class History {
    * @throws java.util.EmptyStackException if the redo stack is empty.
    */
   public HistoryInformations redo() {
+    if (redoStack.isEmpty()) {
+      GameLogger.debug("History: Redo requested but stack is empty.");
+      return null;
+    }
+    if (!redoSignatureStack.isEmpty()) {
+      String sigToRestore = redoSignatureStack.pop();
+      signatureStack.push(sigToRestore);
+      configurationCounts.put(sigToRestore, configurationCounts.getOrDefault(sigToRestore, 0) + 1);
+    }
     HistoryInformations informations = redoStack.pop();
     undoStack.push(informations);
+    GameLogger.info(
+        "History: Redone turn ("
+            + informations.getColor()
+            + "). UndoStack size: "
+            + undoStack.size());
     return informations;
   }
 
@@ -205,7 +261,7 @@ public class History {
    *     chronological order.
    */
   public List<HistoryInformations> toList() {
-    return new ArrayList<>(undoStack).reversed();
+    return new ArrayList<>(undoStack);
   }
 
   /**
@@ -216,10 +272,13 @@ public class History {
    * @return A list of formatted strings, e.g., ["O c3 c5", "X e6 f5"]
    */
   public List<String> toTextList() {
-    List<String> textMoves = new java.util.ArrayList<>();
+    GameLogger.debug("History: Generating text list of moves for saving...");
+    List<String> textMoves = new ArrayList<>();
 
     for (HistoryInformations info : this.undoStack) {
-      if (info.getMoves().isEmpty()) continue;
+      if (info.getMoves().isEmpty()) {
+        continue;
+      }
 
       Move primaryMove = info.getMoves().get(0);
 
@@ -265,5 +324,9 @@ public class History {
     }
 
     return textMoves;
+  }
+
+  public boolean isTripleRepetition(String currentSignature) {
+    return configurationCounts.getOrDefault(currentSignature, 0) >= 3;
   }
 }

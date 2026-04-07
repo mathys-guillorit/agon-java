@@ -3,40 +3,24 @@ package fr.univ.bordeaux.application.commands.specialized;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jline.reader.Completer;
 
-/**
- * Command responsible for displaying various game-related information.
- *
- * <p>Supported targets include the game board, move history, player timers, and current system
- * configuration.
- *
- * @author fr.univ.bordeaux
- * @version 1.0
- */
+/** Command responsible for displaying various game-related information. */
 public final class CmdShow extends Cmd {
 
-  /** CLI options for identifying the display target. */
-  private final Options options;
-
-  /** The specific target to display (e.g., "board", "history"). */
   private String target;
 
-  /** Reference to the global game configuration. */
   private GameConfig gameConfig;
 
   /**
-   * Constructs the base Show command for registration. Defines the available flags: -board,
-   * -history, -time, -configuration.
+   * Constructs the base Show command for registration.
    *
    * @param uictx The user interface context.
    * @param gameConfig The current game configuration.
@@ -46,11 +30,11 @@ public final class CmdShow extends Cmd {
     this.gameConfig = gameConfig;
     this.setDesc("Description: Displays specific information about the current game state.");
     this.setName("show");
-    this.options = new Options();
-    this.options.addOption("board", null, false, "Display the Board");
-    this.options.addOption("history", null, false, "Display the History");
-    this.options.addOption("time", null, false, "Display the Time of both players");
-    this.options.addOption("configuration", null, false, "Display the Configuration");
+    Options options = super.getOptions();
+    options.addOption("board", null, false, "Display the Board");
+    options.addOption("history", null, false, "Display the History");
+    options.addOption("time", null, false, "Display the Time of both players");
+    options.addOption("configuration", null, false, "Display the Configuration");
   }
 
   /**
@@ -82,17 +66,6 @@ public final class CmdShow extends Cmd {
   }
 
   /**
-   * Provides the autocompleter for show targets based on options.
-   *
-   * @return A {@link Completer} instance.
-   */
-  @Nonnull
-  @Override
-  public Completer getAutoCompleter() {
-    return new OptCompleterAdapter(this.options).getCompleter(this.getName());
-  }
-
-  /**
    * Executes the display logic based on the identified target.
    *
    * @param match The current match manager.
@@ -109,7 +82,7 @@ public final class CmdShow extends Cmd {
       case "board" -> showBoard(match);
       case "history" -> showHistory(match);
       case "time" -> showTime(match);
-      case "configuration" -> showConfiguration();
+      case "configuration" -> showConfiguration(match);
       default -> false;
     };
   }
@@ -118,61 +91,107 @@ public final class CmdShow extends Cmd {
    * Factory method to create an executable instance by parsing CLI arguments.
    *
    * @param args The flags provided by the user (e.g., ["-board"]).
-   * @return A new specialized {@link CmdShow} instance.
+   * @return A new specialized CmdShow instance.
    */
   @Override
   public CmdAction createNew(String[] args) {
     CommandLineParser parser = new DefaultParser();
     try {
-      CommandLine line = parser.parse(this.options, args);
-
+      CommandLine line = parser.parse(super.getOptions(), args);
       if (line.getOptions().length > 1) {
-        this.getCtx()
-            .showError("Error: Please specify only one target (e.g., -board or -history).\n");
+        String msg = "Please specify only one target (e.g., -board or -history).\n";
+        this.getCtx().showError(msg);
         return null;
       }
-
       String selectedTarget = "";
-      if (line.hasOption("history")) selectedTarget = "history";
-      else if (line.hasOption("time")) selectedTarget = "time";
-      else if (line.hasOption("configuration")) selectedTarget = "configuration";
-      else if (line.hasOption("board")) selectedTarget = "board";
-
+      if (line.hasOption("history")) {
+        selectedTarget = "history";
+      } else if (line.hasOption("time")) {
+        selectedTarget = "time";
+      } else if (line.hasOption("configuration")) {
+        selectedTarget = "configuration";
+      } else if (line.hasOption("board")) {
+        selectedTarget = "board";
+      }
       return new CmdShow(this.getCtx(), this.gameConfig, selectedTarget);
-
     } catch (ParseException e) {
       this.getCtx().showError("Invalid show command. Use 'help show' for details.\n");
       return null;
     }
   }
 
+  /**
+   * Displays the game history.
+   *
+   * @param match The current match.
+   * @return false.
+   */
   private boolean showHistory(MatchManager match) {
-    this.getCtx().showInfo("History command recognized but not yet implemented.\n");
-    return true;
-  }
-
-  private boolean showBoard(MatchManager match) {
-    if (match == null) {
-      this.getCtx().showError("Error: No active match. Please create or load a game first.\n");
+    if (match == null || match.isMatchOver()) {
+      this.getCtx().showError("Cannot show history because you are not currently in match.\n");
       return false;
-    } else {
-      this.getCtx().updateBoard(match.getAgonBoard());
-      return true;
     }
-  }
-
-  private boolean showTime(MatchManager match) {
-    this.getCtx().showInfo("Timer display recognized but not yet implemented.\n");
+    this.getCtx().displayHistory(match.getHistory());
     return false;
   }
 
-  private boolean showConfiguration() {
-    this.getCtx().showMessage(this.gameConfig.toString() + "\n");
-    return true;
+  /**
+   * Displays the current board.
+   *
+   * @param match The current match.
+   * @return false.
+   */
+  private boolean showBoard(MatchManager match) {
+    if (match == null || match.isMatchOver()) {
+      this.getCtx().showError("Error: No active match. Please create or load a game first.\n");
+      return false;
+    } else {
+      this.getCtx().onMatchUpdate(match);
+      return false;
+    }
   }
 
-  @Override
-  public Options getOptions() {
-    return this.options;
+  /**
+   * Displays the remaining time for the current player.
+   *
+   * @param match The current match.
+   * @return false.
+   */
+  private boolean showTime(MatchManager match) {
+    GameUserInterface ui = this.getCtx();
+    if (match == null || match.isMatchOver()) {
+      ui.showMessage("This command can only be used when you are currently in a blitz match.\n");
+      return false;
+    } else {
+      String playerTimer = match.getCurrentPlayerRemainingTime();
+      Player currentPlayer = match.getCurrentPlayer();
+      ui.showMessage(
+          "Remaining time for : "
+              + currentPlayer.getName()
+              + "( "
+              + currentPlayer.getColor()
+              + " ) : "
+              + playerTimer
+              + "\n");
+    }
+    return false;
+  }
+
+  /**
+   * Displays the current system configuration.
+   *
+   * @return true.
+   */
+  private boolean showConfiguration(MatchManager match) {
+    if (match != null) {
+      this.getCtx()
+          .showMessage(
+              "This is the configuration for the match you are playing it may have some differences between the real configuration if you have used the SET command.\n"
+                  + match.getGameConfig().toString()
+                  + "\n");
+    } else {
+      super.getCtx().showMessage(this.gameConfig.toString() + "\n");
+    }
+    return true;
   }
 }

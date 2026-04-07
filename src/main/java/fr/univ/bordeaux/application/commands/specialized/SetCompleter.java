@@ -10,13 +10,13 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-/** completer for set command (specific args with assignments) */
+/** Completer for set command (specific args with assignments). */
 public class SetCompleter implements Completer {
 
   private Set<String> optNames;
 
   /**
-   * complete set command with options without "--" at the beginning and set with a "="
+   * Complete set command with options without "--" at the beginning and set with a "=".
    *
    * @param opts options to get "longOpt()" as option name
    * @throws IllegalArgumentException all options must have filled "longOpt()" else it will raise an
@@ -34,9 +34,9 @@ public class SetCompleter implements Completer {
     }
   }
 
+  /** JLine fill this method. */
   @Override
   public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
-    String word = line.word();
     int wordIndex = line.wordIndex();
     // after "set" (cmdName)
     if (wordIndex != 1) {

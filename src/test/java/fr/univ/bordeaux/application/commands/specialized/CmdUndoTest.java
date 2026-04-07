@@ -1,6 +1,10 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
@@ -12,6 +16,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -50,7 +55,8 @@ public class CmdUndoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     int from = CoordinateMapper.toIndex('B', 1);
     int to = CoordinateMapper.toIndex('C', 1);
@@ -87,7 +93,8 @@ public class CmdUndoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
     // On joue deux coups
     new CmdMove(
@@ -100,7 +107,7 @@ public class CmdUndoTest {
             CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), gameUserInterface)
         .execute(match);
     new CmdMove(
-            CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), gameUserInterface)
+            CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), gameUserInterface)
         .execute(match);
 
     // On demande un undo de 2 coups
@@ -118,14 +125,14 @@ public class CmdUndoTest {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
-        new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
+        new StandardMatch(
+            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
     // Pas de coups joués, on tente un undo
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"1"});
     boolean result = cmdUndo.execute(match);
 
     assertTrue(result);
-    // Ici, le code passe dans le "if (!match.undo())" et exécute le "break"
   }
 
   @Test

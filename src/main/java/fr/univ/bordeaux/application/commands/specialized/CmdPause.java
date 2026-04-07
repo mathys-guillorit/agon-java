@@ -4,36 +4,28 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.ui.GameUserInterface;
-import org.apache.commons.cli.Options;
 
-/**
- * Command responsible for pausing the game timers.
- *
- * <p>This command is specifically designed for Blitz mode, allowing players to temporarily stop the
- * countdown.
- */
+/** Command responsible for pausing the game timers. */
 public final class CmdPause extends Cmd {
 
-  /** CLI options for the pause command (currently empty). */
-  private Options opts;
-
   /**
-   * Constructs the Pause command. Initializes the command name to "pause" and sets its default
-   * description.
+   * Constructs the Pause command.
    *
    * @param uictx The user interface context for command interaction.
    */
   public CmdPause(GameUserInterface uictx) {
     super(uictx);
-    this.opts = new Options();
     this.setName("pause");
-    this.setDesc(
-        "Description: Pauses the passing time. This command is only available when playing in Blitz mode.");
+    String msg;
+    msg = "Description: Pauses the passing time. ";
+    msg += "This command is only available when playing in Blitz mode.";
+    this.setDesc(msg);
   }
 
   /**
-   * Returns the help description for the pause command. * @return A formatted string describing the
-   * command's purpose.
+   * Returns the help description for the pause command.
+   *
+   * @return A formatted string describing the command's purpose.
    */
   @Override
   public String getDescription() {
@@ -43,15 +35,18 @@ public final class CmdPause extends Cmd {
   /**
    * Executes the pause logic.
    *
-   * <p>This method should interface with the match's timer system to suspend the current countdown.
-   *
    * @param match The manager handling the current match state and timers.
    * @return true if the pause was successfully triggered.
    */
   @Override
   public boolean execute(MatchManager match) {
-    // TODO: Implement timer suspension logic in MatchManager
-    this.getCtx().showInfo("command reconnu mais pas impl");
+    if (match == null || match.isMatchOver()) {
+      this.getCtx()
+          .showInfo(
+              "You must create a match before using this command. Type help for more informations");
+      return false;
+    }
+    match.pause();
     return false;
   }
 
@@ -59,16 +54,10 @@ public final class CmdPause extends Cmd {
    * Factory method to create an executable instance of the pause command.
    *
    * @param args Arguments passed in the CLI (ignored for pause).
-   * @return A new {@link CmdPause} instance.
+   * @return A new CmdPause instance.
    */
   @Override
   public CmdAction createNew(String[] args) {
     return new CmdPause(super.getCtx());
-  }
-
-  /** Returns the CLI options for this command. * @return An empty {@link Options} object. */
-  @Override
-  public Options getOptions() {
-    return this.opts;
   }
 }

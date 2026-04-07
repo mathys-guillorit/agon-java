@@ -1,8 +1,14 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
@@ -12,6 +18,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
@@ -50,42 +57,39 @@ public class CmdRedoTest {
         new StandardMatch(
             board,
             new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface));
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
 
-    int from = CoordinateMapper.toIndex('B', 1);
-    int to = CoordinateMapper.toIndex('C', 1);
-    PieceType piece = board.getPieceAt(from);
+    int fromW = CoordinateMapper.toIndex('B', 1);
+    int toW = CoordinateMapper.toIndex('C', 1);
+    PieceType whiteP = board.getPieceAt(fromW); // Un pion blanc
+    new CmdMove(fromW, toW, gameUserInterface).execute(match);
 
-    // 2. On joue un coup
-    CmdAction move = new CmdMove(from, to, gameUserInterface);
-    move.execute(match);
-    assertNull(board.getPieceAt(from));
-    assertEquals(piece, board.getPieceAt(to));
+    int fromB = CoordinateMapper.toIndex('F', 11);
+    int toB = CoordinateMapper.toIndex('F', 10);
+    PieceType blackQ = board.getPieceAt(fromB); // La reine noire
+    new CmdMove(fromB, toB, gameUserInterface).execute(match);
 
-    // 3. On annule le coup (Undo)
+    // --- UNDO ---
+    // Ton match.undo() annule les DEUX coups.
     match.undo();
-    assertEquals(piece, board.getPieceAt(from), "Après undo, la pièce doit être revenue au départ");
-    assertNull(board.getPieceAt(to));
 
-    // 4. On rétablit le coup (Redo via la commande)
-    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"3"});
-    boolean result = cmdRedo.execute(match);
+    // Vérification après Undo : tout le monde est revenu à sa place
+    assertEquals(whiteP, board.getPieceAt(fromW), "Le pion blanc doit être en B1");
+    assertEquals(blackQ, board.getPieceAt(fromB), "La reine noire doit être en F1");
+    assertNull(board.getPieceAt(toW));
+    assertNull(board.getPieceAt(toB));
 
-    // 5. VÉRIFICATIONS
-    assertTrue(result);
-    assertNull(board.getPieceAt(from), "Après redo, la case de départ doit être à nouveau vide");
-    assertEquals(
-        piece,
-        board.getPieceAt(to),
-        "Après redo, la pièce doit être revenue sur la case d'arrivée");
-    match.undo();
-    cmdRedo = cmds.get("redo").get().createNew(new String[] {});
+    // --- REDO ---
+    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {});
     cmdRedo.execute(match);
-    assertNull(board.getPieceAt(from), "Après redo, la case de départ doit être à nouveau vide");
-    assertEquals(
-        piece,
-        board.getPieceAt(to),
-        "Après redo, la pièce doit être revenue sur la case d'arrivée");
+
+    // Vérification après Redo : les deux coups sont réappliqués
+    assertNull(board.getPieceAt(fromW));
+    assertEquals(whiteP, board.getPieceAt(toW), "Le pion blanc doit être revenu en C1");
+
+    assertNull(board.getPieceAt(fromB));
+    assertEquals(blackQ, board.getPieceAt(toB), "La reine noire doit être revenue en F2");
   }
 
   @Test
@@ -94,16 +98,13 @@ public class CmdRedoTest {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
-        new StandardMatch(board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null);
+        new StandardMatch(
+            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"1"});
-
-    // Pas de undo préalable, donc rien à redo
     boolean result = cmdRedo.execute(match);
 
-    assertTrue(
-        result,
-        "La commande doit renvoyer true même s'il n'y a rien à faire (comportement standard)");
+    assertFalse(result);
   }
 
   @Test
@@ -122,5 +123,73 @@ public class CmdRedoTest {
     String desc = cmdRedo.getDescription();
     assertNotNull(desc);
     assertTrue(desc.contains("Usage: redo [N]"));
+  }
+
+  @Test
+  @DisplayName("Couverture : Redo quand il n'y a plus de coups à rétablir (Warning)")
+  void testRedoMoreThanPossible() {
+    AgonBoard board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+    MatchManager match =
+        new StandardMatch(
+            board,
+            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
+
+    match.move(
+        new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
+    match.undo();
+
+    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"5"});
+    boolean result = cmdRedo.execute(match);
+
+    assertFalse(result);
+  }
+
+  @Test
+  @DisplayName("Couverture : Format de nombre invalide")
+  void testRedoInvalidFormat() {
+    CmdAction cmd = cmds.get("redo").get().createNew(new String[] {"abc"});
+    assertNotNull(cmd);
+  }
+
+  @Test
+  @DisplayName("Couverture : Atteindre 100% sur execute (branches if !match.redo)")
+  void testExecuteBranches() {
+    AgonBoard board = new AgonBoardImpl();
+    board.initBaseConfiguration();
+    MatchManager match =
+        new StandardMatch(
+            board,
+            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new GameConfig());
+
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), Color.WHITE)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 11),
+                CoordinateMapper.toIndex('F', 10),
+                Color.BLACK)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 2), CoordinateMapper.toIndex('F', 3), Color.WHITE)));
+    assertTrue(
+        match.move(
+            new Move(
+                CoordinateMapper.toIndex('F', 10), CoordinateMapper.toIndex('F', 9), Color.BLACK)));
+    match.undo();
+    match.undo();
+
+    CmdAction cmd = cmds.get("redo").get().createNew(new String[] {"3"});
+    boolean result = cmd.execute(match);
+
+    assertFalse(result);
   }
 }

@@ -96,6 +96,8 @@ public interface AgonBoard extends RestrictedAgonBoard {
    */
   List<HistoryInformations> getHistory();
 
+  List<String> getHistoryAsText();
+
   /**
    * Converts the current board state into a list of ASCII strings.
    *
@@ -104,4 +106,6 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return A list of strings representing the board visually.
    */
   List<String> toTextList();
+
+  boolean hasPiecesToRelocate(Color color);
 }

@@ -52,8 +52,12 @@ public class MctsStrategy extends AbstractAgonAi {
 
     List<Move> initialLegalMoves = board.generateLegalMoves(this.color);
 
-    if (initialLegalMoves.isEmpty()) return null;
-    if (initialLegalMoves.size() == 1) return initialLegalMoves.get(0);
+    if (initialLegalMoves.isEmpty()) {
+      return null;
+    }
+    if (initialLegalMoves.size() == 1) {
+      return initialLegalMoves.get(0);
+    }
 
     MctsNode root = new MctsNode(null, null, this.color, initialLegalMoves);
     this.nodeCount++;
@@ -86,9 +90,11 @@ public class MctsStrategy extends AbstractAgonAi {
       int rolloutMoves = 0;
       Color turn = node.getPlayerToMove();
 
-      while (winner == null && rolloutMoves < 50) {
+      while (winner == null && rolloutMoves < 50 && isTimeRemaining()) {
         List<Move> moves = board.generateLegalMoves(turn);
-        if (moves.isEmpty()) break;
+        if (moves.isEmpty()) {
+          break;
+        }
 
         Move randomMove = moves.get(random.nextInt(moves.size()));
         board.applyMove(randomMove);
@@ -153,8 +159,12 @@ public class MctsStrategy extends AbstractAgonAi {
    * @return The winning {@link Color}, or {@code null} if there is no winner yet.
    */
   private Color checkWinner(AgonBoard board) {
-    if (board.isGameWon(Color.WHITE)) return Color.WHITE;
-    if (board.isGameWon(Color.BLACK)) return Color.BLACK;
+    if (board.isGameWon(Color.WHITE)) {
+      return Color.WHITE;
+    }
+    if (board.isGameWon(Color.BLACK)) {
+      return Color.BLACK;
+    }
     return null;
   }
 }

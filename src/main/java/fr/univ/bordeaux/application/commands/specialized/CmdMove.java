@@ -4,16 +4,12 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import javax.annotation.Nonnull;
 import org.jline.reader.Completer;
 
-/**
- * Command responsible for executing a player's move on the board.
- *
- * <p>This command bridges the UI input (coordinates or Move object) with the {@link MatchManager}
- * to update the game state.
- */
+/** Command responsible for executing a player's move on the board. */
 public class CmdMove extends Cmd {
 
   /** The move object to execute (optional if coordinates are provided). */
@@ -26,7 +22,7 @@ public class CmdMove extends Cmd {
   private int destination;
 
   /**
-   * Constructs a move command using a pre-built {@link Move} object.
+   * Constructs a move command using a pre-built Move object.
    *
    * @param move The move to be applied.
    * @param ui The user interface context.
@@ -54,15 +50,13 @@ public class CmdMove extends Cmd {
   /**
    * Executes the move on the match manager.
    *
-   * <p>If a {@link Move} object was provided, it is used directly. Otherwise, a new Move is created
-   * using the current player's color.
-   *
    * @param match The manager responsible for game rules and board updates.
    * @return true if the move was valid and successfully applied, false otherwise.
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match == null) {
+    if (match == null || match.isMatchOver()) {
+      GameLogger.debug("Can't execute move because match is null or over CmdMove.");
       this.getCtx().showError("No active match to execute move.");
       return false;
     }
@@ -71,12 +65,11 @@ public class CmdMove extends Cmd {
     if (this.move != null) {
       result = match.move(this.move);
     } else {
-      // Fallback to coordinates if Move object is null
       Move newMove = new Move(this.from, this.destination, match.getCurrentPlayer().getColor());
       result = match.move(newMove);
     }
 
-    if (!result) {
+    if (!result && this.getCtx() != null) {
       this.getCtx().showWarn("Invalid move attempt.");
     }
 
@@ -84,14 +77,37 @@ public class CmdMove extends Cmd {
   }
 
   /**
-   * Factory method to create a new move action from CLI arguments. * @param args Arguments provided
-   * (e.g., from and destination).
+   * Returns the source index of the move.
    *
-   * @return A new {@link CmdMove} or null if arguments are not handled here.
+   * @return the source index
+   */
+  public int getFrom() {
+    if (this.move != null) {
+      return this.move.getFrom();
+    }
+    return this.from;
+  }
+
+  /**
+   * Returns the destination index of the move.
+   *
+   * @return the destination index
+   */
+  public int getDestination() {
+    if (this.move != null) {
+      return this.move.getDestination();
+    }
+    return this.destination;
+  }
+
+  /**
+   * Factory method to create a new move action from CLI arguments.
+   *
+   * @param args Arguments provided (e.g., from and destination).
+   * @return A new CmdMove or null if arguments are not handled here.
    */
   @Override
   public CmdAction createNew(String[] args) {
-    // Note: Implementation depends on how you parse "move A1 B2"
     return null;
   }
 

@@ -1,6 +1,10 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
@@ -18,66 +22,78 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class CmdCreateTest {
+
   private AgonRegister<CmdAction> cmds = new AgonRegister<>();
-  private GameUserInterface gameUserInterface;
+  private GameUserInterface ui;
   private GameEngine engine;
-  private GameConfig config;
+  private GameConfig globalConfig;
 
   @BeforeEach
   void setUp() {
-    config = new GameConfig();
-    // On simule une entrée utilisateur si nécessaire (ici "n" pour non à une question éventuelle)
-    LineReader reader = new FakeLineReader("n");
+    // La config globale de l'application (le "Template")
+    globalConfig = new GameConfig();
+    globalConfig.setBlitzMode(false);
+    globalConfig.setTimeout(30);
 
+    LineReader reader = new FakeLineReader("n");
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
-      gameUserInterface = new AgonShell(terminal, reader, cmds);
+      ui = new AgonShell(terminal, reader, cmds);
+      engine = new GameEngine(ui, cmds);
 
-      // On crée le moteur de jeu réel
-      engine = new GameEngine(gameUserInterface, cmds);
-
-      // On enregistre la commande Create.
-      // Note : On passe l'engine et la config car CmdCreate en a besoin pour instancier le match
-      cmds.register("create", new CmdCreate(gameUserInterface, config, engine));
-
+      // On enregistre la commande avec la config globale
+      cmds.register("create", new CmdCreate(ui, globalConfig, engine));
     } catch (Exception e) {
       fail("Le setup a échoué : " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("Vérifier que createNew génère une action non nulle")
-  void createNewTest() {
-    // On simule l'appel 'create' sans arguments
-    CmdAction cmdCreate = cmds.get("create").get().createNew(new String[] {});
-    assertNotNull(cmdCreate, "L'action créée ne doit pas être nulle");
+  @DisplayName("F15 : Vérifier qu'un match est bien créé dans l'engine")
+  void testExecuteCreatesMatch() {
+    CmdAction cmd = cmds.get("create").get().createNew(new String[] {});
+    boolean result = cmd.execute(null);
+
+    assertTrue(result);
+    assertNotNull(engine.getMatchManager(), "Un MatchManager doit être créé après execute");
   }
 
   @Test
-  @DisplayName("Vérifier que l'exécution de la commande initialise bien un match")
-  void executeTest() {
-    // 1. On récupère l'action
-    CmdAction cmdCreate = cmds.get("create").get().createNew(new String[] {});
+  @DisplayName("Isolation : La config globale ne doit pas être modifiée par un match")
+  void testConfigIsolation() {
+    // On lance un match en mode Blitz
+    CmdAction cmd = cmds.get("create").get().createNew(new String[] {"-b", "-t", "60"});
+    cmd.execute(null);
 
-    // 2. On exécute. Note : Au début, le match est null (hors-match)
-    // L'exécution doit créer un StandardMatch et appeler engine.setMatchManager()
-    boolean result = cmdCreate.execute(null);
+    // 1. On vérifie que le match actuel est BIEN en blitz 60s
+    GameConfig matchConfig = engine.getMatchManager().getGameConfig();
+    assertTrue(matchConfig.isBlitzMode());
+    assertEquals(60, matchConfig.getTimeout());
 
-    assertTrue(result, "La commande create doit renvoyer true après exécution");
-
-    /* Note : Pour vérifier que le match est bien créé, il faudrait que ton GameEngine
-       ait un getter getMatchManager() ou vérifier via l'UI que le plateau est affiché.
-       Si tu as accès au match via l'engine :
-    */
-    // assertNotNull(engine.getMatchManager(), "Le match manager devrait être initialisé dans
-    // l'engine");
+    // 2. On vérifie que la config globale est RESTÉE à ses valeurs par défaut
+    assertFalse(globalConfig.isBlitzMode(), "La config globale a été polluée !");
+    assertEquals(30, globalConfig.getTimeout(), "La config globale a été polluée !");
   }
 
   @Test
-  @DisplayName("Vérifier la description de la commande")
-  void getDescriptionTest() {
-    CmdAction cmdCreate = cmds.get("create").get().createNew(null);
-    // Adapte la chaîne attendue à ce que tu as mis dans ton CmdCreate.java
-    assertTrue(cmdCreate.getDescription().contains("Usage: new"));
+  @DisplayName("F8 : Vérifier l'activation de l'IA via la commande")
+  void testAiOption() {
+    // On active l'IA pour le blanc
+    CmdAction cmd = cmds.get("create").get().createNew(new String[] {"-a", "white"});
+    cmd.execute(null);
+
+    GameConfig matchConfig = engine.getMatchManager().getGameConfig();
+    assertTrue(matchConfig.isWhiteAi());
+    assertFalse(matchConfig.isBlackAi());
+  }
+
+  @Test
+  @DisplayName("Gestion d'erreur : Option inconnue")
+  void testUnknownOption() {
+    CmdAction cmd = cmds.get("create").get().createNew(new String[] {"--voldemort"});
+    boolean result = cmd.execute(null);
+
+    // Doit renvoyer false à cause du ParseException catché dans CmdCreate
+    assertFalse(result, "La commande devrait échouer avec une option inconnue");
   }
 }

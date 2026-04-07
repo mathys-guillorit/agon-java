@@ -1,6 +1,10 @@
 package fr.univ.bordeaux.agoncore.agonelements;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.agoncore.history.History;
 import fr.univ.bordeaux.agoncore.history.HistoryInformations;
@@ -39,7 +43,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should add HistoryInformations to undo stack")
   void testAddMove() {
-    history.add(move1);
+    history.add(move1, null);
     assertFalse(history.isEmptyUndo());
     assertEquals(move1, history.getHeadUndo());
   }
@@ -47,7 +51,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should move HistoryInformations from undo to redo stack on undo")
   void testUndo() {
-    history.add(move1);
+    history.add(move1, null);
     // On récupère l'objet complet qui contient la liste des mouvements
     HistoryInformations undoneInfo = history.undo();
 
@@ -60,7 +64,7 @@ class HistoryTest {
   @Test
   @DisplayName("Should move HistoryInformations from redo back to undo on redo")
   void testRedo() {
-    history.add(move1);
+    history.add(move1, null);
     history.undo();
 
     HistoryInformations redoneInfo = history.redo();
@@ -81,9 +85,9 @@ class HistoryTest {
   @Test
   @DisplayName("Should handle multiple moves correctly (LIFO)")
   void testMultipleMoves() {
-    history.add(move1);
-    history.add(move2);
-    history.add(move3);
+    history.add(move1, null);
+    history.add(move2, null);
+    history.add(move3, null);
     assertEquals(move3, history.getHeadUndo());
 
     history.undo();
@@ -105,7 +109,7 @@ class HistoryTest {
     assertTrue(history.isEmptyUndo());
     assertTrue(history.isEmptyRedo());
 
-    history.add(move1);
+    history.add(move1, null);
     assertFalse(history.isEmptyUndo());
 
     history.undo();
@@ -115,8 +119,8 @@ class HistoryTest {
   @Test
   @DisplayName("Should correctly export history to ABA-pro text format (including Queens)")
   void testToTextList() {
-    history.add(move1);
-    history.add(move2);
+    history.add(move1, null);
+    history.add(move2, null);
 
     List<String> textList = history.toTextList();
 
@@ -184,15 +188,17 @@ class HistoryTest {
     multiMoves.add(new Move(0, 1, Color.WHITE, PieceType.WHITE_PAWN));
     multiMoves.add(new Move(24, 99, Color.BLACK, PieceType.BLACK_PAWN));
 
-    HistoryInformations complexTurn = new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
-    complexHistory.add(complexTurn);
+    HistoryInformations complexTurn =
+        new HistoryInformations(multiMoves, PieceType.WHITE_PAWN, Color.WHITE);
+    complexHistory.add(complexTurn, null);
 
     List<String> textList = complexHistory.toTextList();
 
     assertEquals(1, textList.size(), "Should export 1 turn");
 
     String exportedMove = textList.get(0);
-    assertTrue(exportedMove.startsWith("O a1 a2 ("), "Should start with main move and open parenthesis");
+    assertTrue(
+        exportedMove.startsWith("O a1 a2 ("), "Should start with main move and open parenthesis");
     assertTrue(exportedMove.contains("X"), "Should contain the captured black guard 'X'");
     assertTrue(exportedMove.endsWith(")"), "Should close the parenthesis");
   }

@@ -1,0 +1,158 @@
+package fr.univ.bordeaux.technical.io.config;
+
+import fr.univ.bordeaux.technical.utils.GameLogger;
+import fr.univ.bordeaux.ui.GameUserInterface;
+import java.util.Arrays;
+import org.apache.commons.cli.CommandLine;
+
+/**
+ * Utility class to bind CommandLine options to a GameConfig object. This prevents code duplication
+ * between the main launcher and the 'new' command.
+ */
+public class ConfigBinder {
+
+  /**
+   * Binds parsed command line options to the provided game configuration.
+   *
+   * @param cmd The parsed command line.
+   * @param config The configuration object to update.
+   * @param Ui The user interface context for feedback.
+   */
+  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface Ui) {
+    GameLogger.debug("ConfigBinder: Starting binding process...");
+
+    // --- F4 & F31: Blitz Mode ---
+    if (cmd.hasOption("b")) {
+      config.setBlitzMode(true);
+      GameLogger.info("ConfigBinder: Blitz mode enabled via options.");
+    }
+
+    if (cmd.hasOption("t")) {
+      if (config.isBlitzMode()) {
+        try {
+          int time = Integer.parseInt(cmd.getOptionValue("t"));
+          config.setTimeout(time);
+          GameLogger.info("ConfigBinder: Global timeout set to " + time + " minutes.");
+        } catch (NumberFormatException e) {
+          GameLogger.error("ConfigBinder: Invalid time format for option 't'. Ignoring.");
+        }
+      } else {
+        GameLogger.debug("ConfigBinder: Option 't' provided but ignored (not in Blitz mode).");
+        Ui.showInfo("Option 't' ignored because option blitz (-b) is missing.");
+      }
+    }
+
+    // --- F8: AI Activation (-a [COLOR]) ---
+    if (cmd.hasOption("a")) {
+      config.setAi(true);
+      String aiValue = cmd.getOptionValue("a");
+      if (aiValue == null) {
+        GameLogger.info("ConfigBinder: No color specified for AI, defaulting to BLACK.");
+        Ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
+        config.setBlackAi(true);
+      } else {
+        switch (aiValue.toLowerCase()) {
+          case "white":
+          case "w":
+            config.setWhiteAi(true);
+            GameLogger.info("ConfigBinder: White player set to AI.");
+            break;
+          case "black":
+          case "b":
+            config.setBlackAi(true);
+            GameLogger.info("ConfigBinder: Black player set to AI.");
+            break;
+          case "a":
+          case "all":
+            config.setWhiteAi(true);
+            config.setBlackAi(true);
+            GameLogger.info("ConfigBinder: Both players set to AI.");
+            break;
+          default:
+            GameLogger.error(
+                "ConfigBinder: Invalid AI color '" + aiValue + "'. Defaulting to BLACK.");
+            Ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
+            config.setBlackAi(true);
+            break;
+        }
+      }
+    }
+    boolean isMcts = false;
+    // --- F32, F34, F36: AI Algorithm Mode ---
+    if (cmd.hasOption("ai-mode")) {
+      String mode = cmd.getOptionValue("ai-mode").toLowerCase();
+      if (Arrays.asList("minimax", "mcts", "iterative").contains(mode)) {
+        isMcts = mode.equals("mcts");
+        if (isMcts) {
+          config.setAiHeuristic("uct");
+        }
+        config.setAiMode(mode);
+        config.setAiIterativeDeepening(mode.equals("iterative"));
+        GameLogger.info("ConfigBinder: AI mode set to " + mode.toUpperCase());
+      } else {
+        GameLogger.error("ConfigBinder: Unknown AI mode '" + mode + "'. Using default.");
+      }
+    }
+
+    // --- F35: AI Depth ---
+    if (cmd.hasOption("ai-minimax-depth")) {
+      try {
+        int depth = Integer.parseInt(cmd.getOptionValue("ai-minimax-depth"));
+        if (depth >= 1) {
+          config.setAiDepth(depth);
+          GameLogger.info("ConfigBinder: AI Minimax depth set to " + depth);
+        } else {
+          GameLogger.error("ConfigBinder: Depth must be >= 1. Ignoring value.");
+        }
+      } catch (NumberFormatException e) {
+        GameLogger.error("ConfigBinder: Invalid depth format.");
+      }
+    }
+
+    // --- F33: AI Heuristics ---
+    if (cmd.hasOption("ai-minimax-scoring")) {
+      String scoring = cmd.getOptionValue("ai-minimax-scoring").toLowerCase();
+      if (Arrays.asList("mixed", "centrality", "mobility").contains(scoring)) {
+        config.setAiHeuristic(scoring);
+        GameLogger.info("ConfigBinder: AI Heuristic set to " + scoring);
+      }
+    }
+
+    // --- AI Time Limit ---
+    if (cmd.hasOption("ai-time")) {
+      try {
+        int aiTime = Integer.parseInt(cmd.getOptionValue("ai-time"));
+        config.setAiTimeLimit(aiTime);
+        GameLogger.info("ConfigBinder: AI response time limit set to " + aiTime + " ms.");
+      } catch (NumberFormatException e) {
+        GameLogger.error("ConfigBinder: Invalid AI time format.");
+      }
+    }
+
+    if (cmd.hasOption("ai-mcts-selection")) {
+      if (!isMcts) {
+        Ui.showInfo("Mcts mode for Ai is not active, option ai-mcts-selection is ignored.\n");
+      } else {
+        String selection = cmd.getOptionValue("ai-mcts-selection");
+        if (selection.equals("ML") || selection.equals("UCT")) {
+          config.setAiHeuristic(selection.toLowerCase());
+          GameLogger.info("AI mcts mode set to " + selection);
+        }
+        Ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
+        GameLogger.info("AI mcts mode set to default (UCT).");
+      }
+    }
+
+    // --- Verbose & Debug (Généralités) ---
+    if (cmd.hasOption("v")) {
+      config.setVerbose(true);
+      GameLogger.getInstance().setVerbose(true);
+      GameLogger.info("Verbose mode enabled.\n");
+    }
+    if (cmd.hasOption("d")) {
+      config.setDebug(true);
+      GameLogger.getInstance().setDebugMode(true);
+      GameLogger.debug("ConfigBinder: Debug mode activated. Logging level increased.");
+    }
+  }
+}

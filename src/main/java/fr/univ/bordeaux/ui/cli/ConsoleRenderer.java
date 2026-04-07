@@ -97,7 +97,8 @@ public class ConsoleRenderer {
     }
     StringBuilder sb = new StringBuilder();
     sb.append('\n');
-    int idxContent, spaceCount;
+    int idxContent;
+    int spaceCount;
     final int linesCount = 11;
     final int midLine = (linesCount - 1) / 2;
 

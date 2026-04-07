@@ -32,7 +32,7 @@ public class AiExample {
 
   /*/** Explicit nothing to add.
   public void simulateGameAiVsRandomBot() {
-    System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs RANDOM (BLACK) ===");
+    GameLogger.info("\n=== GAME SIMULATION : AI (WHITE) vs RANDOM (BLACK) ===");
 
     int whiteQ = CoordinateMapper.toIndex('A', 1);
     int blackQ = CoordinateMapper.toIndex('K', 11);
@@ -60,13 +60,13 @@ public class AiExample {
 
     int maxTurns = 40;
     for (int i = 1; i <= maxTurns; i++) {
-      System.out.println("\n---------------- TURN " + i + " ----------------");
+      GameLogger.info("\n---------------- TURN " + i + " ----------------");
 
-      System.out.println("AI playing :");
+      GameLogger.info("AI playing :");
       Move aiMove = ai.getBestMove(board);
 
       if (aiMove == null) {
-        System.out.println("AI cannot find a move");
+        GameLogger.info("AI cannot find a move");
         break;
       }
 
@@ -74,15 +74,15 @@ public class AiExample {
       board.printBoard();
 
       if (board.isGameWon(Color.WHITE)) {
-        System.out.println("AI won");
+        GameLogger.info("AI won");
         break;
       }
 
-      System.out.println("Random playing :");
+      GameLogger.info("Random playing :");
       List<Move> blackMoves = board.generateLegalMoves(Color.BLACK);
 
       if (blackMoves.isEmpty()) {
-        System.out.println("Random cannot find a move");
+        GameLogger.info("Random cannot find a move");
         break;
       }
 
@@ -92,16 +92,16 @@ public class AiExample {
       board.printBoard();
 
       if (board.isGameWon(Color.BLACK)) {
-        System.out.println("Random won");
+        GameLogger.info("Random won");
         break;
       }
     }
-    System.out.println("\n=== END ===");
+    GameLogger.info("\n=== END ===");
   }*/
 
   /*/** Explicit name nothing to add.
   public void simulateGameAiVsAi() {
-    System.out.println("\n=== GAME SIMULATION : AI (WHITE) vs AI (BLACK) ===");
+    GameLogger.info("\n=== GAME SIMULATION : AI (WHITE) vs AI (BLACK) ===");
 
     int whiteQ = CoordinateMapper.toIndex('A', 1);
     int blackQ = CoordinateMapper.toIndex('K', 11);
@@ -130,9 +130,9 @@ public class AiExample {
 
     int maxTurns = 40;
     for (int i = 1; i <= maxTurns; i++) {
-      System.out.println("\n---------------- TURN " + i + " ----------------");
+      GameLogger.info("\n---------------- TURN " + i + " ----------------");
 
-      System.out.println("WHITE AI playing :");
+      GameLogger.info("WHITE AI playing :");
       Move whiteAiMove =
           wwhiteAi.getBestMove(
               new AgonBoardImpl(
@@ -142,7 +142,7 @@ public class AiExample {
                   board.getBlackPawns().copy2()));
 
       if (whiteAiMove == null) {
-        System.out.println("WHITE AI cannot find a move");
+        GameLogger.info("WHITE AI cannot find a move");
         break;
       }
 
@@ -150,11 +150,11 @@ public class AiExample {
       board.printBoard();
 
       if (board.isGameWon(Color.WHITE)) {
-        System.out.println("WHITE AI won");
+        GameLogger.info("WHITE AI won");
         break;
       }
 
-      System.out.println("BLACK AI playing :");
+      GameLogger.info("BLACK AI playing :");
       Move blackAiMove =
           blackAi.getBestMove(
               new AgonBoardImpl(
@@ -164,7 +164,7 @@ public class AiExample {
                   board.getBlackPawns().copy2()));
 
       if (blackAiMove == null) {
-        System.out.println("BLACK AI cannot find a move");
+        GameLogger.info("BLACK AI cannot find a move");
         break;
       }
 
@@ -172,11 +172,11 @@ public class AiExample {
       board.printBoard();
 
       if (board.isGameWon(Color.BLACK)) {
-        System.out.println("BLACK AI won");
+        GameLogger.info("BLACK AI won");
         break;
       }
     }
-    System.out.println("\n=== END ===");
+    GameLogger.info("\n=== END ===");
   }*/
 
   /*/**

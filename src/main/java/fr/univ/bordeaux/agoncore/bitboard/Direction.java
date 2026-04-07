@@ -51,15 +51,15 @@ public enum Direction {
   SouthWest(-12);
 
   /** The integer shift value applied to a bitboard index. */
-  private final int v;
+  private final int value;
 
   /**
    * Constructs a direction with its corresponding bitboard index offset.
    *
-   * @param v The integer value to add to a 1D index to move in this direction.
+   * @param value The integer value to add to a 1D index to move in this direction.
    */
-  Direction(int v) {
-    this.v = v;
+  Direction(int value) {
+    this.value = value;
   }
 
   /**
@@ -74,12 +74,12 @@ public enum Direction {
    */
   public static Direction getOpposite(Direction d) {
     return switch (d) {
-      case East -> Direction.West;
-      case West -> Direction.East;
-      case NorthEast -> Direction.SouthWest;
-      case SouthWest -> Direction.NorthEast;
-      case NorthWest -> Direction.SouthEast;
-      case SouthEast -> Direction.NorthWest;
+      case East -> West;
+      case West -> East;
+      case NorthEast -> SouthWest;
+      case SouthWest -> NorthEast;
+      case NorthWest -> SouthEast;
+      case SouthEast -> NorthWest;
     };
   }
 
@@ -89,6 +89,6 @@ public enum Direction {
    * @return The index shift value (positive or negative).
    */
   public int getValue() {
-    return v;
+    return value;
   }
 }

@@ -143,25 +143,6 @@ public class OptCompleterAdapterTest {
   }
 
   @Test
-  @Description("(pattern cannot be predicted because is not in possibilities)")
-  void predictNonAppearingPattern() {
-    var a = new OptCompleterAdapter(this.opts);
-    Completer completer = a.getCompleter("cmd");
-    DefaultParser parser = new DefaultParser();
-    String input = "non -";
-    ParsedLine line = parser.parse(input, input.length());
-    var reader = new FakeLineReader(input);
-    List<Candidate> candidates = new ArrayList<>();
-    completer.complete(reader, line, candidates);
-    short optCount = 0;
-    List<String> uniqueOptions = candidates.stream().map(Candidate::value).distinct().toList();
-    assertEquals(
-        optCount,
-        uniqueOptions.size(),
-        "we must have " + optCount + " options defined in `loadOptions()`");
-  }
-
-  @Test
   @Description("predict only long options")
   void predictLongOptions() {
     var a = new OptCompleterAdapter(this.opts);

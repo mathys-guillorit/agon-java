@@ -26,7 +26,6 @@ public class LangService implements LangTranslationProvider {
 
   private ResourceBundle resBundle;
   private Locale locale;
-  private final String defaultFilepath = "lang.default";
   private String lastMessage = "";
 
   /**
@@ -64,15 +63,22 @@ public class LangService implements LangTranslationProvider {
     } catch (MissingResourceException e) {
       // load default
       this.locale = Locale.ENGLISH;
-      this.resBundle = ResourceBundle.getBundle(this.defaultFilepath, this.locale);
+      this.resBundle = ResourceBundle.getBundle("lang.trad", this.locale);
       this.lastMessage = "locale not found default English is set instead";
     }
   }
 
   private void loadBundle() throws MissingResourceException {
-    final String finalPath = "lang." + this.locale.toString();
-    this.resBundle = ResourceBundle.getBundle(finalPath, this.locale);
-    // getting the confirmation message outside the class
+    final String baseName = "lang.trad";
+    ResourceBundle tempBundle = ResourceBundle.getBundle(baseName, this.locale);
+    String foundLang = tempBundle.getLocale().getLanguage();
+    String requestedLang = this.locale.getLanguage();
+    if (!foundLang.equals(requestedLang)
+        && !requestedLang.equals("en")
+        && !requestedLang.isEmpty()) {
+      throw new MissingResourceException("Language not supported", baseName, "");
+    }
+    this.resBundle = tempBundle;
     this.lastMessage = this.translate("LangService_successLoaded");
   }
 

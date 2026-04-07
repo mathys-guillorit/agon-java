@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Use the load local files (example: cli required to load local Menu to display into cli it's load
- * by this class) - UTF-8 only (ASCII) file format transformation must not be here
+ * by this class) - UTF-8 only (ASCII) file format transformation must not be here.
  */
 public class LoadLocalFile {
 
@@ -27,7 +27,7 @@ public class LoadLocalFile {
       throw new IOException("resource not found: " + filepath);
     }
     try (BufferedReader reader =
-                 new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
       var lines = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
