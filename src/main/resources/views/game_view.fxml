@@ -36,9 +36,9 @@
             </Menu>
 
             <Menu mnemonicParsing="false" text="Network">
-<!--                <MenuItem mnemonicParsing="false" onAction="#showServerBrowser" text="Server Browser"/>-->
-<!--                <MenuItem mnemonicParsing="false" onAction="#showHostServerDialog" text="Host Game Server"/>-->
-<!--                <MenuItem mnemonicParsing="false" onAction="#showLobby" text="Multiplayer Lobby"/>-->
+                <MenuItem mnemonicParsing="false" onAction="#showServerBrowser" text="Server Browser"/>
+                <MenuItem mnemonicParsing="false" onAction="#showHostServerDialog" text="Host Game Server"/>
+                <MenuItem mnemonicParsing="false" onAction="#showLobby" text="Multiplayer Lobby"/>
             </Menu>
 
             <Menu mnemonicParsing="false">

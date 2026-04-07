@@ -109,19 +109,11 @@ public class GameLauncher {
     CommandLineParser parser = new DefaultParser();
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
 
-    String playerName = askPlayerName();
-    AppMode mode = askApplicationMode();
-    System.out.println("[INFO] Mode selected: " + mode);
-
-    LocalProfile profile = new LocalProfile(playerName);
-    AppContext context = new AppContext(profile);
-    context.setMode(mode);
-
     try {
       CommandLine cmd = parser.parse(options, args);
 
       if (cmd.hasOption("h")) {
-        this.fillRegister(cmds, null, null, null, context);
+        this.fillRegister(cmds, null, null, null, new AppContext(new LocalProfile("Temp")));
         printHelp(cmds);
         return;
       }
@@ -130,6 +122,19 @@ public class GameLauncher {
         printVersion();
         return;
       }
+
+      String playerName = askPlayerName();
+      AppMode mode;
+      if (cmd.hasOption("g")) {
+        mode = AppMode.LOCAL;
+      } else {
+        mode = askApplicationMode();
+        System.out.println("[INFO] Mode selected: " + mode);
+      }
+
+      LocalProfile profile = new LocalProfile(playerName);
+      AppContext context = new AppContext(profile);
+      context.setMode(mode);
 
       if (cmd.hasOption("v")) {
         config.setVerbose(true);
@@ -227,8 +232,11 @@ public class GameLauncher {
         System.out.println("[INFO] Starting Agon GUI...");
         AgonGui gui = new AgonGui(config, context);
         GameEngine gameEngine = new GameEngine(gui, cmds);
+        context.setGameEngine(gameEngine);
+        gameEngine.setAppContext(context);
         this.fillRegister(cmds, gui, config, gameEngine, context);
         gui.start();
+        gameEngine.start();
     } else {
 
       try {

@@ -1,5 +1,10 @@
 package fr.univ.bordeaux.ui.gui.controllers;
 
+import fr.univ.bordeaux.agoncore.agonelements.PieceType;
+import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
+import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
+import fr.univ.bordeaux.application.AppMode;
+import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
@@ -7,12 +12,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 /**
  * The main JavaFX Controller handling interactions on the game board screen.
@@ -37,6 +45,8 @@ public class GameViewController {
    */
   public void setAgonGui(AgonGui agonGui) {
     this.agonGui = agonGui;
+    Platform.runLater(this::promptSessionSetup);
+    setupConsoleInterceptor();
   }
 
   /**
@@ -88,8 +98,22 @@ public class GameViewController {
   public void routeMessage(String message) {
     if (message == null) return;
     String lowerMsg = message.toLowerCase();
+
     if (lowerMsg.contains("current player") || lowerMsg.contains(">>")) {
-      updateMessage(message);
+      if (agonGui != null && agonGui.getAppContext() != null && agonGui.getAppContext().isOnlineGameActive()) {
+        boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
+        String myColor = agonGui.getAppContext().getLocalOnlineColor().toString();
+
+        String customMsg = isMyTurn
+                ? "Your turn! (You are " + myColor + ")"
+                : "Opponent's turn (You are " + myColor + ")";
+
+        updateMessage(customMsg);
+      } else {
+        updateMessage(message);
+      }
+    } else if (lowerMsg.contains("invitation_received")) {
+      promptInvitation(message);
     } else if (lowerMsg.contains("save the game before quitting")) {
       promptYesNo("save the game before quitting ?");
     } else if (lowerMsg.contains("filename") || lowerMsg.contains("nom du fichier")) {
@@ -129,6 +153,34 @@ public class GameViewController {
     } else {
       if (agonGui != null) agonGui.sendCommand("default_save");
     }
+  }
+
+  private void promptInvitation(String message) {
+    String challenger = "A player";
+    try {
+      String[] parts = message.split("FROM=");
+      if (parts.length > 1) {
+        challenger = parts[1].split(" ")[0];
+      }
+    } catch (Exception ignored) {}
+
+    Alert alert = new Alert(AlertType.CONFIRMATION);
+    alert.setTitle("Incoming Challenge!");
+    alert.setHeaderText(challenger + " has challenged you!");
+    alert.setContentText("Do you want to accept this match?");
+
+    ButtonType btnAccept = new ButtonType("Accept", ButtonBar.ButtonData.YES);
+    ButtonType btnDecline = new ButtonType("Decline", ButtonBar.ButtonData.NO);
+    alert.getButtonTypes().setAll(btnAccept, btnDecline);
+
+    Platform.runLater(() -> {
+      Optional<ButtonType> result = alert.showAndWait();
+      if (result.isPresent() && result.get() == btnAccept) {
+        if (agonGui != null) agonGui.sendCommand("accept");
+      } else {
+        if (agonGui != null) agonGui.sendCommand("decline");
+      }
+    });
   }
 
   /**
@@ -350,6 +402,253 @@ public class GameViewController {
       agonGui.sendCommand("show -history");
     }
   }
+
+  private void promptSessionSetup() {
+    if (agonGui == null || agonGui.getAppContext() == null) return;
+
+    String playerName = "Player";
+    try {
+      playerName = agonGui.getAppContext().getProfile().getName();
+    } catch (Exception ignored) {
+      System.err.println("Could not retrieve player name.");
+    }
+
+    updateMessage("Logged in as: " + playerName);
+
+    Dialog<String> dialog = new Dialog<>();
+    dialog.setTitle("Welcome to Agon");
+
+    dialog.setHeaderText("Hello " + playerName + "!\nChoose your game mode for this session:");
+
+    ButtonType localBtn = new ButtonType("Local (Play offline)", ButtonBar.ButtonData.YES);
+    ButtonType onlineBtn = new ButtonType("Online (Multiplayer)", ButtonBar.ButtonData.NO);
+    dialog.getDialogPane().getButtonTypes().addAll(localBtn, onlineBtn);
+
+    dialog.setResultConverter(btn -> btn == onlineBtn ? "ONLINE" : "LOCAL");
+
+    dialog.showAndWait().ifPresent(choice -> {
+      if (choice.equals("ONLINE")) {
+        agonGui.getAppContext().setMode(AppMode.ONLINE);
+        showServerBrowser();
+      } else {
+        agonGui.getAppContext().setMode(AppMode.LOCAL);
+      }
+    });
+  }
+
+  @FXML
+  public void showServerBrowser() {
+    if (agonGui == null || agonGui.getAppContext() == null) return;
+
+    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
+      return;
+    }
+
+    Dialog<String> dialog = new Dialog<>();
+    dialog.setTitle("Server Browser");
+    dialog.setHeaderText("Select a game server on your network to join");
+
+    ButtonType joinButtonType = new ButtonType("Join", ButtonBar.ButtonData.OK_DONE);
+    dialog.getDialogPane().getButtonTypes().addAll(joinButtonType, ButtonType.CANCEL);
+
+    ListView<String> serverList = new ListView<>();
+    TextField manualIpField = new TextField("localhost:12345");
+    manualIpField.setPromptText("Enter IP:PORT...");
+
+    try {
+      var discovery = agonGui.getAppContext().getDiscovery();
+      var servers = discovery.getServers();
+      if (servers.isEmpty()) {
+        serverList.getItems().add("No local servers found...");
+      } else {
+        for (var s : servers) {
+          serverList.getItems().add(s.name + " @ " + s.ip + ":" + s.tcpPort);
+        }
+      }
+    } catch (Exception e) {
+      serverList.getItems().add("Discovery service offline.");
+    }
+
+    serverList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+      if (newVal != null && newVal.contains("@")) {
+        manualIpField.setText(newVal.split("@")[1].trim());
+      }
+    });
+
+    javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10, new Label("Discovered servers:"), serverList, new Label("Direct IP:"), manualIpField);
+    dialog.getDialogPane().setContent(vbox);
+
+    dialog.setResultConverter(btn -> btn == joinButtonType ? manualIpField.getText().trim() : null);
+
+    dialog.showAndWait().ifPresent(ipAndPort -> {
+      if (!ipAndPort.isBlank()) agonGui.sendCommand("join " + ipAndPort);
+    });
+  }
+
+  @FXML
+  public void showHostServerDialog() {
+    if (agonGui == null || agonGui.getAppContext() == null) return;
+
+    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
+      return;
+    }
+
+    var server = agonGui.getAppContext().getServer();
+    boolean isRunning = server != null && server.isRunning();
+
+    Dialog<String> dialog = new Dialog<>();
+    dialog.setTitle("Host Game Server");
+
+    if (isRunning) {
+      dialog.setHeaderText("Server is already running on port " + server.getPort() + "\nConnected clients: " + server.getConnectedClientsCount());
+      ButtonType stopBtn = new ButtonType("Stop Server", ButtonBar.ButtonData.OK_DONE);
+      dialog.getDialogPane().getButtonTypes().addAll(stopBtn, ButtonType.CANCEL);
+
+      dialog.setResultConverter(btn -> btn == stopBtn ? "STOP" : null);
+    } else {
+      dialog.setHeaderText("Start a new local game server");
+      ButtonType startBtn = new ButtonType("Start", ButtonBar.ButtonData.OK_DONE);
+      dialog.getDialogPane().getButtonTypes().addAll(startBtn, ButtonType.CANCEL);
+
+      TextField portField = new TextField("12345");
+      javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10, new Label("TCP Port (default 12345):"), portField);
+      dialog.getDialogPane().setContent(vbox);
+
+      dialog.setResultConverter(btn -> btn == startBtn ? portField.getText().trim() : null);
+    }
+
+    dialog.showAndWait().ifPresent(result -> {
+      if (result.equals("STOP")) {
+        agonGui.sendCommand("server_stop");
+      } else {
+        agonGui.sendCommand("server_start " + result);
+        agonGui.sendCommand("join localhost:" + result);
+      }
+    });
+  }
+
+  @FXML
+  public void showLobby() {
+    if (agonGui == null || agonGui.getAppContext() == null) return;
+
+    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
+      return;
+    }
+
+    var client = agonGui.getAppContext().getClient();
+    if (client == null || !client.isConnected()) {
+      showWarn("You must be connected to a server to open the lobby!");
+      return;
+    }
+
+    Dialog<String> dialog = new Dialog<>();
+    dialog.setTitle("Multiplayer Lobby");
+    dialog.setHeaderText("See who is online and challenge them!");
+
+    ButtonType challengeBtn = new ButtonType("Challenge Player", ButtonBar.ButtonData.OK_DONE);
+    dialog.getDialogPane().getButtonTypes().addAll(challengeBtn, ButtonType.CLOSE);
+
+    TextArea infoArea = new TextArea();
+    infoArea.setEditable(false);
+    infoArea.setPrefRowCount(12);
+    infoArea.setPrefColumnCount(40);
+    infoArea.setStyle("-fx-font-family: monospace;");
+
+    String initialPlayers = client.requestPlayers();
+    infoArea.setText(initialPlayers != null ? initialPlayers : "Failed to load players.");
+
+    Button refreshBtn = new Button("Refresh Players");
+    refreshBtn.setOnAction(e -> infoArea.setText(client.requestPlayers()));
+
+    Button scoreBtn = new Button("View Scoreboard");
+    scoreBtn.setOnAction(e -> infoArea.setText(client.requestScoreboard()));
+
+    javafx.scene.layout.HBox topButtons = new javafx.scene.layout.HBox(10, refreshBtn, scoreBtn);
+
+    TextField playerIdField = new TextField();
+    playerIdField.setPromptText("Ex: 2");
+    javafx.scene.layout.HBox challengeBox = new javafx.scene.layout.HBox(10, new Label("Target Player ID:"), playerIdField);
+
+    javafx.scene.layout.VBox layout = new javafx.scene.layout.VBox(10, topButtons, infoArea, challengeBox);
+    dialog.getDialogPane().setContent(layout);
+
+    dialog.setResultConverter(btn -> {
+      if (btn == challengeBtn) {
+        String targetId = playerIdField.getText().trim();
+        if (!targetId.isEmpty()) return "new " + targetId;
+      }
+      return null;
+    });
+
+    dialog.showAndWait().ifPresent(cmd -> agonGui.sendCommand(cmd));
+  }
+
+  private void refreshBoardFromNetwork() {
+    if (agonGui == null || agonGui.getAppContext() == null) return;
+
+    Match match = agonGui.getAppContext().getCurrentOnlineMatch();
+
+    if (match != null) {
+      try {
+        RestrictedAgonBoard board = match.getAgonBoard();
+
+        Map<String, PieceType> snapshot = hexCanvas.takeSnapshot(board);
+        hexCanvas.applySnapshot(board, snapshot);
+      } catch (Exception e) {
+        System.err.println("Impossible de rafraîchir le plateau : " + e.getMessage());
+      }
+    }
+  }
+
+  private void setupConsoleInterceptor() {
+    java.io.PrintStream originalOut = System.out;
+
+    System.setOut(new java.io.PrintStream(originalOut) {
+      @Override
+      public void println(String x) {
+        super.println(x);
+
+        if (x != null) {
+          if (x.contains("INVITATION_RECEIVED")) {
+            Platform.runLater(() -> promptInvitation(x));
+          } else if (x.contains("CHOOSE_MODE")) {
+            Platform.runLater(() -> promptGameMode());
+          } else if (x.contains("GAME_STARTED GAME_ID")) {
+            Platform.runLater(GameViewController.this::refreshBoardFromNetwork);
+          } else if (x.contains("Your turn") || x.contains("Opponent turn") || x.contains("You are")) {
+            String cleanText = x.replace("[ONLINE]", "").trim();
+            Platform.runLater(() -> {
+              updateMessage(cleanText);
+              refreshBoardFromNetwork();
+            });
+          }
+        }
+      }
+    });
+  }
+
+  private void promptGameMode() {
+    Alert alert = new Alert(AlertType.CONFIRMATION);
+    alert.setTitle("Select Game Mode");
+    alert.setHeaderText("The match is ready!");
+    alert.setContentText("Do you want to play a Normal game or a Blitz game?");
+
+    ButtonType btnNormal = new ButtonType("Normal", ButtonBar.ButtonData.YES);
+    ButtonType btnBlitz = new ButtonType("Blitz", ButtonBar.ButtonData.NO);
+    alert.getButtonTypes().setAll(btnNormal, btnBlitz);
+
+    java.util.Optional<ButtonType> result = alert.showAndWait();
+    if (result.isPresent() && result.get() == btnNormal) {
+      if (agonGui != null) agonGui.sendCommand("mode normal");
+    } else {
+      if (agonGui != null) agonGui.sendCommand("mode blitz");
+    }
+  }
+
+
 /*
   @FXML
     public void editShortcuts() {

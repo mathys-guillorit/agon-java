@@ -2,6 +2,9 @@ package fr.univ.bordeaux.ui.gui.controllers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.AppMode;
+import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
@@ -30,14 +33,22 @@ public class GameViewControllerTest {
 
   private static class FakeAgonGui extends AgonGui {
     public final List<String> sentCommands = new ArrayList<>();
+    private final AppContext appContext;
 
     public FakeAgonGui() {
       super(new GameConfig(), null);
+      this.appContext = new AppContext(new LocalProfile("Test"));
+      this.appContext.setMode(AppMode.LOCAL);
     }
 
     @Override
     public void sendCommand(String command) {
       sentCommands.add(command);
+    }
+
+    @Override
+    public AppContext getAppContext() {
+      return appContext;
     }
   }
 
@@ -65,13 +76,16 @@ public class GameViewControllerTest {
   void setUp() throws Exception {
     controller = new GameViewController();
     fakeGui = new FakeAgonGui();
-    controller.setAgonGui(fakeGui);
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.setAgonGui(fakeGui));
+    Thread.sleep(800);
     AgonApp.setGui(fakeGui);
 
     setPrivateField(controller, "messageLabel", new Label());
     setPrivateField(controller, "boardContainer", new StackPane());
 
     runAndWait(() -> controller.initialize());
+    fakeGui.sentCommands.clear();
   }
 
   @AfterEach
@@ -515,6 +529,105 @@ public class GameViewControllerTest {
     interactWithNextDialog(null, false);
     runAndWait(() -> controller.showHelp());
   }
+
+  @Test
+  void testNetworkMenus_BlockedInLocalMode() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.LOCAL);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showServerBrowser());
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showHostServerDialog());
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showLobby());
+
+    assertTrue(fakeGui.sentCommands.isEmpty());
+  }
+
+  @Test
+  void testShowServerBrowser_Branches() throws InterruptedException {
+    // Il FAUT passer en ONLINE pour ouvrir la fenêtre !
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.showServerBrowser());
+    Thread.sleep(600);
+
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog("192.168.1.50:12345", false);
+    runAndWait(() -> controller.showServerBrowser());
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.contains("join 192.168.1.50:12345"));
+  }
+
+  @Test
+  void testShowHostServerDialog_Branches() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.showHostServerDialog());
+    Thread.sleep(600);
+
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog("5555", false);
+    runAndWait(() -> controller.showHostServerDialog());
+    Thread.sleep(600);
+
+    assertTrue(fakeGui.sentCommands.contains("server_start 5555"));
+    assertTrue(fakeGui.sentCommands.contains("join localhost:5555"));
+  }
+
+  @Test
+  void testShowLobby_NotConnected() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showLobby());
+    assertTrue(fakeGui.sentCommands.isEmpty());
+  }
+
+  @Test
+  void testRouteMessage_Invitation() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.contains("accept"));
+
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.contains("decline"));
+  }
+
+  @Test
+  void testConsoleInterceptor_ChooseMode() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    System.out.println("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
+
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.contains("mode normal"));
+  }
+
+  @Test
+  void testConsoleInterceptor_GameStarted() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+    System.out.println("[ONLINE] GAME_STARTED GAME_ID=1");
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.isEmpty());
+  }
+
 /*
     @Test
     void testEditShortcuts_Branches() throws InterruptedException {
