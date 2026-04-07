@@ -67,6 +67,9 @@ public class AiFactory {
       case "uct" -> {
         return new UctHeuristic(Math.sqrt(2));
       }
+      case "ml" -> {
+        return new MlHeuristic(Math.sqrt(2));
+      }
       default -> {
         return null;
       }
