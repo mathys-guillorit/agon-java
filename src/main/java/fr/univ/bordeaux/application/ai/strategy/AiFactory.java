@@ -42,6 +42,9 @@ public class AiFactory {
     switch (mode) {
       case "minimax" -> {
         Heuristic heuristic = createHeuristic(config.getAiHeuristic());
+        if(heuristic == null) {
+          return null;
+        }
         return new MinimaxStrategy(
             heuristic,
             color,
@@ -51,6 +54,9 @@ public class AiFactory {
       }
       case "mcts" -> {
         MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
+        if(heuristic == null) {
+          return null;
+        }
         return new MctsStrategy(color, heuristic, config.getAiTimeLimit());
       }
       default -> {
