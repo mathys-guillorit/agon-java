@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsNode;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.StdArrays;
@@ -36,8 +37,8 @@ public class MlHeuristic implements MctsSelectionHeuristic {
         try {
             this.model = SavedModelBundle.load("tfdata/saved_model", "serve");
         } catch (Exception e) {
-            System.err.println("[ML Heuristic] WARNING: Failed to load the model. Ensure the directory exists and contains a valid .pb file.");
-            System.err.println("[ML Heuristic] Error details: " + e.getMessage());
+            GameLogger.error("[ML Heuristic] WARNING: Failed to load the model. Ensure the directory exists and contains a valid .pb file.");
+            GameLogger.error("[ML Heuristic] Error details: " + e.getMessage());
             this.model = null;
         }
     }
@@ -74,7 +75,7 @@ public class MlHeuristic implements MctsSelectionHeuristic {
      */
     private double predictWithTensorFlow(float[] features) {
         if (this.model == null) {
-            return 0.5;
+            throw new RuntimeException("[ML Heuristic] Cannot predict without model.");
         }
 
         float[][] inputMatrix = new float[][]{features};
@@ -90,8 +91,7 @@ public class MlHeuristic implements MctsSelectionHeuristic {
                 return outputTensor.asRawTensor().data().asFloats().getFloat(0);
 
             } catch (Exception e) {
-                System.err.println("[ML Inference] Graph execution failed: " + e.getMessage());
-                return 0.5;
+                throw new RuntimeException("[ML Heuristic] Failed to predict.");
             }
         }
     }

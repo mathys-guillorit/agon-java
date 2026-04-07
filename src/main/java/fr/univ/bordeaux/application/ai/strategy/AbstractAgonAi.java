@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 
 /**
  * Skeletal implementation of the {@link AgonAi} interface.

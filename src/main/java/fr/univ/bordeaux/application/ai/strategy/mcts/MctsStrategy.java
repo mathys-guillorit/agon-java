@@ -6,6 +6,8 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
+import fr.univ.bordeaux.technical.utils.GameLogger;
+
 import java.util.List;
 import java.util.Random;
 
@@ -84,6 +86,7 @@ public class MctsStrategy extends AbstractAgonAi {
         node.addChild(newNode);
         node = newNode;
         this.nodeCount++;
+        GameLogger.debug("Node count :  " + this.nodeCount);
       }
 
       Color winner = checkWinner(board);

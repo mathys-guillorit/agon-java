@@ -1,5 +1,3 @@
-package fr.univ.bordeaux.technical.ait;
-
 import org.tensorflow.Graph;
 import org.tensorflow.Operand;
 import org.tensorflow.Session;
