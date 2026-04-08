@@ -28,15 +28,14 @@ default:
   tags:
     - Boursouflet
   before_script:
-    - set -e
-    - java -version
-    - mvn -version
-    # télécharge les dépendances si absentes dans le cache
-    - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
+    - mkdir -p ~/.m2
+    - echo '<settings><mirrors><mirror><id>central-mirror</id><name>Central Mirror</name><url>https://repo.maven.apache.org/maven2</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>' > ~/.m2/settings.xml
+    - mvn $MAVEN_CLI_OPTS dependency:resolve
+    - mvn $MAVEN_CLI_OPTS dependency:go-offline || true
   script:
-    - mvn test || mvn -o test
+    - mvn test
 
-# Template for all java jobs (avec Microsoft OpenJDK)
+# Template for all java jobs (with Microsoft OpenJDK)
 .java_template:
   tags:
     - Boursouflet
@@ -57,7 +56,7 @@ default:
         apt-get update
         apt-get install -y 
 
-# Tests on each distributions
+# Tests on each distribution
 check-format:
   stage: format-check
   image: $JDK_IMAGE
