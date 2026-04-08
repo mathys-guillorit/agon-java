@@ -5,24 +5,21 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GameLogger {
+public final class GameLogger {
   private static GameLogger instance;
   private final Logger logger;
 
   private GameLogger() {
     this.logger = Logger.getLogger("AgonGame");
 
-    // FORCE LE SILENCE ABSOLU AU DÉBUT
     this.logger.setUseParentHandlers(false);
-    this.logger.setLevel(Level.OFF); // On commence par tout éteindre
-
-    // Nettoyage des handlers existants
+    this.logger.setLevel(Level.OFF);
     for (Handler h : this.logger.getHandlers()) {
       this.logger.removeHandler(h);
     }
 
     ConsoleHandler consoleHandler = new ConsoleHandler();
-    consoleHandler.setLevel(Level.OFF); // Éteint aussi le handler
+    consoleHandler.setLevel(Level.OFF);
     this.logger.addHandler(consoleHandler);
   }
 
@@ -45,7 +42,7 @@ public class GameLogger {
   /** Activé par l'option -d ou set debug=true */
   public void setDebugMode(boolean enabled) {
     if (enabled) {
-      updateLevel(Level.FINE); // FINE est le standard Java pour le Debug
+      updateLevel(Level.FINE);
     } else {
       updateLevel(Level.WARNING);
     }
@@ -58,9 +55,6 @@ public class GameLogger {
       h.setLevel(newLevel);
     }
   }
-
-  // --- MÉTHODES DE LOG STATIQUES ---
-
   public static void debug(String msg) {
     getInstance().logger.log(Level.FINE, "[DEBUG] " + msg);
   }

@@ -24,13 +24,10 @@ class HistoryTest {
   @BeforeEach
   void setUp() {
     history = new History();
-
-    // Initialisation du premier coup (Blanc)
     List<Move> moves1 = new ArrayList<>();
     moves1.add(new Move(0, 1, Color.WHITE, PieceType.WHITE_QUEEN));
     move1 = new HistoryInformations(moves1, PieceType.WHITE_QUEEN, Color.WHITE);
 
-    // Initialisation du deuxième coup (Noir)
     List<Move> moves2 = new ArrayList<>();
     moves2.add(new Move(2, 3, Color.BLACK, PieceType.BLACK_QUEEN));
     move2 = new HistoryInformations(moves2, PieceType.BLACK_QUEEN, Color.BLACK);
@@ -52,7 +49,6 @@ class HistoryTest {
   @DisplayName("Should move HistoryInformations from undo to redo stack on undo")
   void testUndo() {
     history.add(move1, null);
-    // On récupère l'objet complet qui contient la liste des mouvements
     HistoryInformations undoneInfo = history.undo();
 
     assertEquals(move1, undoneInfo);

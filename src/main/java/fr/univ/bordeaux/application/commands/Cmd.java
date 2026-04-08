@@ -132,7 +132,7 @@ public abstract class Cmd implements CmdAction {
    *
    * @param name The new name string.
    */
-  public void setName(String name) {
+  public final void setName(String name) {
     this.name = name;
   }
 

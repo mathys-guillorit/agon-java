@@ -95,7 +95,15 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return A {@link List} containing the sequence of moves in the current game.
    */
   List<HistoryInformations> getHistory();
-
+  /**
+   * Retrieves a text-based representation of the complete move history.
+   *
+   * <p>Each string in the returned list typically represents a single turn or move
+   *
+   * @return A {@link List} of strings, where each element is a formatted
+   * description of a move. Returns an empty list if no moves
+   * have been performed yet.
+   */
   List<String> getHistoryAsText();
 
   /**
@@ -106,6 +114,14 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * @return A list of strings representing the board visually.
    */
   List<String> toTextList();
-
+  /**
+   * Checks if a specific player has any pieces currently captured that must be
+   * returned to the board.
+   *
+   * @param color The {@link Color} of the player whose relocation status is being checked.
+   * @return {@code true} if the player has at least one piece (Queen or Pawn)
+   * pending relocation; {@code false} if all the player's pieces are
+   * already on the board.
+   */
   boolean hasPiecesToRelocate(Color color);
 }

@@ -114,8 +114,6 @@ public final class CmdSet extends Cmd {
         String[] parts = arg.split("=", 2);
         String param = parts[0].trim();
         String value = parts[1].trim();
-
-        // On log chaque changement individuellement en DEBUG pour la traçabilité fine
         GameLogger.debug("CmdSet: Processing parameter [" + param + "] with value [" + value + "]");
 
         switch (param) {
@@ -127,7 +125,7 @@ public final class CmdSet extends Cmd {
           case "debug" -> {
             boolean val = Boolean.parseBoolean(value);
             gameConfig.setDebug(val);
-            GameLogger.getInstance().setDebugMode(val); // Mise à jour dynamique du logger
+            GameLogger.getInstance().setDebugMode(val);
             feedback.append("  - Debug: ").append(val).append("\n");
           }
           case "blitzmode" -> {

@@ -22,7 +22,9 @@ class MatchTest {
   private Player p2;
   private TestMatch match;
 
-  // Sous-classe concrète pour tester la classe abstraite Match
+  /**
+   * Concrete subclass used to test the abstract Match class.
+   */
   private static class TestMatch extends Match {
     public boolean startCalled = false;
     public boolean endCalled = false;
@@ -47,13 +49,13 @@ class MatchTest {
   void setUp() {
     board = new AgonBoardImpl();
     board.initBaseConfiguration();
-    p1 = new HumanPlayer("Blanc", Color.WHITE, null);
-    p2 = new HumanPlayer("Noir", Color.BLACK, null);
+    p1 = new HumanPlayer("White", Color.WHITE, null);
+    p2 = new HumanPlayer("Black", Color.BLACK, null);
     match = new TestMatch(board, p1, p2);
   }
 
   @Test
-  @DisplayName("Initialisation : le joueur blanc doit commencer")
+  @DisplayName("Initialization: the white player should start")
   void testInitialPlayer() {
     assertEquals(Color.WHITE, match.getCurrentPlayer().getColor());
     assertTrue(match.isRunning());
@@ -62,7 +64,7 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Getters : getwhitePlayer et getblackPlayer doivent retourner les bons joueurs")
+  @DisplayName("Getters: getWhitePlayer and getBlackPlayer should return the correct players")
   void testGetWhiteAndBlackPlayer() {
     assertEquals(p1, match.getWhitePlayer());
     assertEquals(p2, match.getBlackPlayer());
@@ -72,11 +74,10 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName(
-      "Getters : getwhitePlayer et getblackPlayer fonctionnent même si les joueurs sont inversés")
+  @DisplayName("Getters: getWhitePlayer and getBlackPlayer work even if players are swapped in constructor")
   void testGetWhiteAndBlackPlayerReversed() {
-    Player blackFirst = new HumanPlayer("Noir", Color.BLACK, null);
-    Player whiteSecond = new HumanPlayer("Blanc", Color.WHITE, null);
+    Player blackFirst = new HumanPlayer("Black", Color.BLACK, null);
+    Player whiteSecond = new HumanPlayer("White", Color.WHITE, null);
 
     TestMatch reversedMatch = new TestMatch(board, blackFirst, whiteSecond);
 
@@ -88,13 +89,13 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Winner : getWinner doit renvoyer null tant que le match n'est pas terminé")
+  @DisplayName("Winner: getWinner should return null as long as the match is not over")
   void testGetWinnerInitiallyNull() {
     assertNull(match.getWinner());
   }
 
   @Test
-  @DisplayName("Move : un mouvement valide doit changer de joueur")
+  @DisplayName("Move: a valid move should switch players")
   void testValidMove() {
     int from = CoordinateMapper.toIndex('K', 10);
     int to = CoordinateMapper.toIndex('J', 10);
@@ -102,14 +103,14 @@ class MatchTest {
 
     boolean result = match.move(move);
 
-    assertTrue(result, "Le mouvement devrait être valide");
-    assertTrue(match.endCalled, "endActions devrait être appelé");
+    assertTrue(result, "The move should be valid");
+    assertTrue(match.endCalled, "endActions should have been called");
     assertEquals(
-        Color.BLACK, match.getCurrentPlayer().getColor(), "Le joueur devrait avoir changé");
+        Color.BLACK, match.getCurrentPlayer().getColor(), "The player should have changed");
   }
 
   @Test
-  @DisplayName("Move : on ne peut pas bouger une pièce adverse")
+  @DisplayName("Move: cannot move an opponent's piece")
   void testInvalidPieceColor() {
     int from = CoordinateMapper.toIndex('K', 7);
     int to = CoordinateMapper.toIndex('J', 7);
@@ -117,12 +118,12 @@ class MatchTest {
 
     boolean result = match.move(move);
 
-    assertFalse(result, "On ne doit pas pouvoir bouger les pièces de l'adversaire");
-    assertEquals(Color.WHITE, match.getCurrentPlayer().getColor(), "Le joueur ne doit pas changer");
+    assertFalse(result, "It should not be possible to move opponent pieces");
+    assertEquals(Color.WHITE, match.getCurrentPlayer().getColor(), "The player should not change");
   }
 
   @Test
-  @DisplayName("Branche : move impossible si le match est déjà FINISHED")
+  @DisplayName("Branch: move impossible if match is already FINISHED")
   void testMoveWhenFinished() {
     match.quit();
 
@@ -131,11 +132,11 @@ class MatchTest {
 
     boolean result = match.move(move);
 
-    assertFalse(result, "Le move doit échouer car le match est fini");
+    assertFalse(result, "The move should fail because the match is over");
   }
 
   @Test
-  @DisplayName("Branche : move impossible si la pièce appartient à l'adversaire")
+  @DisplayName("Branch: move impossible if the piece belongs to the opponent")
   void testMoveOpponentPiece() {
     int fromBlack = CoordinateMapper.toIndex('K', 7);
     int to = CoordinateMapper.toIndex('J', 7);
@@ -143,11 +144,11 @@ class MatchTest {
 
     boolean result = match.move(move);
 
-    assertFalse(result, "Le move doit échouer car la pièce en K7 est noire");
+    assertFalse(result, "The move should fail because the piece at K7 is black");
   }
 
   @Test
-  @DisplayName("Branche : retourne false si applyMove échoue")
+  @DisplayName("Branch: returns false if applyMove fails")
   void testApplyMoveFails() {
     int from = CoordinateMapper.toIndex('C', 2);
     int to = CoordinateMapper.toIndex('C', 1);
@@ -155,11 +156,11 @@ class MatchTest {
 
     boolean result = match.move(illegalMove);
 
-    assertFalse(result, "Le move doit renvoyer false car applyMove a refusé le mouvement");
+    assertFalse(result, "The move should return false because applyMove refused the motion");
   }
 
   @Test
-  @DisplayName("Undo/Redo : vérification de la cohérence de l'historique")
+  @DisplayName("Undo/Redo: verification of history consistency")
   void testUndoRedo() {
     match.move(
         new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
@@ -167,26 +168,26 @@ class MatchTest {
         new Move(CoordinateMapper.toIndex('B', 7), CoordinateMapper.toIndex('C', 7), Color.BLACK));
 
     boolean undoRes = match.undo();
-    assertTrue(undoRes, "Le undo devrait fonctionner après des coups joués");
+    assertTrue(undoRes, "Undo should work after moves are played");
 
     boolean redoRes = match.redo();
-    assertTrue(redoRes, "Le redo devrait fonctionner si des coups ont été annulés");
+    assertTrue(redoRes, "Redo should work if moves have been undone");
   }
 
   @Test
-  @DisplayName("Undo : retourne false si aucun coup n'a été joué")
+  @DisplayName("Undo: returns false if no moves have been played")
   void testUndoWithoutHistory() {
     assertFalse(match.undo());
   }
 
   @Test
-  @DisplayName("Redo : retourne false si aucun coup n'a été annulé")
+  @DisplayName("Redo: returns false if no moves have been undone")
   void testRedoWithoutUndo() {
     assertFalse(match.redo());
   }
 
   @Test
-  @DisplayName("Quit : le match doit s'arrêter")
+  @DisplayName("Quit: the match should stop")
   void testQuit() {
     match.quit();
     assertTrue(match.isMatchOver());
@@ -195,21 +196,21 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Hint : l'IA doit suggérer un mouvement")
+  @DisplayName("Hint: the AI should suggest a move")
   void testHint() {
     Move hint = match.hint();
-    assertNotNull(hint, "L'IA devrait proposer un coup");
-    assertEquals(Color.WHITE, hint.getColor(), "Le coup suggéré doit être pour le joueur actuel");
+    assertNotNull(hint, "The AI should suggest a move");
+    assertEquals(Color.WHITE, hint.getColor(), "The suggested move should be for the current player");
   }
 
   @Test
-  @DisplayName("History : getHistory doit être vide au début")
+  @DisplayName("History: getHistory should be empty at the start")
   void testGetHistoryInitiallyEmpty() {
     assertTrue(match.getHistory().isEmpty());
   }
 
   @Test
-  @DisplayName("History : getHistory doit renvoyer des MoveDTO")
+  @DisplayName("History: getHistory should return MoveDTOs")
   void testGetHistory() {
     match.move(
         new Move(CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), Color.WHITE));
@@ -220,7 +221,7 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Branche : le match passe en FINISHED en cas de victoire")
+  @DisplayName("Branch: the match status changes to FINISHED upon victory")
   void testGameWinStatus() {
     BitBoard queenw = new BitBoard();
     BitBoard pawnw = new BitBoard();
@@ -234,8 +235,8 @@ class MatchTest {
     pawnw.setBit(CoordinateMapper.toIndex('E', 7), 1L);
 
     AgonBoardImpl customBoard = new AgonBoardImpl(queenw, new BitBoard(), pawnw, new BitBoard());
-    Player white = new HumanPlayer("Blanc", Color.WHITE, null);
-    Player black = new HumanPlayer("Noir", Color.BLACK, null);
+    Player white = new HumanPlayer("White", Color.WHITE, null);
+    Player black = new HumanPlayer("Black", Color.BLACK, null);
     TestMatch customMatch = new TestMatch(customBoard, white, black);
 
     Move winningMove =
@@ -244,12 +245,12 @@ class MatchTest {
     customMatch.move(winningMove);
 
     assertEquals(
-        MatchStatus.FINISHED, customMatch.getMatchStatus(), "Le status doit être FINISHED");
+        MatchStatus.FINISHED, customMatch.getMatchStatus(), "The status should be FINISHED");
     assertTrue(customMatch.isMatchOver());
   }
 
   @Test
-  @DisplayName("Winner : getWinner doit retourner le joueur gagnant après une victoire")
+  @DisplayName("Winner: getWinner should return the winning player after a victory")
   void testGetWinnerAfterWin() {
     BitBoard queenw = new BitBoard();
     BitBoard pawnw = new BitBoard();
@@ -263,8 +264,8 @@ class MatchTest {
     pawnw.setBit(CoordinateMapper.toIndex('E', 7), 1L);
 
     AgonBoardImpl customBoard = new AgonBoardImpl(queenw, new BitBoard(), pawnw, new BitBoard());
-    Player white = new HumanPlayer("Blanc", Color.WHITE, null);
-    Player black = new HumanPlayer("Noir", Color.BLACK, null);
+    Player white = new HumanPlayer("White", Color.WHITE, null);
+    Player black = new HumanPlayer("Black", Color.BLACK, null);
     TestMatch customMatch = new TestMatch(customBoard, white, black);
 
     Move winningMove =
@@ -278,14 +279,14 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Pause : retourne false")
+  @DisplayName("Pause: returns false")
   void testPause() {
     assertFalse(match.pause());
   }
 
   @Test
-  @DisplayName("Remaining time : retourne null")
+  @DisplayName("Remaining time: returns null")
   void testRemainingTime() {
-    assertNull(match.getCurrentPlayerRemainingTime());
+    assertEquals(match.getCurrentPlayerRemainingTime(), "null");
   }
 }

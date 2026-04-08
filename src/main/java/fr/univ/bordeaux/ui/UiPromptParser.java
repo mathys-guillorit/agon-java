@@ -26,7 +26,7 @@ import org.jline.reader.impl.DefaultParser;
  */
 public class UiPromptParser {
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
-  private static final Parser parser = new DefaultParser();
+  private static final Parser PARSER = new DefaultParser();
 
   /** Pattern for standard moves: origin (letter+digit) + destination (letter+digit). Ex: "a1b2" */
   private static final Pattern MOVE_PATTERN =
@@ -52,7 +52,7 @@ public class UiPromptParser {
 
     final ParsedLine parsed;
     try {
-      parsed = parser.parse(line, 0);
+      parsed = PARSER.parse(line, 0);
     } catch (Exception e) {
       GameLogger.error("UiPromptParser: JLine parsing failed for input: " + line);
       return null;
@@ -65,7 +65,6 @@ public class UiPromptParser {
 
     String firstWord = words.get(0).toLowerCase();
 
-    // 1. Try compound commands such as "server start" -> "server_start"
     if (words.size() >= 2) {
       String compoundCmdName = firstWord + "_" + words.get(1).toLowerCase();
       String[] compoundOptions = words.subList(2, words.size()).toArray(String[]::new);
@@ -76,10 +75,8 @@ public class UiPromptParser {
       }
     }
 
-    // 2. Fallback to classic one-word commands such as "join"
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
-    // Try to find the command in the registry, otherwise fallback to move/relocation parsing
     return registry
         .get(firstWord)
         .map(
@@ -112,7 +109,6 @@ public class UiPromptParser {
     Matcher moveMatcher = MOVE_PATTERN.matcher(lowerInput);
     Matcher relocationMatcher = RELOCATION_PATTERN.matcher(lowerInput);
 
-    // Case 1: Standard Move (e.g., a1b2)
     if (moveMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches MOVE_PATTERN (" + lowerInput + ")");
       char letterFrom = moveMatcher.group(1).charAt(0);
@@ -131,7 +127,6 @@ public class UiPromptParser {
       }
     }
 
-    // Case 2: Relocation (e.g., a1)
     if (relocationMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches RELOCATION_PATTERN (" + lowerInput + ")");
       char letter = relocationMatcher.group(1).charAt(0);

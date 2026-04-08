@@ -969,12 +969,10 @@ public class AgonBoardImpl implements AgonBoard {
    * circle or to a circle closer to the center (Throne).
    */
   private void initAllowedDestinations() {
-    // A piece can move only forward or on the sides
     for (int i = 0; i < 6; i++) {
       validDestinations[i] = new BitBoard();
     }
     for (int i = 5; i >= 1; i--) {
-      // For each circle i, allowed destinations are tiles in circle i and circle i-1
       for (int j = i; j >= i - 1; j--) {
         validDestinations[i] = validDestinations[i].orOperation(circles[j]);
       }
@@ -997,19 +995,12 @@ public class AgonBoardImpl implements AgonBoard {
     for (int i = 1; i < 6; i++) {
       circles[i] = new BitBoard();
     }
-    // Starting with THRONE (center)
     circles[0] = new BitBoard(throne);
     validZoneMask.setBit(throne, 1);
-
-    // Create outer circles using the expansion (dilation) method
     for (int i = 1; i < 6; i++) {
       BitBoard expansion = getAllNeighborsInternal(circles[i - 1]);
-
-      // Remove tiles that are already part of a previously processed inner circle
       expansion = expansion.andOperation(validZoneMask.complementOperation());
       circles[i] = expansion;
-
-      // Update the global mask with the newly discovered valid tiles
       this.validZoneMask = this.validZoneMask.orOperation(circles[i]);
     }
   }

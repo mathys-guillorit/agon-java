@@ -10,6 +10,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
+import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 public class CmdQuitTest {
   private AgonRegister<CmdAction> cmds;
   private ByteArrayOutputStream outContent;
+  private GameUserInterface gameUserInterface;
 
   @BeforeEach
   void setUp() {
@@ -34,7 +36,6 @@ public class CmdQuitTest {
     outContent = new ByteArrayOutputStream();
   }
 
-  // Helper pour créer l'interface avec une réponse prédéfinie
   private GameUserInterface createUiWithInput(String input) throws Exception {
     Terminal terminal = new FakeTerminal(outContent);
     LineReader reader = new FakeLineReader(input);
@@ -42,7 +43,7 @@ public class CmdQuitTest {
   }
 
   @Test
-  @DisplayName("F10 : Quitter sans sauvegarder (Réponse 'n')")
+  @DisplayName("F10: Quit without saving (Answer 'n')")
   void testQuitNoSave() throws Exception {
     gameUserInterface = createUiWithInput("n");
     MatchManager match = createRealMatch(gameUserInterface);
@@ -52,14 +53,13 @@ public class CmdQuitTest {
     boolean result = cmdQuit.execute(match);
 
     assertTrue(result);
-    assertFalse(gameUserInterface.isRunning(), "Le shell devrait être arrêté");
+    assertFalse(gameUserInterface.isRunning(), "The shell should be stopped");
     assertTrue(outContent.toString().contains("Save the game before quitting?"));
   }
 
   @Test
-  @DisplayName("F10 : Quitter avec sauvegarde réussie (Réponse 'y' + nom)")
+  @DisplayName("F10: Quit with successful save (Answer 'y' + name)")
   void testQuitWithSave() throws Exception {
-    // On simule : "y" pour sauvegarder, puis "ma_sauvegarde" pour le nom
     gameUserInterface = createUiWithInput("y");
     MatchManager match = createRealMatch(gameUserInterface);
     match.setIsSaved(false);
@@ -68,17 +68,15 @@ public class CmdQuitTest {
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
     cmdQuit.execute(match);
 
-    assertTrue(match.isSaved(), "Le match devrait être marqué comme sauvegardé");
+    assertTrue(match.isSaved(), "The match should be marked as saved");
     assertFalse(gameUserInterface.isRunning());
 
-    // Nettoyage du fichier créé par CmdSave
     new File("ma_sauvegarde").delete();
   }
 
   @Test
-  @DisplayName("F10 : Sauvegarde avec nom vide (doit utiliser default_save)")
+  @DisplayName("F10: Save with empty name (should use default_save)")
   void testQuitWithEmptyFileName() throws Exception {
-    // "y" pour oui, puis "" (entrée vide) pour le nom
     gameUserInterface = createUiWithInput("y\n ");
     MatchManager match = createRealMatch(gameUserInterface);
     match.setIsSaved(false);
@@ -94,14 +92,12 @@ public class CmdQuitTest {
   }
 
   @Test
-  @DisplayName("Quitter alors qu'aucun match n'est en cours")
+  @DisplayName("Quit when no match is in progress")
   void testQuitNoActiveMatch() throws Exception {
     gameUserInterface = createUiWithInput("");
 
     AppContext context = new AppContext(new LocalProfile("test"));
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-
-    // Si match est null, on quitte directement (branche if(match != null) sautée)
     boolean result = cmdQuit.execute(null);
 
     assertTrue(result);
@@ -109,11 +105,11 @@ public class CmdQuitTest {
   }
 
   @Test
-  @DisplayName("Quitter si le match est déjà fini ou déjà sauvegardé")
+  @DisplayName("Quit if the match is already finished or already saved")
   void testQuitAlreadySaved() throws Exception {
     gameUserInterface = createUiWithInput("");
     MatchManager match = createRealMatch(gameUserInterface);
-    match.setIsSaved(true); // Déjà sauvegardé, ne doit pas demander
+    match.setIsSaved(true);
 
     AppContext context = new AppContext(new LocalProfile("test"));
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
@@ -122,11 +118,11 @@ public class CmdQuitTest {
     assertFalse(gameUserInterface.isRunning());
     assertFalse(
         outContent.toString().contains("Save the game before quitting?"),
-        "Ne devrait pas demander de sauvegarde si déjà fait");
+        "Should not prompt for save if already done");
   }
 
   @Test
-  @DisplayName("Vérification de la description")
+  @DisplayName("Description verification")
   void testDescription() throws Exception {
     gameUserInterface = createUiWithInput("");
 
@@ -143,8 +139,8 @@ public class CmdQuitTest {
     AppContext context =
         new AppContext(new LocalProfile("test")) {
           @Override
-          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
-            return new fr.univ.bordeaux.application.network.client.AgonClient(getProfile()) {
+          public AgonClient getClient() {
+            return new AgonClient(getProfile()) {
               boolean connected = true;
               boolean quitCalled = false;
 
@@ -184,15 +180,14 @@ public class CmdQuitTest {
     assertFalse(gameUserInterface.isRunning());
   }
 
-  // --- Helpers ---
+
 
   private MatchManager createRealMatch(GameUserInterface ui) {
     return new StandardMatch(
         new AgonBoardImpl(),
-        new HumanPlayer("J1", Color.WHITE, ui),
-        new HumanPlayer("J2", Color.BLACK, ui),
+        new HumanPlayer("P1", Color.WHITE, ui),
+        new HumanPlayer("P2", Color.BLACK, ui),
         new GameConfig());
   }
 
-  private GameUserInterface gameUserInterface;
 }

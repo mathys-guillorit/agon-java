@@ -16,9 +16,9 @@ public class ConfigBinder {
    *
    * @param cmd The parsed command line.
    * @param config The configuration object to update.
-   * @param Ui The user interface context for feedback.
+   * @param ui The user interface context for feedback.
    */
-  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface Ui) {
+  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface  ui) {
     GameLogger.debug("ConfigBinder: Starting binding process...");
 
     // --- F4 & F31: Blitz Mode ---
@@ -38,7 +38,7 @@ public class ConfigBinder {
         }
       } else {
         GameLogger.debug("ConfigBinder: Option 't' provided but ignored (not in Blitz mode).");
-        Ui.showInfo("Option 't' ignored because option blitz (-b) is missing.");
+        ui.showInfo("Option 't' ignored because option blitz (-b) is missing.");
       }
     }
 
@@ -48,7 +48,7 @@ public class ConfigBinder {
       String aiValue = cmd.getOptionValue("a");
       if (aiValue == null) {
         GameLogger.info("ConfigBinder: No color specified for AI, defaulting to BLACK.");
-        Ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
+        ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
         config.setBlackAi(true);
       } else {
         switch (aiValue.toLowerCase()) {
@@ -71,7 +71,7 @@ public class ConfigBinder {
           default:
             GameLogger.error(
                 "ConfigBinder: Invalid AI color '" + aiValue + "'. Defaulting to BLACK.");
-            Ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
+            ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
             config.setBlackAi(true);
             break;
         }
@@ -131,15 +131,16 @@ public class ConfigBinder {
 
     if (cmd.hasOption("ai-mcts-selection")) {
       if (!isMcts) {
-        Ui.showInfo("Mcts mode for Ai is not active, option ai-mcts-selection is ignored.\n");
+        ui.showInfo("Mcts mode for Ai is not active, option ai-mcts-selection is ignored.\n");
       } else {
         String selection = cmd.getOptionValue("ai-mcts-selection");
         if (selection.equals("ML") || selection.equals("UCT")) {
           config.setAiHeuristic(selection.toLowerCase());
           GameLogger.info("AI mcts mode set to " + selection);
+        }else {
+          ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
+          GameLogger.info("AI mcts mode set to default (UCT).");
         }
-        Ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
-        GameLogger.info("AI mcts mode set to default (UCT).");
       }
     }
 

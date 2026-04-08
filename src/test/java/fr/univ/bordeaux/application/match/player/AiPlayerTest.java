@@ -20,7 +20,9 @@ public class AiPlayerTest {
   private AiPlayer aiPlayer;
   private Move fakeBestMove;
 
-  // Implémentation factice (Stub) de AgonAi pour le test
+  /**
+   * Simple stub for AI strategy to avoid running complex algorithms during tests.
+   */
   private class StubAi implements AgonAi {
     @Override
     public Move getBestMove(AgonBoard board) {
@@ -41,23 +43,19 @@ public class AiPlayerTest {
   }
 
   @Test
-  @DisplayName("Vérification des attributs de base (Nom, Couleur, Type)")
+  @DisplayName("Verify basic attributes (Name, Color, Type)")
   void testBasicAttributes() {
     assertEquals("AlphaAgon", aiPlayer.getName());
     assertEquals(Color.WHITE, aiPlayer.getColor());
   }
 
   @Test
-  @DisplayName("getAction doit retourner une CmdMove contenant le meilleur coup de l'IA")
+  @DisplayName("getAction should return a CmdMove containing the AI's best move")
   void testGetAction() {
-    // On crée un registre vide pour l'appel
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
-
-    // Appel de la méthode à tester
     CmdAction action = aiPlayer.getAction(cmds);
 
-    // Vérifications
-    assertNotNull(action, "L'action ne doit pas être nulle");
-    assertTrue(action instanceof CmdMove, "L'action retournée doit être une instance de CmdMove");
+    assertNotNull(action, "The action should not be null");
+    assertTrue(action instanceof CmdMove, "The returned action should be an instance of CmdMove");
   }
 }

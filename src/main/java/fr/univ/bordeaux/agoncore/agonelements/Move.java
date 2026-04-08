@@ -42,7 +42,7 @@ public class Move {
     this.from = from;
     this.destination = destination;
     this.color = color;
-    this.pieceType = null; // Default if not specified
+    this.pieceType = null;
   }
 
   /**
@@ -99,15 +99,27 @@ public class Move {
   public boolean isRelocationMove() {
     return from == -1;
   }
-
+  /**
+   * Computes the hash code for this Move based on its state.
+   *
+   * @return A hash code value for this object.
+   */
   @Override
   public int hashCode() {
     return Objects.hash(from, destination, color, pieceType);
   }
-
+  /**
+   * Compares this move to the specified object.
+   *
+   * <p>Two moves are considered equal if they have the same source, destination, and color.
+   * If piece types are provided for both, they must also match.
+   *
+   * @param obj The object to compare with.
+   * @return {@code true} if the objects are equivalent, {@code false} otherwise.
+   */
   @Override
-  public boolean equals(Object obj) {
-    Move move = (Move) obj;
+  public boolean equals(final Object obj) {
+    final Move move = (Move) obj;
     if (this.pieceType != null && move.getPieceType() != null) {
       return this.from == move.from
           && this.destination == move.destination

@@ -22,7 +22,6 @@ public class HumanPlayerTest {
   private AgonRegister<CmdAction> cmds;
   private FakeUserInterface fakeUi;
 
-  // Stub interne pour contrôler getUserInput
   private class FakeUserInterface extends AgonShell {
     private String simulatedInput;
 
@@ -49,49 +48,44 @@ public class HumanPlayerTest {
     cmds = new AgonRegister<>();
 
     AppContext context = new AppContext(new LocalProfile("test"));
-    // On enregistre au moins une commande pour le test du parseur
     cmds.register("quit", new CmdQuit(fakeUi, context));
 
     humanPlayer = new HumanPlayer("Jean", Color.BLACK, fakeUi);
   }
 
   @Test
-  @DisplayName("Test des getters basiques")
+  @DisplayName("Test basic getters")
   void testGetters() {
     assertEquals("Jean", humanPlayer.getName());
     assertEquals(Color.BLACK, humanPlayer.getColor());
   }
 
   @Test
-  @DisplayName("getAction : retourne null si l'entrée est nulle ou vide")
+  @DisplayName("getAction: returns null if input is null or empty")
   void testGetActionEmptyInput() {
-    // Cas null
     fakeUi.setSimulatedInput(null);
     assertNull(humanPlayer.getAction(cmds));
 
-    // Cas vide
     fakeUi.setSimulatedInput("   ");
     assertNull(humanPlayer.getAction(cmds));
   }
 
   @Test
-  @DisplayName("getAction : délègue au parseur quand l'entrée est valide")
+  @DisplayName("getAction: delegates to parser when input is valid")
   void testGetActionValidInput() {
-    // On simule la saisie "quit"
     fakeUi.setSimulatedInput("quit");
 
     CmdAction action = humanPlayer.getAction(cmds);
 
     assertNotNull(action);
-    assertTrue(action instanceof CmdQuit, "L'entrée 'quit' doit retourner une CmdQuit");
+    assertTrue(action instanceof CmdQuit, "Input 'quit' should return a CmdQuit instance");
   }
 
   @Test
-  @DisplayName("getAction : retourne null si la commande est inconnue (via UiPromptParser)")
+  @DisplayName("getAction: returns null if command is unknown")
   void testGetActionUnknownCommand() {
     fakeUi.setSimulatedInput("notACommand");
 
-    // Le UiPromptParser.parse devrait retourner null (ou afficher une erreur et retourner null)
     CmdAction action = humanPlayer.getAction(cmds);
     assertNull(action);
   }

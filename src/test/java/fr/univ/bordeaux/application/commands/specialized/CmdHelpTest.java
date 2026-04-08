@@ -61,7 +61,6 @@ public class CmdHelpTest {
   @Test
   @DisplayName("Vérifier l'aide ciblée pour une commande existante (quit)")
   void testTargetedHelpSuccess() {
-    // Appel de "help quit"
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {"quit"});
     boolean result = cmd.execute(null);
 

@@ -33,10 +33,15 @@ public class History {
 
   /** Stack containing turns that were reverted and can be re-applied. */
   private final Stack<HistoryInformations> redoStack = new Stack<>();
-
+  /** * A map tracking how many times each board configuration has occurred.
+   * Key: String signature of the board, Value: count of occurrences.
+   */
   private final Map<String, Integer> configurationCounts = new HashMap<>();
-  // On garde aussi une pile des signatures pour pouvoir les décrémenter lors d'un undo
+
+  /** Stack storing the signatures of past board states to manage undo operations. */
   private final Stack<String> signatureStack = new Stack<>();
+
+  /** Stack storing signatures of undone moves to allow restoring them during a redo. */
   private final Stack<String> redoSignatureStack = new Stack<>();
 
   /** Initializes an empty game history. */
@@ -152,12 +157,13 @@ public class History {
   }
 
   /**
-   * Records a new turn in the history.
+   * Adds a new turn to the history along with its board state signature.
    *
-   * <p>The turn is pushed onto the undo stack, and the redo stack is immediately cleared to ensure
-   * history consistency.
+   * <p>This method updates the undo stack, records the board configuration for
+   * repetition checking, and clears the redo stacks to maintain a linear history.</p>
    *
-   * @param informations The {@link HistoryInformations} containing the move sequence to record.
+   * @param informations The {@link HistoryInformations} of the turn.
+   * @param boardSignature A unique {@link String} representing the board state after the move.
    */
   public void add(HistoryInformations informations, String boardSignature) {
     undoStack.push(informations);
@@ -325,7 +331,14 @@ public class History {
 
     return textMoves;
   }
-
+  /**
+   * Checks if the current board configuration has occurred three or more times.
+   * * <p>This is used to detect the "Triple Repetition" rule, which in many
+   * Agon implementations results in a draw or a loss for the player creating the loop.</p>
+   *
+   * @param currentSignature The signature of the board state to check.
+   * @return {@code true} if the state has occurred 3 times or more, {@code false} otherwise.
+   */
   public boolean isTripleRepetition(String currentSignature) {
     return configurationCounts.getOrDefault(currentSignature, 0) >= 3;
   }

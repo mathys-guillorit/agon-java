@@ -50,15 +50,15 @@ public class GameEngineTest {
 
       cmds.register("new", new CmdCreate(gameUserInterface, config, gameEngine));
     } catch (Exception e) {
-      fail("Le setup a échoué : " + e.getMessage());
+      fail("Setup failed: " + e.getMessage());
     }
   }
 
   private StandardMatch createMatch() {
     return new StandardMatch(
         new AgonBoardImpl(),
-        new HumanPlayer("J1", Color.WHITE, null),
-        new HumanPlayer("J2", Color.BLACK, null),
+        new HumanPlayer("P1", Color.WHITE, null),
+        new HumanPlayer("P2", Color.BLACK, null),
         new GameConfig());
   }
 
@@ -104,7 +104,6 @@ public class GameEngineTest {
 
     @Override
     public String getHelp() {
-      /// TODO: impl here (must show a help for all CmdAction)
       return "usage: not defined yet";
     }
 
@@ -121,7 +120,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("Vérifier que createNew génère une action non nulle")
+  @DisplayName("Verify that createNew generates a non-null action")
   void createNewTest() {
     CmdAction cmdCreate = cmds.get("new").get().createNew(new String[] {});
     assertTrue(cmdCreate.execute(null));
@@ -129,7 +128,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("Test de la boucle principale : Menu -> Create -> Match")
+  @DisplayName("Main loop test: Menu -> Create -> Match")
   void loopTest() {
     LineReader reader = new FakeLineReader("new", "quit");
 
@@ -147,15 +146,15 @@ public class GameEngineTest {
 
       assertNotNull(
           gameEngine.getMatchManager(),
-          "La boucle aurait dû exécuter 'create' et initialiser le match");
+          "The loop should have executed 'create' and initialized the match");
       gameUserInterface.quit();
     } catch (Exception e) {
-      fail("La boucle principale a levé une exception : " + e.getMessage());
+      fail("Main loop threw an exception: " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("stop : interrompt le joueur bloqué quand le match se termine")
+  @DisplayName("stop: interrupts blocked player when the match finishes")
   void stopTest() throws Exception {
     AtomicBoolean interruptedReceived = new AtomicBoolean(false);
 
@@ -177,7 +176,7 @@ public class GameEngineTest {
         new StandardMatch(
             new AgonBoardImpl(),
             slowPlayer,
-            new HumanPlayer("J2", Color.BLACK, null),
+            new HumanPlayer("P2", Color.BLACK, null),
             new GameConfig());
     gameEngine.setMatchManager(match);
 
@@ -192,27 +191,27 @@ public class GameEngineTest {
 
     assertTrue(
         interruptedReceived.get(),
-        "Le thread du joueur aurait dû être interrompu par futureAction.cancel(true)");
+        "The player thread should have been interrupted by futureAction.cancel(true)");
 
     gameUserInterface.quit();
     engineThread.join(1000);
   }
 
   @Test
-  @DisplayName("previewMatch : ne doit rien faire si le matchManager est null")
+  @DisplayName("previewMatch: should do nothing if matchManager is null")
   void previewMatchWithNullDoesNothing() {
     assertDoesNotThrow(() -> gameEngine.previewMatch(null));
   }
 
   @Test
-  @DisplayName("previewMatch : fonctionne avec un match valide")
+  @DisplayName("previewMatch: works with a valid match")
   void previewMatchWithValidMatch() {
     StandardMatch match = createMatch();
     assertDoesNotThrow(() -> gameEngine.previewMatch(match));
   }
 
   @Test
-  @DisplayName("setAppContext : enregistre correctement le contexte")
+  @DisplayName("setAppContext: correctly stores context")
   void setAppContextStoresContext() throws Exception {
     AppContext context = new AppContext(new LocalProfile("test"));
     gameEngine.setAppContext(context);
@@ -222,13 +221,13 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("clearBoardPreview : ne lève pas d'exception")
+  @DisplayName("clearBoardPreview: does not throw exception")
   void clearBoardPreviewTest() {
     assertDoesNotThrow(() -> gameEngine.clearBoardPreview());
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : retourne false si action est null")
+  @DisplayName("isForbiddenOnlineCommand: returns false if action is null")
   void isForbiddenOnlineCommandNull() throws Exception {
     Boolean result =
         (Boolean)
@@ -242,7 +241,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : retourne false si le nom est null")
+  @DisplayName("isForbiddenOnlineCommand: returns false if name is null")
   void isForbiddenOnlineCommandNameNull() throws Exception {
     CmdAction action = new FakeCmdAction(null);
 
@@ -255,7 +254,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : undo doit être interdit")
+  @DisplayName("isForbiddenOnlineCommand: undo must be forbidden")
   void isForbiddenOnlineCommandUndo() throws Exception {
     CmdAction action = new FakeCmdAction("undo");
 
@@ -268,7 +267,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : redo doit être interdit")
+  @DisplayName("isForbiddenOnlineCommand: redo must be forbidden")
   void isForbiddenOnlineCommandRedo() throws Exception {
     CmdAction action = new FakeCmdAction("redo");
 
@@ -281,7 +280,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : pause doit être interdit")
+  @DisplayName("isForbiddenOnlineCommand: pause must be forbidden")
   void isForbiddenOnlineCommandPause() throws Exception {
     CmdAction action = new FakeCmdAction("pause");
 
@@ -294,7 +293,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : save doit être interdit")
+  @DisplayName("isForbiddenOnlineCommand: save must be forbidden")
   void isForbiddenOnlineCommandSave() throws Exception {
     CmdAction action = new FakeCmdAction("save");
 
@@ -307,7 +306,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : load doit être interdit")
+  @DisplayName("isForbiddenOnlineCommand: load must be forbidden")
   void isForbiddenOnlineCommandLoad() throws Exception {
     CmdAction action = new FakeCmdAction("load");
 
@@ -320,7 +319,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("isForbiddenOnlineCommand : une commande normale ne doit pas être interdite")
+  @DisplayName("isForbiddenOnlineCommand: normal commands should not be forbidden")
   void isForbiddenOnlineCommandAllowed() throws Exception {
     CmdAction action = new FakeCmdAction("help");
 
@@ -333,14 +332,14 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("refreshOnlineBoard : ne fait rien si appContext est null")
+  @DisplayName("refreshOnlineBoard: does nothing if appContext is null")
   void refreshOnlineBoardWithoutContext() {
     assertDoesNotThrow(
         () -> invokePrivateMethod(gameEngine, "refreshOnlineBoard", new Class<?>[] {}));
   }
 
   @Test
-  @DisplayName("setMatchManager / getMatchManager : conservent la référence")
+  @DisplayName("setMatchManager / getMatchManager: preserves reference")
   void setAndGetMatchManager() {
     StandardMatch match = createMatch();
     gameEngine.setMatchManager(match);
@@ -349,7 +348,7 @@ public class GameEngineTest {
   }
 
   @Test
-  @DisplayName("start : ne plante pas avec une UI qui s'arrête rapidement")
+  @DisplayName("start: does not crash with an UI that quits immediately")
   void startWithImmediateQuit() {
     LineReader reader = new FakeLineReader("quit");
 
@@ -363,14 +362,14 @@ public class GameEngineTest {
 
       assertDoesNotThrow(() -> gameEngine.start());
     } catch (Exception e) {
-      fail("Le test a échoué : " + e.getMessage());
+      fail("Test failed: " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("start : accepte une commande inconnue sans planter")
+  @DisplayName("start: accepts unknown commands without crashing")
   void startWithUnknownCommand() {
-    LineReader reader = new FakeLineReader("commande_inconnue", "quit");
+    LineReader reader = new FakeLineReader("unknown_command", "quit");
 
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
@@ -382,7 +381,7 @@ public class GameEngineTest {
 
       assertDoesNotThrow(() -> gameEngine.start());
     } catch (Exception e) {
-      fail("Le test a échoué : " + e.getMessage());
+      fail("Test failed: " + e.getMessage());
     }
   }
 }

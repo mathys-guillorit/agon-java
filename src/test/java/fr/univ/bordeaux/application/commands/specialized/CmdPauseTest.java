@@ -39,12 +39,12 @@ public class CmdPauseTest {
       Terminal terminal = new FakeTerminal(output);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
     } catch (Exception e) {
-      fail("Le setup a échoué : " + e.getMessage());
+      fail("Setup failed: " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("Vérifier que CmdPause.execute met le match en pause et renvoie false")
+  @DisplayName("Verify that CmdPause.execute pauses the match and returns false")
   void testExecutePause() throws InterruptedException {
     CmdPause cmdPause = new CmdPause(gameUserInterface);
     cmdPause.execute(null);
@@ -58,35 +58,27 @@ public class CmdPauseTest {
     Player p1 = new HumanPlayer("White", Color.WHITE, gameUserInterface);
     Player p2 = new HumanPlayer("Black", Color.BLACK, gameUserInterface);
 
-    // On crée un BlitzMatch avec 1 minute pour que ça soit facile à tester
     BlitzMatch match = new BlitzMatch(board, p1, p2, 1, new GameConfig());
-
-    // Au début le timer tourne (lancé par le constructeur de BlitzMatch)
     String time1 = match.getCurrentPlayerRemainingTime();
-
-    // On attend un peu pour que le temps s'écoule (au moins 1 seconde)
     Thread.sleep(1100);
 
     String time2 = match.getCurrentPlayerRemainingTime();
-    assertNotEquals(time1, time2, "Le temps devrait s'être écoulé avant la pause");
+    assertNotEquals(time1, time2, "Time should have elapsed before the pause");
 
-    // On exécute la pause
     boolean result = cmdPause.execute(match);
-    assertFalse(result, "La commande pause doit renvoyer false pour ne pas passer le tour");
+    assertFalse(result, "Pause command must return false to avoid skipping the turn");
 
-    // On récupère le temps au moment de la pause
     String timePaused = match.getCurrentPlayerRemainingTime();
 
-    // On attend encore
     Thread.sleep(1100);
 
     String timeAfterWait = match.getCurrentPlayerRemainingTime();
     assertEquals(
-        timePaused, timeAfterWait, "Le temps ne devrait pas s'être écoulé pendant la pause");
+        timePaused, timeAfterWait, "Time should not have elapsed during the pause");
   }
 
   @Test
-  @DisplayName("Vérifier la description de la commande pause")
+  @DisplayName("Verify the pause command description")
   void testGetDescription() {
     CmdPause cmdPause = new CmdPause(gameUserInterface);
     assertTrue(cmdPause.getDescription().contains("Usage: pause"));
@@ -94,7 +86,7 @@ public class CmdPauseTest {
   }
 
   @Test
-  @DisplayName("Vérifier createNew")
+  @DisplayName("Verify createNew method")
   void testCreateNew() {
     CmdPause cmdPause = new CmdPause(gameUserInterface);
     CmdAction newAction = cmdPause.createNew(new String[] {});

@@ -68,12 +68,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   /** Registry containing all executable commands available in the shell. */
   private AgonRegister<CmdAction> cmds;
 
-  /** If true, the shell outputs detailed operational feedback. */
-  private boolean verbose;
-
-  /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
-  private AtomicBoolean debug;
-
   private String boardFooter = "";
 
   /**
@@ -81,8 +75,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * prompt.
    */
   private void init() {
-    this.verbose = false;
-    this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHa + "> ";
     GameLogger.info("AgonShell: CLI components initialized.");
@@ -158,28 +150,23 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     try {
       String readLine = this.reader.readLine(this.userPrompt);
 
-      // Cas du Ctrl+D (EOF)
       if (readLine == null) {
         GameLogger.debug("AgonShell: EOF received (null input).");
         return "quit";
       }
-
-      // --- CORRECTION : TRIM ET VÉRIFICATION ---
       line = readLine.trim();
       if (line.isEmpty()) {
-        return null; // Retourne null pour les lignes vides (espaces inclus)
+        return null;
       }
-      // ------------------------------------------
 
       this.reader.getHistory().add(line);
       GameLogger.debug("AgonShell: User entered command: " + line);
       return line;
 
     } catch (UserInterruptException e) {
-      // Si le thread est interrompu par le chrono, on ne veut pas quitter
       if (Thread.currentThread().isInterrupted()) {
         GameLogger.debug("AgonShell: Input interrupted by match timer.");
-        Thread.interrupted(); // Nettoie le flag d'interruption
+        Thread.interrupted();
         return null;
       }
       GameLogger.info("AgonShell: User interrupted (Ctrl+C).");
@@ -301,7 +288,18 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .append("]")
         .toAnsi();
   }
-
+  /**
+   * Displays an error message to the user and logs it in the system.
+   *
+   * <p>This method performs two actions:
+   * <ol>
+   * <li>It records the error in the {@link GameLogger} for debugging purposes.</li>
+   * <li>It prints the error to the command-line interface with a specific
+   * visual prefix to ensure the user notices it.</p>
+   * </ol>
+   *
+   * @param msg The error message to be displayed.
+   */
   @Override
   public void showError(String msg) {
     GameLogger.error("AgonShell (UI Display): " + msg);
@@ -315,8 +313,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   @Override
   public void showInfo(String msg) {
-    // On ne loggue pas systématiquement en INFO ici car c'est souvent de l'affichage pur
-    // pour l'utilisateur, mais on peut le mettre en DEBUG
     GameLogger.debug("AgonShell (UI Display Info): " + msg);
     this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
@@ -389,7 +385,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
     } else {
       String[] timers = match.getAllPlayersRemainingTime();
-      if (timers != null) {
+      if (timers.length!=0) {
         this.showInfo(
             "Current turn: "
                 + match.getCurrentPlayer().getColor()
@@ -436,18 +432,13 @@ public class AgonShell implements GameUserInterface, MatchObserver {
 
     StringBuilder sb = new StringBuilder();
     sb.append("[history]\n");
-
-    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
     for (int i = 0; i < history.size(); i += 2) {
-      // Coup du joueur O (Premier joueur du tour)
       MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
           .append(" ")
           .append(moveO.to().toLowerCase())
           .append(";");
-
-      // Coup du joueur X (S'il existe déjà dans la liste)
       if (i + 1 < history.size()) {
         MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")

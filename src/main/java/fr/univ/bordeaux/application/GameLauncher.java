@@ -31,6 +31,7 @@ import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.ConfigParser;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
@@ -94,8 +95,7 @@ public class GameLauncher {
   public void launch(String[] args) {
     GameConfig config = loadInitialConfig();
 
-    // Initialize Logger with default config
-    fr.univ.bordeaux.technical.utils.GameLogger.getInstance().setDebugMode(config.isDebug());
+    GameLogger.getInstance().setDebugMode(config.isDebug());
 
     CommandLineParser parser = new DefaultParser();
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
@@ -130,32 +130,32 @@ public class GameLauncher {
         File file = new File(filePath);
 
         if (!file.exists() || file.isDirectory()) {
-          fr.univ.bordeaux.technical.utils.GameLogger.error(
+          GameLogger.error(
               "The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
 
         if (cmd.hasOption("c")) {
-          fr.univ.bordeaux.technical.utils.GameLogger.info("Contest mode detected.");
+          GameLogger.info("Contest mode detected.");
           try {
             ContestMatch.executeContest(fileArg[0]);
           } catch (Exception e) {
-            fr.univ.bordeaux.technical.utils.GameLogger.error(
+            GameLogger.error(
                 "Contest mode failed : " + e.getMessage());
           }
           return;
         }
-        fr.univ.bordeaux.technical.utils.GameLogger.info("File argument detected: " + filePath);
+        GameLogger.info("File argument detected: " + filePath);
 
       } else if (cmd.hasOption("c")) {
-        fr.univ.bordeaux.technical.utils.GameLogger.error("Contest mode requires a file argument.");
+        GameLogger.error("Contest mode requires a file argument.");
         this.fillRegister(cmds, null, null, null, null);
         printHelp(cmds);
         return;
       }
       startGame(config, cmd, cmds, filePath, context);
     } catch (ParseException e) {
-      fr.univ.bordeaux.technical.utils.GameLogger.error("Argument Error : " + e.getMessage());
+      GameLogger.error("Argument Error : " + e.getMessage());
       printHelp(cmds);
     }
   }
@@ -173,7 +173,7 @@ public class GameLauncher {
     try {
       return configParser.parse(configPath);
     } catch (IOException e) {
-      fr.univ.bordeaux.technical.utils.GameLogger.info(
+      GameLogger.info(
           "No config file found. Creating a default file...");
       createDefaultConfigFile();
       return new GameConfig();
@@ -189,10 +189,10 @@ public class GameLauncher {
     ConfigSerializer serializer = new ConfigSerializer();
     try {
       serializer.createDefault(configPath);
-      fr.univ.bordeaux.technical.utils.GameLogger.info(
+      GameLogger.info(
           "Minimal configuration file created at: " + configPath);
     } catch (IOException e) {
-      fr.univ.bordeaux.technical.utils.GameLogger.error(
+      GameLogger.error(
           "Failed to save default config: " + e.getMessage());
     }
   }
@@ -217,7 +217,7 @@ public class GameLauncher {
       AgonRegister<CmdAction> cmds,
       String filePathToLoad,
       AppContext context) {
-    fr.univ.bordeaux.technical.utils.GameLogger.info("Starting Agon Shell...");
+    GameLogger.info("Starting Agon Shell...");
     AgonShell userInterface;
     if (cmd.hasOption("g")) {
       // AgonGUI agon = new  AgonGUI(config);
@@ -241,7 +241,6 @@ public class GameLauncher {
         context.setGameEngine(gameEngine);
         gameEngine.setAppContext(context);
         this.fillRegister(cmds, userInterface, config, gameEngine, context);
-        // Bind CLI options to config
         ConfigBinder.bindOptionsToConfig(cmd, config, userInterface);
 
         if (config.isBlitzMode()) {

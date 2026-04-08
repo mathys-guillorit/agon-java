@@ -230,20 +230,15 @@ public abstract class Match implements MatchManager, ObservableMatch {
    */
   public boolean undo() {
     GameLogger.info("Undoing round...");
-
-    // On mémorise si on a réussi à annuler le premier
     boolean resNoir = agonBoard.undoMove();
     if (!resNoir) return false;
 
     boolean resBlanc = agonBoard.undoMove();
-
-    // Si le deuxième échoue, on doit remettre le premier ! (Rollback)
     if (!resBlanc) {
       GameLogger.warn("Partial undo! Restoring last move...");
       agonBoard.redoMove();
       return false;
     }
-
     this.isSaved = false;
     this.notifyUi();
     return true;
@@ -289,7 +284,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    * @return A formatted time string or {@code null} if not applicable.
    */
   public String getCurrentPlayerRemainingTime() {
-    return null;
+    return "null";
   }
 
   /**
@@ -351,10 +346,20 @@ public abstract class Match implements MatchManager, ObservableMatch {
     GameLogger.info(
         "Turn switched to: " + currentPlayer.getName() + " (" + currentPlayer.getColor() + ")");
   }
-
+  /**
+   * Retrieves the remaining reflection time for all players in the match.
+   *
+   * <p>This method provides a snapshot of the timers for every participant.
+   * If the current match type does not support timed play, it returns an
+   * empty array.
+   *
+   * @return An array of {@link String} where first element represents white player
+   * remaining time and the second the black player timer (e.g., "05:30"). Returns an empty array if timers
+   * are not applicable.
+   */
   @Override
   public String[] getAllPlayersRemainingTime() {
-    return null;
+    return new String[0];
   }
 
   /**
