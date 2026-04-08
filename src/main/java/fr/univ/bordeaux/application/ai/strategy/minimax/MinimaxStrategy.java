@@ -6,7 +6,6 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.technical.utils.GameLogger;
-
 import java.util.List;
 
 /**

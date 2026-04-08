@@ -59,6 +59,13 @@ public interface MatchManager extends ReadOnlyMatch {
   void quit();
 
   /**
+   * Computes or retrieves a recommended move for the current player.
+   *
+   * @return a suggested move (hint).
+   */
+  Move hint();
+
+  /**
    * Initializes the beginning of a new turn.
    *
    * <p>This method handles setup logic such as starting turn-based timers or refreshing per-turn

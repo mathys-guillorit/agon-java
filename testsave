@@ -1,0 +1,30 @@
+[settings]
+verbose = false
+debug = false
+placement = false
+blitz = true
+timeout = 30
+ai = true
+ai_color = NONE
+ai_mode = minimax
+ai_depth = 4
+ai_time_limit = 5
+ai_iterative_deepening = true
+ai_heuristic = mixed
+
+[game]
+X
+     . X . . O .
+    O . . . . . X
+   . . . . . . . .
+  X . . . . . . . O
+ . . . . . . . . . .
+. Q . . . . . . . . q
+ . . . . . . . . . .
+  X . . . . . . . O
+   . . . . . . . .
+    O . . . . . X
+     . X . . O .
+
+[history]
+Q f1 f2;
