@@ -34,7 +34,7 @@ default:
     # télécharge les dépendances si absentes dans le cache
     - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
   script:
-    - mvn test || mvn -o test
+    - mvn test
 
 # Template for all java jobs (avec Microsoft OpenJDK)
 .java_template:
