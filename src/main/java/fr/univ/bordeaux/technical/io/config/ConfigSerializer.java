@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Handles the serialization of game configuration settings into a file.
@@ -79,6 +80,14 @@ public class ConfigSerializer implements Serializer<GameConfig> {
       writer.write("ai_time_limit = " + config.getAiTimeLimit() + "\n");
       writer.write("ai_iterative_deepening = " + config.isAiIterativeDeepening() + "\n");
       writer.write("ai_heuristic = " + config.getAiHeuristic() + "\n");
+
+      writer.write("[shortcuts]\n");
+      Map<String, String> shortcuts = config.getShortcuts();
+        for (Map.Entry<String, String> entry : shortcuts.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            writer.write(key + " = " + value + "\n");
+        }
     }
   }
 }
