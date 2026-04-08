@@ -19,13 +19,13 @@ public class CmdPing extends Cmd {
 
   /** Constructor. */
   public CmdPing(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-    this.setName("ping");
-    this.setDesc(
-        "Usage: ping\n"
+    super(
+        ui,
+        "ping",
+        "ping\n"
             + "Description: measures the latency (RTT) with the connected server.\n"
             + "Requires an active connection.\n");
+    this.context = context;
   }
 
   /**

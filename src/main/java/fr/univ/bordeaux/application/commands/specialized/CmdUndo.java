@@ -21,11 +21,12 @@ public final class CmdUndo extends Cmd {
    * @param uictx The user interface context for interaction.
    */
   public CmdUndo(GameUserInterface uictx) {
-    super(uictx);
-    this.setName("undo");
-    String msg = "Description: Cancels the last played turn.";
-    msg += " If a number N is provided, it cancels the last N turns.";
-    this.setDesc(msg);
+    super(
+        uictx,
+        "undo",
+        "undo [N] or undo -n [N]\n"
+            + "Description: Cancels the last N played turns.\n"
+            + "Example: undo 2\n");
     Options options = super.getOptions();
     options.addOption("n", "number", true, "Number of turns to undo");
   }
@@ -39,18 +40,6 @@ public final class CmdUndo extends Cmd {
   private CmdUndo(GameUserInterface uictx, int undoNumber) {
     this(uictx);
     this.undoNumber = undoNumber;
-  }
-
-  /**
-   * Returns the help description and usage examples for the undo command.
-   *
-   * @return A formatted string for the help menu.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: undo [N] or undo -n [N]\n"
-        + "Description: Cancels the last N played turns.\n"
-        + "Example: undo 2\n";
   }
 
   /**

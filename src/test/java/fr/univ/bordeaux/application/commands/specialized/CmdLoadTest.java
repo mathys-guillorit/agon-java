@@ -138,7 +138,7 @@ public class CmdLoadTest {
   void testBasics() {
     CmdLoad prototype = (CmdLoad) cmds.get("load").get();
     assertEquals("load", prototype.getName());
-    assertTrue(prototype.getDescription().contains("Usage: load [filename]"));
+    assertTrue(prototype.getDescription().contains("load [filename]"), prototype.getDescription());
     assertNotNull(prototype.getOptions());
   }
 }

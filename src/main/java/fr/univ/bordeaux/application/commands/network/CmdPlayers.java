@@ -27,16 +27,15 @@ public class CmdPlayers extends Cmd {
    * @param args command arguments
    */
   public CmdPlayers(GameUserInterface ui, AppContext context, String[] args) {
-    super(ui);
-    this.context = context;
-    this.args = args;
-
-    this.setName("players");
-    this.setDesc(
-        "Usage: players [PLAYER_ID]\n"
+    super(
+        ui,
+        "players",
+        "players [PLAYER_ID]\n"
             + "Description: displays the list of connected players "
             + "or the details of a specific player.\n"
             + "Requires an active connection.\n");
+    this.context = context;
+    this.args = args;
   }
 
   /**

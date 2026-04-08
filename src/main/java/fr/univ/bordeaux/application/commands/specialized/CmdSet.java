@@ -30,9 +30,16 @@ public final class CmdSet extends Cmd {
    * @param gameConfig The configuration object to be modified.
    */
   public CmdSet(GameUserInterface uictx, GameConfig gameConfig) {
-    super(uictx);
+    super(
+        uictx,
+        "set",
+        "set PARAM=VALUE\n"
+            + "Description: Changes the current game configuration "
+            + "dynamically, if you use this command in game the "
+            + "change will be effective in the real configuration "
+            + "but not in the match configuration.\n"
+            + "Example: set aiDepth=5 verbose=true\n");
     this.gameConfig = gameConfig;
-    this.setName("set");
     this.addOption(new Option("verbose", true, "increase verbosity (true | false)"));
     this.addOption(new Option("debug", true, "to show more messages (true | false)"));
     this.addOption(new Option("blitzMode", true, "get a time limit"));
@@ -72,21 +79,6 @@ public final class CmdSet extends Cmd {
   }
 
   /**
-   * Returns the usage and description for the set command.
-   *
-   * @return A formatted string for the help menu.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: set PARAM=VALUE\n"
-        + "Description: Changes the current game configuration "
-        + "dynamically, if you use this command in game the "
-        + "change will be effective in the real configuration "
-        + "but not in the match configuration.\n"
-        + "Example: set aiDepth=5 verbose=true\n";
-  }
-
-  /**
    * Executes the configuration update logic.
    *
    * @param match The current match manager (unused during config update).
@@ -99,7 +91,6 @@ public final class CmdSet extends Cmd {
       this.getCtx().showError("Error: No parameters provided. Usage: set PARAM=VALUE");
       return false;
     }
-
     GameLogger.info("CmdSet: Attempting to update configuration with: " + Arrays.toString(args));
     StringBuilder feedback = new StringBuilder("Configuration updated:\n");
 

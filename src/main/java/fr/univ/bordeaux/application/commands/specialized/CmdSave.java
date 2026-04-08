@@ -10,6 +10,7 @@ import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.IOException;
 import java.util.List;
+import org.apache.commons.cli.Option;
 
 /**
  * Command responsible for saving the current game state to a file.
@@ -27,9 +28,13 @@ public final class CmdSave extends Cmd {
    * @param uictx The user interface context.
    */
   public CmdSave(GameUserInterface uictx) {
-    super(uictx);
-    this.setDesc("Description: Saves the current game state and history to the specified file.");
-    this.setName("save");
+    super(
+        uictx,
+        "save",
+        "save [filename]\n"
+            + "Description: Saves the current game state to the specified file,"
+            + "if there is no filename save by default in default_save.\n"
+            + "Example: save myparty.txt\n");
   }
 
   /**
@@ -41,19 +46,7 @@ public final class CmdSave extends Cmd {
   private CmdSave(GameUserInterface uictx, String filename) {
     this(uictx);
     this.filename = filename;
-  }
-
-  /**
-   * Returns the help description and usage for the save command.
-   *
-   * @return A formatted string for the help menu.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: save [filename]\n"
-        + "Description: Saves the current game state to the specified file,"
-        + "if there is no filename save by default in default_save.\n"
-        + "Example: save myparty.txt\n";
+    this.addOption(new Option(null, null, true, "filename"));
   }
 
   /**

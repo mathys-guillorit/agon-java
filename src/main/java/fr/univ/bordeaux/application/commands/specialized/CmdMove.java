@@ -28,9 +28,11 @@ public class CmdMove extends Cmd {
    * @param ui The user interface context.
    */
   public CmdMove(Move move, GameUserInterface ui) {
-    super(ui);
+    super(
+        ui,
+        "move",
+        "move <from> <to>\nDescription:" + " Moves a piece from one coordinate to another.\n");
     this.move = move;
-    this.setName("move");
   }
 
   /**
@@ -41,10 +43,12 @@ public class CmdMove extends Cmd {
    * @param ui The user interface context.
    */
   public CmdMove(int from, int to, GameUserInterface ui) {
-    super(ui);
+    super(
+        ui,
+        "move",
+        "move <from> <to>\nDescription:" + " Moves a piece from one coordinate to another.\n");
     this.from = from;
     this.destination = to;
-    this.setName("move");
   }
 
   /**
@@ -109,16 +113,6 @@ public class CmdMove extends Cmd {
   @Override
   public CmdAction createNew(String[] args) {
     return null;
-  }
-
-  /**
-   * Returns the description of the move command.
-   *
-   * @return String description.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: move <from> <to>\nDescription: Moves a piece from one coordinate to another.\n";
   }
 
   /**

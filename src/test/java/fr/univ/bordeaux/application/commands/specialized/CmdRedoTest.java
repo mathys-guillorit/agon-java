@@ -122,7 +122,7 @@ public class CmdRedoTest {
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {});
     String desc = cmdRedo.getDescription();
     assertNotNull(desc);
-    assertTrue(desc.contains("Usage: redo [N]"));
+    assertTrue(desc.contains("Description: Replays the last canceled "), desc);
   }
 
   @Test

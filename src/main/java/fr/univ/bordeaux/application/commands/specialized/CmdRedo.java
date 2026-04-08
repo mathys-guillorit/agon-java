@@ -17,11 +17,11 @@ public final class CmdRedo extends Cmd {
    * @param uictx The user interface context for interaction.
    */
   public CmdRedo(GameUserInterface uictx) {
-    super(uictx);
-    this.setName("redo");
-    String msg = "Description: Replays the last canceled turn.";
-    msg += "If a number N is provided, it replays the last N canceled turns.";
-    this.setDesc(msg);
+    super(
+        uictx,
+        "redo",
+        "redo\nDescription: Replays the last canceled turn."
+            + "If a number N is provided, it replays the last N canceled turns.\n");
     Options options = super.getOptions();
     options.addOption("n", "number", true, "Number of turns to redo");
   }
@@ -35,18 +35,6 @@ public final class CmdRedo extends Cmd {
   private CmdRedo(GameUserInterface uictx, int redoNumber) {
     this(uictx);
     this.redoNumber = redoNumber;
-  }
-
-  /**
-   * Returns the help description for the redo command.
-   *
-   * @return A formatted string showing usage and examples.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: redo [N]\n"
-        + "Description: Replays the last N canceled turns.\n"
-        + "Example: redo 2\n";
   }
 
   /**

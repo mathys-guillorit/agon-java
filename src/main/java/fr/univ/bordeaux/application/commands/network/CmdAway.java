@@ -20,14 +20,13 @@ public class CmdAway extends Cmd {
    * @param context application context
    */
   public CmdAway(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-
-    this.setName("away");
-    this.setDesc(
-        "Usage: away\n"
+    super(
+        ui,
+        "away",
+        "away\n"
             + "Description: sets your status to away on the server.\n"
             + "Requires an active connection.\n");
+    this.context = context;
   }
 
   /**

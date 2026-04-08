@@ -46,25 +46,15 @@ public class CmdQuit extends Cmd {
    * @param context The application context (network + global state)
    */
   public CmdQuit(GameUserInterface uictx, AppContext context) {
-    super(uictx);
+    super(
+        uictx,
+        "quit",
+        "quit (or Ctrl+C)\n"
+            + "Description: Exits the application."
+            + "If connected to a server: disconnects from it."
+            + " You will be prompted to save your current "
+            + "progress before leaving.\n");
     this.context = context;
-    this.setName("quit");
-  }
-
-  /**
-   * Provides the usage and description for the quit command.
-   *
-   * @return A formatted string for the help menu.
-   */
-  @Override
-  public String getDescription() {
-    final StringBuilder sb = new StringBuilder();
-    sb.append("Usage: quit (or Ctrl+C)\n");
-    sb.append("Description: Exits the application.");
-    sb.append("If connected to a server: disconnects from it.");
-    sb.append(" You will be prompted to save your current ");
-    sb.append("progress before leaving.\n");
-    return sb.toString();
   }
 
   /**

@@ -35,10 +35,11 @@ public class CmdServerStop extends Cmd {
    * @param context the application context used to manage the server state.
    */
   public CmdServerStop(GameUserInterface ui, AppContext context) {
-    super(ui);
+    super(
+        ui,
+        "server_stop",
+        "server stop\n" + "Description: stops the local TCP server if running.\n");
     this.context = context;
-    this.setName("server_stop");
-    this.setDesc("Usage: server stop\n" + "Description: stops the local TCP server if running.\n");
   }
 
   /**

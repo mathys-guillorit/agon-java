@@ -16,11 +16,14 @@ import org.jline.reader.Completer;
 /**
  * Abstract base class for all game commands.
  *
- * <p>This class provides common functionality for command management, including CLI options
- * handling, UI context access, and automatic JLine completer generation. Each sub-command is
+ * <p>This class provides common functionality for command management,
+ * including CLI options
+ * handling, UI context access, and automatic JLine completer generation.
+ * Each sub-command is
  * responsible for defining its own logic, name, and options.
  *
  * @author fr.univ.bordeaux
+ *
  * @version 1.0
  */
 public abstract class Cmd implements CmdAction {
@@ -29,7 +32,7 @@ public abstract class Cmd implements CmdAction {
   private Options options;
 
   /** The user interface context for command interaction and output. */
-  private GameUserInterface ui;
+  private GameUserInterface userInterface;
 
   /** A brief text description of the command's purpose and usage. */
   private String desc;
@@ -38,29 +41,34 @@ public abstract class Cmd implements CmdAction {
   private String name;
 
   /**
-   * Constructs a new command with a reference to the UI context. Initializes default values for
+   * Constructs a new command with a reference to the UI context.
+   * Initializes default values for
    * name, options, and description.
    *
    * @param ui The {@link GameUserInterface} context.
+   * @param name command's name
+   * @param desc short description of the command (see .getHelp() for more details)
    */
-  public Cmd(GameUserInterface ui) {
-    this.ui = ui;
+  public Cmd(GameUserInterface ui, String name, String desc) {
+    this.userInterface = ui;
     this.options = new Options();
-    this.desc = "Description: default Command";
-    this.name = "cmd";
+    this.desc = desc;
+    this.name = name;
   }
 
   /**
-   * Provides access to the current UI context. * @return The {@link GameUserInterface} instance.
+   * Provides access to the current UI context. * @return The
+   * {@link GameUserInterface} instance.
    */
   public GameUserInterface getCtx() {
-    return this.ui;
+    return this.userInterface;
   }
 
   /**
    * Generates a JLine {@link Completer} for this command.
    *
-   * <p>This implementation uses an {@link OptCompleterAdapter} to bridge Commons-CLI options with
+   * <p>This implementation uses an {@link OptCompleterAdapter} to bridge
+   * Commons-CLI options with
    * the JLine completion system.
    *
    * @return A non-null {@link Completer} adapted to the command's options.
@@ -91,7 +99,8 @@ public abstract class Cmd implements CmdAction {
   }
 
   /**
-   * Loads text content from a local file located in the command information directory. Useful for
+   * Loads text content from a local file located in the command information
+   * directory. Useful for
    * loading long descriptions or ASCII art.
    *
    * @param filePath The sub-path under "/cmdsInformations/desc/".
@@ -100,7 +109,8 @@ public abstract class Cmd implements CmdAction {
    * @throws NullPointerException If the file path is invalid.
    */
   @Nullable
-  public String loadText(String filePath) throws IOException, NullPointerException {
+  public String loadText(String filePath) throws IOException,
+          NullPointerException {
     final String finalPath = "/cmdsInformations/desc/" + filePath;
     LoadLocalFile txt = new LoadLocalFile(finalPath);
     return txt.getContent();
@@ -149,7 +159,9 @@ public abstract class Cmd implements CmdAction {
   /**
    * Show Help information about how to use the command (detailed).
    *
-   * @see <a href="https://jline.org/docs/architecture/">jline.org/docs/architecture </a>
+   * @see <a href="https://jline.org/docs/architecture/">
+   *   jline.org/docs/architecture
+   *   </a>
    */
   @Override
   public String getHelp() {
@@ -160,7 +172,13 @@ public abstract class Cmd implements CmdAction {
       // put System.out to our flow
       System.setOut(new PrintStream(baos));
       HelpFormatter formatter = HelpFormatter.builder().get();
-      formatter.printHelp(this.getName(), "", this.getOptions(), "", true);
+      formatter.printHelp(
+          this.getName(),
+          this.getDescription(),
+          this.getOptions(),
+          "",
+          true
+      );
       return baos.toString().trim(); // get String from flow
     } finally {
       // restore original output

@@ -186,7 +186,8 @@ class CmdMoveTest {
         cmdMove
             .getDescription()
             .contains(
-                "Usage: move <from> <to>\nDescription: Moves a piece from one coordinate to another.\n"));
+                "move <from> <to>\nDescription: Moves a piece from one coordinate to another.\n"),
+        cmdMove.getDescription());
   }
 
   @Test

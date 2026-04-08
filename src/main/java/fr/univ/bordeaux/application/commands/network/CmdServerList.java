@@ -36,13 +36,13 @@ public class CmdServerList extends Cmd {
    * @param context the application context used for UDP discovery and networking.
    */
   public CmdServerList(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-    this.setName("server_list");
-    this.setDesc(
-        "Usage: server list\n"
+    super(
+        ui,
+        "server_list",
+        "server list\n"
             + "Description: displays available servers on the local network.\n"
             + "Uses UDP discovery to detect active servers.\n");
+    this.context = context;
   }
 
   /**

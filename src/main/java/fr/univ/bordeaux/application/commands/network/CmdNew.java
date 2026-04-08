@@ -61,16 +61,15 @@ public class CmdNew extends Cmd {
    */
   public CmdNew(
       GameUserInterface ui, AppContext context, GameConfig gameConfig, GameEngine gameEngine) {
-    super(ui);
+    super(
+        ui,
+        "new",
+        "new [LOCAL_OPTIONS] | new PLAYER_ID\n"
+            + "Description: starts a local game in LOCAL mode,\n"
+            + "or requests an online game against the specified player in ONLINE mode.\n");
     this.context = context;
     this.gameConfig = gameConfig;
     this.gameEngine = gameEngine;
-
-    this.setName("new");
-    this.setDesc(
-        "Usage: new [LOCAL_OPTIONS] | new PLAYER_ID\n"
-            + "Description: starts a local game in LOCAL mode,\n"
-            + "or requests an online game against the specified player in ONLINE mode.\n");
   }
 
   /**

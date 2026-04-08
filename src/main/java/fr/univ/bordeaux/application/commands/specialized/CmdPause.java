@@ -14,22 +14,7 @@ public final class CmdPause extends Cmd {
    * @param uictx The user interface context for command interaction.
    */
   public CmdPause(GameUserInterface uictx) {
-    super(uictx);
-    this.setName("pause");
-    String msg;
-    msg = "Description: Pauses the passing time. ";
-    msg += "This command is only available when playing in Blitz mode.";
-    this.setDesc(msg);
-  }
-
-  /**
-   * Returns the help description for the pause command.
-   *
-   * @return A formatted string describing the command's purpose.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: pause\n" + "Description: Pauses the game timers in Blitz mode.\n";
+    super(uictx, "pause", "pause\nDescription: Pauses the game timers in Blitz mode.\n");
   }
 
   /**

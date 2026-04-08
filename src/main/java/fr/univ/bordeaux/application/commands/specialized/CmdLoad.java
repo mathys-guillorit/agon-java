@@ -33,9 +33,13 @@ public final class CmdLoad extends Cmd {
    * @param gameEngine The engine that will run the match.
    */
   public CmdLoad(GameUserInterface uictx, GameEngine gameEngine) {
-    super(uictx);
+    super(
+        uictx,
+        "load",
+        "load [filename]\n"
+            + "Description: Loads a previously saved game from the specified file.\n"
+            + "Example: load my_save.txt\n");
     this.opts = new Options();
-    this.setName("load");
     this.gameEngine = gameEngine;
   }
 
@@ -69,18 +73,6 @@ public final class CmdLoad extends Cmd {
   @Override
   public Options getOptions() {
     return this.opts;
-  }
-
-  /**
-   * Returns the help description and usage examples for the load command.
-   *
-   * @return A formatted string describing the command.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: load [filename]\n"
-        + "Description: Loads a previously saved game from the specified file.\n"
-        + "Example: load my_save.txt\n";
   }
 
   /**

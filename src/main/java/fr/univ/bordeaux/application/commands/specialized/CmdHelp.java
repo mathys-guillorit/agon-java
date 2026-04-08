@@ -27,17 +27,18 @@ public final class CmdHelp extends Cmd {
    * @param cmds The registry of commands used to generate the help list.
    */
   public CmdHelp(GameUserInterface uictx, AgonRegister<CmdAction> cmds) {
-    super(uictx);
+    super(
+        uictx,
+        "help",
+        "help [CMDNAME]\nDescription: display all commands"
+            + " available and their usage or for a specific command.\n"
+            + "Example: help new\n");
     this.agonRegister = cmds;
-
     cmds.getKeys()
         .forEach(
             cmdName -> {
               this.addOption(Option.builder(cmdName).get());
             });
-
-    this.setDesc("Description: display help, show this help with \"help help\"");
-    this.setName("help");
   }
 
   /**
@@ -83,7 +84,7 @@ public final class CmdHelp extends Cmd {
 
       if (targetCmd.isPresent()) {
         ctx.showMessage("======= HELP: " + commandToHelp.toUpperCase() + " =======\n");
-        ctx.showMessage(targetCmd.get().getDescription());
+        ctx.showMessage(targetCmd.get().getHelp() + "\n");
         return true;
       } else {
         GameLogger.error("unknown command for help : " + commandToHelp);
@@ -102,18 +103,6 @@ public final class CmdHelp extends Cmd {
     }
     ctx.showMessage("\nType 'help [command]' for detailed instructions (e.g., 'help show').\n");
     return true;
-  }
-
-  /**
-   * Provides the short description for the help command itself.
-   *
-   * @return An empty string.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: help\n"
-        + "Description: display all commands available and their usage or for a specific command.\n"
-        + "Example: help new\n";
   }
 
   /**

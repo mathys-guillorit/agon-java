@@ -137,7 +137,7 @@ public class CmdSetTest {
 
     // Check if the description reflects the new mandatory format
     assertTrue(
-        desc.contains("Usage: set PARAM=VALUE"), "Description should show the correct format");
+        desc.contains("set PARAM=VALUE"), "Description should show the correct format: " + desc);
     assertTrue(desc.contains("set aiDepth=5"), "Description should provide a valid example");
   }
 

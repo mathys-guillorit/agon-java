@@ -26,15 +26,19 @@ public final class CmdShow extends Cmd {
    * @param gameConfig The current game configuration.
    */
   public CmdShow(GameUserInterface uictx, GameConfig gameConfig) {
-    super(uictx);
+    super(
+        uictx,
+        "show",
+        "show [target]\n"
+            + "Description: Displays specific information about the current game state.\n"
+            + "Available targets: -board -history -time -configuration"
+            + "for more details type \"help show\"\n");
     this.gameConfig = gameConfig;
-    this.setDesc("Description: Displays specific information about the current game state.");
-    this.setName("show");
     Options options = super.getOptions();
-    options.addOption("board", null, false, "Display the Board");
-    options.addOption("history", null, false, "Display the History");
-    options.addOption("time", null, false, "Display the Time of both players");
-    options.addOption("configuration", null, false, "Display the Configuration");
+    options.addOption("board", null, false, "Shows the current hexagonal board state");
+    options.addOption("history", null, false, "Shows the history of all played turns.");
+    options.addOption("time", null, false, "Shows the remaining time for each player.");
+    options.addOption("configuration", null, false, "Shows the current game settings.");
   }
 
   /**
@@ -47,22 +51,6 @@ public final class CmdShow extends Cmd {
   private CmdShow(GameUserInterface uictx, GameConfig gameConfig, String target) {
     this(uictx, gameConfig);
     this.target = target;
-  }
-
-  /**
-   * Returns the help description and available targets.
-   *
-   * @return A formatted string for the help menu.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: show [target]\n"
-        + "Description: Displays specific information about the current game state.\n"
-        + "Available targets:\n"
-        + "  -board         : Shows the current hexagonal board state.\n"
-        + "  -history       : Shows the history of all played turns.\n"
-        + "  -time          : Shows the remaining time for each player.\n"
-        + "  -configuration : Shows the current game settings.\n";
   }
 
   /**

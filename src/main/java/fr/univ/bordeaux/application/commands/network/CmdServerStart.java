@@ -47,13 +47,13 @@ public class CmdServerStart extends Cmd {
    * @param context Application context
    */
   public CmdServerStart(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-    this.setName("server_start");
-    this.setDesc(
-        "Usage: server start [PORT]\n"
+    super(
+        ui,
+        "server_start",
+        "server_start [PORT]\n"
             + "Description: starts the local TCP server on the given port.\n"
             + "If no port is provided, the default port 12345 is used.\n");
+    this.context = context;
   }
 
   /**

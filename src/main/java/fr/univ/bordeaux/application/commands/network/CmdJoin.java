@@ -47,11 +47,8 @@ public class CmdJoin extends Cmd {
    * @param context Application context
    */
   public CmdJoin(GameUserInterface ui, AppContext context) {
-    super(ui);
+    super(ui, "join", "join [HOST[:PORT]]\n" + "Description: connects to a remote game server.\n");
     this.context = context;
-    this.setName("join");
-    this.setDesc(
-        "Usage: join [HOST[:PORT]]\n" + "Description: connects to a remote game server.\n");
   }
 
   /** Internal constructor used when the command is executed with arguments. */

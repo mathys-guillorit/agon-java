@@ -69,8 +69,8 @@ public class CmdHelpTest {
     String output = outContent.toString();
 
     assertTrue(output.contains("HELP: QUIT"));
-    assertTrue(output.contains("Usage: quit"));
-    assertTrue(output.contains("disconnects from it"));
+    assertTrue(output.contains("usage: quit"));
+    assertTrue(output.contains("to a server: disconnects"), output);
   }
 
   @Test

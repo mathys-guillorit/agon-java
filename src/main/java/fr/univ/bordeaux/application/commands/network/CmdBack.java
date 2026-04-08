@@ -20,14 +20,13 @@ public class CmdBack extends Cmd {
    * @param context application context
    */
   public CmdBack(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-
-    this.setName("back");
-    this.setDesc(
-        "Usage: back\n"
+    super(
+        ui,
+        "back",
+        "back\n"
             + "Description: sets your status back to idle on the server.\n"
             + "Requires an active connection.\n");
+    this.context = context;
   }
 
   /**

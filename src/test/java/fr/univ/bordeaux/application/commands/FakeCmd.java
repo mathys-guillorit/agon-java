@@ -6,7 +6,7 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 public class FakeCmd extends Cmd {
 
   public FakeCmd(GameUserInterface ui) {
-    super(ui);
+    super(ui, "cmd", "Description: default Command");
   }
 
   @Override

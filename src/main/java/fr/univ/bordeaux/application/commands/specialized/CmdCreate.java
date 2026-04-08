@@ -14,6 +14,7 @@ import fr.univ.bordeaux.ui.ObservableMatch;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -50,8 +51,7 @@ public class CmdCreate extends Cmd {
    */
   public CmdCreate(
       GameUserInterface ui, GameConfig gameConfig, GameEngine gameEngine, String[] args) {
-    super(ui);
-    this.setName("new");
+    super(ui, "new", null); // desc is override by method
     this.gameConfig = gameConfig;
     this.gameEngine = gameEngine;
     this.args = args;
@@ -90,7 +90,6 @@ public class CmdCreate extends Cmd {
       this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
       return false;
     }
-
     return true;
   }
 
@@ -112,7 +111,19 @@ public class CmdCreate extends Cmd {
    */
   @Override
   public String getDescription() {
-    return "Usage: new\n"
-        + "Description: Starts a new Agon game session. This will reset the board and timers.\n";
+    final var sb = new StringBuilder();
+    sb.append("new ");
+    for (Option opt : this.getOptions().getOptions()) {
+      if (opt.hasLongOpt()) {
+        sb.append(opt.getLongOpt());
+      }
+      if (opt.getOpt() != null) {
+        sb.append(opt.getOpt());
+      }
+      sb.append(" ");
+    }
+    sb.append("\n").append("Description: Starts a new Agon game session.");
+    sb.append(" This will reset the board and timers.\n");
+    return sb.toString();
   }
 }

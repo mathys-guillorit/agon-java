@@ -5,6 +5,13 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Used for application error messages centralization for easy activation/deactivation across all
+ * the app. group all information about what is shown in the app.
+ *
+ * @apiNote do the if here so when pdm send Logger problems it's already treated for the specific
+ *     conditional display.
+ */
 public class GameLogger {
   private static GameLogger instance;
   private final Logger logger;
@@ -26,6 +33,11 @@ public class GameLogger {
     this.logger.addHandler(consoleHandler);
   }
 
+  /**
+   * Get the logger object (entrypoint).
+   *
+   * @return {@link GameLogger}
+   */
   public static synchronized GameLogger getInstance() {
     if (instance == null) {
       instance = new GameLogger();
@@ -33,7 +45,7 @@ public class GameLogger {
     return instance;
   }
 
-  /** Activé par l'option -v ou set verbose=true */
+  /** Activated by the option {@code -v} or {@code set verbose=true}. */
   public void setVerbose(boolean enabled) {
     if (enabled) {
       updateLevel(Level.INFO);
@@ -42,7 +54,7 @@ public class GameLogger {
     }
   }
 
-  /** Activé par l'option -d ou set debug=true */
+  /** Activated by the option {@code -d} or {@code set debug=true}. */
   public void setDebugMode(boolean enabled) {
     if (enabled) {
       updateLevel(Level.FINE); // FINE est le standard Java pour le Debug
@@ -51,7 +63,7 @@ public class GameLogger {
     }
   }
 
-  /** Met à jour le niveau du Logger ET du Handler Console */
+  /** Update the logger level AND console handler. */
   private void updateLevel(Level newLevel) {
     this.logger.setLevel(newLevel);
     for (Handler h : this.logger.getHandlers()) {
@@ -59,7 +71,7 @@ public class GameLogger {
     }
   }
 
-  // --- MÉTHODES DE LOG STATIQUES ---
+  // --- STATIC LOGGING METHODS ---
 
   public static void debug(String msg) {
     getInstance().logger.log(Level.FINE, "[DEBUG] " + msg);

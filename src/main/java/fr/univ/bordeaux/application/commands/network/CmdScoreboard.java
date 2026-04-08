@@ -25,14 +25,13 @@ public class CmdScoreboard extends Cmd {
    * @param context application context
    */
   public CmdScoreboard(GameUserInterface ui, AppContext context) {
-    super(ui);
-    this.context = context;
-
-    this.setName("scoreboard");
-    this.setDesc(
-        "Usage: scoreboard\n"
+    super(
+        ui,
+        "scoreboard",
+        "scoreboard\n"
             + "Description: displays the scoreboard of the server.\n"
             + "Requires an active connection.\n");
+    this.context = context;
   }
 
   /**

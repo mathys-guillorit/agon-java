@@ -55,7 +55,10 @@ public class CmdTest {
     Completer completer = this.fakeCmd.getAutoCompleter();
     List<Candidate> candidates = new ArrayList<>();
     completer.complete(new LineReaderImpl(this.term), this.fpl, candidates);
-    assertFalse(candidates.isEmpty(), "completer must give -b, -h, -m, --hey, --help");
+    assertFalse(
+        candidates.isEmpty(),
+        "completer must give -b, -h, -m, --hey, --help\but we have: "
+            + candidates.stream().toList());
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-b")));
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-h")));
     assertTrue(candidates.stream().anyMatch(c -> c.value().equals("-m")));

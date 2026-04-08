@@ -107,7 +107,13 @@ public class CmdSaveTest {
   @DisplayName("Vérification des métadonnées de la commande")
   void testCommandMetadata() {
     CmdAction prototype = cmds.get("save").get();
+    assertTrue(cmds.get("save").isPresent(), "cmd must exists");
     assertEquals("save", prototype.getName());
-    assertTrue(prototype.getDescription().contains("Usage: save [filename]"));
+    final String cmdDesc = prototype.getDescription();
+    assertTrue(cmdDesc.contains("save [filename]"));
+    var msg = new StringBuilder();
+    msg.append("Description: Saves the current game state to the specified");
+    msg.append(" file,if there is no filename save by ");
+    assertTrue(cmdDesc.contains(msg.append("default in default_save.\n").toString()), cmdDesc);
   }
 }

@@ -155,6 +155,8 @@ public class CmdUndoTest {
   @DisplayName("Vérifier la description de undo")
   void getDescriptionTest() {
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {});
-    assertTrue(cmdUndo.getDescription().contains("Usage: undo [N]"));
+    assertTrue(
+        cmdUndo.getDescription().contains("Description: Cancels the last N played turns."),
+        "result : \"" + cmdUndo.getDescription() + "\"");
   }
 }

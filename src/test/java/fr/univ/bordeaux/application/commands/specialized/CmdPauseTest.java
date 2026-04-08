@@ -89,8 +89,9 @@ public class CmdPauseTest {
   @DisplayName("Vérifier la description de la commande pause")
   void testGetDescription() {
     CmdPause cmdPause = new CmdPause(gameUserInterface);
-    assertTrue(cmdPause.getDescription().contains("Usage: pause"));
-    assertTrue(cmdPause.getDescription().contains("Pauses the game timers"));
+    assertTrue(cmdPause.getDescription().contains("pause"), cmdPause.getDescription());
+    assertTrue(
+        cmdPause.getDescription().contains("Description: Pauses the game timers in Blitz mode."));
   }
 
   @Test

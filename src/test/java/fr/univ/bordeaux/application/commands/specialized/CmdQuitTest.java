@@ -132,7 +132,10 @@ public class CmdQuitTest {
 
     AppContext context = new AppContext(new LocalProfile("test"));
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context);
-    assertTrue(cmdQuit.getDescription().contains("Usage: quit"));
+    assertTrue(
+        cmdQuit.getDescription().contains("Description: Exits the application.If "),
+        cmdQuit.getDescription());
+    assertTrue(cmdQuit.getHelp().contains("quit"));
   }
 
   @Test

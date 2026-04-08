@@ -17,19 +17,7 @@ public final class CmdHint extends Cmd {
    * @param uictx The user interface context for displaying the suggestion.
    */
   public CmdHint(GameUserInterface uictx) {
-    super(uictx);
-    this.setDesc("Description: Request a strategic suggestion from the AI.");
-    this.setName("hint");
-  }
-
-  /**
-   * Provides the help description for the hint command.
-   *
-   * @return A formatted string describing the command.
-   */
-  @Override
-  public String getDescription() {
-    return "Usage: hint\n Description: show to the user the best move to play\n";
+    super(uictx, "hint", "hint\n Description: show to the user the best move to play\n");
   }
 
   /**
