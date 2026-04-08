@@ -1,28 +1,38 @@
 package fr.univ.bordeaux.ui.gui.components.states;
 
+/**
+ * * The interaction state representing an active piece selection or an ongoing drag-and-drop
+ * operation. Handles dropping a piece onto a target hexagon to trigger a move request.
+ */
 public class PieceSelectedState implements CanvasInteractionState {
 
+  /** The starting logical coordinate of the selected piece. */
   private String originHex;
-  private boolean isDragging = false; // Notre fameux détective !
 
-  public PieceSelectedState(String originHex) {
+  /** Flag indicating whether the piece is currently being dragged across the canvas. */
+  private boolean isDragging = false;
+
+  /**
+   * Initializes the state with the coordinate of the piece that was just selected.
+   *
+   * @param originHex The logical coordinate of the selected piece (e.g., "F6").
+   */
+  public PieceSelectedState(final String originHex) {
     this.originHex = originHex;
   }
 
   @Override
   public void handleMousePressed(
-      CanvasInterface canvas, String agonCoordinate, double x, double y) {
+      final CanvasInterface canvas, final String agonCoordinate, final double x, final double y) {
     if (agonCoordinate == null) {
       canvas.setSelectedHex(null);
       canvas.setState(new IdleCanvasState());
     } else if (canvas.hasPieceAt(agonCoordinate)) {
-      // Clic sur une autre pièce (ou la même) : On change l'origine
       canvas.setSelectedHex(agonCoordinate);
       canvas.setDraggedPiece(canvas.getPieceAt(agonCoordinate));
       canvas.setMousePosition(x, y);
       this.originHex = agonCoordinate;
     } else {
-      // Clic sur une case vide : ON JOUE ! (Cas du Clic Simple)
       canvas.requestMove(originHex + "" + agonCoordinate);
       canvas.setSelectedHex(null);
       canvas.setState(new IdleCanvasState());
@@ -31,27 +41,25 @@ public class PieceSelectedState implements CanvasInteractionState {
   }
 
   @Override
-  public void handleMouseDragged(CanvasInterface canvas, double x, double y) {
-    isDragging = true; // Le détective valide le Drag !
+  public void handleMouseDragged(final CanvasInterface canvas, final double x, final double y) {
+    isDragging = true;
     canvas.setMousePosition(x, y);
     canvas.draw();
   }
 
   @Override
-  public void handleMouseReleased(CanvasInterface canvas, String targetHex, double x, double y) {
+  public void handleMouseReleased(
+      final CanvasInterface canvas, final String targetHex, double x, double y) {
     if (isDragging) {
       if (targetHex != null && !targetHex.equals(originHex)) {
-        // DRAG & DROP VALIDE : ON JOUE !
         canvas.requestMove(originHex + "" + targetHex);
         canvas.setSelectedHex(null);
         canvas.setState(new IdleCanvasState());
       } else {
-        // Relâché sur place
         canvas.setSelectedHex(originHex);
       }
       isDragging = false;
     }
-    // On nettoie la pièce volante du curseur (que l'on ait bougé ou non)
     canvas.setDraggedPiece(null);
     canvas.draw();
   }

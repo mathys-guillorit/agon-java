@@ -1,5 +1,8 @@
 package fr.univ.bordeaux.technical.io.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
  * rules (like blitz mode and timeouts), and Artificial Intelligence settings (like algorithms,
@@ -20,6 +23,7 @@ public class GameConfig {
   private String aiHeuristic = "mixed";
   private boolean whiteIsAi = false;
   private boolean blackIsAi = false;
+  private Map<String, String> shortcuts = createDefaultShortcuts();
 
   /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
@@ -238,6 +242,16 @@ public class GameConfig {
   }
 
   /**
+   * Retrieves the map containing all configured keyboard shortcuts.
+   *
+   * @return A map where the key is the shortcut identifier (e.g., "shortcut_new") and the value is
+   *     the assigned key combination (e.g., "ctrl+n").
+   */
+  public Map<String, String> getShortcuts() {
+    return shortcuts;
+  }
+
+  /**
    * Sets whether the White player is controlled by an Artificial Intelligence.
    *
    * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
@@ -254,6 +268,26 @@ public class GameConfig {
    */
   public void setManualPlacement(boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
+  }
+
+  /**
+   * Sets the entire map of keyboard shortcuts.
+   *
+   * @param shortcuts A map containing the shortcut identifiers and their corresponding key
+   *     combinations.
+   */
+  public void setShortcuts(Map<String, String> shortcuts) {
+    this.shortcuts = shortcuts;
+  }
+
+  /**
+   * Adds or updates a single keyboard shortcut in the configuration.
+   *
+   * @param key The shortcut identifier (must start with "shortcut_").
+   * @param value The key combination assigned to this shortcut.
+   */
+  public void addShortcut(String key, String value) {
+    shortcuts.put(key, value);
   }
 
   /**
@@ -304,6 +338,23 @@ public class GameConfig {
     clone.setAiIterativeDeepening(this.aiIterativeDeepening);
     clone.setAiHeuristic(this.aiHeuristic);
 
+    clone.setShortcuts(new HashMap<>(this.shortcuts));
+
     return clone;
+  }
+
+  private Map<String, String> createDefaultShortcuts() {
+    Map<String, String> shortcuts = new HashMap<>();
+    shortcuts.put("shortcut_new", "Ctrl+N");
+    shortcuts.put("shortcut_load", "Ctrl+L");
+    shortcuts.put("shortcut_save", "Ctrl+S");
+    shortcuts.put("shortcut_config", "Ctrl+,");
+    shortcuts.put("shortcut_info", "Ctrl+I");
+    shortcuts.put("shortcut_quit", "Ctrl+Q");
+    shortcuts.put("shortcut_undo", "Ctrl+U");
+    shortcuts.put("shortcut_redo", "Ctrl+R");
+    shortcuts.put("shortcut_pause", "Ctrl+P");
+    shortcuts.put("shortcut_hint", "Ctrl+H");
+    return shortcuts;
   }
 }

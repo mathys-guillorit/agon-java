@@ -63,7 +63,10 @@ public class History {
 
       if (parts.length >= 3) {
         char pieceChar = parts[0].charAt(0);
-        int fromIdx = CoordinateMapper.fromCoordinateString(parts[1]);
+        int fromIdx =
+            parts[1].equalsIgnoreCase("reloc")
+                ? -1
+                : CoordinateMapper.fromCoordinateString(parts[1]);
         int toIdx = CoordinateMapper.fromCoordinateString(parts[2]);
 
         Color moveColor = (pieceChar == 'O' || pieceChar == 'Q') ? Color.WHITE : Color.BLACK;

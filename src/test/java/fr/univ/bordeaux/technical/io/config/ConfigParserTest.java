@@ -168,4 +168,18 @@ class ConfigParserTest {
     assertFalse(configNone.isWhiteAi());
     assertFalse(configNone.isBlackAi());
   }
+
+  @Test
+  void testParseShortcuts() throws IOException {
+    Path configFile = tempDir.resolve("shortcuts.agonrc");
+    String content = "timeout = 30\n" + "shortcut_new = ctrl+n\n" + "shortcut_quit = ctrl+q\n";
+    Files.writeString(configFile, content);
+
+    ConfigParser parser = new ConfigParser();
+    GameConfig config = parser.parse(configFile.toString());
+
+    assertEquals("ctrl+n", config.getShortcuts().get("shortcut_new"));
+    assertEquals("ctrl+q", config.getShortcuts().get("shortcut_quit"));
+    assertTrue(config.getShortcuts().size() >= 2);
+  }
 }

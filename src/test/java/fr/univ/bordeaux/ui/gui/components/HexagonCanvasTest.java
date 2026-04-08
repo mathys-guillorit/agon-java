@@ -8,7 +8,6 @@ import fr.univ.bordeaux.agoncore.agonelements.PieceType;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,21 +26,17 @@ import org.junit.jupiter.api.Test;
  * Test class for the {@link HexagonCanvas} component.
  *
  * <p>Verifies the mathematical calculations for the hexagonal grid, mouse event handling, rendering
- * logic branches, and piece visualization rules.
+ * logic branches, and piece visualization rules. Fully PMD compliant (final variables, single
+ * returns).
  */
 public class HexagonCanvasTest {
 
   private HexagonCanvas canvas;
 
-  /**
-   * Initializes the JavaFX toolkit environment before any tests are run.
-   *
-   * @throws InterruptedException if the thread is interrupted while waiting for toolkit startup.
-   */
   @BeforeAll
   static void initJFX() throws InterruptedException {
     System.setProperty("IS_TEST_ENV", "true");
-    CountDownLatch latch = new CountDownLatch(1);
+    final CountDownLatch latch = new CountDownLatch(1);
     try {
       Platform.startup(
           () -> {
@@ -58,21 +53,13 @@ public class HexagonCanvasTest {
     latch.await(2, TimeUnit.SECONDS);
   }
 
-  /** Initializes a fresh canvas before each test. */
   @BeforeEach
   void setUp() {
     canvas = new HexagonCanvas();
   }
 
-  /**
-   * Helper method to generate dummy mouse events for testing interaction.
-   *
-   * @param type The type of mouse event (e.g., MOUSE_PRESSED).
-   * @param x The simulated X coordinate on the canvas.
-   * @param y The simulated Y coordinate on the canvas.
-   * @return A constructed {@link MouseEvent}.
-   */
-  private MouseEvent createMouseEvent(javafx.event.EventType<MouseEvent> type, double x, double y) {
+  private MouseEvent createMouseEvent(
+      final javafx.event.EventType<MouseEvent> type, final double x, final double y) {
     return new MouseEvent(
         type,
         x,
@@ -96,7 +83,7 @@ public class HexagonCanvasTest {
 
   @Test
   void testStateManagementUtils() {
-    PieceType testPiece = PieceType.WHITE_PAWN;
+    final PieceType testPiece = PieceType.WHITE_PAWN;
     canvas.setSelectedHex("F6");
     canvas.setDraggedPiece(testPiece);
     canvas.setMousePosition(100.5, 200.5);
@@ -105,11 +92,11 @@ public class HexagonCanvasTest {
 
   @Test
   void testApplySnapshot() {
-    Map<String, PieceType> snapshot = new HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_PAWN);
     snapshot.put("A1", PieceType.BLACK_QUEEN);
 
-    RestrictedAgonBoard dummyBoard = null;
+    final RestrictedAgonBoard dummyBoard = null;
     canvas.applySnapshot(dummyBoard, snapshot);
 
     assertTrue(canvas.hasPieceAt("F6"));
@@ -139,13 +126,15 @@ public class HexagonCanvasTest {
 
   @Test
   void testPixelToHex_MathAndOutOfBounds() {
-    RestrictedAgonBoard dummyBoard =
+    final RestrictedAgonBoard dummyBoard =
         (RestrictedAgonBoard)
             Proxy.newProxyInstance(
                 RestrictedAgonBoard.class.getClassLoader(),
                 new Class<?>[] {RestrictedAgonBoard.class},
                 (proxy, method, args) -> null);
+
     canvas.applySnapshot(dummyBoard, new HashMap<>());
+
     assertDoesNotThrow(
         () -> {
           canvas
@@ -153,11 +142,11 @@ public class HexagonCanvasTest {
               .handle(createMouseEvent(MouseEvent.MOUSE_PRESSED, 10000, 10000));
         });
 
-    double centerX = canvas.getWidth() / 2;
-    double centerY = canvas.getHeight() / 2;
+    final double centerX = canvas.getWidth() / 2;
+    final double centerY = canvas.getHeight() / 2;
     for (double angle = 0; angle < Math.PI * 2; angle += 0.1) {
-      double x = centerX + Math.cos(angle) * 35;
-      double y = centerY + Math.sin(angle) * 35;
+      final double x = centerX + Math.cos(angle) * 35;
+      final double y = centerY + Math.sin(angle) * 35;
       canvas.getOnMousePressed().handle(createMouseEvent(MouseEvent.MOUSE_PRESSED, x, y));
     }
   }
@@ -171,48 +160,46 @@ public class HexagonCanvasTest {
   @Test
   void testTakeImmediateSnapshot_WithExceptions() {
     assertTrue(canvas.takeSnapshot(null).isEmpty());
-    RestrictedAgonBoard exceptionBoard =
+
+    final RestrictedAgonBoard exceptionBoard =
         (RestrictedAgonBoard)
             Proxy.newProxyInstance(
                 RestrictedAgonBoard.class.getClassLoader(),
                 new Class<?>[] {RestrictedAgonBoard.class},
                 (proxy, method, args) -> {
-                  if (method.getName().equals("getPieceAt")) {
-                    int index = (Integer) args[0];
-                    if (index % 2 == 0) throw new RuntimeException("Force Catch Block!");
-                    return PieceType.WHITE_PAWN;
+                  Object result = null;
+                  if ("getPieceAt".equals(method.getName())) {
+                    final int index = (Integer) args[0];
+                    if (index % 2 == 0) {
+                      throw new RuntimeException("Force Catch Block!");
+                    }
+                    result = PieceType.WHITE_PAWN;
                   }
-                  return null;
+                  return result;
                 });
-    Map<String, PieceType> snap = canvas.takeSnapshot(exceptionBoard);
+
+    final Map<String, PieceType> snap = canvas.takeSnapshot(exceptionBoard);
     assertFalse(snap.isEmpty());
   }
 
   @Test
-  void testLoadImages_CatchBlock() throws Exception {
-    Field field = HexagonCanvas.class.getDeclaredField("pieceImages");
-    field.setAccessible(true);
-    Map<?, ?> originalMap = (Map<?, ?>) field.get(canvas);
-    field.set(canvas, Collections.emptyMap());
-    Method method = HexagonCanvas.class.getDeclaredMethod("loadImages");
-    method.setAccessible(true);
-    assertDoesNotThrow(() -> method.invoke(canvas));
-    field.set(canvas, originalMap);
-  }
-
-  @Test
   void testDraw_FallbackAndDraggedPiece() throws Exception {
-    Field field = HexagonCanvas.class.getDeclaredField("pieceImages");
-    field.setAccessible(true);
-    ((Map<?, ?>) field.get(canvas)).clear();
+    final Field tmField = HexagonCanvas.class.getDeclaredField("textureManager");
+    tmField.setAccessible(true);
+    final Object manager = tmField.get(canvas);
+
+    final Field piField = manager.getClass().getDeclaredField("pieceImages");
+    piField.setAccessible(true);
+    ((Map<?, ?>) piField.get(manager)).clear();
 
     canvas.setSelectedHex("F6");
     canvas.setDraggedPiece(PieceType.WHITE_PAWN);
     canvas.setMousePosition(150, 150);
 
-    Map<String, PieceType> snapshot = new HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_PAWN);
     snapshot.put("G7", PieceType.BLACK_PAWN);
+
     canvas.applySnapshot(null, snapshot);
     assertDoesNotThrow(() -> canvas.draw());
   }
@@ -230,15 +217,17 @@ public class HexagonCanvasTest {
 
   @Test
   void testMouseInteractionWithBoard() {
-    RestrictedAgonBoard dummyBoard =
+    final RestrictedAgonBoard dummyBoard =
         (RestrictedAgonBoard)
             Proxy.newProxyInstance(
                 RestrictedAgonBoard.class.getClassLoader(),
                 new Class<?>[] {RestrictedAgonBoard.class},
                 (proxy, method, args) -> null);
+
     canvas.applySnapshot(dummyBoard, new HashMap<>());
-    double centerX = canvas.getWidth() / 2;
-    double centerY = canvas.getHeight() / 2;
+    final double centerX = canvas.getWidth() / 2;
+    final double centerY = canvas.getHeight() / 2;
+
     assertDoesNotThrow(
         () -> {
           canvas
@@ -252,59 +241,61 @@ public class HexagonCanvasTest {
 
   @Test
   void testPixelToHex_InsideBoundaries() {
-    try {
-      Method method =
-          HexagonCanvas.class.getDeclaredMethod("pixelToHex", double.class, double.class);
-      method.setAccessible(true);
-      String result = (String) method.invoke(canvas, canvas.getWidth() / 2, canvas.getHeight() / 2);
-      assertNotNull(result);
-      assertEquals("F6", result);
-    } catch (Exception e) {
-      fail("Reflection failed: " + e.getMessage());
-    }
+    final String result =
+        HexMath.pixelToHex(
+            canvas.getWidth() / 2, canvas.getHeight() / 2, canvas.getWidth(), canvas.getHeight());
+    assertNotNull(result);
+    assertEquals("F6", result);
   }
 
   @Test
   void testDraw_WithPiecesAndSelection() {
-    Map<String, PieceType> snapshot = new HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_QUEEN);
     snapshot.put("G7", PieceType.BLACK_PAWN);
+
     canvas.applySnapshot(null, snapshot);
     canvas.setDraggedPiece(null);
     assertDoesNotThrow(() -> canvas.draw());
+
     canvas.setSelectedHex("G7");
     canvas.setDraggedPiece(PieceType.BLACK_PAWN);
     assertDoesNotThrow(() -> canvas.draw());
   }
 
   @Test
-  void testPixelToHex_BoundaryConditions() throws Exception {
-    Method method = HexagonCanvas.class.getDeclaredMethod("pixelToHex", double.class, double.class);
-    method.setAccessible(true);
-    String centerHex =
-        (String) method.invoke(canvas, canvas.getWidth() / 2, canvas.getHeight() / 2);
+  void testPixelToHex_BoundaryConditions() {
+    final String centerHex =
+        HexMath.pixelToHex(
+            canvas.getWidth() / 2, canvas.getHeight() / 2, canvas.getWidth(), canvas.getHeight());
     assertEquals("F6", centerHex);
-    String outHex = (String) method.invoke(canvas, 10000.0, 10000.0);
+
+    final String outHex =
+        HexMath.pixelToHex(10000.0, 10000.0, canvas.getWidth(), canvas.getHeight());
     assertNull(outHex);
   }
 
   @Test
   void testTakeImmediateSnapshot_WithActualPiece() {
     final int f6Index = CoordinateMapper.toIndex('F', 6);
-    RestrictedAgonBoard boardWithPiece =
+    final RestrictedAgonBoard boardWithPiece =
         new RestrictedAgonBoard() {
           @Override
-          public List<Move> generateLegalMoves(Color color) {
-            return List.of();
+          public List<Move> generateLegalMoves(final Color color) {
+            return Collections.emptyList();
           }
 
           @Override
-          public PieceType getPieceAt(int index) {
-            if (index == f6Index) return PieceType.WHITE_QUEEN;
-            return null;
+          public PieceType getPieceAt(final int index) {
+            PieceType type = null;
+            if (index == f6Index) {
+              type = PieceType.WHITE_QUEEN;
+            }
+            return type;
           }
         };
-    Map<String, PieceType> snapshot = canvas.takeSnapshot(boardWithPiece);
+
+    final Map<String, PieceType> snapshot = canvas.takeSnapshot(boardWithPiece);
     assertTrue(snapshot.containsKey("F6"), "Snapshot must contain hex F6");
     assertEquals(
         PieceType.WHITE_QUEEN, snapshot.get("F6"), "The piece on F6 must be a WHITE_QUEEN");
@@ -312,41 +303,38 @@ public class HexagonCanvasTest {
 
   @Test
   void testDraw_PieceVisibilityLogic() {
-    Map<String, PieceType> snapshot = new HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_PAWN);
     canvas.applySnapshot(null, snapshot);
     canvas.setDraggedPiece(null);
     assertDoesNotThrow(() -> canvas.draw());
+
     canvas.setSelectedHex("F6");
     canvas.setDraggedPiece(PieceType.WHITE_PAWN);
     canvas.setMousePosition(200, 200);
     assertDoesNotThrow(() -> canvas.draw());
   }
 
-  /**
-   * Tests full branch coverage for math coordinates calculation. Ensures an out-of-bounds click
-   * correctly returns null.
-   */
   @Test
-  void testPixelToHex_FullBranchCoverage() throws Exception {
+  void testPixelToHex_FullBranchCoverage() {
     canvas.setWidth(1000);
     canvas.setHeight(1000);
-    java.lang.reflect.Method method =
-        HexagonCanvas.class.getDeclaredMethod("pixelToHex", double.class, double.class);
-    method.setAccessible(true);
-    String inside = (String) method.invoke(canvas, 500.0, 500.0);
+
+    final String inside = HexMath.pixelToHex(500.0, 500.0, 1000.0, 1000.0);
     assertEquals("F6", inside, "Center (500, 500) should be detected as F6");
-    String outside = (String) method.invoke(canvas, 0.0, 0.0);
+
+    final String outside = HexMath.pixelToHex(0.0, 0.0, 1000.0, 1000.0);
     assertNull(outside, "A click at (0,0) is out of bounds and must return null");
   }
 
   @Test
   void testDraw_PieceVisibilityBranches() {
-    Map<String, PieceType> snapshot = new java.util.HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_PAWN);
     canvas.applySnapshot(null, snapshot);
     canvas.setDraggedPiece(null);
     assertDoesNotThrow(() -> canvas.draw());
+
     canvas.setSelectedHex("F6");
     canvas.setDraggedPiece(PieceType.WHITE_PAWN);
     canvas.setMousePosition(100, 100);
@@ -355,7 +343,7 @@ public class HexagonCanvasTest {
 
   @Test
   void testDraw_PieceNullAndNotNull() {
-    Map<String, PieceType> snapshot = new java.util.HashMap<>();
+    final Map<String, PieceType> snapshot = new HashMap<>();
     snapshot.put("F6", PieceType.WHITE_PAWN);
     canvas.applySnapshot(null, snapshot);
     assertDoesNotThrow(() -> canvas.draw());

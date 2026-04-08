@@ -46,6 +46,11 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
     String key = parts[0].trim().toLowerCase();
     String value = parts[1].trim();
 
+    if (key.startsWith("shortcut_")) {
+      config.addShortcut(key, value);
+      return;
+    }
+
     try {
       switch (key) {
         case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));

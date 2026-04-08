@@ -2,13 +2,12 @@ package fr.univ.bordeaux.ui.gui;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import fr.univ.bordeaux.technical.io.config.GameConfig;
-import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
@@ -72,93 +71,93 @@ public class AgonAppTest {
     AgonApp.setGui(gui);
     assertNull(AgonApp.getController());
   }
-/*
-    @Test
-    void testAppStart_And_Shortcuts_AllBranches() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(
-                () -> {
-                    try {
-                        GameConfig config = new GameConfig();
 
-                        config.getShortcuts().put("shortcut_new", "Ctrl+N");
-                        config.getShortcuts().put("shortcut_save", "   ");
-                        config.getShortcuts().put("shortcut_load", null);
-                        config.getShortcuts().put("shortcut_quit", "Invalid");
+  @Test
+  void testAppStart_And_Shortcuts_AllBranches() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            GameConfig config = new GameConfig();
 
-                        AgonGui gui = new AgonGui(config);
-                        AgonApp.setGui(gui);
+            config.getShortcuts().put("shortcut_new", "Ctrl+N");
+            config.getShortcuts().put("shortcut_save", "   ");
+            config.getShortcuts().put("shortcut_load", null);
+            config.getShortcuts().put("shortcut_quit", "Invalid");
 
-                        AgonApp app = new AgonApp();
-                        Stage stage = new Stage();
+            AgonGui gui = new AgonGui(config, null);
+            AgonApp.setGui(gui);
 
-                        app.start(stage);
-                        assertNotNull(AgonApp.getController());
-                        AgonApp.refreshShortcuts();
+            AgonApp app = new AgonApp();
+            Stage stage = new Stage();
 
-                    } catch (Exception e) {
-                        fail("Unexpected exception: " + e.getMessage());
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-        latch.await(5, TimeUnit.SECONDS);
-    }
-*/
-    @Test
-    void testSetupShortcuts_NullBranches() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(
-                () -> {
-                    try {
-                        AgonApp app = new AgonApp();
+            app.start(stage);
+            assertNotNull(AgonApp.getController());
+            AgonApp.refreshShortcuts();
 
-                        AgonApp.setGui(null);
-                        app.setupShortcuts();
+          } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+          } finally {
+            latch.countDown();
+          }
+        });
+    latch.await(5, TimeUnit.SECONDS);
+  }
 
-                        AgonApp.setGui(new AgonGui(null, null));
-                        app.setupShortcuts();
+  @Test
+  void testSetupShortcuts_NullBranches() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            AgonApp app = new AgonApp();
 
-                        AgonGui guiWithConfig = new AgonGui(new GameConfig(), null);
-                        AgonApp.setGui(guiWithConfig);
-                        setPrivateStaticField(AgonApp.class, "controller", null);
-                        app.setupShortcuts();
+            AgonApp.setGui(null);
+            app.setupShortcuts();
 
-                        setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
-                        setPrivateStaticField(AgonApp.class, "scene", null);
-                        app.setupShortcuts();
+            AgonApp.setGui(new AgonGui(null, null));
+            app.setupShortcuts();
 
-                        assertTrue(true);
-                    } catch (Exception e) {
-                        fail("Unexpected exception: " + e.getMessage());
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-        latch.await(2, TimeUnit.SECONDS);
-    }
+            AgonGui guiWithConfig = new AgonGui(new GameConfig(), null);
+            AgonApp.setGui(guiWithConfig);
+            setPrivateStaticField(AgonApp.class, "controller", null);
+            app.setupShortcuts();
 
-    @Test
-    void testRefreshShortcuts_NullBranches() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(
-                () -> {
-                    try {
-                        setPrivateStaticField(AgonApp.class, "scene", null);
-                        AgonApp.refreshShortcuts();
+            setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
+            setPrivateStaticField(AgonApp.class, "scene", null);
+            app.setupShortcuts();
 
-                        Scene fakeScene = new Scene(new Pane());
-                        setPrivateStaticField(AgonApp.class, "scene", fakeScene);
-                        AgonApp.setGui(null);
-                        AgonApp.refreshShortcuts();
+            assertTrue(true);
+          } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+          } finally {
+            latch.countDown();
+          }
+        });
+    latch.await(2, TimeUnit.SECONDS);
+  }
 
-                        assertTrue(true);
-                    } catch (Exception e) {
-                        fail("Unexpected exception: " + e.getMessage());
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-        latch.await(2, TimeUnit.SECONDS);
-    }
+  @Test
+  void testRefreshShortcuts_NullBranches() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            setPrivateStaticField(AgonApp.class, "scene", null);
+            AgonApp.refreshShortcuts();
+
+            Scene fakeScene = new Scene(new Pane());
+            setPrivateStaticField(AgonApp.class, "scene", fakeScene);
+            AgonApp.setGui(null);
+            AgonApp.refreshShortcuts();
+
+            assertTrue(true);
+          } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+          } finally {
+            latch.countDown();
+          }
+        });
+    latch.await(2, TimeUnit.SECONDS);
+  }
 }

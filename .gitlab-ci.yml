@@ -96,8 +96,7 @@ test-alpine:
   extends: .test_java
   stage: testGNU_Linux
   script:
-    - apk add xvfb
-    - xvfb-run mvn test || echo "apk introuvable, utilisation de xvfb-run existant"
+    - apk add xvfb || echo "apk introuvable, utilisation de xvfb-run existant"
     - xvfb-run mvn test
   image: alpine:3.19
 

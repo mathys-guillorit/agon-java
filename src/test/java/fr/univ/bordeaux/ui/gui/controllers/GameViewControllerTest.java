@@ -2,9 +2,12 @@ package fr.univ.bordeaux.ui.gui.controllers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.AppMode;
+import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
+import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
@@ -242,7 +245,7 @@ public class GameViewControllerTest {
           controller.startNewGame();
           controller.saveGame();
           controller.loadGame();
-          //controller.editShortcuts();
+          controller.editShortcuts();
         });
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
@@ -257,10 +260,6 @@ public class GameViewControllerTest {
     fakeGui.sentCommands.clear();
     interactWithNextDialog(null, true);
     runAndWait(() -> controller.routeMessage("filename"));
-    Thread.sleep(300);
-
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.routeMessage("nom du fichier"));
     Thread.sleep(300);
 
     setPrivateField(controller, "messageLabel", null);
@@ -297,7 +296,7 @@ public class GameViewControllerTest {
     Thread.sleep(300);
 
     fakeGui.sentCommands.clear();
-    interactWithNextDialog("ma_sauvegarde", false);
+    interactWithNextDialog("my_save", false);
     runAndWait(() -> controller.loadGame());
   }
 
@@ -549,7 +548,6 @@ public class GameViewControllerTest {
 
   @Test
   void testShowServerBrowser_Branches() throws InterruptedException {
-    // Il FAUT passer en ONLINE pour ouvrir la fenêtre !
     fakeGui.getAppContext().setMode(AppMode.ONLINE);
     fakeGui.sentCommands.clear();
 
@@ -597,14 +595,16 @@ public class GameViewControllerTest {
     fakeGui.sentCommands.clear();
 
     interactWithNextDialog(null, false);
-    runAndWait(() -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
+    runAndWait(
+        () -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
     Thread.sleep(600);
     assertTrue(fakeGui.sentCommands.contains("accept"));
 
     fakeGui.sentCommands.clear();
 
     interactWithNextDialog(null, true);
-    runAndWait(() -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
+    runAndWait(
+        () -> controller.routeMessage("[ONLINE] INVITATION_RECEIVED FROM=mathys EXPIRES=300s"));
     Thread.sleep(600);
     assertTrue(fakeGui.sentCommands.contains("decline"));
   }
@@ -628,19 +628,350 @@ public class GameViewControllerTest {
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
 
-/*
-    @Test
-    void testEditShortcuts_Branches() throws InterruptedException {
-        interactWithNextDialog(null, true);
-        runAndWait(() -> controller.editShortcuts());
-        Thread.sleep(300);
-        interactWithNextDialog("Shift+P", false);
-        new Thread(() -> {
-            try { Thread.sleep(500); } catch (Exception e) {}
-            interactWithNextDialog(null, false);
-        }).start();
-        runAndWait(() -> controller.editShortcuts());
-        assertTrue(true);
-    }
-*/
+  @Test
+  void testEditShortcuts_Branches() throws InterruptedException {
+    fakeGui.getConfig().addShortcut("shortcut_test", "Ctrl+T");
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.editShortcuts());
+    Thread.sleep(300);
+    interactWithNextDialog("Shift+P", false);
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(500);
+              } catch (Exception e) {
+              }
+              interactWithNextDialog(null, false);
+            })
+        .start();
+    runAndWait(() -> controller.editShortcuts());
+    assertTrue(true);
+  }
+
+  @Test
+  void testHexCanvas_MoveRequest_WhenPaused() throws InterruptedException {
+    FakeAgonGui pausedGui =
+        new FakeAgonGui() {
+          @Override
+          public boolean getPaused() {
+            return true;
+          }
+        };
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.setAgonGui(pausedGui));
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.getHexCanvas().requestMove("F6G7"));
+
+    assertTrue(pausedGui.sentCommands.isEmpty());
+  }
+
+  @Test
+  void testRouteMessage_SpecificBranches() throws InterruptedException {
+    runAndWait(() -> controller.routeMessage("GAME PAUSED"));
+    interactWithNextDialog("my_save", false);
+    runAndWait(() -> controller.routeMessage("Enter filename:"));
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    runAndWait(() -> controller.routeMessage(">> current player"));
+    assertTrue(true);
+  }
+
+  @Test
+  void testServerBrowser_ListViewSelection() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(300);
+              } catch (Exception e) {
+              }
+              Platform.runLater(
+                  () -> {
+                    for (Window window : Window.getWindows()) {
+                      if (window instanceof Stage
+                          && window.isShowing()
+                          && window.getScene() != null) {
+                        if (window.getScene().getRoot() instanceof DialogPane pane) {
+
+                          @SuppressWarnings("unchecked")
+                          ListView<String> listView = (ListView<String>) pane.lookup(".list-view");
+                          if (listView != null) {
+                            listView.getItems().add("TestServer @ 127.0.0.1:8888");
+                            listView.getSelectionModel().select(0);
+                          }
+
+                          for (ButtonType type : pane.getButtonTypes()) {
+                            if (type.getButtonData().isCancelButton()) {
+                              Node btn = pane.lookupButton(type);
+                              if (btn instanceof Button) ((Button) btn).fire();
+                            }
+                          }
+                        }
+                      }
+                    }
+                  });
+            })
+        .start();
+
+    runAndWait(() -> controller.showServerBrowser());
+    assertTrue(true);
+  }
+
+  @Test
+  void testShowLobby_NotConnected_Protection() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showLobby());
+
+    assertTrue(fakeGui.sentCommands.isEmpty());
+  }
+
+  @Test
+  void testShowHostServer_NotRunning_Branch() throws InterruptedException {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog("8888", false);
+    runAndWait(() -> controller.showHostServerDialog());
+
+    Thread.sleep(300);
+    assertTrue(fakeGui.sentCommands.contains("server_start 8888"));
+  }
+
+  @Test
+  void testShowLobby_Connected_FullInteraction() throws Exception {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+
+    AgonClient fakeClient =
+        new AgonClient(null) {
+          @Override
+          public boolean isConnected() {
+            return true;
+          }
+
+          @Override
+          public String requestPlayers() {
+            return "Player1, Player2";
+          }
+
+          @Override
+          public String requestScoreboard() {
+            return "Scores...";
+          }
+        };
+
+    Field clientField = AppContext.class.getDeclaredField("client");
+    clientField.setAccessible(true);
+    clientField.set(fakeGui.getAppContext(), fakeClient);
+
+    fakeGui.sentCommands.clear();
+
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(400);
+              } catch (Exception e) {
+              }
+              Platform.runLater(
+                  () -> {
+                    List<Window> windows = new ArrayList<>(Window.getWindows());
+
+                    for (Window window : windows) {
+                      if (window instanceof Stage
+                          && window.isShowing()
+                          && window.getScene() != null) {
+                        if (window.getScene().getRoot() instanceof DialogPane pane) {
+
+                          List<Node> buttons = new ArrayList<>(pane.lookupAll(".button"));
+                          for (Node node : buttons) {
+                            if (node instanceof Button btn) {
+                              if ("Refresh Players".equals(btn.getText())
+                                  || "View Scoreboard".equals(btn.getText())) {
+                                btn.fire();
+                              }
+                            }
+                          }
+
+                          TextField tf = (TextField) pane.lookup(".text-field");
+                          if (tf != null) {
+                            tf.setText("42");
+                          }
+
+                          List<ButtonType> buttonTypes = new ArrayList<>(pane.getButtonTypes());
+                          for (ButtonType type : buttonTypes) {
+                            if (type.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
+                              Node submitBtn = pane.lookupButton(type);
+                              if (submitBtn instanceof Button) {
+                                ((Button) submitBtn).fire();
+                                return;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  });
+            })
+        .start();
+
+    runAndWait(() -> controller.showLobby());
+    assertTrue(fakeGui.sentCommands.contains("new 42"));
+  }
+
+  @Test
+  void testConsoleInterceptor_ChooseMode_Blitz() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, true);
+    System.out.println("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
+
+    Thread.sleep(600);
+    assertTrue(fakeGui.sentCommands.contains("mode blitz"));
+  }
+
+  @Test
+  void testShowHostServer_Running_Branch() throws Exception {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+
+    AgonServer fakeServer =
+        new AgonServer("12345") {
+          @Override
+          public boolean isRunning() {
+            return true;
+          }
+
+          @Override
+          public int getPort() {
+            return 12345;
+          }
+
+          @Override
+          public int getConnectedClientsCount() {
+            return 1;
+          }
+        };
+
+    Field serverField = AppContext.class.getDeclaredField("server");
+    serverField.setAccessible(true);
+    serverField.set(fakeGui.getAppContext(), fakeServer);
+
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.showHostServerDialog());
+
+    Thread.sleep(300);
+    assertTrue(fakeGui.sentCommands.contains("server_stop"));
+  }
+
+  @Test
+  void testConsoleInterceptor_OnlineTurns() throws InterruptedException {
+    System.out.println("[ONLINE] Your turn");
+    System.out.println("[ONLINE] Opponent turn");
+    System.out.println("[ONLINE] You are WHITE");
+    Thread.sleep(600);
+    assertTrue(true);
+  }
+
+  @Test
+  void testServerBrowser_ListSelection_And_Routing() throws Exception {
+    fakeGui.getAppContext().setMode(AppMode.ONLINE);
+    runAndWait(() -> controller.routeMessage(">> current player"));
+
+    new Thread(
+            () -> {
+              try {
+                Thread.sleep(400);
+              } catch (Exception e) {
+              }
+              Platform.runLater(
+                  () -> {
+                    List<Window> windows = new ArrayList<>(Window.getWindows());
+                    for (Window window : windows) {
+                      if (window instanceof Stage
+                          && window.isShowing()
+                          && window.getScene() != null) {
+                        if (window.getScene().getRoot() instanceof DialogPane pane) {
+
+                          @SuppressWarnings("unchecked")
+                          ListView<String> listView = (ListView<String>) pane.lookup(".list-view");
+                          if (listView != null) {
+                            listView.getItems().add("FakeServer @ 10.0.0.1:9999");
+                            listView.getSelectionModel().select(0);
+                          }
+
+                          List<ButtonType> types = new ArrayList<>(pane.getButtonTypes());
+                          for (ButtonType type : types) {
+                            if (type.getButtonData().isCancelButton()) {
+                              Node btn = pane.lookupButton(type);
+                              if (btn instanceof Button) {
+                                ((Button) btn).fire();
+                                return;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  });
+            })
+        .start();
+
+    runAndWait(() -> controller.showServerBrowser());
+    assertTrue(true);
+  }
+
+  @Test
+  void testRouteMessage_OnlineTurns_BothBranches() throws Exception {
+    AppContext fakeContextTrue =
+        new AppContext(null) {
+          @Override
+          public boolean isOnlineGameActive() {
+            return true;
+          }
+
+          @Override
+          public boolean isMyOnlineTurn() {
+            return true;
+          }
+
+          @Override
+          public Color getLocalOnlineColor() {
+            return Color.WHITE;
+          }
+        };
+
+    Field contextField = FakeAgonGui.class.getDeclaredField("appContext");
+    contextField.setAccessible(true);
+    contextField.set(fakeGui, fakeContextTrue);
+
+    runAndWait(() -> controller.routeMessage(">> current player"));
+
+    AppContext fakeContextFalse =
+        new AppContext(null) {
+          @Override
+          public boolean isOnlineGameActive() {
+            return true;
+          }
+
+          @Override
+          public boolean isMyOnlineTurn() {
+            return false;
+          }
+
+          @Override
+          public Color getLocalOnlineColor() {
+            return Color.BLACK;
+          }
+        };
+    contextField.set(fakeGui, fakeContextFalse);
+
+    runAndWait(() -> controller.routeMessage(">> current player"));
+
+    assertTrue(true);
+  }
 }

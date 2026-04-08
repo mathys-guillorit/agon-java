@@ -29,22 +29,38 @@ import javafx.util.Duration;
  */
 public class AgonGui implements GameUserInterface, MatchObserver {
 
+  /** Flag indicating whether the debug mode is currently active. */
   private final AtomicBoolean debugMode = new AtomicBoolean(false);
+
+  /** Flag indicating whether the GUI application is currently running. */
   private final AtomicBoolean running = new AtomicBoolean(true);
+
+  /** The user's game configuration settings. */
   private final GameConfig config;
+
+  /** The global application context storing profiles and network states. */
   private final AppContext context;
+
+  /** A thread-safe queue storing commands sent from the UI to the engine. */
   private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
+
+  /** The currently active match state (read-only). */
   private ReadOnlyMatch currentMatch;
+
+  /** The animation timeline controlling the blitz mode countdown updates. */
   private Timeline blitzTimeline;
+
+  /** Flag indicating whether the current match is paused. */
+  private boolean isPaused = false;
 
   /**
    * Constructs a new AgonGui instance.
    *
    * @param config The game configuration settings.
    */
-  public AgonGui(GameConfig config,  AppContext context) {
-      this.config = config;
-      this.context = context;
+  public AgonGui(final GameConfig config, final AppContext context) {
+    this.config = config;
+    this.context = context;
   }
 
   /**
@@ -56,61 +72,71 @@ public class AgonGui implements GameUserInterface, MatchObserver {
     return this.config;
   }
 
-    /**
-     * Retrieves the current application context.
-     *
-     * @return The AppContext instance.
-     */
-    public AppContext getAppContext() {
-        return this.context;
-    }
+  /**
+   * Retrieves the current application context.
+   *
+   * @return The AppContext instance.
+   */
+  public AppContext getAppContext() {
+    return this.context;
+  }
 
   /**
    * Submits a command string to the processing queue.
    *
    * @param command The command input (e.g., "new", "F6G7").
    */
-  public void sendCommand(String command) {
+  public void sendCommand(final String command) {
+    if (command != null && command.trim().equalsIgnoreCase("pause")) {
+      isPaused = !isPaused;
+      updateStatusMessage();
+    }
     commandQueue.offer(command);
   }
 
   @Override
   public String getUserInput() {
+    String input = null;
     try {
-      return commandQueue.take();
-    } catch (InterruptedException e) {
+      input = commandQueue.take();
+    } catch (final InterruptedException e) {
       Thread.currentThread().interrupt();
-      return null;
     }
+    return input;
   }
 
   @Override
-  public void displayHistory(List<MoveDtO> moves) {
+  public void displayHistory(final List<MoveDtO> moves) {
     if (moves.isEmpty()) {
       showInfo("The history is currently empty.");
-      return;
+    } else {
+      final StringBuilder sb = new StringBuilder("--- Move History ---\n\n");
+      for (int i = 0; i < moves.size(); i++) {
+        final MoveDtO m = moves.get(i);
+        sb.append(
+            String.format(
+                "%d. %s : %s -> %s\n",
+                i / 2 + 1, i % 2 == 0 ? "White" : "Black", m.from(), m.to()));
+      }
+      showInfo(sb.toString());
     }
-
-    StringBuilder sb = new StringBuilder("--- Move History ---\n\n");
-    for (int i = 0; i < moves.size(); i++) {
-      MoveDtO m = moves.get(i);
-      sb.append(
-          String.format(
-              "%d. %s : %s -> %s\n", i / 2 + 1, i % 2 == 0 ? "White" : "Black", m.from(), m.to()));
-    }
-    showInfo(sb.toString());
   }
 
-  /** Initializes and launches the JavaFX application thread. */
+  /** * Initializes and launches the underlying JavaFX application thread. */
   public void start() {
     AgonApp.setGui(this);
     new Thread(() -> Application.launch(AgonApp.class)).start();
   }
 
-  public void updateBoard(RestrictedAgonBoard agonBoard) {
-    GameViewController controller = AgonApp.getController();
+  /**
+   * Synchronizes the graphical board with the provided core game board state.
+   *
+   * @param agonBoard The updated board state to render.
+   */
+  public void updateBoard(final RestrictedAgonBoard agonBoard) {
+    final GameViewController controller = AgonApp.getController();
     if (controller != null && controller.getHexCanvas() != null) {
-      Map<String, PieceType> safeSnapshot = controller.getHexCanvas().takeSnapshot(agonBoard);
+      final Map<String, PieceType> safeSnapshot = controller.getHexCanvas().takeSnapshot(agonBoard);
       Platform.runLater(
           () -> {
             controller.getHexCanvas().applySnapshot(agonBoard, safeSnapshot);
@@ -119,10 +145,10 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void showMessage(String message) {
+  public void showMessage(final String message) {
     Platform.runLater(
         () -> {
-          GameViewController controller = AgonApp.getController();
+          final GameViewController controller = AgonApp.getController();
           if (controller != null && message != null) {
             controller.routeMessage(message.trim());
           }
@@ -130,20 +156,22 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void showError(String error) {
+  public void showError(final String error) {
     System.err.println("[GUI ERROR] " + error);
     Platform.runLater(
         () -> {
-          GameViewController controller = AgonApp.getController();
-          if (controller != null) controller.showError(error);
+          final GameViewController controller = AgonApp.getController();
+          if (controller != null) {
+            controller.showError(error);
+          }
         });
   }
 
   @Override
-  public void showInfo(String info) {
+  public void showInfo(final String info) {
     Platform.runLater(
         () -> {
-          GameViewController controller = AgonApp.getController();
+          final GameViewController controller = AgonApp.getController();
           if (controller != null && info != null) {
             controller.routeMessage(info.trim());
           }
@@ -151,11 +179,13 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void showWarn(String warning) {
+  public void showWarn(final String warning) {
     Platform.runLater(
         () -> {
-          GameViewController controller = AgonApp.getController();
-          if (controller != null) controller.showWarn(warning);
+          final GameViewController controller = AgonApp.getController();
+          if (controller != null) {
+            controller.showWarn(warning);
+          }
         });
   }
 
@@ -163,8 +193,10 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public void showHelp() {
     Platform.runLater(
         () -> {
-          GameViewController controller = AgonApp.getController();
-          if (controller != null) controller.showHelp();
+          final GameViewController controller = AgonApp.getController();
+          if (controller != null) {
+            controller.showHelp();
+          }
         });
   }
 
@@ -184,13 +216,15 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void onMatchUpdate(ReadOnlyMatch match) {
+  public void onMatchUpdate(final ReadOnlyMatch match) {
     this.currentMatch = match;
     if (match != null) {
       updateBoard(match.getAgonBoard());
 
       if (match.isMatchOver()) {
-        if (blitzTimeline != null) blitzTimeline.stop();
+        if (blitzTimeline != null) {
+          blitzTimeline.stop();
+        }
         showInfo(
             "MATCH OVER! Winner: "
                 + (match.getWinner() != null ? match.getWinner().getColor() : "None"));
@@ -207,13 +241,23 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   private void updateStatusMessage() {
-    if (currentMatch == null || currentMatch.isMatchOver()) return;
-    StringBuilder sb =
-        new StringBuilder("Current Player: " + currentMatch.getCurrentPlayer().getColor());
-    if (currentMatch instanceof BlitzMatch blitzMatch) {
-      sb.append("   |   Time left: ").append(blitzMatch.getRemainingTime());
+    if (currentMatch != null && !currentMatch.isMatchOver() && !isPaused) {
+      final StringBuilder sb =
+          new StringBuilder("Current Player: " + currentMatch.getCurrentPlayer().getColor());
+      if (currentMatch instanceof BlitzMatch blitzMatch) {
+        sb.append("   |   Time left: ").append(blitzMatch.getRemainingTime());
+      }
+      showMessage(sb.toString());
     }
-    showMessage(sb.toString());
+  }
+
+  /**
+   * Checks if the game is currently paused.
+   *
+   * @return True if the game is paused, false otherwise.
+   */
+  public boolean getPaused() {
+    return isPaused;
   }
 
   @Override
@@ -222,5 +266,5 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   }
 
   @Override
-  public void setVerbose(boolean state) {}
+  public void setVerbose(final boolean state) {}
 }

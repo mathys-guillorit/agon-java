@@ -17,15 +17,7 @@ import fr.univ.bordeaux.application.commands.network.CmdServerList;
 import fr.univ.bordeaux.application.commands.network.CmdServerStart;
 import fr.univ.bordeaux.application.commands.network.CmdServerStatus;
 import fr.univ.bordeaux.application.commands.network.CmdServerStop;
-import fr.univ.bordeaux.application.commands.specialized.CmdHelp;
-import fr.univ.bordeaux.application.commands.specialized.CmdHint;
-import fr.univ.bordeaux.application.commands.specialized.CmdLoad;
-import fr.univ.bordeaux.application.commands.specialized.CmdQuit;
-import fr.univ.bordeaux.application.commands.specialized.CmdRedo;
-import fr.univ.bordeaux.application.commands.specialized.CmdSave;
-import fr.univ.bordeaux.application.commands.specialized.CmdSet;
-import fr.univ.bordeaux.application.commands.specialized.CmdShow;
-import fr.univ.bordeaux.application.commands.specialized.CmdUndo;
+import fr.univ.bordeaux.application.commands.specialized.*;
 import fr.univ.bordeaux.application.match.ContestMatch;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
@@ -85,7 +77,6 @@ public class GameLauncher {
     this.setupOptions();
   }
 
-
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
     options.addOption("V", "version", false, "Displays version information");
@@ -104,103 +95,129 @@ public class GameLauncher {
    *
    * @param args The command-line arguments provided at startup.
    */
-  public void launch(String[] args) {
-    GameConfig config = loadInitialConfig();
-    CommandLineParser parser = new DefaultParser();
-    AgonRegister<CmdAction> cmds = new AgonRegister<>();
+  public void launch(final String... args) {
+    final AgonRegister<CmdAction> cmds = new AgonRegister<>();
+    final CommandLineParser parser = new DefaultParser();
 
     try {
-      CommandLine cmd = parser.parse(options, args);
+      final CommandLine cmd = parser.parse(options, args);
 
-      if (cmd.hasOption("h")) {
-        this.fillRegister(cmds, null, null, null, new AppContext(new LocalProfile("Temp")));
-        printHelp(cmds);
-        return;
-      }
-
-      if (cmd.hasOption("V")) {
-        printVersion();
-        return;
-      }
-
-      String playerName = askPlayerName();
-      AppMode mode;
-      if (cmd.hasOption("g")) {
-        mode = AppMode.LOCAL;
+      if (cmd.hasOption("h") || cmd.hasOption("V")) {
+        handleInfoOptions(cmd, cmds);
       } else {
-        mode = askApplicationMode();
-        System.out.println("[INFO] Mode selected: " + mode);
+        setupAndStartGame(cmd, cmds);
       }
-
-      LocalProfile profile = new LocalProfile(playerName);
-      AppContext context = new AppContext(profile);
-      context.setMode(mode);
-
-      if (cmd.hasOption("v")) {
-        config.setVerbose(true);
-        System.out.println("[INFO] Verbose mode enabled.");
-      }
-
-      if (cmd.hasOption("d")) {
-        config.setDebug(true);
-        System.out.println("[DEBUG] Debug mode enabled.");
-      }
-
-      String[] fileArg = cmd.getArgs();
-      String filePath = null;
-
-      if (fileArg.length > 0) {
-        filePath = fileArg[0];
-        File file = new File(filePath);
-
-        if (!file.exists() || file.isDirectory()) {
-          System.err.println(
-              "[ERROR] The file '" + filePath + "' does not exist or is a directory.");
-          return;
-        }
-
-        if (cmd.hasOption("c")) {
-          System.out.println("[INFO] Contest mode detected.");
-          try {
-            ContestMatch.executeContest(fileArg[0]);
-          } catch (Exception e) {
-            System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
-          }
-          return;
-        }
-
-        System.out.println("[INFO] File argument detected: " + filePath);
-
-      } else if (cmd.hasOption("c")) {
-        System.err.println("[ERROR] Contest mode requires a file argument.");
-        this.fillRegister(cmds, null, null, null, context);
-        printHelp(cmds);
-        return;
-      }
-
-      startGame(config, cmd, cmds, context);
-
     } catch (ParseException e) {
       System.err.println("Argument Error : " + e.getMessage());
       printHelp(cmds);
     }
   }
 
-
-  private GameConfig loadInitialConfig() {
-    ConfigParser configParser = new ConfigParser();
-    try {
-      return configParser.parse(configPath);
-    } catch (IOException e) {
-      System.out.println("No config file found. Creating a default file...");
-      createDefaultConfigFile();
-      return new GameConfig();
+  private void handleInfoOptions(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
+    if (cmd.hasOption("h")) {
+      this.fillRegister(cmds, null, null, null, new AppContext(new LocalProfile("Temp")));
+      printHelp(cmds);
+    } else if (cmd.hasOption("V")) {
+      printVersion();
     }
   }
 
+  private void setupAndStartGame(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
+    final GameConfig config = loadInitialConfig();
+    applyConfigOptions(cmd, config);
+
+    final AppContext context = createAppContext(cmd);
+
+    if (processArgumentsAndContest(cmd, cmds, context)) {
+      startGame(config, cmd, cmds, context);
+    }
+  }
+
+  private void applyConfigOptions(final CommandLine cmd, final GameConfig config) {
+    if (cmd.hasOption("v")) {
+      config.setVerbose(true);
+      System.out.println("[INFO] Verbose mode enabled.");
+    }
+    if (cmd.hasOption("d")) {
+      config.setDebug(true);
+      System.out.println("[DEBUG] Debug mode enabled.");
+    }
+  }
+
+  private AppContext createAppContext(final CommandLine cmd) {
+    final String playerName = askPlayerName();
+    final AppMode mode;
+
+    if (cmd.hasOption("g")) {
+      mode = AppMode.LOCAL;
+    } else {
+      mode = askApplicationMode();
+      System.out.println("[INFO] Mode selected: " + mode);
+    }
+
+    final AppContext context = new AppContext(new LocalProfile(playerName));
+    context.setMode(mode);
+
+    return context;
+  }
+
+  private boolean processArgumentsAndContest(
+      final CommandLine cmd, final AgonRegister<CmdAction> cmds, final AppContext context) {
+
+    boolean shouldStart = true;
+    final String[] fileArg = cmd.getArgs();
+
+    if (fileArg.length == 0) {
+      if (cmd.hasOption("c")) {
+        System.err.println("[ERROR] Contest mode requires a file argument.");
+        this.fillRegister(cmds, null, null, null, context);
+        printHelp(cmds);
+        shouldStart = false;
+      }
+    } else {
+      final String filePath = fileArg[0];
+      final File file = new File(filePath);
+
+      if (!file.exists() || file.isDirectory()) {
+        System.err.println("[ERROR] The file '" + filePath + "' does not exist or is a directory.");
+        shouldStart = false;
+      } else if (cmd.hasOption("c")) {
+        System.out.println("[INFO] Contest mode detected.");
+        try {
+          ContestMatch.executeContest(filePath);
+        } catch (Exception e) {
+          System.err.println("[ERROR] Contest mode failed : " + e.getMessage());
+        }
+        shouldStart = false;
+      } else {
+        System.out.println("[INFO] File argument detected: " + filePath);
+      }
+    }
+
+    return shouldStart;
+  }
+
+  /**
+   * Attempts to load the persistent game configuration. If the file is missing, a default
+   * configuration file is automatically created.
+   *
+   * @return The loaded GameConfig instance.
+   */
+  private GameConfig loadInitialConfig() {
+    final ConfigParser configParser = new ConfigParser();
+    GameConfig config;
+    try {
+      config = configParser.parse(configPath);
+    } catch (IOException e) {
+      System.out.println("No config file found. Creating a default file...");
+      createDefaultConfigFile();
+      config = new GameConfig();
+    }
+    return config;
+  }
 
   private void createDefaultConfigFile() {
-    ConfigSerializer serializer = new ConfigSerializer();
+    final ConfigSerializer serializer = new ConfigSerializer();
     try {
       serializer.createDefault(configPath);
       System.out.println("[INFO] Minimal configuration file created at: " + configPath);
@@ -210,7 +227,7 @@ public class GameLauncher {
   }
 
   protected String askPlayerName() {
-    Scanner scanner = new Scanner(System.in);
+    final Scanner scanner = new Scanner(System.in);
 
     System.out.print("Enter your player name: ");
     String name = scanner.nextLine().trim();
@@ -224,39 +241,42 @@ public class GameLauncher {
   }
 
   protected void startGame(
-      GameConfig config, CommandLine cmd, AgonRegister<CmdAction> cmds, AppContext context) {
+      final GameConfig config,
+      final CommandLine cmd,
+      final AgonRegister<CmdAction> cmds,
+      final AppContext context) {
 
     System.out.println("Starting Agon Shell...");
 
     if (cmd.hasOption("g")) {
-        System.out.println("[INFO] Starting Agon GUI...");
-        AgonGui gui = new AgonGui(config, context);
-        GameEngine gameEngine = new GameEngine(gui, cmds);
-        context.setGameEngine(gameEngine);
-        gameEngine.setAppContext(context);
-        this.fillRegister(cmds, gui, config, gameEngine, context);
-        gui.start();
-        gameEngine.start();
+      System.out.println("[INFO] Starting Agon GUI...");
+      final AgonGui gui = new AgonGui(config, context);
+      final GameEngine gameEngine = new GameEngine(gui, cmds);
+      context.setGameEngine(gameEngine);
+      gameEngine.setAppContext(context);
+      this.fillRegister(cmds, gui, config, gameEngine, context);
+      gui.start();
+      gameEngine.start();
     } else {
 
       try {
         final AgonShell[] shellRef = new AgonShell[1];
 
-        Completer strategyCompleter =
+        final Completer strategyCompleter =
             (reader, line, candidates) -> {
               if (shellRef[0] != null) {
                 shellRef[0].globalCompleter(reader, line, candidates);
               }
             };
 
-        Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-        LineReader reader =
+        final Terminal terminal = TerminalBuilder.builder().dumb(true).build();
+        final LineReader reader =
             LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
 
-        AgonShell userInterface = new AgonShell(terminal, reader, cmds);
+        final AgonShell userInterface = new AgonShell(terminal, reader, cmds);
         shellRef[0] = userInterface;
 
-        GameEngine gameEngine = new GameEngine(userInterface, cmds);
+        final GameEngine gameEngine = new GameEngine(userInterface, cmds);
         context.setGameEngine(gameEngine);
         gameEngine.setAppContext(context);
 
@@ -272,40 +292,50 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Populates the command register with all available game and network commands.
+   *
+   * @param cmds The register to populate.
+   * @param userInterface The active User Interface (CLI or GUI).
+   * @param config The current game configuration.
+   * @param engine The game engine instance.
+   * @param context The global application context.
+   */
   private void fillRegister(
-      AgonRegister<CmdAction> cmds,
-      GameUserInterface ui,
-      GameConfig config,
-      GameEngine engine,
-      AppContext context) {
+      final AgonRegister<CmdAction> cmds,
+      final GameUserInterface userInterface,
+      final GameConfig config,
+      final GameEngine engine,
+      final AppContext context) {
 
-    cmds.register("new", new CmdNew(ui, context, config, engine));
+    cmds.register("new", new CmdNew(userInterface, context, config, engine));
 
-    cmds.register("hint", new CmdHint(ui));
-    cmds.register("show", new CmdShow(ui, config));
-    cmds.register("load", new CmdLoad(ui, engine));
-    cmds.register("save", new CmdSave(ui));
-    cmds.register("set", new CmdSet(ui, config));
-    cmds.register("undo", new CmdUndo(ui));
-    cmds.register("redo", new CmdRedo(ui));
-    cmds.register("help", new CmdHelp(ui, cmds));
+    cmds.register("hint", new CmdHint(userInterface));
+    cmds.register("show", new CmdShow(userInterface, config));
+    cmds.register("load", new CmdLoad(userInterface, engine));
+    cmds.register("save", new CmdSave(userInterface));
+    cmds.register("set", new CmdSet(userInterface, config));
+    cmds.register("undo", new CmdUndo(userInterface));
+    cmds.register("redo", new CmdRedo(userInterface));
+    cmds.register("pause", new CmdPause(userInterface));
+    cmds.register("help", new CmdHelp(userInterface, cmds));
 
-    cmds.register("join", new CmdJoin(ui, context));
-    cmds.register("ping", new CmdPing(ui, context));
-    cmds.register("server_start", new CmdServerStart(ui, context));
-    cmds.register("server_stop", new CmdServerStop(ui, context));
-    cmds.register("server_list", new CmdServerList(ui, context));
-    cmds.register("server_status", new CmdServerStatus(ui, context));
-    cmds.register("players", new CmdPlayers(ui, context, new String[0]));
-    cmds.register("scoreboard", new CmdScoreboard(ui, context));
-    cmds.register("away", new CmdAway(ui, context));
-    cmds.register("back", new CmdBack(ui, context));
-    cmds.register("accept", new CmdAccept(ui, context));
-    cmds.register("decline", new CmdDecline(ui, context));
-    cmds.register("cancel", new CmdCancel(ui, context));
-    cmds.register("mode", new CmdMode(ui, context));
+    cmds.register("join", new CmdJoin(userInterface, context));
+    cmds.register("ping", new CmdPing(userInterface, context));
+    cmds.register("server_start", new CmdServerStart(userInterface, context));
+    cmds.register("server_stop", new CmdServerStop(userInterface, context));
+    cmds.register("server_list", new CmdServerList(userInterface, context));
+    cmds.register("server_status", new CmdServerStatus(userInterface, context));
+    cmds.register("players", new CmdPlayers(userInterface, context, new String[0]));
+    cmds.register("scoreboard", new CmdScoreboard(userInterface, context));
+    cmds.register("away", new CmdAway(userInterface, context));
+    cmds.register("back", new CmdBack(userInterface, context));
+    cmds.register("accept", new CmdAccept(userInterface, context));
+    cmds.register("decline", new CmdDecline(userInterface, context));
+    cmds.register("cancel", new CmdCancel(userInterface, context));
+    cmds.register("mode", new CmdMode(userInterface, context));
 
-    cmds.register("quit", new CmdQuit(ui, context));
+    cmds.register("quit", new CmdQuit(userInterface, context));
   }
 
   /**
@@ -314,8 +344,8 @@ public class GameLauncher {
    * <p>Attempts to read a custom "helpGameLauncher.txt" file. If not found, falls back to the
    * standard Apache CLI formatter.
    */
-  private void printHelp(AgonRegister<CmdAction> cmds) {
-    HelpFormatter formatter = new HelpFormatter();
+  private void printHelp(final AgonRegister<CmdAction> cmds) {
+    final HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("agon [OPTIONS]", options);
 
     System.out.println("\nCOMMANDES DISPONIBLES DANS LE SHELL :");
@@ -377,8 +407,13 @@ public class GameLauncher {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
 
+  /**
+   * Prompts the user via standard input to select their application mode (Local or Online).
+   *
+   * @return The selected AppMode.
+   */
   protected AppMode askApplicationMode() {
-    Scanner scanner = new Scanner(System.in);
+    final Scanner scanner = new Scanner(System.in);
 
     System.out.println("Select mode:");
     System.out.println("1 - Local");
@@ -387,16 +422,11 @@ public class GameLauncher {
 
     String input = scanner.nextLine().trim();
 
-    while (!input.equals("1") && !input.equals("2")) {
+    while (!"1".equals(input) && !"2".equals(input)) {
       System.out.print("Invalid choice. Enter 1 (Local) or 2 (Online): ");
       input = scanner.nextLine().trim();
     }
 
-    if (input.equals("2")) {
-      return AppMode.ONLINE;
-    }
-
-    return AppMode.LOCAL;
+    return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
-
 }

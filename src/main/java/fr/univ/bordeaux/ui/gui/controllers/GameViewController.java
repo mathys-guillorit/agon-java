@@ -1,66 +1,81 @@
 package fr.univ.bordeaux.ui.gui.controllers;
 
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
-import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.match.Match;
+import fr.univ.bordeaux.application.network.client.AgonClient;
+import fr.univ.bordeaux.application.network.client.ClientDiscovery;
+import fr.univ.bordeaux.application.network.client.ServerInfo;
+import fr.univ.bordeaux.application.network.server.AgonServer;
+import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /**
- * The main JavaFX Controller handling interactions on the game board screen.
- *
- * <p>This class binds the visual FXML elements to the logic and sends interactions to the {@link
- * AgonGui} engine wrapper.
+ * The main JavaFX Controller for the Agon game interface. Handles all UI events, dialog prompts,
+ * network lobbies, and routes commands to the core game engine via the {@link AgonGui} bridge.
  */
 public class GameViewController {
 
+  /** The UI stack pane container holding the hexagon canvas. */
   @FXML private StackPane boardContainer;
 
+  /** The UI label used to display game status and server messages. */
   @FXML private Label messageLabel;
 
+  /** The main GUI bridge connecting the interface to the game engine. */
   private AgonGui agonGui;
 
+  /** The custom canvas component responsible for rendering the game board. */
   private HexagonCanvas hexCanvas;
 
   /**
-   * Injects the underlying GUI controller.
-   *
-   * @param agonGui The AgonGui instance managing the game state.
+   * Default constructor for the GameViewController. Instantiated automatically by JavaFX when
+   * loading the FXML.
    */
-  public void setAgonGui(AgonGui agonGui) {
+  public GameViewController() {}
+
+  /**
+   * Injects the AgonGui bridge into the controller and triggers initial session setups.
+   *
+   * @param agonGui The core GUI bridge instance.
+   */
+  public void setAgonGui(final AgonGui agonGui) {
     this.agonGui = agonGui;
     Platform.runLater(this::promptSessionSetup);
     setupConsoleInterceptor();
   }
 
   /**
-   * Returns the canvas currently managing the board rendering.
+   * Retrieves the hexagon canvas component.
    *
-   * @return The active HexagonCanvas.
+   * @return The HexagonCanvas instance used for rendering the board.
    */
   public HexagonCanvas getHexCanvas() {
     return this.hexCanvas;
   }
 
   /**
-   * Initializes the JavaFX controller. Sets up the canvas, binds dimensions, and links the resizing
-   * listener.
+   * Initializes the JavaFX components after the FXML has been loaded. Sets up the HexagonCanvas and
+   * binds its dimensions to the parent container.
    */
   @FXML
   public void initialize() {
@@ -68,7 +83,11 @@ public class GameViewController {
     hexCanvas.setMoveRequestListener(
         move -> {
           if (agonGui != null) {
-            agonGui.sendCommand(move);
+            if (agonGui.getPaused()) {
+              showWarn("The game is currently paused. Please unpause to make a move.");
+            } else {
+              agonGui.sendCommand(move);
+            }
           }
         });
     boardContainer.getChildren().add(hexCanvas);
@@ -79,118 +98,147 @@ public class GameViewController {
   }
 
   /**
-   * Updates the status message displayed at the top/bottom of the board.
+   * Updates the primary message label on the UI.
    *
    * @param message The text to display.
    */
-  public void updateMessage(String message) {
+  public void updateMessage(final String message) {
     if (messageLabel != null) {
       messageLabel.setText(message);
     }
   }
 
   /**
-   * Routes a message to the appropriate UI component based on its content. - "Current Player" or
-   * ">>" implies a Status bar update. - Everything else is displayed as an Information Popup.
+   * Parses incoming engine messages and routes them to the appropriate UI component (e.g., updating
+   * the status label, prompting a dialog, or showing a notification).
    *
-   * @param message The system message.
+   * @param message The raw message string from the game engine.
    */
-  public void routeMessage(String message) {
-    if (message == null) return;
-    String lowerMsg = message.toLowerCase();
+  public void routeMessage(final String message) {
+    if (message != null) {
+      final String lowerMsg = message.toLowerCase();
 
-    if (lowerMsg.contains("current player") || lowerMsg.contains(">>")) {
-      if (agonGui != null && agonGui.getAppContext() != null && agonGui.getAppContext().isOnlineGameActive()) {
-        boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
-        String myColor = agonGui.getAppContext().getLocalOnlineColor().toString();
-
-        String customMsg = isMyTurn
-                ? "Your turn! (You are " + myColor + ")"
-                : "Opponent's turn (You are " + myColor + ")";
-
-        updateMessage(customMsg);
+      if (lowerMsg.contains("game paused")
+          || lowerMsg.contains("current player")
+          || lowerMsg.contains(">>")) {
+        handleTurnAndPauseMessages(message, lowerMsg);
+      } else if (lowerMsg.contains("invitation_received")
+          || lowerMsg.contains("save the game")
+          || lowerMsg.contains("filename")) {
+        handleDialogPrompts(message, lowerMsg);
       } else {
-        updateMessage(message);
+        showInfo(message);
       }
-    } else if (lowerMsg.contains("invitation_received")) {
-      promptInvitation(message);
-    } else if (lowerMsg.contains("save the game before quitting")) {
-      promptYesNo("save the game before quitting ?");
-    } else if (lowerMsg.contains("filename") || lowerMsg.contains("nom du fichier")) {
-      promptFilename("Enter the name of the save file :");
-    } else {
-      showInfo(message);
     }
   }
 
-  private void promptYesNo(String msg) {
-    Alert alert = new Alert(AlertType.CONFIRMATION);
+  private void handleTurnAndPauseMessages(final String originalMsg, final String lowerMsg) {
+    if (lowerMsg.contains("game paused")) {
+      updateMessage(originalMsg);
+    } else if (agonGui != null && agonGui.getAppContext().isOnlineGameActive()) {
+      final boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
+      final String color = agonGui.getAppContext().getLocalOnlineColor().toString();
+      final String customMsg =
+          isMyTurn ? "Your turn! (You are " + color + ")" : "Opponent's turn (" + color + ")";
+      updateMessage(customMsg);
+    } else {
+      updateMessage(originalMsg);
+    }
+  }
+
+  private void handleDialogPrompts(final String originalMsg, final String lowerMsg) {
+    if (lowerMsg.contains("invitation_received")) {
+      promptInvitation(originalMsg);
+    } else if (lowerMsg.contains("save the game before quitting")) {
+      promptYesNo("Save the game before quitting ?");
+    } else if (lowerMsg.contains("filename")) {
+      promptFilename("Enter the name of the save file :");
+    }
+  }
+
+  private void promptYesNo(final String msg) {
+    final Alert alert = new Alert(AlertType.CONFIRMATION);
     alert.setTitle("Quit the Game");
     alert.setHeaderText(null);
     alert.setContentText(msg);
 
-    ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
-    ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
+    final ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+    final ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
     alert.getButtonTypes().setAll(buttonYes, buttonNo);
 
-    Optional<ButtonType> result = alert.showAndWait();
+    final Optional<ButtonType> result = alert.showAndWait();
     if (result.isPresent() && result.get() == buttonYes) {
-      if (agonGui != null) agonGui.sendCommand("y");
+      if (agonGui != null) {
+        agonGui.sendCommand("y");
+      }
     } else {
-      if (agonGui != null) agonGui.sendCommand("n");
+      if (agonGui != null) {
+        agonGui.sendCommand("n");
+      }
     }
   }
 
-  private void promptFilename(String msg) {
-    TextInputDialog dialog = new TextInputDialog("");
-    dialog.setTitle("Save");
-    dialog.setHeaderText(null);
-    dialog.setContentText(msg);
-
-    Optional<String> result = dialog.showAndWait();
-    if (result.isPresent() && !result.get().trim().isEmpty()) {
-      if (agonGui != null) agonGui.sendCommand(result.get().trim());
-    } else {
-      if (agonGui != null) agonGui.sendCommand("default_save");
-    }
-  }
-
-  private void promptInvitation(String message) {
+  private void promptInvitation(final String message) {
     String challenger = "A player";
     try {
-      String[] parts = message.split("FROM=");
+      final String[] parts = message.split("FROM=");
       if (parts.length > 1) {
         challenger = parts[1].split(" ")[0];
       }
-    } catch (Exception ignored) {}
+    } catch (Exception ignored) {
+    }
 
-    Alert alert = new Alert(AlertType.CONFIRMATION);
+    final Alert alert = new Alert(AlertType.CONFIRMATION);
     alert.setTitle("Incoming Challenge!");
     alert.setHeaderText(challenger + " has challenged you!");
     alert.setContentText("Do you want to accept this match?");
 
-    ButtonType btnAccept = new ButtonType("Accept", ButtonBar.ButtonData.YES);
-    ButtonType btnDecline = new ButtonType("Decline", ButtonBar.ButtonData.NO);
+    final ButtonType btnAccept = new ButtonType("Accept", ButtonBar.ButtonData.YES);
+    final ButtonType btnDecline = new ButtonType("Decline", ButtonBar.ButtonData.NO);
     alert.getButtonTypes().setAll(btnAccept, btnDecline);
 
-    Platform.runLater(() -> {
-      Optional<ButtonType> result = alert.showAndWait();
-      if (result.isPresent() && result.get() == btnAccept) {
-        if (agonGui != null) agonGui.sendCommand("accept");
-      } else {
-        if (agonGui != null) agonGui.sendCommand("decline");
-      }
-    });
+    Platform.runLater(
+        () -> {
+          final Optional<ButtonType> result = alert.showAndWait();
+          if (result.isPresent() && result.get().equals(btnAccept)) {
+            if (agonGui != null) {
+              agonGui.sendCommand("accept");
+            }
+          } else {
+            if (agonGui != null) {
+              agonGui.sendCommand("decline");
+            }
+          }
+        });
   }
 
   /**
-   * Displays an error popup dialogue.
+   * Prompts the user with a text input dialog to enter a filename.
    *
-   * @param error The error message to present to the user.
+   * @param message The instruction message displayed in the dialog.
    */
-  public void showError(String error) {
+  private void promptFilename(final String message) {
+    final TextInputDialog dialog = new TextInputDialog("");
+    dialog.setTitle("Input Required");
+    dialog.setHeaderText(null);
+    dialog.setContentText(message);
+
+    final Optional<String> result = dialog.showAndWait();
+    if (result.isPresent() && !result.get().trim().isEmpty()) {
+      if (agonGui != null) {
+        agonGui.sendCommand(result.get().trim());
+      }
+    }
+  }
+
+  /**
+   * Displays an error dialog to the user.
+   *
+   * @param error The error message to display.
+   */
+  public void showError(final String error) {
     updateMessage("Error : " + error);
-    Alert alert = new Alert(AlertType.ERROR);
+    final Alert alert = new Alert(AlertType.ERROR);
     alert.setTitle("Error");
     alert.setHeaderText(null);
     alert.setContentText(error);
@@ -198,12 +246,12 @@ public class GameViewController {
   }
 
   /**
-   * Displays an informational popup dialogue.
+   * Displays an informational dialog to the user.
    *
-   * @param info The information to present.
+   * @param info The information message to display.
    */
-  public void showInfo(String info) {
-    Alert alert = new Alert(AlertType.INFORMATION);
+  public void showInfo(final String info) {
+    final Alert alert = new Alert(AlertType.INFORMATION);
     alert.setTitle("Information");
     alert.setHeaderText(null);
     alert.setContentText(info);
@@ -211,50 +259,45 @@ public class GameViewController {
   }
 
   /**
-   * Displays a warning popup dialogue.
+   * Displays a warning dialog to the user.
    *
-   * @param warning The warning text to present.
+   * @param warning The warning message to display.
    */
-  public void showWarn(String warning) {
-    Alert alert = new Alert(AlertType.WARNING);
+  public void showWarn(final String warning) {
+    final Alert alert = new Alert(AlertType.WARNING);
     alert.setTitle("Warning");
     alert.setHeaderText(null);
     alert.setContentText(warning);
     alert.showAndWait();
   }
 
-  /**
-   * Builds and displays the "New Game" configuration dialog box.
-   *
-   * @return An Optional containing the command string to be executed if accepted.
-   */
   private Optional<String> showNewGameDialog() {
-    Dialog<String> dialog = new Dialog<>();
+    final Dialog<String> dialog = new Dialog<>();
     dialog.setTitle("New Game");
     dialog.setHeaderText("Player configuration for the new game");
 
-    ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
+    final ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
     dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
 
-    ComboBox<String> p1Type = new ComboBox<>();
+    final ComboBox<String> p1Type = new ComboBox<>();
     p1Type.getItems().addAll("Human", "AI");
     p1Type.setValue("Human");
 
-    ComboBox<String> p1Color = new ComboBox<>();
+    final ComboBox<String> p1Color = new ComboBox<>();
     p1Color.getItems().addAll("White", "Black");
     p1Color.setValue("White");
 
-    ComboBox<String> p2Type = new ComboBox<>();
+    final ComboBox<String> p2Type = new ComboBox<>();
     p2Type.getItems().addAll("Human", "AI");
     p2Type.setValue("AI");
 
-    CheckBox blitzCheck = new CheckBox("Enable Blitz mode");
-    Spinner<Integer> timeSpinner = new Spinner<>(1, 60, 5);
+    final CheckBox blitzCheck = new CheckBox("Enable Blitz mode");
+    final Spinner<Integer> timeSpinner = new Spinner<>(1, 60, 5);
     timeSpinner.setDisable(true);
 
     blitzCheck.setOnAction(e -> timeSpinner.setDisable(!blitzCheck.isSelected()));
 
-    GridPane grid = new GridPane();
+    final GridPane grid = new GridPane();
     grid.setHgap(10);
     grid.setVgap(10);
     grid.setPadding(new Insets(20, 150, 10, 10));
@@ -275,16 +318,17 @@ public class GameViewController {
 
     dialog.setResultConverter(
         dialogButton -> {
+          String res = null;
           if (dialogButton == createButtonType) {
-            StringBuilder cmd = new StringBuilder("new");
+            final StringBuilder cmd = new StringBuilder("new");
 
-            String p1ColorStr = p1Color.getValue().toLowerCase();
-            String p2ColorStr = p1ColorStr.equals("white") ? "black" : "white";
+            final String p1ColorStr = p1Color.getValue().toLowerCase();
+            final String p2ColorStr = "white".equals(p1ColorStr) ? "black" : "white";
 
-            if (p1Type.getValue().equals("AI")) {
+            if ("AI".equals(p1Type.getValue())) {
               cmd.append(" --ai ").append(p1ColorStr);
             }
-            if (p2Type.getValue().equals("AI")) {
+            if ("AI".equals(p2Type.getValue())) {
               cmd.append(" --ai ").append(p2ColorStr);
             }
 
@@ -294,40 +338,49 @@ public class GameViewController {
               cmd.append(" --blitz --time ").append(timeSpinner.getValue());
             }
 
-            return cmd.toString();
+            res = cmd.toString();
           }
-          return null;
+          return res;
         });
 
     return dialog.showAndWait();
   }
 
+  /** Opens the dialog to configure and start a new game. */
   @FXML
   public void startNewGame() {
-    if (agonGui == null) return;
-    Optional<String> result = showNewGameDialog();
-    result.ifPresent(command -> agonGui.sendCommand(command));
+    if (agonGui != null) {
+      final Optional<String> result = showNewGameDialog();
+      result.ifPresent(command -> agonGui.sendCommand(command));
+    }
   }
 
+  /** Sends an undo command to the game engine. */
   @FXML
   public void undo() {
-    if (agonGui != null) agonGui.sendCommand("undo");
+    if (agonGui != null) {
+      agonGui.sendCommand("undo");
+    }
   }
 
+  /** Sends a redo command to the game engine. */
   @FXML
   public void redo() {
-    if (agonGui != null) agonGui.sendCommand("redo");
+    if (agonGui != null) {
+      agonGui.sendCommand("redo");
+    }
   }
 
+  /** Opens a dialog to save the current game state. */
   @FXML
   public void saveGame() {
     if (agonGui != null) {
-      TextInputDialog dialog = new TextInputDialog("");
+      final TextInputDialog dialog = new TextInputDialog("");
       dialog.setTitle("Save");
       dialog.setHeaderText(null);
       dialog.setContentText("Enter the name of the game you want to save :");
 
-      Optional<String> result = dialog.showAndWait();
+      final Optional<String> result = dialog.showAndWait();
       if (result.isPresent()) {
         String filename = result.get().trim();
         if (filename.isEmpty()) {
@@ -338,43 +391,54 @@ public class GameViewController {
     }
   }
 
+  /** Opens a dialog to load a previously saved game. */
   @FXML
   public void loadGame() {
     if (agonGui != null) {
-      TextInputDialog dialog = new TextInputDialog("");
+      final TextInputDialog dialog = new TextInputDialog("");
       dialog.setTitle("Load a Game");
       dialog.setHeaderText(null);
       dialog.setContentText("Enter the name of the game you want to load :");
 
-      Optional<String> result = dialog.showAndWait();
+      final Optional<String> result = dialog.showAndWait();
       if (result.isPresent() && !result.get().trim().isEmpty()) {
         agonGui.sendCommand("load " + result.get().trim());
       }
     }
   }
 
+  /** Sends a pause command to toggle the game's running state. */
   @FXML
   public void pauseGame() {
-    if (agonGui != null) agonGui.sendCommand("pause");
+    if (agonGui != null) {
+      agonGui.sendCommand("pause");
+    }
   }
 
+  /** Sends a quit command to safely terminate the game. */
   @FXML
   public void quitGame() {
-    if (agonGui != null) agonGui.sendCommand("quit");
+    if (agonGui != null) {
+      agonGui.sendCommand("quit");
+    }
   }
 
+  /** Requests a hint from the engine for the current player's turn. */
   @FXML
   public void requestHint() {
-    if (agonGui != null) agonGui.sendCommand("hint");
+    if (agonGui != null) {
+      agonGui.sendCommand("hint");
+    }
   }
 
+  /** Displays the help instructions parsed from the internal text file. */
   @FXML
   public void showHelp() {
     try {
-      java.io.InputStream in = getClass().getResourceAsStream("/cmdsInformations/agonGuiMenu.txt");
+      final InputStream in = getClass().getResourceAsStream("/cmdsInformations/agonGuiMenu.txt");
 
       if (in != null) {
-        String helpText = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        final String helpText = new String(in.readAllBytes(), StandardCharsets.UTF_8);
         showInfo(helpText);
       } else {
         showInfo("The help file agonGuiMenu.txt could not be found.");
@@ -384,6 +448,7 @@ public class GameViewController {
     }
   }
 
+  /** Displays the current application configuration. */
   @FXML
   public void showConfig() {
     if (agonGui != null) {
@@ -391,11 +456,13 @@ public class GameViewController {
     }
   }
 
+  /** Displays the current application version. */
   @FXML
   public void showVersion() {
     showInfo("Agon Game - GUI Version");
   }
 
+  /** Requests the move history from the game engine. */
   @FXML
   public void showHistory() {
     if (agonGui != null) {
@@ -403,297 +470,351 @@ public class GameViewController {
     }
   }
 
+  /** Prompts the user with a session setup dialog to choose between Local and Online modes. */
   private void promptSessionSetup() {
-    if (agonGui == null || agonGui.getAppContext() == null) return;
-
-    String playerName = "Player";
-    try {
-      playerName = agonGui.getAppContext().getProfile().getName();
-    } catch (Exception ignored) {
-      System.err.println("Could not retrieve player name.");
-    }
-
-    updateMessage("Logged in as: " + playerName);
-
-    Dialog<String> dialog = new Dialog<>();
-    dialog.setTitle("Welcome to Agon");
-
-    dialog.setHeaderText("Hello " + playerName + "!\nChoose your game mode for this session:");
-
-    ButtonType localBtn = new ButtonType("Local (Play offline)", ButtonBar.ButtonData.YES);
-    ButtonType onlineBtn = new ButtonType("Online (Multiplayer)", ButtonBar.ButtonData.NO);
-    dialog.getDialogPane().getButtonTypes().addAll(localBtn, onlineBtn);
-
-    dialog.setResultConverter(btn -> btn == onlineBtn ? "ONLINE" : "LOCAL");
-
-    dialog.showAndWait().ifPresent(choice -> {
-      if (choice.equals("ONLINE")) {
-        agonGui.getAppContext().setMode(AppMode.ONLINE);
-        showServerBrowser();
-      } else {
-        agonGui.getAppContext().setMode(AppMode.LOCAL);
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      String playerName = "Player";
+      try {
+        playerName = agonGui.getAppContext().getProfile().getName();
+      } catch (Exception ignored) {
+        System.err.println("Could not retrieve player name.");
       }
-    });
+
+      updateMessage("Logged in as: " + playerName);
+
+      final Dialog<String> dialog = new Dialog<>();
+      dialog.setTitle("Welcome to Agon");
+
+      dialog.setHeaderText("Hello " + playerName + "!\nChoose your game mode for this session:");
+
+      final ButtonType localBtn = new ButtonType("Local (Play offline)", ButtonBar.ButtonData.YES);
+      final ButtonType onlineBtn = new ButtonType("Online (Multiplayer)", ButtonBar.ButtonData.NO);
+      dialog.getDialogPane().getButtonTypes().addAll(localBtn, onlineBtn);
+
+      dialog.setResultConverter(btn -> btn == onlineBtn ? "ONLINE" : "LOCAL");
+
+      dialog
+          .showAndWait()
+          .ifPresent(
+              choice -> {
+                if ("ONLINE".equals(choice)) {
+                  agonGui.getAppContext().setMode(AppMode.ONLINE);
+                  showServerBrowser();
+                } else {
+                  agonGui.getAppContext().setMode(AppMode.LOCAL);
+                }
+              });
+    }
   }
 
+  /** Opens the Server Browser dialog to find and join local network games. */
   @FXML
   public void showServerBrowser() {
-    if (agonGui == null || agonGui.getAppContext() == null) return;
-
-    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
-      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
-      return;
-    }
-
-    Dialog<String> dialog = new Dialog<>();
-    dialog.setTitle("Server Browser");
-    dialog.setHeaderText("Select a game server on your network to join");
-
-    ButtonType joinButtonType = new ButtonType("Join", ButtonBar.ButtonData.OK_DONE);
-    dialog.getDialogPane().getButtonTypes().addAll(joinButtonType, ButtonType.CANCEL);
-
-    ListView<String> serverList = new ListView<>();
-    TextField manualIpField = new TextField("localhost:12345");
-    manualIpField.setPromptText("Enter IP:PORT...");
-
-    try {
-      var discovery = agonGui.getAppContext().getDiscovery();
-      var servers = discovery.getServers();
-      if (servers.isEmpty()) {
-        serverList.getItems().add("No local servers found...");
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+        showWarn(
+            "This menu is restricted to Online mode.\nPlease restart the game to play online.");
       } else {
-        for (var s : servers) {
-          serverList.getItems().add(s.name + " @ " + s.ip + ":" + s.tcpPort);
+        final Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Server Browser");
+        dialog.setHeaderText("Select a game server on your network to join");
+
+        final ButtonType joinButtonType = new ButtonType("Join", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(joinButtonType, ButtonType.CANCEL);
+
+        final ListView<String> serverList = new ListView<>();
+        final TextField manualIpField = new TextField("localhost:12345");
+        manualIpField.setPromptText("Enter IP:PORT...");
+
+        try {
+          final ClientDiscovery discovery = agonGui.getAppContext().getDiscovery();
+          final List<ServerInfo> servers = discovery.getServers();
+          if (servers.isEmpty()) {
+            serverList.getItems().add("No local servers found...");
+          } else {
+            for (final ServerInfo s : servers) {
+              serverList.getItems().add(s.name + " @ " + s.ip + ":" + s.tcpPort);
+            }
+          }
+        } catch (Exception e) {
+          serverList.getItems().add("Discovery service offline.");
         }
+
+        serverList
+            .getSelectionModel()
+            .selectedItemProperty()
+            .addListener(
+                (obs, oldVal, newVal) -> {
+                  if (newVal != null && newVal.contains("@")) {
+                    manualIpField.setText(newVal.split("@")[1].trim());
+                  }
+                });
+
+        final VBox vbox =
+            new VBox(
+                10,
+                new Label("Discovered servers:"),
+                serverList,
+                new Label("Direct IP:"),
+                manualIpField);
+        dialog.getDialogPane().setContent(vbox);
+
+        dialog.setResultConverter(
+            btn -> btn == joinButtonType ? manualIpField.getText().trim() : null);
+
+        dialog
+            .showAndWait()
+            .ifPresent(
+                ipAndPort -> {
+                  if (!ipAndPort.isBlank()) {
+                    agonGui.sendCommand("join " + ipAndPort);
+                  }
+                });
       }
-    } catch (Exception e) {
-      serverList.getItems().add("Discovery service offline.");
     }
-
-    serverList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-      if (newVal != null && newVal.contains("@")) {
-        manualIpField.setText(newVal.split("@")[1].trim());
-      }
-    });
-
-    javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10, new Label("Discovered servers:"), serverList, new Label("Direct IP:"), manualIpField);
-    dialog.getDialogPane().setContent(vbox);
-
-    dialog.setResultConverter(btn -> btn == joinButtonType ? manualIpField.getText().trim() : null);
-
-    dialog.showAndWait().ifPresent(ipAndPort -> {
-      if (!ipAndPort.isBlank()) agonGui.sendCommand("join " + ipAndPort);
-    });
   }
 
+  /** Opens the Host Server dialog to start or stop a local multiplayer server. */
   @FXML
   public void showHostServerDialog() {
-    if (agonGui == null || agonGui.getAppContext() == null) return;
-
-    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
-      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
-      return;
-    }
-
-    var server = agonGui.getAppContext().getServer();
-    boolean isRunning = server != null && server.isRunning();
-
-    Dialog<String> dialog = new Dialog<>();
-    dialog.setTitle("Host Game Server");
-
-    if (isRunning) {
-      dialog.setHeaderText("Server is already running on port " + server.getPort() + "\nConnected clients: " + server.getConnectedClientsCount());
-      ButtonType stopBtn = new ButtonType("Stop Server", ButtonBar.ButtonData.OK_DONE);
-      dialog.getDialogPane().getButtonTypes().addAll(stopBtn, ButtonType.CANCEL);
-
-      dialog.setResultConverter(btn -> btn == stopBtn ? "STOP" : null);
-    } else {
-      dialog.setHeaderText("Start a new local game server");
-      ButtonType startBtn = new ButtonType("Start", ButtonBar.ButtonData.OK_DONE);
-      dialog.getDialogPane().getButtonTypes().addAll(startBtn, ButtonType.CANCEL);
-
-      TextField portField = new TextField("12345");
-      javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10, new Label("TCP Port (default 12345):"), portField);
-      dialog.getDialogPane().setContent(vbox);
-
-      dialog.setResultConverter(btn -> btn == startBtn ? portField.getText().trim() : null);
-    }
-
-    dialog.showAndWait().ifPresent(result -> {
-      if (result.equals("STOP")) {
-        agonGui.sendCommand("server_stop");
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+        showWarn(
+            "This menu is restricted to Online mode.\nPlease restart the game to play online.");
       } else {
-        agonGui.sendCommand("server_start " + result);
-        agonGui.sendCommand("join localhost:" + result);
+        final AgonServer server = agonGui.getAppContext().getServer();
+        final boolean isRunning = server != null && server.isRunning();
+
+        final Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Host Game Server");
+
+        if (isRunning) {
+          dialog.setHeaderText(
+              "Server is already running on port "
+                  + server.getPort()
+                  + "\nConnected clients: "
+                  + server.getConnectedClientsCount());
+          final ButtonType stopBtn = new ButtonType("Stop Server", ButtonBar.ButtonData.OK_DONE);
+          dialog.getDialogPane().getButtonTypes().addAll(stopBtn, ButtonType.CANCEL);
+
+          dialog.setResultConverter(btn -> btn == stopBtn ? "STOP" : null);
+        } else {
+          dialog.setHeaderText("Start a new local game server");
+          final ButtonType startBtn = new ButtonType("Start", ButtonBar.ButtonData.OK_DONE);
+          dialog.getDialogPane().getButtonTypes().addAll(startBtn, ButtonType.CANCEL);
+
+          final TextField portField = new TextField("12345");
+          final VBox vbox = new VBox(10, new Label("TCP Port (default 12345):"), portField);
+          dialog.getDialogPane().setContent(vbox);
+
+          dialog.setResultConverter(btn -> btn == startBtn ? portField.getText().trim() : null);
+        }
+
+        dialog
+            .showAndWait()
+            .ifPresent(
+                result -> {
+                  if ("STOP".equals(result)) {
+                    agonGui.sendCommand("server_stop");
+                  } else {
+                    agonGui.sendCommand("server_start " + result);
+                    agonGui.sendCommand("join localhost:" + result);
+                  }
+                });
       }
-    });
+    }
   }
 
+  /** Opens the multiplayer lobby to view connected players and issue challenges. */
   @FXML
   public void showLobby() {
-    if (agonGui == null || agonGui.getAppContext() == null) return;
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
+        showWarn(
+            "This menu is restricted to Online mode.\nPlease restart the game to play online.");
+      } else {
+        final AgonClient client = agonGui.getAppContext().getClient();
+        if (client == null || !client.isConnected()) {
+          showWarn("You must be connected to a server to open the lobby!");
+        } else {
+          final Dialog<String> dialog = new Dialog<>();
+          dialog.setTitle("Multiplayer Lobby");
+          dialog.setHeaderText("See who is online and challenge them!");
 
-    if (agonGui.getAppContext().getMode() == AppMode.LOCAL) {
-      showWarn("This menu is restricted to Online mode.\nPlease restart the game to play online.");
-      return;
-    }
+          final ButtonType challengeBtn =
+              new ButtonType("Challenge Player", ButtonBar.ButtonData.OK_DONE);
+          dialog.getDialogPane().getButtonTypes().addAll(challengeBtn, ButtonType.CLOSE);
 
-    var client = agonGui.getAppContext().getClient();
-    if (client == null || !client.isConnected()) {
-      showWarn("You must be connected to a server to open the lobby!");
-      return;
-    }
+          final TextArea infoArea = new TextArea();
+          infoArea.setEditable(false);
+          infoArea.setPrefRowCount(12);
+          infoArea.setPrefColumnCount(40);
+          infoArea.setStyle("-fx-font-family: monospace;");
 
-    Dialog<String> dialog = new Dialog<>();
-    dialog.setTitle("Multiplayer Lobby");
-    dialog.setHeaderText("See who is online and challenge them!");
+          final String initialPlayers = client.requestPlayers();
+          infoArea.setText(initialPlayers != null ? initialPlayers : "Failed to load players.");
 
-    ButtonType challengeBtn = new ButtonType("Challenge Player", ButtonBar.ButtonData.OK_DONE);
-    dialog.getDialogPane().getButtonTypes().addAll(challengeBtn, ButtonType.CLOSE);
+          final Button refreshBtn = new Button("Refresh Players");
+          refreshBtn.setOnAction(e -> infoArea.setText(client.requestPlayers()));
 
-    TextArea infoArea = new TextArea();
-    infoArea.setEditable(false);
-    infoArea.setPrefRowCount(12);
-    infoArea.setPrefColumnCount(40);
-    infoArea.setStyle("-fx-font-family: monospace;");
+          final Button scoreBtn = new Button("View Scoreboard");
+          scoreBtn.setOnAction(e -> infoArea.setText(client.requestScoreboard()));
 
-    String initialPlayers = client.requestPlayers();
-    infoArea.setText(initialPlayers != null ? initialPlayers : "Failed to load players.");
+          final HBox topButtons = new HBox(10, refreshBtn, scoreBtn);
 
-    Button refreshBtn = new Button("Refresh Players");
-    refreshBtn.setOnAction(e -> infoArea.setText(client.requestPlayers()));
+          final TextField playerIdField = new TextField();
+          playerIdField.setPromptText("Ex: 2");
+          final HBox challengeBox = new HBox(10, new Label("Target Player ID:"), playerIdField);
 
-    Button scoreBtn = new Button("View Scoreboard");
-    scoreBtn.setOnAction(e -> infoArea.setText(client.requestScoreboard()));
+          final VBox layout = new VBox(10, topButtons, infoArea, challengeBox);
+          dialog.getDialogPane().setContent(layout);
 
-    javafx.scene.layout.HBox topButtons = new javafx.scene.layout.HBox(10, refreshBtn, scoreBtn);
+          dialog.setResultConverter(
+              btn -> {
+                String cmd = null;
+                if (btn == challengeBtn) {
+                  final String targetId = playerIdField.getText().trim();
+                  if (!targetId.isEmpty()) {
+                    cmd = "new " + targetId;
+                  }
+                }
+                return cmd;
+              });
 
-    TextField playerIdField = new TextField();
-    playerIdField.setPromptText("Ex: 2");
-    javafx.scene.layout.HBox challengeBox = new javafx.scene.layout.HBox(10, new Label("Target Player ID:"), playerIdField);
-
-    javafx.scene.layout.VBox layout = new javafx.scene.layout.VBox(10, topButtons, infoArea, challengeBox);
-    dialog.getDialogPane().setContent(layout);
-
-    dialog.setResultConverter(btn -> {
-      if (btn == challengeBtn) {
-        String targetId = playerIdField.getText().trim();
-        if (!targetId.isEmpty()) return "new " + targetId;
+          dialog.showAndWait().ifPresent(cmd -> agonGui.sendCommand(cmd));
+        }
       }
-      return null;
-    });
-
-    dialog.showAndWait().ifPresent(cmd -> agonGui.sendCommand(cmd));
+    }
   }
 
   private void refreshBoardFromNetwork() {
-    if (agonGui == null || agonGui.getAppContext() == null) return;
-
-    Match match = agonGui.getAppContext().getCurrentOnlineMatch();
-
-    if (match != null) {
-      try {
-        RestrictedAgonBoard board = match.getAgonBoard();
-
-        Map<String, PieceType> snapshot = hexCanvas.takeSnapshot(board);
-        hexCanvas.applySnapshot(board, snapshot);
-      } catch (Exception e) {
-        System.err.println("Impossible de rafraîchir le plateau : " + e.getMessage());
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
+      if (match != null) {
+        try {
+          final RestrictedAgonBoard board = match.getAgonBoard();
+          final Map<String, PieceType> snapshot = hexCanvas.takeSnapshot(board);
+          hexCanvas.applySnapshot(board, snapshot);
+        } catch (Exception e) {
+          System.err.println("Unable to refresh the board: " + e.getMessage());
+        }
       }
     }
   }
 
+  /**
+   * Intercepts standard console output (System.out) to capture background network events and
+   * trigger corresponding JavaFX visual updates.
+   */
   private void setupConsoleInterceptor() {
-    java.io.PrintStream originalOut = System.out;
+    final PrintStream originalOut = System.out;
 
-    System.setOut(new java.io.PrintStream(originalOut) {
-      @Override
-      public void println(String x) {
-        super.println(x);
+    System.setOut(
+        new PrintStream(originalOut) {
+          @Override
+          public void println(final String x) {
+            super.println(x);
 
-        if (x != null) {
-          if (x.contains("INVITATION_RECEIVED")) {
-            Platform.runLater(() -> promptInvitation(x));
-          } else if (x.contains("CHOOSE_MODE")) {
-            Platform.runLater(() -> promptGameMode());
-          } else if (x.contains("GAME_STARTED GAME_ID")) {
-            Platform.runLater(GameViewController.this::refreshBoardFromNetwork);
-          } else if (x.contains("Your turn") || x.contains("Opponent turn") || x.contains("You are")) {
-            String cleanText = x.replace("[ONLINE]", "").trim();
-            Platform.runLater(() -> {
-              updateMessage(cleanText);
-              refreshBoardFromNetwork();
-            });
+            if (x != null) {
+              if (x.contains("INVITATION_RECEIVED")) {
+                Platform.runLater(() -> promptInvitation(x));
+              } else if (x.contains("CHOOSE_MODE")) {
+                Platform.runLater(() -> promptGameMode());
+              } else if (x.contains("GAME_STARTED GAME_ID")) {
+                Platform.runLater(GameViewController.this::refreshBoardFromNetwork);
+              } else if (x.contains("Your turn")
+                  || x.contains("Opponent turn")
+                  || x.contains("You are")) {
+                String cleanText = x.replace("[ONLINE]", "").trim();
+                Platform.runLater(
+                    () -> {
+                      refreshBoardFromNetwork();
+                    });
+              }
+            }
           }
-        }
-      }
-    });
+        });
   }
 
   private void promptGameMode() {
-    Alert alert = new Alert(AlertType.CONFIRMATION);
+    final Alert alert = new Alert(AlertType.CONFIRMATION);
     alert.setTitle("Select Game Mode");
     alert.setHeaderText("The match is ready!");
     alert.setContentText("Do you want to play a Normal game or a Blitz game?");
 
-    ButtonType btnNormal = new ButtonType("Normal", ButtonBar.ButtonData.YES);
-    ButtonType btnBlitz = new ButtonType("Blitz", ButtonBar.ButtonData.NO);
+    final ButtonType btnNormal = new ButtonType("Normal", ButtonBar.ButtonData.YES);
+    final ButtonType btnBlitz = new ButtonType("Blitz", ButtonBar.ButtonData.NO);
     alert.getButtonTypes().setAll(btnNormal, btnBlitz);
 
-    java.util.Optional<ButtonType> result = alert.showAndWait();
+    final Optional<ButtonType> result = alert.showAndWait();
     if (result.isPresent() && result.get() == btnNormal) {
-      if (agonGui != null) agonGui.sendCommand("mode normal");
+      if (agonGui != null) {
+        agonGui.sendCommand("mode normal");
+      }
     } else {
-      if (agonGui != null) agonGui.sendCommand("mode blitz");
+      if (agonGui != null) {
+        agonGui.sendCommand("mode blitz");
+      }
     }
   }
 
-
-/*
+  /** Opens the shortcut editor dialog allowing the user to remap key bindings. */
   @FXML
-    public void editShortcuts() {
-      if (agonGui == null) return;
-      Dialog<Map<String, String>> dialog = new Dialog<>();
+  public void editShortcuts() {
+    if (agonGui != null) {
+      final Dialog<Map<String, String>> dialog = new Dialog<>();
       dialog.setTitle("Keyboard Shortcuts");
       dialog.setHeaderText("Modify your shortcuts (ex: Ctrl+N, Alt+N)");
 
-      ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+      final ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
       dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-      GridPane grid = new GridPane();
+      final GridPane grid = new GridPane();
       grid.setHgap(10);
       grid.setVgap(10);
       grid.setPadding(new Insets(20, 150, 10, 10));
 
-      Map<String, String> currentShortcuts = agonGui.getConfig().getShortcuts();
-      Map<String, TextField> fields = new java.util.HashMap<>();
+      final Map<String, String> currentShortcuts = agonGui.getConfig().getShortcuts();
+      final Map<String, TextField> fields = new HashMap<>();
       int row = 0;
-      for (String key : currentShortcuts.keySet()) {
+      for (final String key : currentShortcuts.keySet()) {
         grid.add(new Label(key.replace("shortcut_", "") + " :"), 0, row);
-        TextField tf = new TextField(currentShortcuts.get(key));
+        final TextField tf = new TextField(currentShortcuts.get(key));
         grid.add(tf, 1, row);
         fields.put(key, tf);
         row++;
-        }
+      }
       dialog.getDialogPane().setContent(grid);
 
-      dialog.setResultConverter(dialogButton -> {
-        if (dialogButton == saveButtonType) {
-            Map<String, String> newShortcuts = new HashMap<>();
-            fields.forEach((key, tf) -> newShortcuts.put(key, tf.getText().trim()));
-            return newShortcuts;
-        }
-        return null;
-      });
-      Optional<Map<String, String>> result = dialog.showAndWait();
-      result.ifPresent(newShortcuts -> {
-          newShortcuts.forEach((key, tf) -> {
-              agonGui.getConfig().saveShortcuts(key, tf);
+      dialog.setResultConverter(
+          dialogButton -> {
+            Map<String, String> res = null;
+            if (dialogButton == saveButtonType) {
+              res = new HashMap<>();
+              final Map<String, String> finalRes = res;
+              fields.forEach((key, tf) -> finalRes.put(key, tf.getText().trim()));
+            }
+            return res;
           });
-          currentShortcuts.putAll(newShortcuts);
-          AgonApp.refreshShortcuts();
-          showInfo("Shortcuts updated successfully !");
-      });
+
+      final Optional<Map<String, String>> result = dialog.showAndWait();
+      result.ifPresent(
+          newShortcuts -> {
+            newShortcuts.forEach(
+                (key, tf) -> {
+                  agonGui.getConfig().addShortcut(key, tf);
+                });
+            currentShortcuts.putAll(newShortcuts);
+            try {
+              if (!"true".equals(System.getProperty("IS_TEST_ENV"))) {
+                new ConfigSerializer().save(agonGui.getConfig(), ".agonrc");
+              }
+            } catch (Exception e) {
+              System.err.println("Failed to save shortcuts to .agonrc: " + e.getMessage());
+            }
+            AgonApp.refreshShortcuts();
+            showInfo("Shortcuts updated successfully !");
+          });
+    }
   }
-*/
 }

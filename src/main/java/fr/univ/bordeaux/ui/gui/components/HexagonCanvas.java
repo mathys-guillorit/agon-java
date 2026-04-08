@@ -19,129 +19,123 @@ import javafx.scene.text.TextAlignment;
 
 /**
  * A custom JavaFX Canvas responsible for rendering the hexagonal Agon game board. It handles the
- * drawing of the grid, the pieces, and captures mouse interactions.
+ * drawing of the grid, the pieces, and captures mouse interactions by delegating them to the
+ * current {@link CanvasInteractionState}.
  */
 public class HexagonCanvas extends Canvas implements CanvasInterface {
 
-  private static final double HEX_SIZE = 30.0;
-  private static final double SQRT_3 = Math.sqrt(3);
+  /** The current state of the game board. */
   private RestrictedAgonBoard currentBoard;
-  private final Map<String, Image> pieceImages = new HashMap<>();
+
+  /** The utility responsible for loading and providing piece images. */
+  private final PieceTextureManager textureManager = new PieceTextureManager();
+
+  /** A snapshot map linking coordinates to piece types for efficient rendering. */
   private final Map<String, PieceType> boardSnapshot = new HashMap<>();
+
+  /** The current interaction state of the canvas (e.g., Idle or Dragging). */
   private CanvasInteractionState currentState = new IdleCanvasState();
+
+  /** The logical coordinate of the currently selected hexagon (e.g., "F6"). */
   private String selectedHex = null;
+
+  /** The callback triggered when a user attempts to make a move. */
   private Consumer<String> moveRequestListener;
+
+  /** The piece currently being dragged by the mouse. */
   private PieceType draggedPiece = null;
+
+  /** The current X pixel coordinate of the mouse pointer. */
   private double mouseX = 0;
+
+  /** The current Y pixel coordinate of the mouse pointer. */
   private double mouseY = 0;
 
-  /**
-   * Constructs a new HexagonCanvas. Initializes piece images and sets up the mouse click event
-   * listeners.
-   */
+  /** Default constructor for the Hexagon Canvas. Initializes mouse event listeners. */
   public HexagonCanvas() {
-    loadImages();
     setupMouseListener();
   }
 
   /**
-   * Sets the listener that will handle game moves requested via the UI.
+   * Sets the listener that will be triggered when a move is requested by the user via the UI.
    *
-   * @param moveRequestListener A consumer accepting a move command string.
+   * @param moveRequestListener A consumer accepting the move command string (e.g., "F6G7").
    */
-  public void setMoveRequestListener(Consumer<String> moveRequestListener) {
+  public void setMoveRequestListener(final Consumer<String> moveRequestListener) {
     this.moveRequestListener = moveRequestListener;
   }
 
-  /** Registers mouse event handlers (press, drag, release) for canvas interaction. */
   private void setupMouseListener() {
     this.setOnMousePressed(
         event -> {
-          if (currentBoard == null) return;
-          String coord = pixelToHex(event.getX(), event.getY());
+          if (currentBoard == null) {
+            return;
+          }
+          final String coord =
+              HexMath.pixelToHex(event.getX(), event.getY(), getWidth(), getHeight());
           currentState.handleMousePressed(this, coord, event.getX(), event.getY());
         });
 
     this.setOnMouseDragged(
         event -> {
-          if (currentBoard == null) return;
+          if (currentBoard == null) {
+            return;
+          }
           currentState.handleMouseDragged(this, event.getX(), event.getY());
         });
 
     this.setOnMouseReleased(
         event -> {
-          if (currentBoard == null) return;
-          String coord = pixelToHex(event.getX(), event.getY());
+          if (currentBoard == null) {
+            return;
+          }
+          final String coord =
+              HexMath.pixelToHex(event.getX(), event.getY(), getWidth(), getHeight());
           currentState.handleMouseReleased(this, coord, event.getX(), event.getY());
         });
   }
 
-  /**
-   * Converts a 2D pixel coordinate into a standard Agon hexagonal coordinate (e.g., "F6").
-   *
-   * @param x The X pixel coordinate.
-   * @param y The Y pixel coordinate.
-   * @return The hexagonal coordinate string, or null if the click is outside the board.
-   */
-  private String pixelToHex(double x, double y) {
-    double ptX = x - (getWidth() / 2);
-    double ptY = y - (getHeight() / 2);
-    double fracQ = (SQRT_3 / 3.0 * ptX - 1.0 / 3.0 * ptY) / HEX_SIZE;
-    double fracR = 2.0 / 3.0 * ptY / HEX_SIZE;
-
-    int[] rounded = axialRound(fracQ, fracR);
-    int q = rounded[0];
-    int r = rounded[1];
-
-    if (Math.abs(q) <= 5 && Math.abs(r) <= 5 && Math.abs(-q - r) <= 5) {
-      char rowChar = (char) (65 + 5 - r);
-      int logicalCol = q + 6;
-      return "" + rowChar + logicalCol;
-    }
-    return null;
-  }
-
-  public void setState(CanvasInteractionState newState) {
+  /** {@inheritDoc} */
+  @Override
+  public void setState(final CanvasInteractionState newState) {
     this.currentState = newState;
   }
 
-  public void setSelectedHex(String hex) {
+  /** {@inheritDoc} */
+  @Override
+  public void setSelectedHex(final String hex) {
     this.selectedHex = hex;
   }
 
-  /**
-   * Triggers a move request via the assigned listener.
-   *
-   * @param moveCommand The formatted move command (e.g., "F6G7").
-   */
-  public void requestMove(String moveCommand) {
+  /** {@inheritDoc} */
+  @Override
+  public void requestMove(final String moveCommand) {
     if (moveRequestListener != null) {
       moveRequestListener.accept(moveCommand);
     }
   }
 
   /**
-   * Captures the current state of pieces from the actual game board model.
+   * Captures the current state of the board pieces to render them efficiently.
    *
-   * @param board The current restricted board instance.
-   * @return A map linking hexagonal coordinates to the pieces placed there.
+   * @param board The current restricted board state.
+   * @return A map linking logical coordinates (e.g., "F6") to their occupying PieceType.
    */
-  public Map<String, PieceType> takeSnapshot(RestrictedAgonBoard board) {
-    Map<String, PieceType> snap = new HashMap<>();
+  public Map<String, PieceType> takeSnapshot(final RestrictedAgonBoard board) {
+    final Map<String, PieceType> snap = new HashMap<>();
     if (board != null) {
-      for (int[] coord : getBoardCoordinates()) {
-        int q = coord[0];
-        int r = coord[1];
-        char rowChar = (char) (65 + 5 - r);
-        int logicalCol = q + 6;
+      for (final int[] coord : HexMath.getBoardCoordinates()) {
+        final int q = coord[0];
+        final int r = coord[1];
+        final char rowChar = (char) (65 + 5 - r);
+        final int logicalCol = q + 6;
         try {
-          int index = CoordinateMapper.toIndex(rowChar, logicalCol);
-          PieceType piece = board.getPieceAt(index);
+          final int index = CoordinateMapper.toIndex(rowChar, logicalCol);
+          final PieceType piece = board.getPieceAt(index);
           if (piece != null) {
             snap.put("" + rowChar + logicalCol, piece);
           }
         } catch (Exception ignored) {
-          continue;
         }
       }
     }
@@ -149,12 +143,13 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
   }
 
   /**
-   * Applies a snapshot of the board state and requests a re-render.
+   * Applies a new board state snapshot to the canvas and triggers a redraw.
    *
-   * @param boardRef A reference to the active board.
-   * @param safeSnapshot The extracted map of piece positions.
+   * @param boardRef The reference to the core board.
+   * @param safeSnapshot The mapped coordinates and pieces to render.
    */
-  public void applySnapshot(RestrictedAgonBoard boardRef, Map<String, PieceType> safeSnapshot) {
+  public void applySnapshot(
+      final RestrictedAgonBoard boardRef, final Map<String, PieceType> safeSnapshot) {
     this.currentBoard = boardRef;
     this.boardSnapshot.clear();
     this.boardSnapshot.putAll(safeSnapshot);
@@ -162,35 +157,35 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
   }
 
   /**
-   * Main rendering loop. Clears the canvas, draws the hexagonal grid using axial coordinates, and
-   * maps these coordinates to the internal Bitboard to draw the pieces.
+   * Clears the canvas and completely redraws the background, the hexagonal grid, the coordinate
+   * labels, and all active pieces.
    */
+  @Override
   public void draw() {
-    GraphicsContext gc = getGraphicsContext2D();
+    final GraphicsContext gc = getGraphicsContext2D();
     gc.setFill(Color.web("#2b2b2b"));
     gc.fillRect(0, 0, getWidth(), getHeight());
 
-    double centerX = getWidth() / 2;
-    double centerY = getHeight() / 2;
+    final double centerX = getWidth() / 2;
+    final double centerY = getHeight() / 2;
 
-    for (int[] coord : getBoardCoordinates()) {
-      int q = coord[0];
-      int r = coord[1];
+    for (final int[] coord : HexMath.getBoardCoordinates()) {
+      final int q = coord[0];
+      final int r = coord[1];
 
-      double offsetX = HEX_SIZE * SQRT_3 * (q + r / 2.0);
-      double offsetY = HEX_SIZE * 1.5 * r;
-      double hexX = centerX + offsetX;
-      double hexY = centerY + offsetY;
+      final double offsetX = HexMath.HEX_SIZE * HexMath.SQRT_3 * (q + r / 2.0);
+      final double offsetY = HexMath.HEX_SIZE * 1.5 * r;
+      final double hexX = centerX + offsetX;
+      final double hexY = centerY + offsetY;
 
-      char rowChar = (char) (65 + 5 - r);
-      int logicalCol = q + 6;
-      String currentCoord = "" + rowChar + logicalCol;
+      final char rowChar = (char) (65 + 5 - r);
+      final int logicalCol = q + 6;
+      final String currentCoord = "" + rowChar + logicalCol;
 
-      Color fillColor = Color.LIGHTGRAY;
-      if ((Math.abs(q) + Math.abs(r) + Math.abs(-q - r)) / 2 % 2 == 0) {
-        fillColor = Color.web("#e0e0e0");
-      }
-
+      Color fillColor =
+          ((Math.abs(q) + Math.abs(r) + Math.abs(-q - r)) / 2 % 2 == 0)
+              ? Color.web("#e0e0e0")
+              : Color.LIGHTGRAY;
       Color strokeColor = Color.BLACK;
       double lineWidth = 2.0;
 
@@ -200,9 +195,9 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
         lineWidth = 4.0;
       }
 
-      drawHexagon(gc, hexX, hexY, HEX_SIZE, fillColor, strokeColor, lineWidth);
+      drawHexagon(gc, hexX, hexY, HexMath.HEX_SIZE, fillColor, strokeColor, lineWidth);
 
-      PieceType piece = boardSnapshot.get(currentCoord);
+      final PieceType piece = boardSnapshot.get(currentCoord);
       if (piece != null && (!currentCoord.equals(selectedHex) || draggedPiece == null)) {
         drawPiece(gc, hexX, hexY, piece);
       }
@@ -212,57 +207,46 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
     gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
     gc.setTextAlign(TextAlignment.CENTER);
     gc.setTextBaseline(VPos.CENTER);
-    int boardRadius = 5;
+
+    final int boardRadius = 5;
     for (int r = -boardRadius; r <= boardRadius; r++) {
-      char rowChar = (char) (65 + 5 - r);
-      int minQ = Math.max(-boardRadius, -boardRadius - r);
-
-      double offsetX = HEX_SIZE * SQRT_3 * (minQ + r / 2.0);
-      double offsetY = HEX_SIZE * 1.5 * r;
-
-      double finalX = centerX + offsetX - (SQRT_3 * HEX_SIZE);
-      double finalY = centerY + offsetY;
-
+      final char rowChar = (char) (65 + 5 - r);
+      final int minQ = Math.max(-boardRadius, -boardRadius - r);
+      final double finalX =
+          centerX
+              + (HexMath.HEX_SIZE * HexMath.SQRT_3 * (minQ + r / 2.0))
+              - (HexMath.SQRT_3 * HexMath.HEX_SIZE);
+      final double finalY = centerY + (HexMath.HEX_SIZE * 1.5 * r);
       gc.fillText(String.valueOf(rowChar), finalX, finalY);
     }
 
     for (int q = -boardRadius; q <= boardRadius; q++) {
-      int logicalCol = q + 6;
-      int maxR = Math.min(boardRadius, boardRadius - q);
-      double offsetX = HEX_SIZE * SQRT_3 * (q + maxR / 2.0);
-      double offsetY = HEX_SIZE * 1.5 * maxR;
-      double finalX = centerX + offsetX + (HEX_SIZE * SQRT_3 * 0.5);
-      double finalY = centerY + offsetY + (HEX_SIZE * 1.5);
-      gc.fillText(String.valueOf(logicalCol), finalX, finalY);
+      final int maxR = Math.min(boardRadius, boardRadius - q);
+      final double finalX =
+          centerX
+              + (HexMath.HEX_SIZE * HexMath.SQRT_3 * (q + maxR / 2.0))
+              + (HexMath.HEX_SIZE * HexMath.SQRT_3 * 0.5);
+      final double finalY = centerY + (HexMath.HEX_SIZE * 1.5 * maxR) + (HexMath.HEX_SIZE * 1.5);
+      gc.fillText(String.valueOf(q + 6), finalX, finalY);
     }
+
     if (draggedPiece != null) {
       drawPiece(gc, mouseX, mouseY, draggedPiece);
     }
   }
 
-  /**
-   * Draws a single pointy-topped hexagon at the specified coordinates.
-   *
-   * @param gc The graphics context used for drawing.
-   * @param centerX The X coordinate of the hexagon's center.
-   * @param centerY The Y coordinate of the hexagon's center.
-   * @param size The outer radius (size) of the hexagon.
-   * @param fill The interior color of the hexagon.
-   * @param stroke The border color of the hexagon.
-   */
   private void drawHexagon(
-      GraphicsContext gc,
-      double centerX,
-      double centerY,
-      double size,
-      Color fill,
-      Color stroke,
-      double lineWidth) {
-    double[] pointsX = new double[6];
-    double[] pointsY = new double[6];
+      final GraphicsContext gc,
+      final double centerX,
+      final double centerY,
+      final double size,
+      final Color fill,
+      final Color stroke,
+      final double lineWidth) {
+    final double[] pointsX = new double[6];
+    final double[] pointsY = new double[6];
     for (int i = 0; i < 6; i++) {
-      double angle_deg = 60 * i - 30;
-      double angle_rad = Math.PI / 180 * angle_deg;
+      final double angle_rad = Math.PI / 180 * (60 * i - 30);
       pointsX[i] = centerX + size * Math.cos(angle_rad);
       pointsY[i] = centerY + size * Math.sin(angle_rad);
     }
@@ -273,151 +257,83 @@ public class HexagonCanvas extends Canvas implements CanvasInterface {
     gc.strokePolygon(pointsX, pointsY, 6);
   }
 
-  /**
-   * Renders a game piece on the board. Automatically scales the image to fit proportionally within
-   * the hexagon.
-   *
-   * @param gc The graphics context used for drawing.
-   * @param centerX The X coordinate of the target hexagon's center.
-   * @param centerY The Y coordinate of the target hexagon's center.
-   * @param piece The PieceType to be drawn.
-   */
-  private void drawPiece(GraphicsContext gc, double centerX, double centerY, PieceType piece) {
-    String pieceName = piece.name().toLowerCase();
-    Image img = pieceImages.get(pieceName);
-
+  private void drawPiece(
+      final GraphicsContext gc, final double centerX, final double centerY, final PieceType piece) {
+    final Image img = textureManager.getImage(piece);
     if (img != null) {
-      double originalW = img.getWidth();
-      double originalH = img.getHeight();
-      double pieceSizeMultiplier = 3.5;
-      double scale = HEX_SIZE * pieceSizeMultiplier / Math.max(originalW, originalH);
-      double drawW = originalW * scale;
-      double drawH = originalH * scale;
-      double drawX = centerX - drawW / 2;
-      double drawY = centerY - drawH / 2;
-      gc.drawImage(img, drawX, drawY, drawW, drawH);
+      final double scale = HexMath.HEX_SIZE * 3.5 / Math.max(img.getWidth(), img.getHeight());
+      final double drawW = img.getWidth() * scale;
+      final double drawH = img.getHeight() * scale;
+      gc.drawImage(img, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
     } else {
-      double pieceRadius = HEX_SIZE * 0.5;
+      final double r = HexMath.HEX_SIZE * 0.5;
       gc.setFill(Color.RED);
-      gc.fillOval(centerX - pieceRadius, centerY - pieceRadius, pieceRadius * 2, pieceRadius * 2);
+      gc.fillOval(centerX - r, centerY - r, r * 2, r * 2);
     }
   }
 
-  /** Loads the piece textures from the resources directory into memory. */
-  private void loadImages() {
-    try {
-      pieceImages.put(
-          "white_pawn",
-          new Image(
-              Objects.requireNonNull(getClass().getResourceAsStream("/images/white_pawn.png"))));
-      pieceImages.put(
-          "black_pawn",
-          new Image(
-              Objects.requireNonNull(getClass().getResourceAsStream("/images/black_pawn.png"))));
-      pieceImages.put(
-          "white_queen",
-          new Image(
-              Objects.requireNonNull(getClass().getResourceAsStream("/images/white_queen.png"))));
-      pieceImages.put(
-          "black_queen",
-          new Image(
-              Objects.requireNonNull(getClass().getResourceAsStream("/images/black_queen.png"))));
-    } catch (Exception e) {
-      System.err.println(
-          "[WARNING] Failed to load piece images. Check the src/main/resources/images/ directory.");
-    }
-  }
-
-  /**
-   * Converts floating-point axial coordinates back to the nearest integer hex coordinates. Uses the
-   * cubic coordinate rounding algorithm.
-   */
-  private int[] axialRound(double qFrac, double rFrac) {
-    double sFrac = -qFrac - rFrac;
-
-    int q = (int) Math.round(qFrac);
-    int r = (int) Math.round(rFrac);
-    int s = (int) Math.round(sFrac);
-
-    double diffQ = Math.abs(q - qFrac);
-    double diffR = Math.abs(r - rFrac);
-    double diffS = Math.abs(s - sFrac);
-
-    if (diffQ > diffR && diffQ > diffS) {
-      q = -r - s;
-    } else if (diffR > diffS) {
-      r = -q - s;
-    }
-
-    return new int[] {q, r};
-  }
-
-  /**
-   * Calculates and returns the list of all valid (q, r) coordinates on the board. This avoids
-   * duplicating the complex hexagonal grid boundaries logic. * @return A list of integer arrays [q,
-   * r] for each valid hexagon.
-   */
-  private List<int[]> getBoardCoordinates() {
-    List<int[]> coords = new ArrayList<>();
-    int boardRadius = 5;
-
-    for (int q = -boardRadius; q <= boardRadius; q++) {
-      int r1 = Math.max(-boardRadius, -q - boardRadius);
-      int r2 = Math.min(boardRadius, -q + boardRadius);
-      for (int r = r1; r <= r2; r++) {
-        coords.add(new int[] {q, r});
-      }
-    }
-    return coords;
-  }
-
-  public boolean hasPieceAt(String hex) {
+  /** {@inheritDoc} */
+  @Override
+  public boolean hasPieceAt(final String hex) {
     return boardSnapshot.containsKey(hex);
   }
 
-  public PieceType getPieceAt(String hex) {
+  /** {@inheritDoc} */
+  @Override
+  public PieceType getPieceAt(final String hex) {
     return boardSnapshot.get(hex);
   }
 
-  public void setDraggedPiece(PieceType piece) {
+  /** {@inheritDoc} */
+  @Override
+  public void setDraggedPiece(final PieceType piece) {
     this.draggedPiece = piece;
   }
 
-  public void setMousePosition(double x, double y) {
+  /** {@inheritDoc} */
+  @Override
+  public void setMousePosition(final double x, final double y) {
     this.mouseX = x;
     this.mouseY = y;
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean isResizable() {
     return true;
   }
 
+  /** {@inheritDoc} */
   @Override
   public double prefWidth(double height) {
     return getWidth();
   }
 
+  /** {@inheritDoc} */
   @Override
   public double prefHeight(double width) {
     return getHeight();
   }
 
+  /** {@inheritDoc} */
   @Override
   public double minWidth(double height) {
     return 0;
   }
 
+  /** {@inheritDoc} */
   @Override
   public double minHeight(double width) {
     return 0;
   }
 
+  /** {@inheritDoc} */
   @Override
   public double maxWidth(double height) {
     return Double.MAX_VALUE;
   }
 
+  /** {@inheritDoc} */
   @Override
   public double maxHeight(double width) {
     return Double.MAX_VALUE;
