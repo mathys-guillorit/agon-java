@@ -19,19 +19,20 @@ public class UctHeuristic implements MctsSelectionHeuristic {
      *
      * @param explorationParam The constant used to scale the exploration term (typically √2).
      */
-    public UctHeuristic(double explorationParam) {
+    public UctHeuristic(final double explorationParam) {
         this.explorationParam = explorationParam;
     }
 
     @Override
-    public double evaluateNode(MctsNode parent, MctsNode child, AgonBoard board) {
+    public double evaluateNode(final MctsNode parent, final MctsNode child, AgonBoard board) {
+        final double retVal;
         if (child.getVisitCount() == 0) {
-            return Double.MAX_VALUE;
+            retVal = Double.MAX_VALUE;
+        }else{
+            final double exploit = child.getWinScore() / child.getVisitCount();
+            final double explore = explorationParam * Math.sqrt(Math.log(parent.getVisitCount()) /  child.getVisitCount());
+            retVal = explore + exploit;
         }
-
-        double exploit = child.getWinScore() / (double) child.getVisitCount();
-        double explore = explorationParam * Math.sqrt(Math.log(parent.getVisitCount()) / (double) child.getVisitCount());
-
-        return exploit + explore;
+        return retVal;
     }
 }

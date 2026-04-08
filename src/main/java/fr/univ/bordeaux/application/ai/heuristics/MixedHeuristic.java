@@ -25,7 +25,7 @@ public class MixedHeuristic implements Heuristic {
   private final MobilityHeuristic mobilityHeuristic;
 
   /** The internal strategy for evaluating board control. */
-  private final CentralityHeuristic centralityHeuristic;
+  private final CentralityHeuristic cHeuristic;
 
   /**
    * The multiplier applied to the mobility score.
@@ -52,11 +52,11 @@ public class MixedHeuristic implements Heuristic {
    * @param mobilityWeight The importance factor for the mobility score (e.g., 5.0).
    * @param centralityWeight The importance factor for the centrality score (e.g., 1.0).
    */
-  public MixedHeuristic(double mobilityWeight, double centralityWeight) {
+  public MixedHeuristic(final double mobilityWeight, final double centralityWeight) {
     this.mobilityWeight = mobilityWeight;
     this.centralityWeight = centralityWeight;
     this.mobilityHeuristic = new MobilityHeuristic();
-    this.centralityHeuristic = new CentralityHeuristic();
+    this.cHeuristic = new CentralityHeuristic();
   }
 
   /**
@@ -75,9 +75,9 @@ public class MixedHeuristic implements Heuristic {
    * @return The combined weighted score.
    */
   @Override
-  public long evaluate(AgonBoard board, Color aiColor) {
-    long mobilityScore = mobilityHeuristic.evaluate(board, aiColor);
-    long centralityScore = centralityHeuristic.evaluate(board, aiColor);
+  public long evaluate(final AgonBoard board, final Color aiColor) {
+    final long mobilityScore = mobilityHeuristic.evaluate(board, aiColor);
+    final long centralityScore = cHeuristic.evaluate(board, aiColor);
     return (long) (mobilityScore * mobilityWeight + centralityScore * centralityWeight);
   }
 }

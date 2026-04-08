@@ -5,11 +5,12 @@ import fr.univ.bordeaux.application.ai.heuristics.*;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
-import java.util.HashMap;
+
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Factory for AI. */
-public class AiFactory {
+public final class AiFactory {
 
   private AiFactory() {}
 
@@ -19,8 +20,8 @@ public class AiFactory {
    * @param config {@link GameConfig}
    * @return {@link Map}
    */
-  public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config) {
-    Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
+  public static Map<Color, AbstractAgonAi> createAiMap(final GameConfig config) {
+    final Map<Color, AbstractAgonAi> aiMap = new ConcurrentHashMap<>();
     if (config.isWhiteAi()) {
       aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
     }
@@ -37,63 +38,56 @@ public class AiFactory {
    * @param color {@link Color}
    * @return {@link AbstractAgonAi}
    */
-  public static AbstractAgonAi createAi(GameConfig config, Color color) {
-    String mode = config.getAiMode();
+  public static AbstractAgonAi createAi(final GameConfig config, final Color color) {
+    final AbstractAgonAi resultAi;
+    final String mode = config.getAiMode();
+
     switch (mode) {
       case "minimax" -> {
-        Heuristic heuristic = createHeuristic(config.getAiHeuristic());
-        if(heuristic == null) {
-          return null;
+        final Heuristic heuristic = createHeuristic(config.getAiHeuristic());
+        if (heuristic == null) {
+          resultAi = null;
+        } else {
+          resultAi = new MinimaxStrategy(
+                  heuristic,
+                  color,
+                  config.getAiDepth(),
+                  config.isAiIterativeDeepening(),
+                  config.getAiTimeLimit());
         }
-        return new MinimaxStrategy(
-            heuristic,
-            color,
-            config.getAiDepth(),
-            config.isAiIterativeDeepening(),
-            config.getAiTimeLimit());
       }
       case "mcts" -> {
-        MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
-        if(heuristic == null) {
-          return null;
+        final MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
+        if (heuristic == null) {
+          resultAi = null;
+        } else {
+          resultAi = new MctsStrategy(color, heuristic, config.getAiTimeLimit());
         }
-        return new MctsStrategy(color, heuristic, config.getAiTimeLimit());
       }
-      default -> {
-        return null;
-      }
+      default -> resultAi = null;
     }
+    return resultAi;
   }
 
-  private static Heuristic createHeuristic(String type) {
+  private static Heuristic createHeuristic(final String type) {
+    final Heuristic resultHeuristic;
     switch (type) {
-      case "centrality" -> {
-        return new CentralityHeuristic();
-      }
-      case "mobility" -> {
-        return new MobilityHeuristic();
-      }
-      case "mixed" -> {
-        return new MixedHeuristic(10, 1);
-      }
-      default -> {
-        return null;
-      }
+      case "centrality" -> resultHeuristic = new CentralityHeuristic();
+      case "mobility" -> resultHeuristic = new MobilityHeuristic();
+      case "mixed" -> resultHeuristic = new MixedHeuristic(10, 1);
+      default -> resultHeuristic = null;
     }
+    return resultHeuristic;
   }
 
-  private static MctsSelectionHeuristic createSelectionHeuristic(String type) {
+  private static MctsSelectionHeuristic createSelectionHeuristic(final String type) {
+    final MctsSelectionHeuristic resultSelection;
     switch (type) {
-      case "uct" -> {
-        return new UctHeuristic(Math.sqrt(2));
-      }
-      case "ml" -> {
-        return new MlHeuristic(Math.sqrt(2));
-      }
-      default -> {
-        return null;
-      }
+      case "uct" -> resultSelection = new UctHeuristic(Math.sqrt(2));
+      case "ml" -> resultSelection = new MlHeuristic(Math.sqrt(2));
+      default -> resultSelection = null;
     }
+    return resultSelection;
   }
 
   /**
@@ -102,7 +96,7 @@ public class AiFactory {
    * @param color {@link Color}
    * @return {@link AbstractAgonAi}
    */
-  public static AbstractAgonAi createHintAi(Color color) {
+  public static AbstractAgonAi createHintAi(final Color color) {
     return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
   }
 }

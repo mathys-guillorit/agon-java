@@ -31,7 +31,7 @@ public abstract class AbstractHeuristic implements Heuristic {
    * @param pawnWeight The importance of the heuristic factor for a Pawn.
    * @param queenWeight The importance of the heuristic factor for the Queen.
    */
-  public AbstractHeuristic(int pawnWeight, int queenWeight) {
+  public AbstractHeuristic(final int pawnWeight, final int queenWeight) {
     this.pawnWeight = pawnWeight;
     this.queenWeight = queenWeight;
   }
@@ -64,27 +64,26 @@ public abstract class AbstractHeuristic implements Heuristic {
    * #getFactor(AgonBoard, int)}, and applies the corresponding weight (Queen or Pawn).
    */
   @Override
-  public long evaluate(AgonBoard board, Color aiColor) {
+  public long evaluate(final AgonBoard board, final Color aiColor) {
     long score = 0;
+
     for (int i = 0; i <= 120; i++) {
-      PieceType piece = board.getPieceAt(i);
+      final PieceType piece = board.getPieceAt(i);
       if (piece == null) {
         continue;
       }
-      long factor = getFactor(board, i);
-      long pieceValue = 0;
-      if (piece == PieceType.WHITE_QUEEN || piece == PieceType.BLACK_QUEEN) {
-        pieceValue = factor * queenWeight;
-      } else {
-        pieceValue = factor * pawnWeight;
-      }
-      boolean isWhitePiece = piece == PieceType.WHITE_PAWN || piece == PieceType.WHITE_QUEEN;
-      if (aiColor == Color.WHITE) {
-        score += (isWhitePiece ? pieceValue : -pieceValue);
-      } else {
-        score += (isWhitePiece ? -pieceValue : pieceValue);
-      }
+
+      final long factor = getFactor(board, i);
+
+      final boolean isQueen = (piece == PieceType.WHITE_QUEEN || piece == PieceType.BLACK_QUEEN);
+      final long pieceValue = factor * (isQueen ? queenWeight : pawnWeight);
+
+      final boolean isWhitePiece = (piece == PieceType.WHITE_PAWN || piece == PieceType.WHITE_QUEEN);
+      final boolean isMyPiece = (aiColor == Color.WHITE) == isWhitePiece;
+
+      score += isMyPiece ? pieceValue : -pieceValue;
     }
+
     return score;
   }
 }
