@@ -7,7 +7,7 @@ stages:
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-  MAVEN_CLI_OPTS: "-B -ntp -f agon/pom.xml"
+  MAVEN_CLI_OPTS: "-B -ntp -f pom.xml"
   JDK_IMAGE: "mcr.microsoft.com/java/jdk:21-ga"  # Microsoft OpenJDK 21 (projet constraint)
 
 cache:
