@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class ConfigParser extends AbstractFileParser<GameConfig> {
 
-  /** Constructs a new {@code ConfigParser}. */
-  public ConfigParser() {}
+  /** Prefix indicating a new section in the configuration file. */
+  private static final String SECTION_PREFIX = "[";
 
   /**
    * Processes the cleaned lines to construct the GameConfig object.
@@ -26,7 +26,7 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
     final GameConfig config = new GameConfig();
 
     for (final String line : cleanLines) {
-      if (line.startsWith("[")) {
+      if (line.startsWith(SECTION_PREFIX)) {
         continue;
       }
       parseLine(line, config);
@@ -46,50 +46,75 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
     final String key = parts[0].trim().toLowerCase();
     final String value = parts[1].trim();
 
+    if (key.startsWith("shortcut_")) {
+      config.addShortcut(key, value);
+      return;
+    }
+
     try {
-      switch (key) {
-        case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
-        case "debug" -> config.setDebug(Boolean.parseBoolean(value));
-        case "placement" -> config.setManualPlacement(Boolean.parseBoolean(value));
-        case "blitz" -> config.setBlitzMode(Boolean.parseBoolean(value));
-        case "timeout" -> config.setTimeout(Integer.parseInt(value));
-        case "ai" -> config.setAi(Boolean.parseBoolean(value));
-        case "ai_color" -> {
-          final String val = value.toUpperCase();
-          switch (val) {
-            case "ALL" -> {
-              config.setWhiteAi(true);
-              config.setBlackAi(true);
-            }
-            case "WHITE" -> {
-              config.setWhiteAi(true);
-              config.setBlackAi(false);
-            }
-            case "BLACK" -> {
-              config.setWhiteAi(false);
-              config.setBlackAi(true);
-            }
-            case "NONE" -> {
-              if (config.isAiActive()) {
-                throw new IOException("Ai mode is active but is not assigned to any color");
-              } else {
-                config.setWhiteAi(false);
-                config.setBlackAi(false);
-              }
-            }
-            default -> throw new IOException("Invalid value for option '" + key + "' : " + value);
-          }
-        }
-        case "ai_mode" -> config.setAiMode(value);
-        case "ai_depth" -> config.setAiDepth(Integer.parseInt(value));
-        case "ai_time_limit" -> config.setAiTimeLimit(Integer.parseInt(value));
-        case "ai_iterative_deepening" -> config.setAiIterativeDeepening(
-            Boolean.parseBoolean(value));
-        case "ai_heuristic" -> config.setAiHeuristic(value);
-        default -> throw new IOException("Invalid option : " + key);
-      }
+      applySetting(key, value, config);
     } catch (NumberFormatException e) {
-      throw new IOException("Invalid value for option '" + key + "' : " + value);
+      throw new IOException("Invalid value for option '" + key + "' : " + value, e);
+    }
+  }
+
+  /**
+   * Applies a specific setting to the configuration object.
+   *
+   * @param key    The configuration key.
+   * @param value  The configuration value to be parsed.
+   * @param config The configuration object to update.
+   * @throws IOException If the key is unknown.
+   */
+  private void applySetting(final String key, final String value, final GameConfig config) throws IOException {
+    switch (key) {
+      case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
+      case "debug" -> config.setDebug(Boolean.parseBoolean(value));
+      case "placement" -> config.setManualPlacement(Boolean.parseBoolean(value));
+      case "blitz" -> config.setBlitzMode(Boolean.parseBoolean(value));
+      case "timeout" -> config.setTimeout(Integer.parseInt(value));
+      case "ai" -> config.setAi(Boolean.parseBoolean(value));
+      case "ai_color" -> applyAiColor(value, config);
+      case "ai_mode" -> config.setAiMode(value);
+      case "ai_depth" -> config.setAiDepth(Integer.parseInt(value));
+      case "ai_time_limit" -> config.setAiTimeLimit(Integer.parseInt(value));
+      case "ai_iterative_deepening" -> config.setAiIterativeDeepening(Boolean.parseBoolean(value));
+      case "ai_heuristic" -> config.setAiHeuristic(value);
+      default -> throw new IOException("Invalid option : " + key);
+    }
+  }
+
+  /**
+   * Applies the AI color setting.
+   *
+   * @param value  The color configuration value.
+   * @param config The configuration object to update.
+   * @throws IOException If the color value is invalid or conflicts with AI status.
+   */
+  private void applyAiColor(final String value, final GameConfig config) throws IOException {
+    final String val = value.toUpperCase();
+    switch (val) {
+      case "ALL" -> {
+        config.setWhiteAi(true);
+        config.setBlackAi(true);
+      }
+      case "WHITE" -> {
+        config.setWhiteAi(true);
+        config.setBlackAi(false);
+      }
+      case "BLACK" -> {
+        config.setWhiteAi(false);
+        config.setBlackAi(true);
+      }
+      case "NONE" -> {
+        if (config.isAiActive()) {
+          throw new IOException("Ai mode is active but is not assigned to any color");
+        } else {
+          config.setWhiteAi(false);
+          config.setBlackAi(false);
+        }
+      }
+      default -> throw new IOException("Invalid value for option 'ai_color' : " + value);
     }
   }
 }
