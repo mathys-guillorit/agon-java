@@ -8,7 +8,7 @@ import java.io.IOException;
 public class GameState implements SaveParserState {
 
   @Override
-  public void parseLine(String line, GameSaveBuilder builder) throws IOException {
+  public void parseLine(final String line, final GameSaveBuilder builder) throws IOException {
     if (line.length() == 1) {
       if (line.equalsIgnoreCase("X")) {
         builder.setCurrentPlayer(Color.BLACK);

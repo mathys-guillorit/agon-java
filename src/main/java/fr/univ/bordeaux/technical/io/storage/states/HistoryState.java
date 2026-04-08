@@ -7,11 +7,11 @@ import java.io.IOException;
 public class HistoryState implements SaveParserState {
 
   @Override
-  public void parseLine(String line, GameSaveBuilder builder) throws IOException {
-    String[] rawMoves = line.split(";");
+  public void parseLine(final String line, final GameSaveBuilder builder) throws IOException {
+    final String[] rawMoves = line.split(";");
 
-    for (String move : rawMoves) {
-      String cleanMove = move.trim();
+    for (final String move : rawMoves) {
+      final String cleanMove = move.trim();
       if (!cleanMove.isEmpty()) {
         builder.addHistoryMove(cleanMove);
       }

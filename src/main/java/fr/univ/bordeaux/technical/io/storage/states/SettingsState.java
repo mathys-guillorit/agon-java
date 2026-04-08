@@ -10,7 +10,7 @@ public class SettingsState implements SaveParserState {
   private final ConfigParser configHelper = new ConfigParser();
 
   @Override
-  public void parseLine(String line, GameSaveBuilder builder) throws IOException {
+  public void parseLine(final String line, final GameSaveBuilder builder) throws IOException {
     configHelper.parseLine(line, builder.getConfig());
   }
 }

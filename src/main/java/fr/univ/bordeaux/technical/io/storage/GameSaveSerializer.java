@@ -19,47 +19,59 @@ import java.util.List;
  */
 public class GameSaveSerializer implements Serializer<GameSaveData> {
 
+  /** Constructs a new {@code GameSaveSerializer}. */
+  public GameSaveSerializer() {}
+
   @Override
-  public void save(GameSaveData saveData, String filePath) throws IOException {
-    Path path = Paths.get(filePath);
+  public void save(final GameSaveData saveData, final String filePath) throws IOException {
+    final Path path = Paths.get(filePath);
+    final GameConfig config = saveData.getConfig();
+    final Color currentPlayer = saveData.getCurrentPlayer();
+    final List<String> boardLines = saveData.getBoardLines();
+    final List<String> historyMoves = saveData.getHistoryMoves();
 
     try (BufferedWriter writer = Files.newBufferedWriter(path)) {
 
       writer.write("[settings]\n");
-      writeConfig(writer, saveData.getConfig());
+      writeConfig(writer, config);
       writer.write("\n");
 
       writer.write("[game]\n");
 
-      char playerChar = (saveData.getCurrentPlayer() == Color.BLACK) ? 'X' : 'O';
+      final char playerChar = (currentPlayer == Color.BLACK) ? 'X' : 'O';
       writer.write(playerChar + "\n");
 
-      for (String line : saveData.getBoardLines()) {
+      for (final String line : boardLines) {
         writer.write(line + "\n");
       }
       writer.write("\n");
 
       writer.write("[history]\n");
-      List<String> moves = saveData.getHistoryMoves();
 
-      for (int i = 0; i < moves.size(); i++) {
-        writer.write(moves.get(i) + ";");
+      for (int i = 0; i < historyMoves.size(); i++) {
+        writer.write(historyMoves.get(i) + ";");
 
         if ((i + 1) % 2 == 0) {
           writer.write("\n");
-        } else if (i < moves.size() - 1) {
+        } else if (i < historyMoves.size() - 1) {
           writer.write(" ");
         }
       }
 
-      if (!moves.isEmpty() && moves.size() % 2 != 0) {
+      if (!historyMoves.isEmpty() && historyMoves.size() % 2 != 0) {
         writer.write("\n");
       }
     }
   }
 
-  /** Helper method to accurately dump the GameConfig into key=value format. */
-  private void writeConfig(BufferedWriter writer, GameConfig config) throws IOException {
+  /**
+   * Helper method to accurately dump the GameConfig into key=value format.
+   *
+   * @param writer The BufferedWriter used for writing to the file.
+   * @param config The GameConfig object to serialize.
+   * @throws IOException If an I/O error occurs during writing.
+   */
+  private void writeConfig(final BufferedWriter writer, final GameConfig config) throws IOException {
     writer.write("verbose = " + config.isVerbose() + "\n");
     writer.write("debug = " + config.isDebug() + "\n");
     writer.write("placement = " + config.isManualPlacement() + "\n");

@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.ai.heuristics.*;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,7 +76,10 @@ public final class AiFactory {
       case "centrality" -> resultHeuristic = new CentralityHeuristic();
       case "mobility" -> resultHeuristic = new MobilityHeuristic();
       case "mixed" -> resultHeuristic = new MixedHeuristic(10, 1);
-      default -> resultHeuristic = null;
+      default -> {
+        GameLogger.warn("No heuristic found, Mixed heuristic will be used.");
+        resultHeuristic = new MixedHeuristic(10, 1);
+      }
     }
     return resultHeuristic;
   }
@@ -85,7 +89,10 @@ public final class AiFactory {
     switch (type) {
       case "uct" -> resultSelection = new UctHeuristic(Math.sqrt(2));
       case "ml" -> resultSelection = new MlHeuristic(Math.sqrt(2));
-      default -> resultSelection = null;
+      default -> {
+        GameLogger.warn("No selection heuristic found, Uct heuristic will be used.");
+        resultSelection = new UctHeuristic(Math.sqrt(2));
+      }
     }
     return resultSelection;
   }
