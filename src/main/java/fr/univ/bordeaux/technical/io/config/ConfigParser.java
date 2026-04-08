@@ -12,10 +12,8 @@ import java.util.List;
  */
 public class ConfigParser extends AbstractFileParser<GameConfig> {
 
-  /** Constante pour éviter l'alerte sur les littéraux. */
-  private static final String SECTION_PREFIX = "[";
-
-  // PMD: Le constructeur vide a été supprimé. Java s'en charge.
+  /** Constructs a new {@code ConfigParser}. */
+  public ConfigParser() {}
 
   /**
    * Processes the cleaned lines to construct the GameConfig object.
@@ -28,7 +26,7 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
     final GameConfig config = new GameConfig();
 
     for (final String line : cleanLines) {
-      if (line.startsWith(SECTION_PREFIX)) {
+      if (line.startsWith("[")) {
         continue;
       }
       parseLine(line, config);
@@ -48,64 +46,50 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
     final String key = parts[0].trim().toLowerCase();
     final String value = parts[1].trim();
 
-    // RESTAURATION : Ton code des raccourcis qu'on avait fait avant !
-    if (key.startsWith("shortcut_")) {
-      config.addShortcut(key, value);
-      return;
-    }
-
     try {
-      applySetting(key, value, config);
-    } catch (NumberFormatException e) {
-      // PMD: On passe 'e' pour préserver le StackTrace
-      throw new IOException("Invalid numeric value for option '" + key + "' : " + value, e);
-    }
-  }
-
-  /** Gère l'affectation des paramètres simples pour réduire la complexité cyclomatique. */
-  private void applySetting(final String key, final String value, final GameConfig config) throws IOException {
-    switch (key) {
-      case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
-      case "debug" -> config.setDebug(Boolean.parseBoolean(value));
-      case "placement" -> config.setManualPlacement(Boolean.parseBoolean(value));
-      case "blitz" -> config.setBlitzMode(Boolean.parseBoolean(value));
-      case "timeout" -> config.setTimeout(Integer.parseInt(value));
-      case "ai" -> config.setAi(Boolean.parseBoolean(value));
-      case "ai_color" -> applyAiColor(value, config);
-      case "ai_mode" -> config.setAiMode(value);
-      case "ai_depth" -> config.setAiDepth(Integer.parseInt(value));
-      case "ai_time_limit" -> config.setAiTimeLimit(Integer.parseInt(value));
-      case "ai_iterative_deepening" -> config.setAiIterativeDeepening(Boolean.parseBoolean(value));
-      case "ai_heuristic" -> config.setAiHeuristic(value);
-      default -> throw new IOException("Invalid option : " + key);
-    }
-  }
-
-  /** Sépare la logique de la couleur de l'IA pour garder des méthodes courtes. */
-  private void applyAiColor(final String value, final GameConfig config) throws IOException {
-    final String val = value.toUpperCase();
-    switch (val) {
-      case "ALL" -> {
-        config.setWhiteAi(true);
-        config.setBlackAi(true);
-      }
-      case "WHITE" -> {
-        config.setWhiteAi(true);
-        config.setBlackAi(false);
-      }
-      case "BLACK" -> {
-        config.setWhiteAi(false);
-        config.setBlackAi(true);
-      }
-      case "NONE" -> {
-        if (config.isAiActive()) {
-          throw new IOException("Ai mode is active but is not assigned to any color");
-        } else {
-          config.setWhiteAi(false);
-          config.setBlackAi(false);
+      switch (key) {
+        case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
+        case "debug" -> config.setDebug(Boolean.parseBoolean(value));
+        case "placement" -> config.setManualPlacement(Boolean.parseBoolean(value));
+        case "blitz" -> config.setBlitzMode(Boolean.parseBoolean(value));
+        case "timeout" -> config.setTimeout(Integer.parseInt(value));
+        case "ai" -> config.setAi(Boolean.parseBoolean(value));
+        case "ai_color" -> {
+          final String val = value.toUpperCase();
+          switch (val) {
+            case "ALL" -> {
+              config.setWhiteAi(true);
+              config.setBlackAi(true);
+            }
+            case "WHITE" -> {
+              config.setWhiteAi(true);
+              config.setBlackAi(false);
+            }
+            case "BLACK" -> {
+              config.setWhiteAi(false);
+              config.setBlackAi(true);
+            }
+            case "NONE" -> {
+              if (config.isAiActive()) {
+                throw new IOException("Ai mode is active but is not assigned to any color");
+              } else {
+                config.setWhiteAi(false);
+                config.setBlackAi(false);
+              }
+            }
+            default -> throw new IOException("Invalid value for option '" + key + "' : " + value);
+          }
         }
+        case "ai_mode" -> config.setAiMode(value);
+        case "ai_depth" -> config.setAiDepth(Integer.parseInt(value));
+        case "ai_time_limit" -> config.setAiTimeLimit(Integer.parseInt(value));
+        case "ai_iterative_deepening" -> config.setAiIterativeDeepening(
+            Boolean.parseBoolean(value));
+        case "ai_heuristic" -> config.setAiHeuristic(value);
+        default -> throw new IOException("Invalid option : " + key);
       }
-      default -> throw new IOException("Invalid value for option 'ai_color' : " + value);
+    } catch (NumberFormatException e) {
+      throw new IOException("Invalid value for option '" + key + "' : " + value);
     }
   }
 }
