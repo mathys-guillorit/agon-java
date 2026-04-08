@@ -46,7 +46,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   private boolean isSaved = false;
 
   /** The UI observer to be notified of updates. */
-  private MatchObserver UiObserver;
+  private MatchObserver uiObserver;
 
   /** The winner of the match, null if the game is ongoing or a draw. */
   private Player winner;
@@ -216,8 +216,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /** Triggers an update on the registered UI observer. */
   public void notifyUi() {
-    if (this.UiObserver != null) {
-      this.UiObserver.onMatchUpdate(this);
+    if (this.uiObserver != null) {
+      this.uiObserver.onMatchUpdate(this);
     }
   }
 
@@ -325,7 +325,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
    */
   @Override
   public void setObserver(MatchObserver observer) {
-    this.UiObserver = observer;
+    this.uiObserver = observer;
   }
 
   /**

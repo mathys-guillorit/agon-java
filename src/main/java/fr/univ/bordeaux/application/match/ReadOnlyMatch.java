@@ -64,13 +64,6 @@ public interface ReadOnlyMatch {
   GameConfig getGameConfig();
 
   /**
-   * Computes or retrieves a recommended move for the current player.
-   *
-   * @return a suggested move (hint).
-   */
-  Move hint();
-
-  /**
    * Identifies the player who won the game.
    *
    * @return the winner of the match, or null if game is not finished.

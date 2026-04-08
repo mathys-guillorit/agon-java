@@ -1,0 +1,65 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package fr.univ.bordeaux.application {
+    class AppContext {
+        - profile: LocalProfile
+        - client: AgonClient
+        - server: AgonServer
+        - mode: AppMode
+        + getClient(): AgonClient
+        + getServer(): AgonServer
+    }
+
+    class GameLauncher {
+        - context: AppContext
+        - ui: GameUserInterface
+        + launch(): void
+    }
+
+    package match {
+        class MatchManager {
+            - currentMatch: Match
+            + createMatch(type: String): Match
+        }
+
+        abstract class Match implements ReadOnlyMatch {
+            - board: AgonBoard
+            - player1: Player
+            - player2: Player
+            + makeMove(move: Move): boolean
+        }
+
+        class StandardMatch extends Match
+        class BlitzMatch extends Match
+        class ContestMatch extends Match
+
+        interface ReadOnlyMatch {
+            + getBoard(): RestrictedAgonBoard
+            + getCurrentPlayer(): Player
+        }
+
+        class GameEngine {
+            + validateMove(move: Move, board: AgonBoard): boolean
+        }
+
+        package player {
+            interface Player {
+                + getName(): String
+                + getColor(): Color
+            }
+            abstract class AbstractPlayer implements Player
+            class HumanPlayer extends AbstractPlayer
+            class AiPlayer extends AbstractPlayer
+            class NetworkPlayer extends AbstractPlayer
+        }
+    }
+}
+
+' Relations inter-couches
+GameLauncher --> AppContext : manages
+Match --> "1" fr.univ.bordeaux.agoncore.bitboard.AgonBoard : uses
+Match --> "2" player.Player : has
+Match ..> fr.univ.bordeaux.application.match.GameEngine : uses for validation
+
+@enduml

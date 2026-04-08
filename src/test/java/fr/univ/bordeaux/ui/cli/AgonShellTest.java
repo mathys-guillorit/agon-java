@@ -494,10 +494,6 @@ public class AgonShellTest {
             return new GameConfig();
           }
 
-          @Override
-          public Move hint() {
-            return null;
-          }
         };
 
     shell.onMatchUpdate(finishedMatch);
