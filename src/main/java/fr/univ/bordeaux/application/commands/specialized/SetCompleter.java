@@ -15,6 +15,9 @@ public class SetCompleter implements Completer {
 
   private Set<String> optNames;
 
+  /** Command name. */
+  private String cmdName = "set";
+
   /**
    * Complete set command with options without "--" at the beginning and set with a "=".
    *
@@ -26,7 +29,7 @@ public class SetCompleter implements Completer {
     this.optNames = new HashSet<>();
     String optName;
     for (Option opt : opts.getOptions()) {
-      optName = opt.getLongOpt();
+      optName = opt.getOpt();
       if (optName == null) {
         throw new IllegalArgumentException("Missing required option");
       }
@@ -39,8 +42,11 @@ public class SetCompleter implements Completer {
   public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
     int wordIndex = line.wordIndex();
     // after "set" (cmdName)
-    if (wordIndex != 1) {
+    if (wordIndex < 1) {
       return;
+    }
+    if (!line.words().getFirst().equals(this.cmdName)) {
+      return; // no predictions for band cmd name
     }
     String current = line.word();
     Candidate candidate;

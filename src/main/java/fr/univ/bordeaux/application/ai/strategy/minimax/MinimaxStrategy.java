@@ -5,6 +5,7 @@ import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.List;
 
 /**
@@ -155,6 +156,7 @@ public class MinimaxStrategy extends AbstractAgonAi {
    */
   private long minimax(
       AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
+    GameLogger.debug("Node count :  " + this.nodeCount + "at depth : " + depth);
 
     if (!this.timeoutReached && !isTimeRemaining()) {
       this.timeoutReached = true;

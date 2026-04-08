@@ -103,6 +103,12 @@ public class GameEngineTest {
     }
 
     @Override
+    public String getHelp() {
+      /// TODO: impl here (must show a help for all CmdAction)
+      return "usage: not defined yet";
+    }
+
+    @Override
     public String getDescription() {
       return "fake command";
     }

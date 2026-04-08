@@ -80,7 +80,7 @@ class AiFactoryTest {
   @Test
   void testCreateAiMctsMode() {
     config.setAiMode("mcts");
-    config.setAiHeuristic("mobility");
+    config.setAiHeuristic("uct");
 
     AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
@@ -105,5 +105,49 @@ class AiFactoryTest {
     assertNotNull(hintAi, "The factory should return a hint Ai instance.");
     assertInstanceOf(
         MinimaxStrategy.class, hintAi, "The returned hint Ai should be a MinimaxStrategy.");
+  }
+
+  @Test
+  void testCreateAiMinimaxModeUnknownHeuristic() {
+    config.setAiMode("minimax");
+    config.setAiHeuristic("random_string");
+
+    AbstractAgonAi ai = AiFactory.createAi(config, Color.BLACK);
+
+    assertNull(
+        ai,
+        "The factory should return null (or handle gracefully) for an unknown heuristic in minimax.");
+  }
+
+  @Test
+  void testCreateAiMctsModeWithUct() {
+    config.setAiMode("mcts");
+    config.setAiHeuristic("uct");
+
+    AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
+
+    assertNotNull(ai, "The factory should return an Ai instance for MCTS with UCT.");
+    assertInstanceOf(MctsStrategy.class, ai, "The returned Ai should be an MctsStrategy.");
+  }
+
+  @Test
+  void testCreateAiMctsModeWithMl() {
+    config.setAiMode("mcts");
+    config.setAiHeuristic("ml");
+
+    AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
+
+    assertNotNull(ai, "The factory should return an Ai instance for MCTS with ML.");
+    assertInstanceOf(MctsStrategy.class, ai, "The returned Ai should be an MctsStrategy.");
+  }
+
+  @Test
+  void testCreateAiMctsModeUnknownHeuristic() {
+    config.setAiMode("mcts");
+    config.setAiHeuristic("random_string");
+
+    AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
+
+    assertNull(ai, "The factory should return null for an unknown selection heuristic in mcts.");
   }
 }

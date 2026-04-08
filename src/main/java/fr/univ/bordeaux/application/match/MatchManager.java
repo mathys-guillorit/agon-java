@@ -57,13 +57,13 @@ public interface MatchManager extends ReadOnlyMatch {
 
   /** Terminates the current match session and sets the status to finished. */
   void quit();
+
   /**
    * Computes or retrieves a recommended move for the current player.
    *
    * @return a suggested move (hint).
    */
   Move hint();
-
 
   /**
    * Initializes the beginning of a new turn.
