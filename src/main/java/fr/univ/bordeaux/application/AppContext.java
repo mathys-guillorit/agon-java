@@ -135,40 +135,41 @@ public class AppContext implements OnlineGameStartListener {
     this.gameEngine = gameEngine;
   }
 
-  /**
-   * Called when an online game has started.
-   *
-   * <p>This method creates the local visual match used by the UI, stores the online game state, and
-   * injects the match into the game engine.
-   *
-   * @param info the parsed online game information
-   */
-  @Override
-  public void onOnlineGameStarted(OnlineGameInfo info) {
-    final Match localMatch =
-        MatchFactory.createOnlineMatch(info.getWhitePlayerName(), info.getBlackPlayerName());
+    /**
+     * Called when an online game has started.
+     *
+     * <p>This method creates the local visual match used by the UI, stores the online game state, and
+     * injects the match into the game engine.
+     *
+     * @param info the parsed online game information
+     */
+    @Override
+    public void onOnlineGameStarted(OnlineGameInfo info) {
+        // CORRECTION ICI : On ajoute le 3ème paramètre info.isBlitzMode() !
+        final Match localMatch =
+                MatchFactory.createOnlineMatch(info.getWhitePlayerName(), info.getBlackPlayerName(), info.isBlitzMode());
 
-    this.onlineGameActive = true;
-    this.currentOnlineGameId = info.getGameId();
-    this.localOnlineColor = info.getLocalColor();
-    this.myOnlineTurn = info.isMyTurn();
-    this.currentOnlineMatch = localMatch;
+        this.onlineGameActive = true;
+        this.currentOnlineGameId = info.getGameId();
+        this.localOnlineColor = info.getLocalColor();
+        this.myOnlineTurn = info.isMyTurn();
+        this.currentOnlineMatch = localMatch;
 
-    System.out.println("[ONLINE] Game started. GAME_ID=" + info.getGameId());
-    System.out.println("[ONLINE] You are " + info.getLocalColor());
-    System.out.println(
-        "[ONLINE] WHITE=" + info.getWhitePlayerName() + " BLACK=" + info.getBlackPlayerName());
+        System.out.println("[ONLINE] Game started. GAME_ID=" + info.getGameId());
+        System.out.println("[ONLINE] You are " + info.getLocalColor());
+        System.out.println(
+                "[ONLINE] WHITE=" + info.getWhitePlayerName() + " BLACK=" + info.getBlackPlayerName());
 
-    if (gameEngine != null) {
-      gameEngine.previewMatch(localMatch);
+        if (gameEngine != null) {
+            gameEngine.previewMatch(localMatch);
+        }
+
+        if (myOnlineTurn) {
+            System.out.println("[ONLINE] Your turn");
+        } else {
+            System.out.println("[ONLINE] Opponent turn");
+        }
     }
-
-    if (myOnlineTurn) {
-      System.out.println("[ONLINE] Your turn");
-    } else {
-      System.out.println("[ONLINE] Opponent turn");
-    }
-  }
 
   /**
    * Indicates whether an online game is currently active.
@@ -260,6 +261,8 @@ public class AppContext implements OnlineGameStartListener {
 
     myOnlineTurn = false;
 
+    currentOnlineMatch.startTurn();
+
     if (gameEngine != null) {
       gameEngine.previewMatch(currentOnlineMatch);
     }
@@ -301,6 +304,8 @@ public class AppContext implements OnlineGameStartListener {
     }
 
     myOnlineTurn = true;
+
+    currentOnlineMatch.startTurn();
 
     if (gameEngine != null) {
       gameEngine.previewMatch(currentOnlineMatch);

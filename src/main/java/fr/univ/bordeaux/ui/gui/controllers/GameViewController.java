@@ -132,19 +132,27 @@ public class GameViewController {
     }
   }
 
-  private void handleTurnAndPauseMessages(final String originalMsg, final String lowerMsg) {
-    if (lowerMsg.contains("game paused")) {
-      updateMessage(originalMsg);
-    } else if (agonGui != null && agonGui.getAppContext().isOnlineGameActive()) {
-      final boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
-      final String color = agonGui.getAppContext().getLocalOnlineColor().toString();
-      final String customMsg =
-          isMyTurn ? "Your turn! (You are " + color + ")" : "Opponent's turn (" + color + ")";
-      updateMessage(customMsg);
-    } else {
-      updateMessage(originalMsg);
+    private void handleTurnAndPauseMessages(final String originalMsg, final String lowerMsg) {
+        if (lowerMsg.contains("game paused")) {
+            updateMessage(originalMsg);
+        } else if (agonGui != null && agonGui.getAppContext().isOnlineGameActive()) {
+            final boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
+            final String myColor = agonGui.getAppContext().getLocalOnlineColor().toString();
+            final String oppColor = myColor.equals("WHITE") ? "BLACK" : "WHITE";
+
+            String customMsg =
+                    isMyTurn ? "Your turn! (You are " + myColor + ")" : "Opponent's turn (" + oppColor + ")";
+
+            if (originalMsg.contains("Time left:")) {
+                final String timePart = originalMsg.substring(originalMsg.indexOf("Time left:"));
+                customMsg += "   |   " + timePart;
+            }
+
+            updateMessage(customMsg);
+        } else {
+            updateMessage(originalMsg);
+        }
     }
-  }
 
   private void handleDialogPrompts(final String originalMsg, final String lowerMsg) {
     if (lowerMsg.contains("invitation_received")) {
@@ -687,20 +695,15 @@ public class GameViewController {
     }
   }
 
-  private void refreshBoardFromNetwork() {
-    if (agonGui != null && agonGui.getAppContext() != null) {
-      final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
-      if (match != null) {
-        try {
-          final RestrictedAgonBoard board = match.getAgonBoard();
-          final Map<String, PieceType> snapshot = hexCanvas.takeSnapshot(board);
-          hexCanvas.applySnapshot(board, snapshot);
-        } catch (Exception e) {
-          System.err.println("Unable to refresh the board: " + e.getMessage());
+    private void refreshBoardFromNetwork() {
+        if (agonGui != null && agonGui.getAppContext() != null) {
+            final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
+            if (match != null) {
+                // En transmettant le match au GUI, la Timeline du Blitz démarre automatiquement !
+                agonGui.onMatchUpdate(match);
+            }
         }
-      }
     }
-  }
 
   /**
    * Intercepts standard console output (System.out) to capture background network events and
