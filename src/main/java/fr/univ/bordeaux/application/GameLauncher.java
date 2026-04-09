@@ -18,7 +18,7 @@ import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import java.io.File;
 import java.io.IOException;
-import java.util.Scanner;
+import javafx.application.Platform;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -111,19 +111,12 @@ public class GameLauncher {
   }
 
   private AppContext createAppContext(final CommandLine cmd) {
-    final AppMode mode;
-    final String playerName = askPlayerName();
-
-    if (cmd.hasOption("g")) {
-      mode = AppMode.LOCAL;
-    } else {
-      mode = askApplicationMode();
-      System.out.println("[INFO] Mode selected: " + mode);
+    String playerName = System.getProperty("user.name");
+    if (playerName == null || playerName.isBlank()) {
+      playerName = "Player";
     }
-
     final AppContext context = new AppContext(new LocalProfile(playerName));
-    context.setMode(mode);
-
+    context.setMode(AppMode.LOCAL);
     return context;
   }
 
@@ -185,29 +178,25 @@ public class GameLauncher {
     }
   }
 
-  protected String askPlayerName() {
-    final Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter your player name: ");
-    String name = scanner.nextLine().trim();
-
+  protected String askPlayerName(LineReader reader) {
+    final String prompt = "\u001B[35m[AGON]\u001B[0m> ";
+    String name = reader.readLine(prompt + "Enter your player name: ").trim();
     while (name.isEmpty()) {
-      System.out.print("Name cannot be empty. Enter your player name: ");
-      name = scanner.nextLine().trim();
+      name = reader.readLine(prompt + "Name cannot be empty. Enter your player name: ").trim();
     }
     return name;
   }
 
-  protected AppMode askApplicationMode() {
-    final Scanner scanner = new Scanner(System.in);
-    System.out.println("Select mode:");
-    System.out.println("1 - Local");
-    System.out.println("2 - Online");
-    System.out.print("Your choice: ");
+  protected AppMode askApplicationMode(LineReader reader) {
+    final String prompt = "\u001B[35m[AGON]\u001B[0m> ";
+    reader.getTerminal().writer().println(prompt + "Select mode:");
+    reader.getTerminal().writer().println("1 - Local");
+    reader.getTerminal().writer().println("2 - Online");
+    reader.getTerminal().writer().flush();
 
-    String input = scanner.nextLine().trim();
+    String input = reader.readLine(prompt + "Your choice: ").trim();
     while (!"1".equals(input) && !"2".equals(input)) {
-      System.out.print("Invalid choice. Enter 1 (Local) or 2 (Online): ");
-      input = scanner.nextLine().trim();
+      input = reader.readLine(prompt + "Invalid choice. Enter 1 (Local) or 2 (Online): ").trim();
     }
     return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
@@ -221,19 +210,62 @@ public class GameLauncher {
 
     if (cmd.hasOption("g")) {
       System.out.println("Starting Agon GUI...");
-      launchGUI(config, cmds, context);
+      launchGUI(config, cmd, cmds, filePathToLoad, context);
     } else {
       System.out.println("Starting Agon Shell...");
       launchCLI(config, cmd, cmds, filePathToLoad, context);
     }
   }
 
-  protected void launchGUI(GameConfig config, AgonRegister<CmdAction> cmds, AppContext context) {
+  protected void launchGUI(
+      GameConfig config,
+      CommandLine cmd,
+      AgonRegister<CmdAction> cmds,
+      String filePathToLoad,
+      AppContext context) {
     final AgonGui gui = new AgonGui(config, context);
+
+    try {
+      ConfigBinder.bindOptionsToConfig(cmd, config, gui);
+    } catch (Exception e) {
+      GameLogger.error("[ERROR] Failed to bind config to GUI: " + e.getMessage());
+    }
+
     final GameEngine gameEngine = new GameEngine(gui, cmds);
     context.setGameEngine(gameEngine);
     gameEngine.setAppContext(context);
     this.fillRegister(cmds, gui, config, gameEngine, context);
+
+    new Thread(
+            () -> {
+              boolean fxReady = false;
+              while (!fxReady) {
+                try {
+                  Platform.runLater(() -> {});
+                  fxReady = true;
+                } catch (IllegalStateException e) {
+                  try {
+                    Thread.sleep(800);
+                  } catch (InterruptedException ignored) {
+                  }
+                }
+              }
+
+              Platform.runLater(
+                  () -> {
+                    if (config.isBlitzMode()) {
+                      CmdCreate create = new CmdCreate(gui, config, gameEngine);
+                      create.execute(null);
+                    }
+
+                    if (filePathToLoad != null && !cmd.hasOption("c")) {
+                      cmds.get("load")
+                          .ifPresent(l -> l.createNew(new String[] {filePathToLoad}).execute(null));
+                    }
+                  });
+            })
+        .start();
+
     gui.start();
     gameEngine.start();
   }
@@ -254,9 +286,34 @@ public class GameLauncher {
             }
           };
 
+      final boolean isTestEnv = "true".equals(System.getProperty("IS_TEST_ENV"));
       final Terminal terminal = TerminalBuilder.builder().dumb(true).build();
       final LineReader reader =
           LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
+
+      if (!isTestEnv && !cmd.hasOption("c")) {
+        String name = askPlayerName(reader);
+        AppMode mode = askApplicationMode(reader);
+        context.setMode(mode);
+        try {
+          try {
+            context
+                .getProfile()
+                .getClass()
+                .getMethod("setName", String.class)
+                .invoke(context.getProfile(), name);
+          } catch (Exception e) {
+            for (java.lang.reflect.Field field : AppContext.class.getDeclaredFields()) {
+              if (field.getType().equals(LocalProfile.class)) {
+                field.setAccessible(true);
+                field.set(context, new LocalProfile(name));
+                break;
+              }
+            }
+          }
+        } catch (Exception ignored) {
+        }
+      }
 
       final AgonShell userInterface = new AgonShell(terminal, reader, cmds);
       shellRef[0] = userInterface;

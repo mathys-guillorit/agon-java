@@ -5,6 +5,7 @@ import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import java.io.IOException;
 import java.util.Map;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,6 +43,17 @@ public class AgonApp extends Application {
     scene = new Scene(root, 900, 700);
     stage.setTitle("Agon - GUI Mode");
     stage.setScene(scene);
+
+    stage.setOnCloseRequest(
+        (e) -> {
+          if (agonGui != null) {
+            agonGui.quit();
+          } else {
+            Platform.exit();
+            System.exit(0);
+          }
+        });
+
     stage.show();
     controller = loader.getController();
     controller.setAgonGui(agonGui);

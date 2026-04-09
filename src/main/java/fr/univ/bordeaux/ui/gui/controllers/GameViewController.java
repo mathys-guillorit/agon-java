@@ -286,7 +286,6 @@ public class GameViewController {
     final ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
     dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
 
-    // --- JOUEURS ---
     final ComboBox<String> p1Type = new ComboBox<>();
     p1Type.getItems().addAll("Human", "AI");
     p1Type.setValue("Human");
@@ -299,13 +298,12 @@ public class GameViewController {
     p2Type.getItems().addAll("Human", "AI");
     p2Type.setValue("AI");
 
-    // --- CONFIGURATION IA (Globale, basée sur CmdCreate) ---
     final ComboBox<String> aiMode = new ComboBox<>();
     aiMode.getItems().addAll("Random", "Minimax", "MCTS");
     aiMode.setValue("Minimax");
 
     final ComboBox<String> aiMinimaxScoring = new ComboBox<>();
-    aiMinimaxScoring.getItems().addAll("Mobility", "Centrality", "ML");
+    aiMinimaxScoring.getItems().addAll("Mobility", "Centrality", "Mixed");
     aiMinimaxScoring.setValue("Mobility");
 
     final Spinner<Integer> aiDepth = new Spinner<>(1, 10, 3);
@@ -314,12 +312,10 @@ public class GameViewController {
     aiMctsSelection.getItems().addAll("UCT", "ML");
     aiMctsSelection.setValue("UCT");
 
-    // Création des lignes de paramètres IA
     final HBox scoringBox = new HBox(10, new Label("Heuristic:"), aiMinimaxScoring);
     final HBox depthBox = new HBox(10, new Label("Depth:"), aiDepth);
     final HBox mctsBox = new HBox(10, new Label("Selection:"), aiMctsSelection);
 
-    // Le panneau IA complet
     final VBox aiSettingsBox = new VBox(10);
     aiSettingsBox.setPadding(new Insets(10));
     aiSettingsBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 5;");
@@ -350,7 +346,6 @@ public class GameViewController {
     timeSpinner.setDisable(true);
     blitzCheck.setOnAction(e -> timeSpinner.setDisable(!blitzCheck.isSelected()));
 
-    // --- LAYOUT ---
     final GridPane grid = new GridPane();
     grid.setHgap(10);
     grid.setVgap(10);
@@ -382,9 +377,8 @@ public class GameViewController {
             boolean p1IsAi = "AI".equals(p1Type.getValue());
             boolean p2IsAi = "AI".equals(p2Type.getValue());
 
-            // CORRECTION ICI : Gestion de l'option --ai selon le nombre d'IA
             if (p1IsAi && p2IsAi) {
-              cmd.append(" --ai a"); // "a" ou "all" pour définir les deux joueurs en IA
+              cmd.append(" --ai a");
             } else if (p1IsAi) {
               cmd.append(" --ai ").append(p1ColorStr);
             } else if (p2IsAi) {
@@ -541,25 +535,35 @@ public class GameViewController {
   /** Prompts the user with a session setup dialog to choose between Local and Online modes. */
   private void promptSessionSetup() {
     if (agonGui != null && agonGui.getAppContext() != null) {
-      String playerName = "Player";
-      try {
-        playerName = agonGui.getAppContext().getProfile().getName();
-      } catch (Exception ignored) {
-        GameLogger.error("Could not retrieve player name.");
+      if (agonGui.getConfig().isBlitzMode()) {
+        agonGui.getAppContext().setMode(AppMode.LOCAL);
+        return;
       }
-
-      updateMessage("Logged in as: " + playerName);
 
       final Dialog<String> dialog = new Dialog<>();
       dialog.setTitle("Welcome to Agon");
+      dialog.setHeaderText("Session Setup\\nPlease enter your name and choose a game mode:");
 
-      dialog.setHeaderText("Hello " + playerName + "!\nChoose your game mode for this session:");
+      final TextField nameField = new TextField(System.getProperty("user.name"));
+      nameField.setPromptText("Enter your player name");
+      final VBox content = new VBox(10, new Label("Player Name:"), nameField);
+      content.setPadding(new Insets(10, 0, 10, 0));
+      dialog.getDialogPane().setContent(content);
 
       final ButtonType localBtn = new ButtonType("Local (Play offline)", ButtonBar.ButtonData.YES);
       final ButtonType onlineBtn = new ButtonType("Online (Multiplayer)", ButtonBar.ButtonData.NO);
       dialog.getDialogPane().getButtonTypes().addAll(localBtn, onlineBtn);
 
-      dialog.setResultConverter(btn -> btn == onlineBtn ? "ONLINE" : "LOCAL");
+      dialog.setResultConverter(
+          btn -> {
+            String playerName = nameField.getText().trim();
+            if (playerName.isEmpty()) {
+              playerName = "Player";
+            }
+
+            updateMessage("Logged in as: " + playerName);
+            return btn == onlineBtn ? "ONLINE" : "LOCAL";
+          });
 
       dialog
           .showAndWait()
