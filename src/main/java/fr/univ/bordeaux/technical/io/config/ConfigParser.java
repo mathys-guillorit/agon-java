@@ -51,6 +51,11 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
       return;
     }
 
+    if (key.startsWith("shortcut_")) {
+      config.addShortcut(key, value);
+      return;
+    }
+
     try {
       applySetting(key, value, config);
     } catch (NumberFormatException e) {
@@ -61,12 +66,13 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
   /**
    * Applies a specific setting to the configuration object.
    *
-   * @param key    The configuration key.
-   * @param value  The configuration value to be parsed.
+   * @param key The configuration key.
+   * @param value The configuration value to be parsed.
    * @param config The configuration object to update.
    * @throws IOException If the key is unknown.
    */
-  private void applySetting(final String key, final String value, final GameConfig config) throws IOException {
+  private void applySetting(final String key, final String value, final GameConfig config)
+      throws IOException {
     switch (key) {
       case "verbose" -> config.setVerbose(Boolean.parseBoolean(value));
       case "debug" -> config.setDebug(Boolean.parseBoolean(value));
@@ -87,7 +93,7 @@ public class ConfigParser extends AbstractFileParser<GameConfig> {
   /**
    * Applies the AI color setting.
    *
-   * @param value  The color configuration value.
+   * @param value The color configuration value.
    * @param config The configuration object to update.
    * @throws IOException If the color value is invalid or conflicts with AI status.
    */

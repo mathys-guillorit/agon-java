@@ -36,16 +36,16 @@ public class MinimaxStrategy extends AbstractAgonAi {
    * @param heuristic The evaluation function used for leaf nodes.
    * @param color The color played by this AI.
    * @param maxDepth The absolute maximum depth limit for the recursion.
-   * @param itDeepening {@code true} to enable Iterative Deepening, {@code false} for
-   * standard Minimax.
+   * @param itDeepening {@code true} to enable Iterative Deepening, {@code false} for standard
+   *     Minimax.
    * @param timeLimitSeconds The maximum allowed calculation time per move in seconds.
    */
   public MinimaxStrategy(
-          final Heuristic heuristic,
-          final Color color,
-          final int maxDepth,
-          final boolean itDeepening,
-          final int timeLimitSeconds) {
+      final Heuristic heuristic,
+      final Color color,
+      final int maxDepth,
+      final boolean itDeepening,
+      final int timeLimitSeconds) {
     super(heuristic, color);
     this.maxDepth = maxDepth;
     this.itDeepening = itDeepening;
@@ -78,7 +78,8 @@ public class MinimaxStrategy extends AbstractAgonAi {
     return result;
   }
 
-  private Move runMinimaxForDepth(final AgonBoard board, final List<Move> legalMoves, final int targetDepth) {
+  private Move runMinimaxForDepth(
+      final AgonBoard board, final List<Move> legalMoves, final int targetDepth) {
     Move bestMove = legalMoves.getFirst();
     long maxScore = Long.MIN_VALUE;
     long alpha = Long.MIN_VALUE;
@@ -113,7 +114,11 @@ public class MinimaxStrategy extends AbstractAgonAi {
   }
 
   private long minimax(
-          final AgonBoard board, final int depth, final boolean isMaximizingPlayer, final long alpha, final long beta) {
+      final AgonBoard board,
+      final int depth,
+      final boolean isMaximizingPlayer,
+      final long alpha,
+      final long beta) {
     final long result;
 
     GameLogger.debug("Node count :  " + this.nodeCount + "at depth : " + depth);
@@ -143,7 +148,7 @@ public class MinimaxStrategy extends AbstractAgonAi {
   }
 
   private long evaluateMaximizing(
-          final AgonBoard board, final int depth, final long alpha, final long beta) {
+      final AgonBoard board, final int depth, final long alpha, final long beta) {
     final long result;
     final List<Move> moves = board.generateLegalMoves(this.color);
 
@@ -182,7 +187,11 @@ public class MinimaxStrategy extends AbstractAgonAi {
   }
 
   private long evaluateMinimizing(
-          final AgonBoard board, final int depth, final long alpha, final long beta, final Color opponentColor) {
+      final AgonBoard board,
+      final int depth,
+      final long alpha,
+      final long beta,
+      final Color opponentColor) {
     final long result;
     final List<Move> moves = board.generateLegalMoves(opponentColor);
 

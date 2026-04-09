@@ -53,7 +53,11 @@ public class MctsNode {
    * @param playerToMove The player whose turn it is to play next.
    * @param legalMoves The complete list of legal moves available from this current state.
    */
-  public MctsNode(final MctsNode parent, final Move move, final Color playerToMove, final List<Move> legalMoves) {
+  public MctsNode(
+      final MctsNode parent,
+      final Move move,
+      final Color playerToMove,
+      final List<Move> legalMoves) {
     this.parent = parent;
     this.move = move;
     this.playerToMove = playerToMove;
@@ -89,7 +93,7 @@ public class MctsNode {
     final Move retMove;
     if (untriedMoves.isEmpty()) {
       retMove = null;
-    }else{
+    } else {
       final int index = random.nextInt(untriedMoves.size());
       retMove = untriedMoves.remove(index);
     }

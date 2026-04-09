@@ -80,7 +80,7 @@ public class ConfigSerializer implements Serializer<GameConfig> {
       writer.write("ai_depth = " + config.getAiDepth() + "\n");
       writer.write("ai_time_limit = " + config.getAiTimeLimit() + "\n");
       writer.write("ai_iterative_deepening = " + config.isAiIterativeDeepening() + "\n");
-      writer.write("ai_heuristic = " + config.getAiHeuristic() + "\n");
+      writer.write("ai_heuristic = " + config.getAiHeuristic() + "\n\n");
 
       writer.write("[shortcuts]\n");
       final Map<String, String> shortcuts = config.getShortcuts();
@@ -89,7 +89,6 @@ public class ConfigSerializer implements Serializer<GameConfig> {
         final String value = entry.getValue();
         writer.write(key + " = " + value + "\n");
       }
-
     }
   }
 }

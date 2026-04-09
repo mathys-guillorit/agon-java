@@ -6,7 +6,6 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.technical.utils.GameLogger;
-
 import java.util.List;
 import java.util.Random;
 
@@ -28,11 +27,12 @@ public class MctsStrategy extends AbstractAgonAi {
   /**
    * Constructs a new MCTS strategy instance.
    *
-   * @param color      The color played by this AI agent.
-   * @param selHeur    The specific heuristic used for node selection.
-   * @param timeLimit  The calculation time limit in seconds.
+   * @param color The color played by this AI agent.
+   * @param selHeur The specific heuristic used for node selection.
+   * @param timeLimit The calculation time limit in seconds.
    */
-  public MctsStrategy(final Color color, final MctsSelectionHeuristic selHeur, final int timeLimit) {
+  public MctsStrategy(
+      final Color color, final MctsSelectionHeuristic selHeur, final int timeLimit) {
     super(null, color);
     this.timeLimit = timeLimit * 1000L;
     this.selHeur = selHeur;
@@ -64,7 +64,8 @@ public class MctsStrategy extends AbstractAgonAi {
   }
 
   /**
-   * Executes a single complete iteration of the MCTS algorithm (Selection, Expansion, Simulation, Backpropagation).
+   * Executes a single complete iteration of the MCTS algorithm (Selection, Expansion, Simulation,
+   * Backpropagation).
    */
   private void runMctsIteration(final MctsNode root, final AgonBoard board) {
     int depth = 0;
@@ -104,7 +105,8 @@ public class MctsStrategy extends AbstractAgonAi {
   }
 
   /**
-   * Performs a random simulation (rollout) from the current board state until a terminal state or depth limit is reached.
+   * Performs a random simulation (rollout) from the current board state until a terminal state or
+   * depth limit is reached.
    */
   private int simulate(final AgonBoard board, final Color startTurn) {
     int rolloutMoves = 0;
@@ -127,9 +129,7 @@ public class MctsStrategy extends AbstractAgonAi {
     return rolloutMoves;
   }
 
-  /**
-   * Backpropagates the simulation result up the tree to update node statistics.
-   */
+  /** Backpropagates the simulation result up the tree to update node statistics. */
   private void backpropagate(final MctsNode startNode, final Color winner) {
     MctsNode tempNode = startNode;
     while (tempNode != null) {

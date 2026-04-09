@@ -20,6 +20,8 @@ public class BlitzMatch extends Match {
   /** The timer dedicated to the Black player. */
   private final GameTimer blackTimer;
 
+  private boolean isPaused = false;
+
   /**
    * Constructs a BlitzMatch with the specified board, players, and time limit. By default, the
    * White player starts the game.
@@ -88,7 +90,7 @@ public class BlitzMatch extends Match {
     if (this.getMatchStatus() == MatchStatus.FINISHED) {
       return;
     }
-    if (!getCurrentTimer().isRunning()) {
+    if (!isPaused && !getCurrentTimer().isRunning()) {
       GameLogger.debug("BlitzMatch: Resuming " + super.getCurrentPlayer().getColor() + " timer.");
       getCurrentTimer().start();
     }
@@ -103,8 +105,13 @@ public class BlitzMatch extends Match {
    * @return {@code true} if the timer was successfully stopped.
    */
   public boolean pause() {
-    GameLogger.info("BlitzMatch: Game paused.");
-    this.getCurrentTimer().stop();
+    isPaused = !isPaused;
+    if (isPaused) {
+      GameLogger.info("BlitzMatch: Game paused.");
+      this.getCurrentTimer().stop();
+    } else {
+      this.getCurrentTimer().start();
+    }
     return true;
   }
 
@@ -168,8 +175,10 @@ public class BlitzMatch extends Match {
   /** Starts the current player's timer at the beginning of their gameplay phase. */
   @Override
   public void startTurn() {
-    GameLogger.debug("BlitzMatch: Starting turn for " + super.getCurrentPlayer().getColor());
-    getCurrentTimer().start();
+    if (!isPaused) {
+      GameLogger.debug("BlitzMatch: Starting turn for " + super.getCurrentPlayer().getColor());
+      getCurrentTimer().start();
+    }
   }
 
   /**

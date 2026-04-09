@@ -5,6 +5,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
@@ -84,6 +85,9 @@ public class CmdCreate extends Cmd {
       ConfigBinder.bindOptionsToConfig(cmd, matchConfig, super.getCtx());
       MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
+      if (match instanceof ReadOnlyMatch) {
+        ((MatchObserver) super.getCtx()).onMatchUpdate((ReadOnlyMatch) match);
+      }
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       GameLogger.error(e.getMessage());

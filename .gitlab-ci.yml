@@ -71,28 +71,41 @@ jacoco85p:
   extends: .test_java
   stage: coverage-check
   script:
-    - mvn -T 40 test jacoco:report
+    - apt-get update -y && apt-get install -y xvfb
+    - xvfb-run mvn -T 40 test jacoco:report
     - mvn jacoco:check
   allow_failure: true
 
 test-debian:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - apt-get update -y && apt-get install -y xvfb
+    - xvfb-run mvn test
   image: debian:bookworm
 
 test-temurin:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - apt-get update -y && apt-get install -y xvfb
+    - xvfb-run mvn test
   image: eclipse-temurin:21-jdk
 
 test-alpine:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - apk add xvfb || echo "apk introuvable, utilisation de xvfb-run existant"
+    - xvfb-run mvn test
   image: alpine:3.19
 
 test-fedora:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - dnf install -y xorg-x11-server-Xvfb || echo "dnf introuvable, utilisation de xvfb-run existant"
+    - xvfb-run mvn test
   image: fedora:39
 
 # https://gitlab.archlinux.org/archbot
@@ -100,21 +113,33 @@ test-fedora:
 test-arch:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - pacman -Sy --noconfirm xorg-server-xvfb || echo "pacman introuvable, utilisation de xvfb-run existant"
+    - xvfb-run mvn test
   image: archlinux:base-20260201.0.486523
 
 test-ubuntu24:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - apt-get update -y && apt-get install -y xvfb
+    - xvfb-run mvn test
   image: ubuntu:24.04
 
 test-ubuntu22:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - apt-get update -y && apt-get install -y xvfb
+    - xvfb-run mvn test
   image: ubuntu:22.04
 
 test-opensuse:
   extends: .test_java
   stage: testGNU_Linux
+  script:
+    - zypper refresh && zypper install -y xorg-x11-server-xvfb
+    - xvfb-run mvn test
   image: opensuse/leap:15.5
 
 # end page
