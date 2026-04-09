@@ -9,6 +9,7 @@ import fr.univ.bordeaux.application.match.player.NetworkPlayer;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
 import fr.univ.bordeaux.application.network.player.PlayerStatus;
+import fr.univ.bordeaux.application.network.server.game.ServerGameSession;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -85,7 +86,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("Constructor and getters return expected values")
-  void constructor_and_getters() {
+  void constructorAndGetters() {
     OnlinePlayer white = whitePlayer();
     OnlinePlayer black = blackPlayer();
 
@@ -104,7 +105,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("ContainsPlayer returns true only for session players")
-  void contains_player() {
+  void containsPlayer() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -122,7 +123,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("GetOpponent returns the other player or null")
-  void get_opponent() {
+  void getOpponent() {
     OnlinePlayer white = whitePlayer();
     OnlinePlayer black = blackPlayer();
 
@@ -140,7 +141,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("GetColorOfPlayer returns expected colors")
-  void get_color_of_player() {
+  void getColorOfPlayer() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -158,7 +159,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("GetRoleLabel returns WHITE BLACK or UNKNOWN")
-  void get_role_label() {
+  void getRoleLabel() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -176,7 +177,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("IsPlayersTurn returns false when match is null")
-  void is_players_turn_match_null() {
+  void isPlayersTurnMatchNull() {
     ServerGameSession session = new ServerGameSession(1, whitePlayer(), blackPlayer(), null);
 
     assertFalse(session.isPlayersTurn(1));
@@ -184,7 +185,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("IsPlayersTurn returns false for unknown player")
-  void is_players_turn_unknown_player() {
+  void isPlayersTurnUnknownPlayer() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -197,7 +198,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("IsPlayersTurn returns true only for the current color")
-  void is_players_turn() {
+  void isPlayersTurn() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -211,7 +212,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("DescribeRoles returns formatted role string")
-  void describe_roles() {
+  void describeRoles() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -227,7 +228,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove returns false when player is not in session")
-  void play_move_player_not_in_session() {
+  void playMovePlayerNotInSession() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -241,7 +242,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove returns false when match is null")
-  void play_move_match_null() {
+  void playMoveMatchNull() {
     ServerGameSession session = new ServerGameSession(1, whitePlayer(), blackPlayer(), null);
 
     assertFalse(session.playMove(1, "e2e4"));
@@ -249,7 +250,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove returns false when it is not the player's turn")
-  void play_move_not_players_turn() {
+  void playMoveNotPlayersTurn() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -263,7 +264,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove returns false for invalid raw move")
-  void play_move_invalid_raw_move() {
+  void playMoveInvalidRawMove() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -277,7 +278,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove applies a normal move when valid")
-  void play_move_normal_success() {
+  void playMoveNormalSuccess() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -298,7 +299,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove rejects short move during normal phase")
-  void play_move_rejects_short_move_in_normal_phase() {
+  void playMoveRejectsShortMoveInNormalPhase() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -315,7 +316,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove applies replacement move when required")
-  void play_move_replacement_success() {
+  void playMoveReplacementSuccess() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -336,7 +337,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove rejects full move during replacement phase")
-  void play_move_rejects_full_move_in_replacement_phase() {
+  void playMoveRejectsFullMoveInReplacementPhase() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -353,7 +354,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("PlayMove returns false when match refuses the move")
-  void play_move_match_refuses_move() {
+  void playMoveMatchRefusesMove() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 
@@ -371,7 +372,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("IsGameOver returns false when match is null")
-  void is_game_over_match_null() {
+  void isGameOverMatchNull() {
     ServerGameSession session = new ServerGameSession(1, whitePlayer(), blackPlayer(), null);
 
     assertFalse(session.isGameOver());
@@ -379,7 +380,7 @@ class ServerGameSessionTest {
 
   @Test
   @DisplayName("IsGameOver delegates to match state")
-  void is_game_over() {
+  void isGameOver() {
     NetworkPlayer whiteMatchPlayer = new NetworkPlayer("Alice", Color.WHITE);
     NetworkPlayer blackMatchPlayer = new NetworkPlayer("Bob", Color.BLACK);
 

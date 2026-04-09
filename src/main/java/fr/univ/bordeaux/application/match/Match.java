@@ -10,43 +10,67 @@ import fr.univ.bordeaux.application.ai.strategy.AgonAi;
 import fr.univ.bordeaux.application.ai.strategy.AiFactory;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.ObservableMatch;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Play an Agon Match between two players. */
+/**
+ * Abstract class representing an Agon Match between two players.
+ *
+ * <p>This class manages the core game state, including the board, players, turn switching, and move
+ * history. It implements the Observer pattern to notify the UI of any state changes.
+ */
 public abstract class Match implements MatchManager, ObservableMatch {
 
+  /** The physical game board. */
   private final AgonBoard agonBoard;
+
+  /** The player whose turn it is currently. */
   private Player currentPlayer;
+
+  /** The first player participant. */
   private final Player player1;
+
+  /** The second player participant. */
   private final Player player2;
+
+  /** The current status of the match (RUNNING, FINISHED, etc.). */
   private MatchStatus status;
+
+  /** Configuration settings for the current game. */
   private final GameConfig gameConfig;
+
+  /** Flag indicating if the current state has been saved to a file. */
   private boolean isSaved = false;
+
+  /** The UI observer to be notified of updates. */
   private MatchObserver uiObserver;
+
+  /** The winner of the match, null if the game is ongoing or a draw. */
   private Player winner;
 
   /**
-   * Play a {@link Match}.
+   * Initializes a new Match. By default, the White player starts.
    *
-   * @param agonBoard {@link AgonBoard} board to play on
-   * @param player1 {@link Player} first player that plays the party
-   * @param player2 {@link Player} second player that plays the party
+   * @param agonBoard The board to play on.
+   * @param player1 The first player.
+   * @param player2 The second player.
+   * @param gameConfig The game configuration.
    */
   public Match(AgonBoard agonBoard, Player player1, Player player2, GameConfig gameConfig) {
     this(agonBoard, player1, player2, gameConfig, Color.WHITE);
   }
 
   /**
-   * Play a {@link Match}.
+   * Initializes a new Match with a specific starting color.
    *
-   * @param agonBoard {@link AgonBoard} board to play on
-   * @param player1 {@link Player} first player that plays the party
-   * @param player2 {@link Player} second player that plays the party
-   * @param gameConfig {@link GameConfig} game configuration
-   * @param startingColor {@link Color} the color of the player who starts
+   * @param agonBoard The board to play on.
+   * @param player1 The first player.
+   * @param player2 The second player.
+   * @param gameConfig The game configuration.
+   * @param startingColor The color of the player who should move first.
    */
   public Match(
       AgonBoard agonBoard,
@@ -63,31 +87,43 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
-   * get if the game is (ended or not runned) or not.
+   * Checks if the match is currently in progress.
    *
-   * @return true | false
+   * @return {@code true} if the status is RUNNING, {@code false} otherwise.
    */
   public boolean isRunning() {
     return status == MatchStatus.RUNNING;
   }
 
   /**
-   * Move a piece on the board.
+   * Attempts to move a piece on the board.
    *
-   * @param move {@link Move}
-   * @return true succeeded else false
+   * <p>Validates the move against the current player and the board state. If successful, it checks
+   * for win conditions and triggers end-of-turn actions.
+   *
+   * @param move The move to be executed.
+   * @return {@code true} if the move was successful and applied, {@code false} otherwise.
    */
   public boolean move(Move move) {
-    // this.startActions();
+    GameLogger.info("trying to play move " + move.toString());
     if (this.status == MatchStatus.FINISHED) {
       return false;
     }
     PieceType piece = agonBoard.getPieceAt(move.getFrom());
-    if (piece != null && piece.getColor() != currentPlayer.getColor()) {
-      return false;
+    if (piece != null) {
+      if (piece.getColor() != currentPlayer.getColor()) {
+        GameLogger.info(
+            "Move rejected: "
+                + currentPlayer.getName()
+                + " cannot move "
+                + piece.getColor()
+                + " pieces.");
+        return false;
+      }
     }
     if (agonBoard.applyMove(move)) {
       if (agonBoard.isGameWon(currentPlayer.getColor())) {
+        GameLogger.info("MATCH FINISHED: " + currentPlayer.getName() + " wins!");
         this.status = MatchStatus.FINISHED;
         this.winner = currentPlayer;
       }
@@ -102,7 +138,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   /**
    * Returns the winner of the match.
    *
-   * @return the winning player, or null if the match is not finished yet
+   * @return The winning {@link Player}, or {@code null} if no winner yet.
    */
   @Override
   public Player getWinner() {
@@ -110,18 +146,18 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
-   * Returns the player controlling the white pieces.
+   * Returns the player playing with the White pieces.
    *
-   * @return the white player
+   * @return The player playing with the White pieces.
    */
   public Player getWhitePlayer() {
     return (player1.getColor() == Color.WHITE) ? player1 : player2;
   }
 
   /**
-   * Returns the player controlling the black pieces.
+   * Returns the player playing with the Black pieces.
    *
-   * @return the black player
+   * @return The player playing with the Black pieces.
    */
   public Player getBlackPlayer() {
     return (player1.getColor() == Color.BLACK) ? player1 : player2;
@@ -130,22 +166,22 @@ public abstract class Match implements MatchManager, ObservableMatch {
   /**
    * Sets the winner of the match.
    *
-   * @param winner the player who won the match
+   * @param winner The player to be set as the winner.
    */
   protected void setWinner(Player winner) {
     this.winner = winner;
   }
 
-  /** Beginning actions when a turn is about to start. */
+  /** Hook for actions to perform at the very beginning of a player's turn. */
   public abstract void startActions();
 
-  /** Actions when a turn is about to end. */
+  /** Hook for actions to perform at the end of a player's turn (e.g., stopping timers). */
   public abstract void endActions();
 
   /**
-   * get last turns.
+   * Retrieves the history of moves formatted for the UI.
    *
-   * @return {@link List}
+   * @return A {@link List} of {@link MoveDtO} containing coordinates in AbaPro notation.
    */
   public List<MoveDtO> getHistory() {
     List<HistoryInformations> domainHistory = agonBoard.getHistory();
@@ -161,17 +197,20 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return uiList;
   }
 
-  /** Stop Match. */
+  /** Terminates the match immediately. */
   public void quit() {
     this.setMatchStatus(MatchStatus.FINISHED);
   }
 
   /**
-   * Redo a turn.
+   * Replays the last undone move.
    *
-   * @return true has succeeded else false not possible (not enough history)
+   * <p>In Agon, this typically involves replaying a full round (two moves).
+   *
+   * @return {@code true} if redo was successful.
    */
   public boolean redo() {
+    GameLogger.info("Redoing round...");
     boolean res1 = agonBoard.redoMove();
     boolean res2 = agonBoard.redoMove();
     if (res1 || res2) {
@@ -181,7 +220,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
     return res1 && res2;
   }
 
-  /** Notify the UI about a state change in the match. */
+  /** Triggers an update on the registered UI observer. */
   public void notifyUi() {
     if (this.uiObserver != null) {
       this.uiObserver.onMatchUpdate(this);
@@ -189,34 +228,48 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
-   * Undo a turn.
+   * Cancels the last moves performed.
    *
-   * @return true has succeeded else false not possible (not enough history)
+   * <p>In Agon, this typically undoes a full round (two moves).
+   *
+   * @return {@code true} if undo was successful.
    */
-  @Override
   public boolean undo() {
-    boolean res1 = agonBoard.undoMove();
-    boolean res2 = agonBoard.undoMove();
-    if (res1 || res2) {
-      this.isSaved = false;
+    GameLogger.info("Undoing round...");
+
+    // On mémorise si on a réussi à annuler le premier
+    boolean resNoir = agonBoard.undoMove();
+    if (!resNoir) {
+      return false;
     }
+
+    boolean resBlanc = agonBoard.undoMove();
+
+    // Si le deuxième échoue, on doit remettre le premier ! (Rollback)
+    if (!resBlanc) {
+      GameLogger.warn("Partial undo! Restoring last move...");
+      agonBoard.redoMove();
+      return false;
+    }
+
+    this.isSaved = false;
     this.notifyUi();
-    return res1 && res2;
+    return true;
   }
 
   /**
-   * Check if the match is saved.
+   * Indicates whether the current match state has been saved to persistent storage.
    *
-   * @return true if saved, false otherwise.
+   * @return {@code true} if the current match state is saved to persistent storage.
    */
   public boolean isSaved() {
     return isSaved;
   }
 
   /**
-   * Set the saved status of the match.
+   * Updates the saved status of the match.
    *
-   * @param isSaved the saved status.
+   * @param isSaved The new saved status of the match.
    */
   @Override
   public void setIsSaved(boolean isSaved) {
@@ -224,74 +277,73 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
-   * Predict next turn.
+   * Provides a move suggestion for the current player using an AI strategy.
    *
-   * @return {@link Move}
+   * @return A suggested {@link Move}.
    */
   public Move hint() {
     AgonAi ai = AiFactory.createHintAi(currentPlayer.getColor());
-    Move hint = ai.getBestMove(agonBoard);
-    return hint;
+    return ai.getBestMove(agonBoard);
   }
 
   /**
-   * Pause the game.
+   * Pauses the match.
    *
-   * @return false always
+   * @return {@code false} by default (to be overridden in timed matches).
    */
   public boolean pause() {
     return false;
   }
 
   /**
-   * Get the time left (blitz mode or runed game under time constraints).
+   * Gets the remaining time for the current turn.
    *
-   * @return {@link String}
+   * @return A formatted time string or {@code null} if not applicable.
    */
-  public String getRemainingTime() {
+  public String getCurrentPlayerRemainingTime() {
     return null;
   }
 
   /**
-   * See if we play or not.
+   * Returns the current match status.
    *
-   * @return {@link MatchStatus}
+   * @return The current {@link MatchStatus}.
    */
   public MatchStatus getMatchStatus() {
     return status;
   }
 
   /**
-   * Game not started or already ended or not finished.
+   * Indicates whether the match has reached a terminal state.
    *
-   * @return true | false
+   * @return {@code true} if the match has reached a terminal state.
    */
   public boolean isMatchOver() {
     return this.status == MatchStatus.FINISHED;
   }
 
   /**
-   * Explicit.
+   * Sets the status of the match.
    *
-   * @param status {@link MatchStatus}
+   * @param status The new status to be assigned to the match.
    */
   protected void setMatchStatus(MatchStatus status) {
     this.status = status;
   }
 
   /**
-   * Explicit.
+   * Returns the player who is currently active.
    *
-   * @return {@link Player}
+   * @return The {@link Player} who is currently active.
    */
   public Player getCurrentPlayer() {
     return currentPlayer;
   }
 
   /**
-   * Registers an observer notified when the match state changes.
+   * Registers the observer for match updates.
    *
-   * @param observer the observer to register
+   * @param observer The observer to register for match updates.
    */
   @Override
   public void setObserver(MatchObserver observer) {
@@ -299,34 +351,36 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
-   * Returns the board associated with this match.
+   * Returns the underlying board instance.
    *
-   * @return the Agon board used by this match
+   * @return The underlying board instance.
    */
   public AgonBoard getAgonBoard() {
     return agonBoard;
   }
 
   /**
-   * Returns the configuration used for this match.
+   * Returns the game configuration associated with this match.
    *
-   * @return the game configuration
+   * @return The game configuration associated with this match.
    */
   public GameConfig getGameConfig() {
     return gameConfig;
   }
 
-  /**
-   * Performs actions at the beginning of a player's turn.
-   *
-   * <p>This default implementation does nothing and may be overridden by subclasses that need
-   * turn-specific behavior.
-   */
+  /** Hook for turn-specific initialization logic. */
   public void startTurn() {}
 
-  /** Switches the current player to the other player in the match. */
+  /** Switches the current active player. */
   protected void switchPlayer() {
-    currentPlayer = currentPlayer.equals(player1) ? player2 : player1;
+    currentPlayer = (currentPlayer.equals(player1)) ? player2 : player1;
+    GameLogger.info(
+        "Turn switched to: " + currentPlayer.getName() + " (" + currentPlayer.getColor() + ")");
+  }
+
+  @Override
+  public String[] getAllPlayersRemainingTime() {
+    return null;
   }
 
   /**

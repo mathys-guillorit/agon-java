@@ -11,7 +11,7 @@ class CmdScoreboardTest {
 
   @Test
   @DisplayName("scoreboard refuses when client is not connected")
-  void scoreboard_refuses_when_client_is_not_connected() {
+  void scoreboardRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdScoreboardTest {
 
   @Test
   @DisplayName("scoreboard shows response when request succeeds")
-  void scoreboard_shows_response_when_request_succeeds() {
+  void scoreboardShowsResponseWhenRequestSucceeds() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdScoreboardTest {
 
   @Test
   @DisplayName("scoreboard shows error when request fails")
-  void scoreboard_shows_error_when_request_fails() {
+  void scoreboardShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -52,7 +52,7 @@ class CmdScoreboardTest {
 
     boolean result = new CmdScoreboard(ui, ctx).createNew(new String[0]).execute(null);
 
-    assertTrue(result);
+    assertFalse(result);
     assertEquals(1, ui.errors.size());
     assertTrue(ui.errors.get(0).contains("Failed to retrieve scoreboard"));
   }

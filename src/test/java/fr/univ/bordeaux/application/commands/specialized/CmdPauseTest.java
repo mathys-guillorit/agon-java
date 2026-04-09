@@ -62,12 +62,12 @@ public class CmdPauseTest {
     BlitzMatch match = new BlitzMatch(board, p1, p2, 1, new GameConfig());
 
     // Au début le timer tourne (lancé par le constructeur de BlitzMatch)
-    String time1 = match.getRemainingTime();
+    String time1 = match.getCurrentPlayerRemainingTime();
 
     // On attend un peu pour que le temps s'écoule (au moins 1 seconde)
     Thread.sleep(1100);
 
-    String time2 = match.getRemainingTime();
+    String time2 = match.getCurrentPlayerRemainingTime();
     assertNotEquals(time1, time2, "Le temps devrait s'être écoulé avant la pause");
 
     // On exécute la pause
@@ -75,12 +75,12 @@ public class CmdPauseTest {
     assertFalse(result, "La commande pause doit renvoyer false pour ne pas passer le tour");
 
     // On récupère le temps au moment de la pause
-    String timePaused = match.getRemainingTime();
+    String timePaused = match.getCurrentPlayerRemainingTime();
 
     // On attend encore
     Thread.sleep(1100);
 
-    String timeAfterWait = match.getRemainingTime();
+    String timeAfterWait = match.getCurrentPlayerRemainingTime();
     assertEquals(
         timePaused, timeAfterWait, "Le temps ne devrait pas s'être écoulé pendant la pause");
   }

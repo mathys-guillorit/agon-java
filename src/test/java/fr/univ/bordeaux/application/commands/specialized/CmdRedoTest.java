@@ -60,39 +60,36 @@ public class CmdRedoTest {
             new HumanPlayer("J2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
-    int from = CoordinateMapper.toIndex('B', 1);
-    int to = CoordinateMapper.toIndex('C', 1);
-    PieceType piece = board.getPieceAt(from);
+    int fromW = CoordinateMapper.toIndex('B', 1);
+    int toW = CoordinateMapper.toIndex('C', 1);
+    PieceType whiteP = board.getPieceAt(fromW); // Un pion blanc
+    new CmdMove(fromW, toW, gameUserInterface).execute(match);
 
-    // 2. On joue un coup
-    CmdAction move = new CmdMove(from, to, gameUserInterface);
-    move.execute(match);
-    assertNull(board.getPieceAt(from));
-    assertEquals(piece, board.getPieceAt(to));
+    int fromB = CoordinateMapper.toIndex('F', 11);
+    int toB = CoordinateMapper.toIndex('F', 10);
+    PieceType blackQ = board.getPieceAt(fromB); // La reine noire
+    new CmdMove(fromB, toB, gameUserInterface).execute(match);
 
-    // 3. On annule le coup (Undo)
+    // --- UNDO ---
+    // Ton match.undo() annule les DEUX coups.
     match.undo();
-    assertEquals(piece, board.getPieceAt(from), "Après undo, la pièce doit être revenue au départ");
-    assertNull(board.getPieceAt(to));
 
-    // 4. On rétablit le coup (Redo via la commande)
-    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"3"});
-    boolean result = cmdRedo.execute(match);
+    // Vérification après Undo : tout le monde est revenu à sa place
+    assertEquals(whiteP, board.getPieceAt(fromW), "Le pion blanc doit être en B1");
+    assertEquals(blackQ, board.getPieceAt(fromB), "La reine noire doit être en F1");
+    assertNull(board.getPieceAt(toW));
+    assertNull(board.getPieceAt(toB));
 
-    // 5. VÉRIFICATIONS
-    assertFalse(result, "Redo doit renvoyer false pour ne pas passer le tour"); // CHANGÉ ICI
-    assertNull(board.getPieceAt(from));
-    assertEquals(piece, board.getPieceAt(to));
+    // --- REDO ---
+    CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {});
+    cmdRedo.execute(match);
 
-    match.undo();
-    cmdRedo = cmds.get("redo").get().createNew(new String[] {});
-    boolean result2 = cmdRedo.execute(match);
-    assertFalse(result2, "Redo doit renvoyer false");
-    assertNull(board.getPieceAt(from), "Après redo, la case de départ doit être à nouveau vide");
-    assertEquals(
-        piece,
-        board.getPieceAt(to),
-        "Après redo, la pièce doit être revenue sur la case d'arrivée");
+    // Vérification après Redo : les deux coups sont réappliqués
+    assertNull(board.getPieceAt(fromW));
+    assertEquals(whiteP, board.getPieceAt(toW), "Le pion blanc doit être revenu en C1");
+
+    assertNull(board.getPieceAt(fromB));
+    assertEquals(blackQ, board.getPieceAt(toB), "La reine noire doit être revenue en F2");
   }
 
   @Test

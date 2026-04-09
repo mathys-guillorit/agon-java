@@ -3,6 +3,7 @@ package fr.univ.bordeaux.application;
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
+import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.application.match.MatchManager;
@@ -24,7 +25,7 @@ class AppContextTest {
     MatchManager lastPreviewed = null;
 
     FakeGameEngine() {
-      super(null, null);
+      super(null, new AgonRegister<>());
     }
 
     @Override
@@ -47,7 +48,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("Constructeur et getters par défaut")
-  void constructor_defaults() {
+  void constructorDefaults() {
     assertSame(profile, context.getProfile());
     assertNotNull(context.getClient());
     assertNull(context.getServer());
@@ -63,7 +64,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("setServer / getServer")
-  void server_getter_setter() {
+  void serverGetterSetter() {
     AgonServer server = new AgonServer("TestServer");
     context.setServer(server);
     assertSame(server, context.getServer());
@@ -71,27 +72,27 @@ class AppContextTest {
 
   @Test
   @DisplayName("setMode / getMode")
-  void mode_getter_setter() {
+  void modeGetterSetter() {
     context.setMode(AppMode.ONLINE);
     assertEquals(AppMode.ONLINE, context.getMode());
   }
 
   @Test
   @DisplayName("isConnected ne plante pas")
-  void is_connected() {
+  void isConnected() {
     assertDoesNotThrow(() -> context.isConnected());
   }
 
   @Test
   @DisplayName("setGameEngine ne plante pas")
-  void set_game_engine() {
+  void setGameEngine() {
     FakeGameEngine engine = new FakeGameEngine();
     assertDoesNotThrow(() -> context.setGameEngine(engine));
   }
 
   @Test
   @DisplayName("setMyOnlineTurn met à jour la valeur")
-  void set_my_online_turn() {
+  void setMyOnlineTurn() {
     context.setMyOnlineTurn(true);
     assertTrue(context.isMyOnlineTurn());
 
@@ -101,7 +102,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onOnlineGameStarted initialise correctement une partie online")
-  void on_online_game_started() {
+  void onOnlineGameStarted() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -121,7 +122,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onLocalMoveConfirmed ne fait rien sans match online")
-  void on_local_move_confirmed_without_match() {
+  void onLocalMoveConfirmedWithoutMatch() {
     assertDoesNotThrow(() -> context.onLocalMoveConfirmed("a1a2"));
     assertNull(context.getCurrentOnlineMatch());
     assertFalse(context.isOnlineGameActive());
@@ -129,7 +130,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onOpponentMoveReceived ne fait rien sans match online")
-  void on_opponent_move_received_without_match() {
+  void onOpponentMoveReceivedWithoutMatch() {
     assertDoesNotThrow(() -> context.onOpponentMoveReceived("a1a2"));
     assertNull(context.getCurrentOnlineMatch());
     assertFalse(context.isOnlineGameActive());
@@ -137,7 +138,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onLocalMoveConfirmed ignore un coup invalide")
-  void on_local_move_confirmed_invalid_move() {
+  void onLocalMoveConfirmedInvalidMove() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -157,7 +158,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onOpponentMoveReceived ignore un coup invalide")
-  void on_opponent_move_received_invalid_move() {
+  void onOpponentMoveReceivedInvalidMove() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -177,7 +178,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("leaveOnlineGame réinitialise l'état online")
-  void leave_online_game() {
+  void leaveOnlineGame() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -199,7 +200,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onGameOver appelle leaveOnlineGame")
-  void on_game_over() {
+  void onGameOver() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -216,7 +217,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onOnlineBoardRefreshRequested refresh si possible")
-  void on_online_board_refresh_requested() {
+  void onOnlineBoardRefreshRequested() {
     FakeGameEngine engine = new FakeGameEngine();
     context.setGameEngine(engine);
 
@@ -232,7 +233,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("onOnlineBoardRefreshRequested ne fait rien sans engine ou sans match")
-  void on_online_board_refresh_requested_noop() {
+  void onOnlineBoardRefreshRequestedNoop() {
     assertDoesNotThrow(() -> context.onOnlineBoardRefreshRequested());
 
     FakeGameEngine engine = new FakeGameEngine();
@@ -418,7 +419,7 @@ class AppContextTest {
 
   @Test
   @DisplayName("OnlineGameInfo exposes blitz mode flag")
-  void online_game_info_blitz_flag() {
+  void onlineGameInfoBlitzFlag() {
     OnlineGameInfo normal = new OnlineGameInfo(1, Color.WHITE, "Alice", "Bob", true, false);
     OnlineGameInfo blitz = new OnlineGameInfo(2, Color.BLACK, "Alice", "Bob", false, true);
 

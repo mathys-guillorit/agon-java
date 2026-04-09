@@ -57,8 +57,8 @@ public final class CmdRedo extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    if (match == null) {
-      this.getCtx().showError("No active match found.\n");
+    if (match == null || match.isMatchOver()) {
+      this.getCtx().showError("No active match found you can't redo now.\n");
       return false;
     }
     for (int i = 0; i < redoNumber; i++) {

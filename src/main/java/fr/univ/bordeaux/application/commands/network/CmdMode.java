@@ -6,16 +6,11 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import java.util.Locale;
 
 /**
- * Command used to choose the game mode in a lobby.
- *
- * <p>Supported modes:
- *
- * <ul>
- *   <li>{@code mode normal}
- *   <li>{@code mode blitz}
- * </ul>
+ * Command used to choose the game mode in a lobby. Supported modes: {@code mode normal} and {@code
+ * mode blitz}.
  */
 public class CmdMode extends Cmd {
 
@@ -28,11 +23,11 @@ public class CmdMode extends Cmd {
   /**
    * Constructor used during command registration.
    *
-   * @param ui User interface context
+   * @param userInterface User interface context
    * @param context Application context
    */
-  public CmdMode(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdMode(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("mode");
     this.setDesc(
@@ -41,14 +36,15 @@ public class CmdMode extends Cmd {
   }
 
   /** Internal constructor used when the command is executed with arguments. */
-  private CmdMode(GameUserInterface ui, AppContext context, String[] args) {
-    this(ui, context);
+  private CmdMode(
+      final GameUserInterface userInterface, final AppContext context, final String[] args) {
+    this(userInterface, context);
     this.args = args;
   }
 
   /** Creates a new instance of the command with parsed arguments. */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdMode(getCtx(), context, args);
   }
 
@@ -58,7 +54,7 @@ public class CmdMode extends Cmd {
    * @param match Not used (network command independent from game state)
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
     return run(args);
   }
 
@@ -68,32 +64,34 @@ public class CmdMode extends Cmd {
    * @param args Command arguments
    * @return true if execution completed
    */
-  private boolean run(String[] args) {
-    AgonClient client = context.getClient();
+  private boolean run(final String[] args) {
+    final AgonClient client = getClient();
+    boolean result = true;
 
     if (!client.isConnected()) {
       getCtx().showWarn("[CLIENT] Not connected.\n");
-      return false;
-    }
-
-    if (args == null || args.length == 0 || args[0].isBlank()) {
+      result = false;
+    } else if (args == null || args.length == 0 || args[0].isBlank()) {
       getCtx().showWarn("[CLIENT] Missing mode. Use: mode normal | mode blitz\n");
-      return false;
-    }
-
-    String mode = args[0].trim().toLowerCase();
-
-    if (!"normal".equals(mode) && !"blitz".equals(mode)) {
-      getCtx().showWarn("[CLIENT] Invalid mode. Use: mode normal | mode blitz\n");
-      return false;
-    }
-
-    if (client.chooseMode(mode)) {
-      getCtx().showMessage("[CLIENT] Mode request sent: " + mode + "\n");
+      result = false;
     } else {
-      getCtx().showError("[CLIENT] Failed to send mode request.");
+      final String mode = args[0].trim().toLowerCase(Locale.ROOT);
+
+      if (!"normal".equals(mode) && !"blitz".equals(mode)) {
+        getCtx().showWarn("[CLIENT] Invalid mode. Use: mode normal | mode blitz\n");
+        result = false;
+      } else if (client.chooseMode(mode)) {
+        getCtx().showMessage("[CLIENT] Mode request sent: " + mode + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Failed to send mode request.");
+      }
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the network client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

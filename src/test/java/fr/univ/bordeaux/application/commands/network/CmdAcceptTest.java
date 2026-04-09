@@ -11,7 +11,7 @@ class CmdAcceptTest {
 
   @Test
   @DisplayName("accept refuses when client is not connected")
-  void accept_refuses_when_client_is_not_connected() {
+  void acceptRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdAcceptTest {
 
   @Test
   @DisplayName("accept sends request when connected")
-  void accept_sends_request_when_connected() {
+  void acceptSendsRequestWhenConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdAcceptTest {
 
   @Test
   @DisplayName("accept shows error when request fails")
-  void accept_shows_error_when_request_fails() {
+  void acceptShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

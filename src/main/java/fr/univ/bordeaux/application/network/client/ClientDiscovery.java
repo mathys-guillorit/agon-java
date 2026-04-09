@@ -1,89 +1,111 @@
 package fr.univ.bordeaux.application.network.client;
 
 import fr.univ.bordeaux.application.network.server.PresenceMessage;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Client-side UDP discovery service. */
+@SuppressWarnings("PMD.DoNotUseThreads")
 public class ClientDiscovery {
-  public static final int UDP_PORT = 12346;
 
-  private final Map<String, ServerInfo> servers = new HashMap<>();
+  /** UDP port used for discovery broadcasts. */
+  public static final int UDP_PORT = 12_346;
 
+  /** Discovered servers indexed by "ip:port". */
+  private final Map<String, ServerInfo> servers;
+
+  /** UDP socket used to receive broadcast packets. */
   private DatagramSocket socket;
-  private Thread thread;
-  private volatile boolean running = false;
+
+  /** Indicates whether the discovery loop is running. */
+  private final AtomicBoolean running;
+
+  /** Creates a new client discovery service. */
+  public ClientDiscovery() {
+    this.servers = new ConcurrentHashMap<>();
+    this.running = new AtomicBoolean(false);
+  }
 
   /**
    * Starts listening for UDP broadcast messages.
    *
-   * @throws Exception if socket cannot be opened
+   * @throws IOException if the socket cannot be opened
    */
-  public void start() throws Exception {
-
-    if (running) {
+  public void start() throws IOException {
+    if (running.get()) {
       return;
     }
 
-    running = true;
+    running.set(true);
 
     socket = new DatagramSocket(null);
     socket.setReuseAddress(true);
-    socket.bind(new java.net.InetSocketAddress(UDP_PORT));
+    socket.bind(new InetSocketAddress(UDP_PORT));
     socket.setBroadcast(true);
 
-    thread =
+    final Thread discoveryThread =
         new Thread(
             () -> {
-              byte[] buffer = new byte[512];
+              final byte[] receiveBuffer = new byte[512];
+              final DatagramPacket receivedPacket =
+                  new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
-              while (running) {
+              while (running.get()) {
                 try {
-                  // Receive UDP packet
-                  DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                  socket.receive(packet);
+                  socket.receive(receivedPacket);
 
-                  // Parse presence message
-                  PresenceMessage pm = PresenceMessage.parse(packet.getData(), packet.getLength());
+                  final PresenceMessage presenceMessage =
+                      PresenceMessage.parse(receivedPacket.getData(), receivedPacket.getLength());
 
-                  if (pm == null) {
+                  if (presenceMessage == null) {
                     continue;
                   }
 
-                  String ip = packet.getAddress().getHostAddress();
-                  String key = ip + ":" + pm.getTcpPort();
+                  final InetAddress packetAddress = receivedPacket.getAddress();
+                  final String hostAddress = packetAddress.getHostAddress();
+                  final String serverKey = hostAddress + ":" + presenceMessage.getTcpPort();
 
-                  synchronized (this) {
-                    ServerInfo s = servers.get(key);
-                    if (s == null) {
-                      s = new ServerInfo(pm.getServerName(), ip, pm.getTcpPort());
-                      servers.put(s.key(), s);
-                    } else {
-                      s.lastSeen = System.currentTimeMillis();
-                    }
+                  final ServerInfo existingServer = servers.get(serverKey);
+                  if (existingServer == null) {
+                    servers.put(
+                        serverKey,
+                        new ServerInfo(
+                            presenceMessage.getServerName(),
+                            hostAddress,
+                            presenceMessage.getTcpPort()));
+                  } else {
+                    existingServer.lastSeen = System.currentTimeMillis();
                   }
 
-                  // Cleanup outdated servers
                   cleanup();
 
-                } catch (Exception ignored) {
-                  // Ignored
+                } catch (IOException ignored) {
+                  if (running.get()) {
+                    // Ignored while discovery is active.
+                  }
+                } catch (RuntimeException ignored) {
+                  // Invalid packet or parse failure: ignored.
                 }
               }
-            });
+            },
+            "ClientDiscovery-Listener");
 
-    thread.setDaemon(true);
-    thread.start();
+    discoveryThread.setDaemon(true);
+    discoveryThread.start();
   }
 
   /** Removes servers not seen for more than 30 seconds. */
-  private synchronized void cleanup() {
-    long now = System.currentTimeMillis();
-    servers.values().removeIf(s -> now - s.lastSeen > 30_000);
+  private void cleanup() {
+    final long currentTime = System.currentTimeMillis();
+    servers.values().removeIf(serverInfo -> currentTime - serverInfo.lastSeen > 30_000);
   }
 
   /**
@@ -91,17 +113,19 @@ public class ClientDiscovery {
    *
    * @return list of servers
    */
-  public synchronized List<ServerInfo> getServers() {
+  public List<ServerInfo> getServers() {
     cleanup();
     return new ArrayList<>(servers.values());
   }
 
   /** Stops discovery and clears the server list. */
   public void stop() {
-    running = false;
+    running.set(false);
+
     if (socket != null) {
       socket.close();
     }
+
     servers.clear();
   }
 }

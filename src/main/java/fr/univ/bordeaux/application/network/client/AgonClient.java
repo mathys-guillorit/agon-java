@@ -1,909 +1,629 @@
 package fr.univ.bordeaux.application.network.client;
 
-import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
-import fr.univ.bordeaux.application.network.OnlineGameInfo;
 import fr.univ.bordeaux.application.network.OnlineGameStartListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import fr.univ.bordeaux.application.network.client.runtime.ClientAsyncEventHandler;
+import fr.univ.bordeaux.application.network.client.runtime.ClientKeepAliveService;
+import fr.univ.bordeaux.application.network.client.runtime.ClientTransport;
+import fr.univ.bordeaux.application.network.client.runtime.SocketClientTransport;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * The AgonClient class manages the TCP connection to the game server.
- *
- * <p>This version is adapted for F39/F40:
- *
- * <ul>
- *   <li>only one thread reads from the socket,
- *   <li>synchronous responses are stored line by line,
- *   <li>asynchronous events are handled separately,
- *   <li>multi-line responses such as PLAYERS and SCOREBOARD are supported.
- * </ul>
- */
+/** Provides the public client-side API. Used to communicate with the online game server. */
 public class AgonClient {
 
-  private Socket socket;
-  private BufferedReader in;
-  private BufferedWriter out;
-
-  /** Local profile containing the player's name and server ids. */
+  /** Local profile containing the player's identity and per-server identifiers. */
   private final LocalProfile profile;
 
-  private Thread keepAliveThread;
-  private volatile boolean keepAliveRunning = false;
+  /** Low-level transport responsible for socket communication and response buffering. */
+  private final ClientTransport transport;
 
-  private Thread readerThread;
-  private volatile boolean readerRunning = false;
+  /** Component handling asynchronous protocol events coming from the server. */
+  private final ClientAsyncEventHandler asyncEventHandler;
 
-  /** Stores synchronous server responses in arrival order. */
-  private final LinkedList<String> pendingResponses = new LinkedList<>();
+  /** Background service periodically sending keep-alive messages. */
+  private final ClientKeepAliveService keepAliveService;
 
-  /** Lock used to wait for incoming responses. */
-  private final Object responseLock = new Object();
-
-  /** Lock used to ensure only one synchronous command is active at a time. */
+  /** Lock ensuring that only one synchronous request is active at a time. */
   private final Object commandLock = new Object();
 
-  private OnlineGameStartListener onlineGameStartListener;
+  /** Indicates whether the client is currently connected to a server. */
+  private final AtomicBoolean connected = new AtomicBoolean(false);
 
   /**
-   * Constructor with a local profile.
+   * Creates a new online client bound to one local profile.
    *
-   * @param profile the local profile of the player
+   * @param profile the local player profile
    */
-  public AgonClient(LocalProfile profile) {
+  public AgonClient(final LocalProfile profile) {
     this.profile = profile;
+    this.transport = new SocketClientTransport();
+    this.asyncEventHandler = new ClientAsyncEventHandler();
+    this.keepAliveService = new ClientKeepAliveService();
+
+    transport.setAsyncEventPredicate(asyncEventHandler::isAsyncEvent);
+    transport.setAsyncEventConsumer(asyncEventHandler::handleAsyncEvent);
   }
 
   /**
-   * Connects to a TCP server and logs in using the local profile name.
+   * Connects to a remote game server and logs in using the local profile.
    *
-   * @param host server host
-   * @param port server port
-   * @return true if the connection and login succeed, false otherwise
+   * @param host the remote server host
+   * @param port the remote server port
+   * @return {@code true} if succeed {@code false} otherwise
    */
-  public boolean connect(String host, int port) {
+  public boolean connect(final String host, final int port) {
+    boolean connectedSuccessfully = true;
+
     if (isConnected()) {
-      return true;
-    }
+      connectedSuccessfully = true;
+    } else {
+      try {
+        transport.connect(host, port);
+        transport.startReader();
 
-    try {
-      socket = new Socket(host, port);
-      socket.setSoTimeout(0);
+        synchronized (commandLock) {
+          transport.sendLine(
+              "LOGIN NAME=" + profile.getName() + " CLIENT_ID=" + profile.getClientId());
 
-      in =
-          new BufferedReader(
-              new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
-      out =
-          new BufferedWriter(
-              new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+          final String response = transport.waitResponse(5000L);
 
-      sendLine("LOGIN NAME=" + profile.getName() + " CLIENT_ID=" + profile.getClientId());
-
-      String response = in.readLine();
-
-      if (response == null || !response.startsWith("WELCOME")) {
+          if (response == null || !response.startsWith("WELCOME")) {
+            disconnectSilently();
+            connectedSuccessfully = false;
+          } else {
+            registerServerPlayerId(host, port, response);
+            connected.set(true);
+            startKeepAlive();
+            connectedSuccessfully = true;
+          }
+        }
+      } catch (IOException e) {
         disconnectSilently();
-        return false;
+        connectedSuccessfully = false;
       }
-
-      Integer id = extractId(response);
-      if (id != null) {
-        String serverKey = host + ":" + port;
-        profile.setIdForServer(serverKey, id);
-      }
-
-      startReader();
-      startKeepAlive();
-      return true;
-
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
     }
+
+    return connectedSuccessfully;
   }
 
   /**
    * Indicates whether the client is currently connected.
    *
-   * @return true if the socket is connected and not closed
+   * @return {@code true} if the client is connected, {@code false} otherwise
    */
   public boolean isConnected() {
-    return socket != null && socket.isConnected() && !socket.isClosed();
-  }
-
-  /** Starts the unique reader thread. */
-  private void startReader() {
-    if (readerRunning) {
-      return;
+    if (!connected.get()) {
+      return false;
     }
 
-    readerRunning = true;
-
-    readerThread =
-        new Thread(
-            () -> {
-              try {
-                while (readerRunning && isConnected()) {
-                  String line = in.readLine();
-
-                  if (line == null) {
-                    disconnectSilently();
-                    break;
-                  }
-
-                  if ("BYE".equalsIgnoreCase(line.trim())) {
-                    disconnectSilently();
-                    break;
-                  }
-
-                  if (isAsyncEvent(line)) {
-                    handleAsyncEvent(line);
-                  } else {
-                    synchronized (responseLock) {
-                      pendingResponses.addLast(line);
-                      responseLock.notifyAll();
-                    }
-                  }
-                }
-              } catch (IOException e) {
-                disconnectSilently();
-              }
-            },
-            "AgonClient-Reader");
-
-    readerThread.setDaemon(true);
-    readerThread.start();
-  }
-
-  /**
-   * Returns true if the received line is an asynchronous event.
-   *
-   * @param line received protocol line
-   * @return true if it is an async event
-   */
-  private boolean isAsyncEvent(String line) {
-    return line.startsWith("GAME_STARTED")
-        || line.startsWith("NEW_OK")
-        || line.startsWith("MOVE_OK")
-        || line.startsWith("OPPONENT_MOVE")
-        || line.startsWith("GAME_OVER")
-        || line.startsWith("YOUR_TURN")
-        || line.startsWith("ERROR MESSAGE=")
-        || line.startsWith("INVITATION_SENT")
-        || line.startsWith("INVITATION_RECEIVED")
-        || line.startsWith("INVITATION_ACCEPTED")
-        || line.startsWith("INVITATION_DECLINED")
-        || line.startsWith("INVITATION_CANCELED")
-        || line.startsWith("LOBBY_JOINED")
-        || line.startsWith("WAITING_MODE")
-        || line.startsWith("CHOOSE_MODE")
-        || line.startsWith("DECLINE_OK");
-  }
-
-  /**
-   * Handles asynchronous events sent by the server.
-   *
-   * @param line async event line
-   */
-  private void handleAsyncEvent(String line) {
-    if (line.startsWith("NEW_OK") || line.startsWith("GAME_STARTED")) {
-      System.out.println("[ONLINE] " + line);
-      handleGameStartMessage(line);
-      return;
+    if (!transport.isConnected()) {
+      connected.set(false);
+      return false;
     }
 
-    if (line.startsWith("INVITATION_SENT")
-        || line.startsWith("INVITATION_RECEIVED")
-        || line.startsWith("INVITATION_ACCEPTED")
-        || line.startsWith("INVITATION_DECLINED")
-        || line.startsWith("INVITATION_CANCELED")
-        || line.startsWith("LOBBY_JOINED")
-        || line.startsWith("CHOOSE_MODE")) {
-      System.out.println("[ONLINE] " + line);
-      return;
-    }
-
-    if (line.startsWith("WAITING_MODE")) {
-      System.out.println("[ONLINE] Waiting for host to choose mode.");
-      return;
-    }
-
-    if (line.startsWith("MOVE_OK")) {
-      String moveText = line.substring("MOVE_OK".length()).trim();
-      System.out.println("[ONLINE] Move accepted: " + moveText);
-
-      if (onlineGameStartListener != null && !moveText.isBlank()) {
-        onlineGameStartListener.onLocalMoveConfirmed(moveText);
-      }
-      return;
-    }
-
-    if (line.startsWith("OPPONENT_MOVE")) {
-      String moveText = line.substring("OPPONENT_MOVE".length()).trim();
-      System.out.println("[ONLINE] Opponent played: " + moveText);
-
-      if (onlineGameStartListener != null && !moveText.isBlank()) {
-        onlineGameStartListener.onOpponentMoveReceived(moveText);
-      }
-      return;
-    }
-
-    if (line.startsWith("GAME_OVER")) {
-      if (line.contains("RESULT=WIN") && line.contains("REASON=OPPONENT_LEFT")) {
-        System.out.println("[ONLINE] Opponent left the game. You win by forfeit.");
-      } else if (line.contains("RESULT=LOSS") && line.contains("REASON=OPPONENT_LEFT")) {
-        System.out.println("[ONLINE] You resigned. You lose the game.");
-      } else if (line.contains("RESULT=WIN")) {
-        System.out.println("[ONLINE] You win.");
-      } else if (line.contains("RESULT=LOSS")) {
-        System.out.println("[ONLINE] You lose.");
-      } else {
-        System.out.println("[ONLINE] " + line);
-      }
-
-      if (onlineGameStartListener != null) {
-        onlineGameStartListener.onGameOver(line);
-      }
-      return;
-    }
-
-    if (line.startsWith("ERROR MESSAGE=")) {
-      String msg = line.substring("ERROR MESSAGE=".length()).trim();
-
-      switch (msg) {
-        case "INVALID_MOVE" -> System.out.println("[SERVER] Illegal move.");
-        case "NOT_YOUR_TURN" -> System.out.println("[SERVER] Not your turn.");
-        case "MISSING_MOVE" -> System.out.println("[SERVER] Missing move.");
-        case "NOT_IN_GAME" -> System.out.println("[SERVER] You are not in a game.");
-        case "GAME_NOT_FOUND" -> System.out.println("[SERVER] Game not found.");
-        default -> System.out.println("[SERVER] " + msg);
-      }
-
-      if (onlineGameStartListener != null) {
-        onlineGameStartListener.onOnlineBoardRefreshRequested();
-      }
-      return;
-    }
-
-    System.out.println("[SERVER] " + line);
-  }
-
-  /**
-   * Waits for the next synchronous response line from the server.
-   *
-   * @param timeoutMs maximum wait time in milliseconds
-   * @return the received line, or null if timeout/disconnection occurs
-   */
-  private String waitResponse(long timeoutMs) {
-    long end = System.currentTimeMillis() + timeoutMs;
-
-    synchronized (responseLock) {
-      while (isConnected()) {
-        while (!pendingResponses.isEmpty()) {
-          String line = pendingResponses.removeFirst();
-          if (line != null && !line.isBlank()) {
-            return line;
-          }
-        }
-
-        long remaining = end - System.currentTimeMillis();
-        if (remaining <= 0) {
-          return null;
-        }
-
-        try {
-          responseLock.wait(remaining);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          return null;
-        }
-      }
-      return null;
-    }
-  }
-
-  /** Starts a background thread that sends PING messages every 30 seconds. */
-  private void startKeepAlive() {
-    if (keepAliveRunning) {
-      return;
-    }
-
-    keepAliveRunning = true;
-
-    keepAliveThread =
-        new Thread(
-            () -> {
-              while (keepAliveRunning) {
-                try {
-                  Thread.sleep(30_000);
-
-                  if (!isConnected()) {
-                    break;
-                  }
-
-                  synchronized (commandLock) {
-                    sendLine("PING");
-                    String resp = waitResponse(5000);
-
-                    if (resp == null || !resp.startsWith("PONG")) {
-                      disconnectSilently();
-                      break;
-                    }
-                  }
-
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  break;
-                } catch (IOException e) {
-                  disconnectSilently();
-                  break;
-                }
-              }
-            },
-            "AgonClient-KeepAlive");
-
-    keepAliveThread.setDaemon(true);
-    keepAliveThread.start();
+    return true;
   }
 
   /**
    * Requests the status of the connected remote server.
    *
-   * @return the raw server response if successful, null otherwise
+   * @return the raw server response if successful, or {@code null} otherwise
    */
   public String requestServerStatus() {
-    if (!isConnected()) {
-      return null;
-    }
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("STATUS");
-        String resp = waitResponse(5000);
-        return (resp != null && resp.startsWith("STATUS_OK")) ? resp : null;
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performSingleLineRequest("STATUS", "STATUS_OK");
       }
     }
+
+    return response;
   }
 
   /**
    * Requests the list of connected players from the server.
    *
-   * @return the raw players response if successful, null otherwise
+   * @return the formatted players response, or {@code null} if the request fails
    */
   public String requestPlayers() {
-    if (!isConnected()) {
-      return null;
-    }
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("PLAYERS");
-
-        StringBuilder sb = new StringBuilder();
-
-        while (true) {
-          String line = waitResponse(5000);
-          if (line == null) {
-            return null;
-          }
-          if ("END".equals(line)) {
-            break;
-          }
-          sb.append(line).append("\n");
-        }
-
-        return sb.toString().trim();
-
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performMultilineRequest("PLAYERS");
       }
     }
+
+    return response;
   }
 
   /**
-   * Requests the scoreboard from the connected server.
+   * Requests the scoreboard from the server.
    *
-   * @return the formatted scoreboard response, or null if the request fails
+   * @return the formatted scoreboard response, or {@code null} if the request fails
    */
   public String requestScoreboard() {
-    if (!isConnected()) {
-      return null;
-    }
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("SCOREBOARD");
-
-        StringBuilder sb = new StringBuilder();
-
-        while (true) {
-          String line = waitResponse(5000);
-          if (line == null) {
-            return null;
-          }
-          if ("END".equals(line)) {
-            break;
-          }
-          sb.append(line).append("\n");
-        }
-
-        return sb.toString().trim();
-
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performMultilineRequest("SCOREBOARD");
       }
     }
+
+    return response;
   }
 
   /**
-   * Requests the detailed information of a specific player.
+   * Requests the details of one connected player.
    *
    * @param playerId the id of the player to query
-   * @return the raw server response if successful, null otherwise
+   * @return the raw server response if successful, or {@code null} otherwise
    */
-  public String requestPlayerDetails(int playerId) {
-    if (!isConnected()) {
-      return null;
-    }
+  public String requestPlayerDetails(final int playerId) {
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("PLAYERS " + playerId);
-        return waitResponse(5000);
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performSingleLineRequest("PLAYERS " + playerId, null);
       }
     }
+
+    return response;
   }
 
   /**
    * Sends a new game invitation request.
    *
-   * @param targetPlayerId the ID of the target player
-   * @return a local confirmation string, or null if sending fails
+   * @param targetPlayerId the id of the invited player
+   * @return a local confirmation string, or {@code null} if sending fails
    */
-  public String requestNewGame(int targetPlayerId) {
-    if (!isConnected()) {
-      return null;
-    }
+  public String requestNewGame(final int targetPlayerId) {
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("NEW PLAYER_ID=" + targetPlayerId);
-        return "[CLIENT] New game request sent.";
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response =
+            sendFireAndForget("NEW PLAYER_ID=" + targetPlayerId, "[CLIENT] New game request sent.");
       }
     }
+
+    return response;
   }
 
   /**
    * Sends ACCEPT to the server.
    *
-   * @return true if sent successfully, false otherwise
+   * @return {@code true} if the command succeed, {@code false} otherwise
    */
   public boolean acceptInvitation() {
-    if (!isConnected()) {
-      return false;
+    boolean accepted = false;
+
+    if (isConnected()) {
+      synchronized (commandLock) {
+        accepted = sendBooleanCommand("ACCEPT");
+      }
     }
 
-    try {
-      synchronized (commandLock) {
-        sendLine("ACCEPT");
-      }
-      return true;
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
-    }
+    return accepted;
   }
 
   /**
    * Sends DECLINE to the server.
    *
-   * @return true if sent successfully, false otherwise
+   * @return {@code true} if the command succeed, {@code false} otherwise
    */
   public boolean declineInvitation() {
-    if (!isConnected()) {
-      return false;
+    boolean declined = false;
+
+    if (isConnected()) {
+      synchronized (commandLock) {
+        declined = sendBooleanCommand("DECLINE");
+      }
     }
 
-    try {
-      synchronized (commandLock) {
-        sendLine("DECLINE");
-      }
-      return true;
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
-    }
+    return declined;
   }
 
   /**
    * Sends CANCEL to the server.
    *
-   * @return true if sent successfully, false otherwise
+   * @return {@code true} if the command succeed, {@code false} otherwise
    */
   public boolean cancelInvitation() {
-    if (!isConnected()) {
-      return false;
+    boolean canceled = false;
+
+    if (isConnected()) {
+      synchronized (commandLock) {
+        canceled = sendBooleanCommand("CANCEL");
+      }
     }
 
-    try {
-      synchronized (commandLock) {
-        sendLine("CANCEL");
-      }
-      return true;
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
-    }
+    return canceled;
   }
 
   /**
    * Sends MODE to the server.
    *
-   * @param mode selected mode
-   * @return true if sent successfully, false otherwise
+   * @param mode the selected mode
+   * @return {@code true} if the command succeed, {@code false} otherwise
    */
-  public boolean chooseMode(String mode) {
-    if (!isConnected() || mode == null || mode.isBlank()) {
-      return false;
+  public boolean chooseMode(final String mode) {
+    boolean modeChosen = false;
+
+    if (isConnected() && mode != null && !mode.isBlank()) {
+      synchronized (commandLock) {
+        modeChosen = sendBooleanCommand("MODE " + mode.trim());
+      }
     }
 
-    try {
-      synchronized (commandLock) {
-        sendLine("MODE " + mode.trim());
-      }
-      return true;
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
-    }
+    return modeChosen;
   }
 
   /**
-   * Checks whether the connection is still alive by sending a PING.
+   * Checks whether the connection is alive by sending a PING request.
    *
-   * @return true if the server replies with PONG, false otherwise
+   * @return {@code true} if the server => PONG, {@code false} otherwise
    */
   public boolean isAlive() {
-    if (!isConnected()) {
-      return false;
-    }
+    boolean alive = false;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("PING");
-        String resp = waitResponse(5000);
-
-        if (resp == null || !resp.startsWith("PONG")) {
-          disconnectSilently();
-          return false;
-        }
-        return true;
-
-      } catch (IOException e) {
-        disconnectSilently();
-        return false;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        final String response = performSingleLineRequest("PING", "PONG");
+        alive = response != null;
       }
     }
+
+    return alive;
   }
 
   /**
-   * Sends PING to the server and waits for a PONG reply.
+   * Sends PING to the server and measures round-trip time.
    *
-   * @return a formatted RTT string if successful, null otherwise
+   * @return a formatted RTT string if successful, or {@code null} otherwise
    */
   public String pingRttMs() {
-    if (!isConnected()) {
-      return null;
-    }
+    String roundTripTime = null;
 
-    long t0 = System.currentTimeMillis();
-
-    synchronized (commandLock) {
-      try {
-        sendLine("PING");
-        String resp = waitResponse(5000);
-
-        if (resp == null || !resp.startsWith("PONG")) {
-          return null;
-        }
-
-        long rtt = System.currentTimeMillis() - t0;
-        return "[SERVER] PONG TIME=" + rtt + "ms";
-
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
-      }
-    }
-  }
-
-  /** Sends QUIT to the server then closes the connection. */
-  public void quit() {
-    if (!isConnected()) {
-      disconnectSilently();
-      return;
-    }
-
-    synchronized (commandLock) {
-      try {
-        sendLine("QUIT");
-        waitResponse(2000);
-      } catch (IOException ignored) {
-        // Ignored
-      } finally {
-        disconnectSilently();
-      }
-    }
-  }
-
-  /** Closes everything without throwing exceptions. */
-  public void disconnectSilently() {
-    keepAliveRunning = false;
-    readerRunning = false;
-
-    synchronized (responseLock) {
-      pendingResponses.clear();
-      responseLock.notifyAll();
-    }
-
-    try {
-      if (socket != null) {
-        socket.close();
-      }
-    } catch (IOException ignored) {
-      // Ignored
-    }
-
-    socket = null;
-    in = null;
-    out = null;
-  }
-
-  /**
-   * Writes a single line to the server followed by a newline character.
-   *
-   * @param msg message to send
-   * @throws IOException if the client is not connected or the write fails
-   */
-  private synchronized void sendLine(String msg) throws IOException {
-    if (out == null) {
-      throw new IOException("Not connected");
-    }
-
-    out.write(msg);
-    out.write('\n');
-    out.flush();
-  }
-
-  /**
-   * Extracts the player id from a server response.
-   *
-   * @param response raw server response
-   * @return extracted id, or null if not found
-   */
-  private Integer extractId(String response) {
-    String[] parts = response.split("\\s+");
-
-    for (String part : parts) {
-      if (part.startsWith("ID=")) {
-        try {
-          return Integer.parseInt(part.substring(3));
-        } catch (NumberFormatException e) {
-          return null;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Registers a listener notified when an online game starts.
-   *
-   * @param listener the listener to notify
-   */
-  public void setOnlineGameStartListener(OnlineGameStartListener listener) {
-    this.onlineGameStartListener = listener;
-  }
-
-  /**
-   * Parses a protocol line formatted as: COMMAND KEY=VALUE KEY=VALUE ... .
-   *
-   * @param line the protocol line
-   * @return a map of parsed key/value pairs
-   */
-  private Map<String, String> parseProtocolArgs(String line) {
-    Map<String, String> args = new HashMap<>();
-
-    if (line == null || line.isBlank()) {
-      return args;
-    }
-
-    String[] parts = line.trim().split("\\s+");
-
-    for (int i = 1; i < parts.length; i++) {
-      String token = parts[i];
-      int eq = token.indexOf('=');
-
-      if (eq <= 0) {
-        continue;
-      }
-
-      String key = token.substring(0, eq);
-      String value = token.substring(eq + 1);
-
-      if (!key.isEmpty()) {
-        args.put(key, value);
-      }
-    }
-
-    return args;
-  }
-
-  /**
-   * Handles a game-start protocol message and notifies the registered listener.
-   *
-   * @param line the received protocol line
-   */
-  private void handleGameStartMessage(String line) {
-    Map<String, String> args = parseProtocolArgs(line);
-
-    try {
-      String gameIdValue = args.get("GAME_ID");
-      String colorValue = args.get("COLOR");
-      String whiteName = args.get("WHITE");
-      String blackName = args.get("BLACK");
-      String modeValue = args.get("MODE");
-
-      if (gameIdValue == null
-          || colorValue == null
-          || whiteName == null
-          || blackName == null
-          || modeValue == null) {
-        System.err.println("[CLIENT] Invalid game start message: " + line);
-        return;
-      }
-
-      int gameId = Integer.parseInt(gameIdValue);
-      Color localColor = Color.valueOf(colorValue.toUpperCase());
-
-      boolean myTurn = localColor == Color.WHITE;
-      boolean blitzMode = "BLITZ".equalsIgnoreCase(modeValue);
-
-      OnlineGameInfo info =
-          new OnlineGameInfo(gameId, localColor, whiteName, blackName, myTurn, blitzMode);
-
-      if (onlineGameStartListener != null) {
-        onlineGameStartListener.onOnlineGameStarted(info);
-      }
-
-    } catch (Exception e) {
-      System.err.println("[CLIENT] Failed to parse game start message: " + line);
-    }
-  }
-
-  /**
-   * Sends a full move to the server using internal board indices.
-   *
-   * @param from source board index
-   * @param to destination board index
-   * @return true if the move was sent successfully, false otherwise
-   */
-  public boolean sendMove(int from, int to) {
-    if (!isConnected()) {
-      return false;
-    }
-
-    try {
-      String moveText =
-          CoordinateMapper.toAbaPro(from).toLowerCase()
-              + CoordinateMapper.toAbaPro(to).toLowerCase();
-
+    if (isConnected()) {
       synchronized (commandLock) {
-        sendLine("MOVE " + moveText);
+        final long startTimeMs = System.currentTimeMillis();
+        final String response = performSingleLineRequest("PING", "PONG");
+
+        if (response != null) {
+          final long elapsedTimeMs = System.currentTimeMillis() - startTimeMs;
+          roundTripTime = "[SERVER] PONG TIME=" + elapsedTimeMs + "ms";
+        }
       }
-
-      return true;
-
-    } catch (Exception e) {
-      disconnectSilently();
-      return false;
     }
+
+    return roundTripTime;
+  }
+
+  /** Sends QUIT to the server, then closes the connection locally. */
+  public void quit() {
+    if (isConnected()) {
+      synchronized (commandLock) {
+        try {
+          transport.sendLine("QUIT");
+          transport.waitResponse(2000L);
+        } catch (IOException ignored) {
+          // Ignored
+        } finally {
+          disconnectSilently();
+        }
+      }
+    } else {
+      disconnectSilently();
+    }
+  }
+
+  /** Closes all resources without throwing any exception to the caller. */
+  public void disconnectSilently() {
+    connected.set(false);
+    keepAliveService.stop();
+    transport.stop();
+  }
+
+  /**
+   * Sends a full move to the server using board indices.
+   *
+   * @param fromIndex source board index
+   * @param toIndex destination board index
+   * @return {@code true} if the move was sent successfully, {@code false} otherwise
+   */
+  public boolean sendMove(final int fromIndex, final int toIndex) {
+    boolean moveSent = false;
+
+    if (isConnected()) {
+      try {
+        final String moveText =
+            CoordinateMapper.toAbaPro(fromIndex).toLowerCase(java.util.Locale.ROOT)
+                + CoordinateMapper.toAbaPro(toIndex).toLowerCase(java.util.Locale.ROOT);
+
+        synchronized (commandLock) {
+          transport.sendLine("MOVE " + moveText);
+        }
+
+        moveSent = true;
+      } catch (IllegalArgumentException | IOException e) {
+        disconnectSilently();
+        moveSent = false;
+      }
+    }
+
+    return moveSent;
   }
 
   /**
    * Sends a raw move string directly to the server.
    *
    * @param rawMove move text to send
-   * @return true if the move was sent successfully, false otherwise
+   * @return {@code true} if the move was sent successfully, {@code false} otherwise
    */
-  public boolean sendRawMove(String rawMove) {
-    if (!isConnected() || rawMove == null || rawMove.isBlank()) {
-      return false;
+  public boolean sendRawMove(final String rawMove) {
+    boolean moveSent = false;
+
+    if (isConnected() && rawMove != null && !rawMove.isBlank()) {
+      synchronized (commandLock) {
+        moveSent = sendBooleanCommand("MOVE " + rawMove.trim().toUpperCase(java.util.Locale.ROOT));
+      }
     }
 
-    try {
-      synchronized (commandLock) {
-        sendLine("MOVE " + rawMove.trim().toUpperCase());
-      }
-      return true;
-    } catch (IOException e) {
-      disconnectSilently();
-      return false;
-    }
+    return moveSent;
   }
 
   /** Sends a resignation request to the server for the current online game. */
   public void resignGame() {
-    if (!isConnected()) {
-      return;
-    }
-
-    try {
-      sendLine("RESIGN");
-    } catch (IOException e) {
-      System.err.println("[CLIENT] Failed to resign from online match: " + e.getMessage());
+    if (isConnected()) {
+      try {
+        transport.sendLine("RESIGN");
+      } catch (IOException e) {
+        GameLogger.error("[CLIENT] Failed to resign from online match: " + e.getMessage());
+      }
     }
   }
 
   /**
    * Requests the server to set the local player status to away.
    *
-   * @return the raw server response if successful, null otherwise
+   * @return the raw server response if successful, or {@code null} otherwise
    */
-  public String setAway() {
-    if (!isConnected()) {
-      return null;
-    }
+  public String requestAwayStatus() {
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("AWAY");
-        return waitResponse(5000);
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performSingleLineRequest("AWAY", null);
       }
     }
+
+    return response;
   }
 
   /**
    * Requests the server to set the local player status back to idle.
    *
-   * @return the raw server response if successful, null otherwise
+   * @return the raw server response if successful, or {@code null} otherwise
    */
-  public String setBack() {
-    if (!isConnected()) {
-      return null;
-    }
+  public String requestBackStatus() {
+    String response = null;
 
-    synchronized (commandLock) {
-      try {
-        sendLine("BACK");
-        return waitResponse(5000);
-      } catch (IOException e) {
-        disconnectSilently();
-        return null;
+    if (isConnected()) {
+      synchronized (commandLock) {
+        response = performSingleLineRequest("BACK", null);
       }
     }
+
+    return response;
+  }
+
+  /**
+   * Registers a listener notified when an online game starts or evolves.
+   *
+   * @param listener the listener to register
+   */
+  public void setOnlineGameStartListener(final OnlineGameStartListener listener) {
+    asyncEventHandler.setGameStartListener(listener);
+  }
+
+  /** Starts the periodic keep-alive mechanism. */
+  private void startKeepAlive() {
+    keepAliveService.start(
+        () -> {
+          if (isConnected()) {
+            synchronized (commandLock) {
+              final String response = performSingleLineRequest("PING", "PONG");
+
+              if (response == null) {
+                disconnectSilently();
+              }
+            }
+          }
+        });
+  }
+
+  /**
+   * Registers the local player id associated with one connected server.
+   *
+   * @param host the connected server host
+   * @param port the connected server port
+   * @param response the welcome response returned by the server
+   */
+  private void registerServerPlayerId(final String host, final int port, final String response) {
+    final Integer playerId = extractId(response);
+
+    if (playerId != null) {
+      final String serverKey = host + ":" + port;
+      profile.setIdForServer(serverKey, playerId);
+    }
+  }
+
+  /**
+   * Performs one request expecting one response line.
+   *
+   * @param requestLine the protocol line to send
+   * @param expectedPrefix optional expected prefix
+   * @return the response line if valid, or {@code null} otherwise
+   */
+  private String performSingleLineRequest(final String requestLine, final String expectedPrefix) {
+    String responseLine = null;
+
+    try {
+      transport.sendLine(requestLine);
+      responseLine = transport.waitResponse(5000L);
+
+      if (expectedPrefix != null
+          && (responseLine == null || !responseLine.startsWith(expectedPrefix))) {
+        responseLine = null;
+      }
+    } catch (IOException e) {
+      disconnectSilently();
+      responseLine = null;
+    }
+
+    return responseLine;
+  }
+
+  /**
+   * Performs one request expecting a multiline response terminated by END.
+   *
+   * @param requestLine the protocol line to send
+   * @return the formatted multiline response, or {@code null} otherwise
+   */
+  private String performMultilineRequest(final String requestLine) {
+    String multilineResponse = null;
+
+    try {
+      transport.sendLine(requestLine);
+
+      final StringBuilder responseBuilder = new StringBuilder();
+      boolean finished = false;
+
+      while (!finished) {
+        final String responseLine = transport.waitResponse(5000L);
+
+        if (responseLine == null) {
+          responseBuilder.setLength(0);
+          finished = true;
+        } else if ("END".equals(responseLine)) {
+          finished = true;
+        } else {
+          responseBuilder.append(responseLine).append('\n');
+        }
+      }
+
+      if (responseBuilder.length() > 0) {
+        multilineResponse = responseBuilder.toString().trim();
+      }
+    } catch (IOException e) {
+      disconnectSilently();
+      multilineResponse = null;
+    }
+
+    return multilineResponse;
+  }
+
+  /**
+   * Sends one command that doesn't require an synchronous protocol response.
+   *
+   * @param requestLine the protocol line to send
+   * @param successValue the value returned when sending succeeds
+   * @return the provided success value, or {@code null} on failure
+   */
+  private String sendFireAndForget(final String requestLine, final String successValue) {
+    String result = null;
+
+    try {
+      transport.sendLine(requestLine);
+      result = successValue;
+    } catch (IOException e) {
+      disconnectSilently();
+      result = null;
+    }
+
+    return result;
+  }
+
+  /**
+   * Sends one command that only needs a local success/failure outcome.
+   *
+   * @param requestLine the protocol line to send
+   * @return {@code true} if sending succeeds, {@code false} otherwise
+   */
+  private boolean sendBooleanCommand(final String requestLine) {
+    boolean sentSuccessfully = false;
+
+    try {
+      transport.sendLine(requestLine);
+      sentSuccessfully = true;
+    } catch (IOException e) {
+      disconnectSilently();
+      sentSuccessfully = false;
+    }
+
+    return sentSuccessfully;
+  }
+
+  /**
+   * Extracts the player id from a WELCOME response.
+   *
+   * @param response the raw server response
+   * @return the extracted id, or {@code null} if none can be parsed
+   */
+  private Integer extractId(final String response) {
+    Integer extractedId = null;
+
+    if (response != null) {
+      final String[] tokens = response.split("\\s+");
+
+      for (String token : tokens) {
+        if (token.startsWith("ID=")) {
+          try {
+            extractedId = Integer.parseInt(token.substring(3));
+            break;
+          } catch (NumberFormatException ignored) {
+            extractedId = null;
+          }
+        }
+      }
+    }
+
+    return extractedId;
+  }
+
+  /**
+   * Returns the local profile associated with this client.
+   *
+   * @return the local profile
+   */
+  public LocalProfile getProfile() {
+    return profile;
+  }
+
+  /**
+   * Indicates whether another object is the same client instance reference.
+   *
+   * @param obj the compared object
+   * @return {@code true} if both references are equal, {@code false} otherwise
+   */
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
+
+  /**
+   * Returns the identity hash code of this object.
+   *
+   * @return the object hash code
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode());
   }
 }

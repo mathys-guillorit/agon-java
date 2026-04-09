@@ -1,6 +1,5 @@
 package fr.univ.bordeaux.application.match;
 
-import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
@@ -38,7 +37,9 @@ public interface ReadOnlyMatch {
    *
    * @return the remaining time if applicable.
    */
-  String getRemainingTime();
+  String getCurrentPlayerRemainingTime();
+
+  String[] getAllPlayersRemainingTime();
 
   /**
    * Determines whether the game has reached a final state.
@@ -60,13 +61,6 @@ public interface ReadOnlyMatch {
    * @return the game configuration.
    */
   GameConfig getGameConfig();
-
-  /**
-   * Computes or retrieves a recommended move for the current player.
-   *
-   * @return a suggested move (hint).
-   */
-  Move hint();
 
   /**
    * Identifies the player who won the game.

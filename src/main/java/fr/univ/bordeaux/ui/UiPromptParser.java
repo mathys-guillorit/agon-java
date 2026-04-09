@@ -4,6 +4,7 @@ import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
+import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -24,7 +25,6 @@ import org.jline.reader.impl.DefaultParser;
  * </ol>
  */
 public class UiPromptParser {
-
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
   private static final Parser parser = new DefaultParser();
 
@@ -54,6 +54,7 @@ public class UiPromptParser {
     try {
       parsed = parser.parse(line, 0);
     } catch (Exception e) {
+      GameLogger.error("UiPromptParser: JLine parsing failed for input: " + line);
       return null;
     }
 
@@ -78,10 +79,22 @@ public class UiPromptParser {
     // 2. Fallback to classic one-word commands such as "join"
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
+    // Try to find the command in the registry, otherwise fallback to move/relocation parsing
     return registry
         .get(firstWord)
-        .map(action -> action.createNew(options))
-        .orElseGet(() -> handleDefault(line, ui));
+        .map(
+            action -> {
+              GameLogger.debug("UiPromptParser: Recognized registered command '" + firstWord + "'");
+              return action.createNew(options);
+            })
+        .orElseGet(
+            () -> {
+              GameLogger.debug(
+                  "UiPromptParser: No registered command found for '"
+                      + firstWord
+                      + "', falling back to regex.");
+              return handleDefault(line, ui);
+            });
   }
 
   /**
@@ -95,11 +108,13 @@ public class UiPromptParser {
    * @return A {@link CmdMove} instance if coordinates are valid, {@code null} otherwise.
    */
   private static CmdAction handleDefault(String input, GameUserInterface ui) {
-    Matcher moveMatcher = MOVE_PATTERN.matcher(input.toLowerCase());
-    Matcher relocationMatcher = RELOCATION_PATTERN.matcher(input.toLowerCase());
+    String lowerInput = input.toLowerCase().trim();
+    Matcher moveMatcher = MOVE_PATTERN.matcher(lowerInput);
+    Matcher relocationMatcher = RELOCATION_PATTERN.matcher(lowerInput);
 
     // Case 1: Standard Move (e.g., a1b2)
     if (moveMatcher.matches()) {
+      GameLogger.debug("UiPromptParser: Input matches MOVE_PATTERN (" + lowerInput + ")");
       char letterFrom = moveMatcher.group(1).charAt(0);
       int colFrom = Integer.parseInt(moveMatcher.group(2));
       char letterTo = moveMatcher.group(3).charAt(0);
@@ -110,6 +125,7 @@ public class UiPromptParser {
         int indexTo = CoordinateMapper.toIndex(Character.toUpperCase(letterTo), colTo);
         return new CmdMove(indexFrom, indexTo, ui);
       } else {
+        GameLogger.debug("UiPromptParser: Move coordinates out of bounds (1-11).");
         ui.showError("Error: Coordinates out of bounds (1-11). Example: 'a1b1'.\n");
         return null;
       }
@@ -117,17 +133,22 @@ public class UiPromptParser {
 
     // Case 2: Relocation (e.g., a1)
     if (relocationMatcher.matches()) {
+      GameLogger.debug("UiPromptParser: Input matches RELOCATION_PATTERN (" + lowerInput + ")");
       char letter = relocationMatcher.group(1).charAt(0);
       int col = Integer.parseInt(relocationMatcher.group(2));
 
       if (isValidCoord(col)) {
         return new CmdMove(-1, CoordinateMapper.toIndex(Character.toUpperCase(letter), col), ui);
       } else {
+        GameLogger.debug("UiPromptParser: Relocation coordinate out of bounds (1-11).");
         ui.showError("Error: Coordinate out of bounds (1-11). Example: 'a1'.\n");
         return null;
       }
     }
 
+    GameLogger.debug(
+        "UiPromptParser: Input '" + lowerInput + "' did not match any command or move pattern.");
+    ui.showError("Invalid command. Please use help to display more information.\n");
     return null;
   }
 

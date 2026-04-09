@@ -3,9 +3,12 @@ package fr.univ.bordeaux.application.commands;
 import fr.univ.bordeaux.technical.utils.LoadLocalFile;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.OptCompleterAdapter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
@@ -120,7 +123,7 @@ public abstract class Cmd implements CmdAction {
    *
    * @param desc The new description string.
    */
-  public void setDesc(String desc) {
+  protected final void setDesc(String desc) {
     this.desc = desc;
   }
 
@@ -129,7 +132,7 @@ public abstract class Cmd implements CmdAction {
    *
    * @param name The new name string.
    */
-  public void setName(String name) {
+  protected final void setName(String name) {
     this.name = name;
   }
 
@@ -141,5 +144,27 @@ public abstract class Cmd implements CmdAction {
   @Override
   public String getName() {
     return this.name;
+  }
+
+  /**
+   * Show Help information about how to use the command (detailed).
+   *
+   * @see <a href="https://jline.org/docs/architecture/">jline.org/docs/architecture </a>
+   */
+  @Override
+  public String getHelp() {
+    // create a flow to catch the output
+    var baos = new ByteArrayOutputStream();
+    PrintStream psOriginalOut = System.out;
+    try {
+      // put System.out to our flow
+      System.setOut(new PrintStream(baos));
+      HelpFormatter formatter = HelpFormatter.builder().get();
+      formatter.printHelp(this.getName(), "", this.getOptions(), "", true);
+      return baos.toString().trim(); // get String from flow
+    } finally {
+      // restore original output
+      System.setOut(psOriginalOut);
+    }
   }
 }

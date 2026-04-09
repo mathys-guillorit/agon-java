@@ -3,7 +3,6 @@ package fr.univ.bordeaux.ui;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Unified interface defining possible interactions in the Agon game.
@@ -70,12 +69,6 @@ public interface GameUserInterface {
    * @param msg {@link String}
    */
   void showInfo(String msg);
-
-  /** Explicit. */
-  AtomicBoolean getDebugMode();
-
-  /** Explicit. */
-  void setVerbose(boolean state);
 
   /**
    * Retrieve from ui/CLi some text.

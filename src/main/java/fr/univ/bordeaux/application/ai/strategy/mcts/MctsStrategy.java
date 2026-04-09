@@ -3,8 +3,9 @@ package fr.univ.bordeaux.application.ai.strategy.mcts;
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
-import fr.univ.bordeaux.application.ai.heuristics.Heuristic;
+import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.List;
 import java.util.Random;
 
@@ -17,18 +18,24 @@ import java.util.Random;
  */
 public class MctsStrategy extends AbstractAgonAi {
 
-  private static final double C_PARAM = Math.sqrt(2);
   private final Random random = new Random();
+
+  /**
+   * The heuristic strategy specifically used for evaluating and selecting nodes during the tree
+   * traversal phase.
+   */
+  private final MctsSelectionHeuristic selectionHeuristic;
 
   /**
    * Constructs a new MCTS strategy instance.
    *
-   * @param heuristic The heuristic evaluation function (optional for pure MCTS, maintained for
-   *     architectural consistency).
    * @param color The color played by this AI agent.
+   * @param selectionHeuristic The specific heuristic used for node selection (e.g., UCT or ML).
    */
-  public MctsStrategy(Heuristic heuristic, Color color) {
-    super(heuristic, color);
+  public MctsStrategy(Color color, MctsSelectionHeuristic selectionHeuristic, int timeLimit) {
+    super(null, color);
+    this.setTimeLimit(timeLimit * 1000L);
+    this.selectionHeuristic = selectionHeuristic;
   }
 
   /**
@@ -61,7 +68,7 @@ public class MctsStrategy extends AbstractAgonAi {
       MctsNode node = root;
 
       while (node.isFullyExpanded() && !node.isLeaf()) {
-        node = getBestChild(node, C_PARAM);
+        node = getBestChild(node, board);
         board.applyMove(node.getMove());
         depth++;
       }
@@ -78,6 +85,7 @@ public class MctsStrategy extends AbstractAgonAi {
         node.addChild(newNode);
         node = newNode;
         this.nodeCount++;
+        GameLogger.debug("Node count :  " + this.nodeCount);
       }
 
       Color winner = checkWinner(board);
@@ -116,30 +124,30 @@ public class MctsStrategy extends AbstractAgonAi {
       }
     }
 
-    MctsNode bestChild = getBestChild(root, 0);
+    MctsNode bestChild = getBestChild(root, board);
     return bestChild != null ? bestChild.getMove() : initialLegalMoves.get(0);
   }
 
   /**
-   * Evaluates and selects the best child node using the UCB1 (Upper Confidence Bound 1) formula.
+   * Evaluates and selects the best child node using the injected {@link MctsSelectionHeuristic}.
    *
    * @param node The parent node whose children are to be evaluated.
-   * @param explorationParam The exploration constant (C).
-   * @return The child {@link MctsNode} with the highest computed UCB1 value.
+   * @param board The current game board state (matching the parent node's state).
+   * @return The child {@link MctsNode} with the highest computed selection score.
    */
-  private MctsNode getBestChild(MctsNode node, double explorationParam) {
+  private MctsNode getBestChild(MctsNode node, AgonBoard board) {
     MctsNode bestChild = null;
     double bestValue = Double.NEGATIVE_INFINITY;
 
     for (MctsNode child : node.getChildren()) {
-      double exploit = child.getWinScore() / (double) child.getVisitCount();
-      double explore =
-          explorationParam
-              * Math.sqrt(Math.log(node.getVisitCount()) / (double) child.getVisitCount());
-      double uctValue = exploit + explore;
+      board.applyMove(child.getMove());
 
-      if (uctValue > bestValue) {
-        bestValue = uctValue;
+      double nodeValue = this.selectionHeuristic.evaluateNode(node, child, board);
+
+      board.undoMove();
+
+      if (nodeValue > bestValue) {
+        bestValue = nodeValue;
         bestChild = child;
       }
     }

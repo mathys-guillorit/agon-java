@@ -4,17 +4,22 @@ import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
 import fr.univ.bordeaux.ui.GameUserInterface;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import java.util.Arrays; // Import ajouté pour le debug des args
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nonnull;
+import org.apache.commons.cli.Option;
+import org.jline.reader.Completer;
 
 /** Command responsible for dynamically updating the game configuration. */
 public final class CmdSet extends Cmd {
 
   private GameConfig gameConfig;
+
+  /** Types required to inform the user what to fill with option. */
+  private Map<String, String> metaDataTypes = new HashMap<>();
 
   private String[] args;
 
@@ -26,22 +31,32 @@ public final class CmdSet extends Cmd {
    */
   public CmdSet(GameUserInterface uictx, GameConfig gameConfig) {
     super(uictx);
-    Options options = super.getOptions();
-    options.addOption("verbose", null, true, "increases the verbosity of the programme");
-    options.addOption("debug", null, true, "displays the debug output");
-    options.addOption("blitzmode", null, true, "sets if the game is a blitz");
-    options.addOption("timeout", null, true, "set the timeout in milliseconds for blitzmode");
-    options.addOption("aiActive", null, true, "enable aiPlayers for the game");
-    options.addOption("aiMode", null, true, "set the algorithme to use for ai");
-    options.addOption("aiDepth", null, true, "set the maximum depth for the AI algorithm");
-    options.addOption(
-        "aiIterativeDeepening", null, true, "set IterativeDeepening for AI algorithm");
-    options.addOption("aiTimeLimit", null, true, "set the response time for an AI");
-    options.addOption("aiHeuristic", null, true, "set the heuristic use for AI algorithm");
-    options.addOption("whiteIsAI", null, true, "set if the white player is an AI");
-    options.addOption("blackIsAI", null, true, "set if the black player an AI");
     this.gameConfig = gameConfig;
     this.setName("set");
+    this.addOption(new Option("verbose", true, "increase verbosity (true | false)"));
+    this.addOption(new Option("debug", true, "to show more messages (true | false)"));
+    this.addOption(new Option("blitzMode", true, "get a time limit"));
+    this.addOption(new Option("timeout", true, "time limit for invites"));
+    this.addOption(new Option("aiActive", true, "set if the ai is active"));
+    this.addOption(new Option("aiMode", true, "algorithm specified"));
+    this.addOption(new Option("aiDepth", true, "value of depth research algorithm"));
+    this.addOption(new Option("aiTimeLimit", true, "set time limit to play for the ai"));
+    this.addOption(new Option("aiIterativeDeepening", true, "use AI Iterative deepening"));
+    this.addOption(new Option("aiHeuristic", true, "change ai heuristic"));
+    this.addOption(new Option("whiteIsAi", true, "if the white player is an AI"));
+    this.addOption(new Option("blackIsAi", true, "if the black player is an AI"));
+    this.metaDataTypes.put("verbose", "true^false");
+    this.metaDataTypes.put("debug", "true^false");
+    this.metaDataTypes.put("blitzMode", "true^false");
+    this.metaDataTypes.put("timeout", "0..." + Integer.MAX_VALUE);
+    this.metaDataTypes.put("aiActive", "true^false");
+    this.metaDataTypes.put("aiMode", "minimax^mcts^iterative");
+    this.metaDataTypes.put("aiDepth", "0..." + Integer.MAX_VALUE);
+    this.metaDataTypes.put("aiTimeLimit", "0..." + Integer.MAX_VALUE);
+    this.metaDataTypes.put("aiIterativeDeepening", "true^false");
+    this.metaDataTypes.put("aiHeuristic", "mixed^centrality^mobility^UCT^ML");
+    this.metaDataTypes.put("whiteIsAi", "true^false");
+    this.metaDataTypes.put("blackIsAi", "true^false");
   }
 
   /**
@@ -63,9 +78,12 @@ public final class CmdSet extends Cmd {
    */
   @Override
   public String getDescription() {
-    return "Usage: set -PARAM VALUE\n"
-        + "Description: Changes the current game configuration dynamically.\n"
-        + "Example: set -aiDepth 5 -verbose true\n";
+    return "Usage: set PARAM=VALUE\n"
+        + "Description: Changes the current game configuration "
+        + "dynamically, if you use this command in game the "
+        + "change will be effective in the real configuration "
+        + "but not in the match configuration.\n"
+        + "Example: set aiDepth=5 verbose=true\n";
   }
 
   /**
@@ -76,86 +94,108 @@ public final class CmdSet extends Cmd {
    */
   @Override
   public boolean execute(MatchManager match) {
-    CommandLineParser parser = new DefaultParser();
-    try {
-      CommandLine cmd = parser.parse(super.getOptions(), args);
-      StringBuilder feedback = new StringBuilder("Configuration updated:\n");
-
-      if (cmd.hasOption("verbose")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("verbose"));
-        gameConfig.setVerbose(val);
-        feedback.append("  - Verbose: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("debug")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("debug"));
-        gameConfig.setDebug(val);
-        feedback.append("  - Debug: ").append(val).append("\n");
-      }
-
-      if (cmd.hasOption("blitzmode")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("blitzmode"));
-        gameConfig.setBlitzMode(val);
-        feedback.append("  - BlitzMode: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("timeout")) {
-        int val = Integer.parseInt(cmd.getOptionValue("timeout"));
-        gameConfig.setTimeout(val);
-        feedback.append("  - Timeout: ").append(val).append("ms\n");
-      }
-
-      if (cmd.hasOption("aiActive")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("aiActive"));
-        gameConfig.setAi(val);
-        feedback.append("  - AI Active: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("aiMode")) {
-        String val = cmd.getOptionValue("aiMode").toLowerCase().trim();
-        gameConfig.setAiMode(val);
-        feedback.append("  - AI Mode: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("aiDepth")) {
-        int val = Integer.parseInt(cmd.getOptionValue("aiDepth"));
-        gameConfig.setAiDepth(val);
-        feedback.append("  - AI Depth: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("aiTimeLimit")) {
-        int val = Integer.parseInt(cmd.getOptionValue("aiTimeLimit"));
-        gameConfig.setAiTimeLimit(val);
-        feedback.append("  - AI Time Limit: ").append(val).append("s\n");
-      }
-      if (cmd.hasOption("aiIterativeDeepening")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("aiIterativeDeepening"));
-        gameConfig.setAiIterativeDeepening(val);
-        feedback.append("  - Iterative Deepening: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("aiHeuristic")) {
-        String val = cmd.getOptionValue("aiHeuristic").toLowerCase().trim();
-        gameConfig.setAiHeuristic(val);
-        feedback.append("  - Heuristic: ").append(val).append("\n");
-      }
-
-      if (cmd.hasOption("whiteIsAI")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("whiteIsAI"));
-        gameConfig.setWhiteAi(val);
-        feedback.append("  - White is AI: ").append(val).append("\n");
-      }
-      if (cmd.hasOption("blackIsAI")) {
-        boolean val = Boolean.parseBoolean(cmd.getOptionValue("blackIsAI"));
-        gameConfig.setBlackAi(val);
-        feedback.append("  - Black is AI: ").append(val).append("\n");
-      }
-
-      this.getCtx().showInfo(feedback.toString());
-
-    } catch (ParseException e) {
-      this.getCtx().showError("Syntax error: " + e.getMessage());
-      return false;
-    } catch (NumberFormatException e) {
-      this.getCtx().showError("Error: Value must be a number.");
+    if (args == null || args.length == 0) {
+      GameLogger.error("CmdSet: Execution failed - No arguments provided.");
+      this.getCtx().showError("Error: No parameters provided. Usage: set PARAM=VALUE");
       return false;
     }
 
-    return true;
+    GameLogger.info("CmdSet: Attempting to update configuration with: " + Arrays.toString(args));
+    StringBuilder feedback = new StringBuilder("Configuration updated:\n");
+
+    try {
+      for (String arg : args) {
+        if (!arg.contains("=")) {
+          GameLogger.error("CmdSet: Invalid argument format -> " + arg);
+          this.getCtx().showError("Invalid format for: " + arg + ". Expected PARAM=VALUE");
+          continue;
+        }
+
+        String[] parts = arg.split("=", 2);
+        String param = parts[0].trim();
+        String value = parts[1].trim();
+
+        // On log chaque changement individuellement en DEBUG pour la traçabilité fine
+        GameLogger.debug("CmdSet: Processing parameter [" + param + "] with value [" + value + "]");
+
+        switch (param) {
+          case "verbose" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setVerbose(val);
+            feedback.append("  - Verbose: ").append(val).append("\n");
+          }
+          case "debug" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setDebug(val);
+            GameLogger.getInstance().setDebugMode(val); // Mise à jour dynamique du logger
+            feedback.append("  - Debug: ").append(val).append("\n");
+          }
+          case "blitzmode" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setBlitzMode(val);
+            feedback.append("  - BlitzMode: ").append(val).append("\n");
+          }
+          case "timeout" -> {
+            int val = Integer.parseInt(value);
+            gameConfig.setTimeout(val);
+            feedback.append("  - Timeout: ").append(val).append("ms\n");
+          }
+          case "aiActive" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setAi(val);
+            feedback.append("  - AI Active: ").append(val).append("\n");
+          }
+          case "aiMode" -> {
+            gameConfig.setAiMode(value.toLowerCase());
+            feedback.append("  - AI Mode: ").append(value).append("\n");
+          }
+          case "aiDepth" -> {
+            int val = Integer.parseInt(value);
+            gameConfig.setAiDepth(val);
+            feedback.append("  - AI Depth: ").append(val).append("\n");
+          }
+          case "aiTimeLimit" -> {
+            int val = Integer.parseInt(value);
+            gameConfig.setAiTimeLimit(val);
+            feedback.append("  - AI Time Limit: ").append(val).append("s\n");
+          }
+          case "aiIterativeDeepening" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setAiIterativeDeepening(val);
+            feedback.append("  - Iterative Deepening: ").append(val).append("\n");
+          }
+          case "aiHeuristic" -> {
+            gameConfig.setAiHeuristic(value.toLowerCase());
+            feedback.append("  - Heuristic: ").append(value).append("\n");
+          }
+          case "whiteIsAi" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setWhiteAi(val);
+            feedback.append("  - White is Ai: ").append(val).append("\n");
+          }
+          case "blackIsAi" -> {
+            boolean val = Boolean.parseBoolean(value);
+            gameConfig.setBlackAi(val);
+            feedback.append("  - Black is Ai: ").append(val).append("\n");
+          }
+          default -> {
+            GameLogger.error("CmdSet: Unknown parameter attempted -> " + param);
+            this.getCtx().showError("Unknown parameter: " + param);
+            this.getCtx().showInfo(this.getDescription());
+            return false;
+          }
+        }
+      }
+
+      GameLogger.info("CmdSet: Configuration update successful.");
+      this.getCtx().showInfo(feedback.toString());
+      return true;
+
+    } catch (NumberFormatException e) {
+      GameLogger.error("CmdSet: Numerical parsing error -> " + e.getMessage());
+      this.getCtx().showError("Error: Numeric value expected.");
+      return false;
+    }
   }
 
   /**
@@ -167,5 +207,60 @@ public final class CmdSet extends Cmd {
   @Override
   public CmdAction createNew(String[] args) {
     return new CmdSet(super.getCtx(), this.gameConfig, args);
+  }
+
+  /**
+   * AutoCompletion for the command.
+   *
+   * @return {@link Completer}
+   */
+  @Nonnull
+  @Override
+  public Completer getAutoCompleter() {
+    return new SetCompleter(this.getOptions());
+  }
+
+  /**
+   * Show a Specific help form {@link CmdSet} command ("=" required).
+   *
+   * @return {@link String} help message about how to use the command specifically
+   */
+  @Override
+  public String getHelp() {
+    var sb = new StringBuilder();
+    sb.append("usage: ").append(this.getName());
+    // add opts with format [optName=] (first line "usage:")
+    for (Option opt : this.getOptions().getOptions()) {
+      sb.append(" [").append(opt.getOpt()).append("=");
+      if (opt.hasArg()) {
+        sb.append(this.metaDataTypes.get(opt.getOpt()));
+      }
+      sb.append("]");
+    }
+    sb.append("\n\n");
+    sb.append(String.format("%-30s %s%n", "Options", "Description"));
+    sb.append(String.format("%-30s %s%n", "-------", "-----------"));
+    // compute max width of the first column
+    // (option that has the biggest length for next lines alignment)
+    int maxFirstColumnWidth = 0; // formatting
+    StringBuilder firstColumn = new StringBuilder();
+    for (Option opt : this.getOptions().getOptions()) {
+      firstColumn.append(opt.getOpt()).append("=");
+      firstColumn.append(this.metaDataTypes.get(opt.getOpt()));
+      if (firstColumn.length() > maxFirstColumnWidth) {
+        maxFirstColumnWidth = firstColumn.length();
+      }
+      firstColumn = new StringBuilder();
+    }
+    maxFirstColumnWidth += 3; // add a bit more space before description
+    // display each lines
+    for (Option opt : this.getOptions().getOptions()) {
+      firstColumn.append(opt.getOpt()).append("=");
+      firstColumn.append(this.metaDataTypes.get(opt.getOpt()));
+      sb.append(
+          String.format(" %-" + maxFirstColumnWidth + "s %s%n", firstColumn, opt.getDescription()));
+      firstColumn = new StringBuilder();
+    }
+    return sb.toString();
   }
 }

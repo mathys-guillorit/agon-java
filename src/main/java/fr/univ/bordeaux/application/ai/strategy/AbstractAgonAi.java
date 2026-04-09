@@ -108,4 +108,13 @@ public abstract class AbstractAgonAi implements AgonAi {
    * @return The best move found by the specific algorithm.
    */
   protected abstract Move computeMove(AgonBoard board);
+
+  /**
+   * Retrieves the maximum execution time allowed for the AI to compute a move.
+   *
+   * @return The time limit in milliseconds.
+   */
+  public long getTimeLimit() {
+    return timeLimit;
+  }
 }

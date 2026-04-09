@@ -12,7 +12,7 @@ class NetworkPlayerTest {
 
   @Test
   @DisplayName("Constructor initializes name and color correctly")
-  void constructor_initializes_fields() {
+  void constructorInitializesFields() {
     NetworkPlayer player = new NetworkPlayer("Alice", Color.WHITE);
 
     assertEquals("Alice", player.getName());
@@ -21,7 +21,7 @@ class NetworkPlayerTest {
 
   @Test
   @DisplayName("getAction returns null for network player")
-  void get_action_returns_null() {
+  void getActionReturnsNull() {
     NetworkPlayer player = new NetworkPlayer("Bob", Color.BLACK);
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
 
@@ -32,7 +32,7 @@ class NetworkPlayerTest {
 
   @Test
   @DisplayName("getColor returns assigned color")
-  void get_color_returns_assigned_color() {
+  void getColorReturnsAssignedColor() {
     NetworkPlayer player = new NetworkPlayer("Charlie", Color.BLACK);
 
     assertEquals(Color.BLACK, player.getColor());
@@ -40,7 +40,7 @@ class NetworkPlayerTest {
 
   @Test
   @DisplayName("getName returns assigned name")
-  void get_name_returns_assigned_name() {
+  void getNameReturnsAssignedName() {
     NetworkPlayer player = new NetworkPlayer("Dave", Color.WHITE);
 
     assertEquals("Dave", player.getName());

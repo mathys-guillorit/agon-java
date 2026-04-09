@@ -1,0 +1,73 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package fr.univ.bordeaux.ui {
+    interface GameUserInterface {
+        + isRunning(): boolean
+        + quit(): void
+        + onMatchUpdate(match: ReadOnlyMatch): void
+        + showMessage(message: String): void
+        + showError(error: String): void
+        + showHelp(): void
+        + showWarn(msg: String): void
+        + showInfo(msg: String): void
+        + getUserInput(): String
+        + displayHistory(moves: List<MoveDtO>): void
+    }
+
+    interface MatchObserver {
+        + onMatchUpdate(match: ReadOnlyMatch): void
+    }
+
+    interface ObservableMatch {
+        + setObserver(observer: MatchObserver): void
+        + notifyUi(): void
+    }
+
+    abstract class AbstractGameUi
+
+    class UiPromptParser {
+        + {static} parse(line: String, registry: AgonRegister<CmdAction>, ui: GameUserInterface): CmdAction
+    }
+
+    package cli {
+        class AgonShell implements fr.univ.bordeaux.ui.GameUserInterface, fr.univ.bordeaux.ui.MatchObserver {
+            - running: AtomicBoolean
+            - terminal: Terminal
+            - reader: LineReader
+            - cmds: AgonRegister<CmdAction>
+            + AgonShell(term: Terminal, reader: LineReader, cmds: AgonRegister<CmdAction>)
+            + run(): void
+        }
+
+        class ConsoleRenderer {
+            + {static} getBoardRepresentation(board: RestrictedAgonBoard): String
+        }
+
+        class OptCompleterAdapter {
+            + OptCompleterAdapter(opts: Options)
+            + getCompleter(cmdName: String): Completer
+        }
+    }
+
+    package gui {
+        package controllers {}
+        package components {}
+    }
+}
+
+' External dependencies
+package fr.univ.bordeaux.application.match {
+    interface ReadOnlyMatch
+    class MoveDtO
+}
+
+package fr.univ.bordeaux.agoncore.bitboard {
+    interface RestrictedAgonBoard
+}
+
+AgonShell ..> UiPromptParser : uses
+AgonShell ..> ConsoleRenderer : uses
+AgonShell ..> OptCompleterAdapter : uses
+
+@enduml

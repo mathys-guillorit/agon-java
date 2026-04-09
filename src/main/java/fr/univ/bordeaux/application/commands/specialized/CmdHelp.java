@@ -4,6 +4,7 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -85,6 +86,7 @@ public final class CmdHelp extends Cmd {
         ctx.showMessage(targetCmd.get().getDescription());
         return true;
       } else {
+        GameLogger.error("unknown command for help : " + commandToHelp);
         ctx.showMessage("Unknown command: " + commandToHelp + "\n");
       }
     }
@@ -111,7 +113,7 @@ public final class CmdHelp extends Cmd {
   public String getDescription() {
     return "Usage: help\n"
         + "Description: display all commands available and their usage or for a specific command.\n"
-        + "Example: help new";
+        + "Example: help new\n";
   }
 
   /**

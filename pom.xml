@@ -82,6 +82,17 @@
       <version>1.11.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.tensorflow</groupId>
+      <artifactId>tensorflow-core-platform</artifactId>
+      <version>0.5.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.tensorflow</groupId>
+      <artifactId>tensorflow-framework</artifactId>
+      <version>0.5.0</version>
+    </dependency>
 
   </dependencies>
 
@@ -179,6 +190,27 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.26.0</version>
+        <configuration>
+          <rulesets>
+            <!-- If you want to start small, take only this line -->
+            <!-- <ruleset>/rulesets/java/quickstart.xml</ruleset> -->
+            <!-- All the rulesets -->
+            <ruleset>/category/java/bestpractices.xml</ruleset>
+            <ruleset>/category/java/codestyle.xml</ruleset>
+            <ruleset>/category/java/design.xml</ruleset>
+            <ruleset>/category/java/documentation.xml</ruleset>
+            <ruleset>/category/java/errorprone.xml</ruleset>
+            <ruleset>/category/java/multithreading.xml</ruleset>
+            <ruleset>/category/java/performance.xml</ruleset>
+            <ruleset>/category/java/security.xml</ruleset>
+          </rulesets>
+        </configuration>
+      </plugin>
+
       <!-- Plugin to run JavaFX applications easily -->
       <!-- This handles module-path and add-modules automatically -->
       <plugin>
@@ -269,27 +301,6 @@
           </execution>
         </executions>
       </plugin>
-
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-pmd-plugin</artifactId>
-            <version>3.26.0</version>
-            <configuration>
-                <rulesets>
-                    <!-- If you want to start small, take only this line -->
-                    <!-- <ruleset>/rulesets/java/quickstart.xml</ruleset> -->
-                    <!-- All the rulesets -->
-                    <ruleset>/category/java/bestpractices.xml</ruleset>
-                    <ruleset>/category/java/codestyle.xml</ruleset>
-                    <ruleset>/category/java/design.xml</ruleset>
-                    <ruleset>/category/java/documentation.xml</ruleset>
-                    <ruleset>/category/java/errorprone.xml</ruleset>
-                    <ruleset>/category/java/multithreading.xml</ruleset>
-                    <ruleset>/category/java/performance.xml</ruleset>
-                    <ruleset>/category/java/security.xml</ruleset>
-                </rulesets>
-            </configuration>
-        </plugin>
 
     </plugins>
   </build>

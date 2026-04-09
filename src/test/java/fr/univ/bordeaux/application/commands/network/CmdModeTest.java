@@ -11,7 +11,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode refuses when client is not connected")
-  void mode_refuses_when_client_is_not_connected() {
+  void modeRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode refuses when argument is missing")
-  void mode_refuses_when_argument_is_missing() {
+  void modeRefusesWhenArgumentIsMissing() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -44,7 +44,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode refuses invalid value")
-  void mode_refuses_invalid_value() {
+  void modeRefusesInvalidValue() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -59,7 +59,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode sends request when value is normal")
-  void mode_sends_request_when_value_is_normal() {
+  void modeSendsRequestWhenValueIsNormal() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -76,7 +76,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode trims and lowercases blitz")
-  void mode_trims_and_lowercases_blitz() {
+  void modeTrimsAndLowercasesBlitz() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -92,7 +92,7 @@ class CmdModeTest {
 
   @Test
   @DisplayName("mode shows error when request fails")
-  void mode_shows_error_when_request_fails() {
+  void modeShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

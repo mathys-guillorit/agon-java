@@ -9,7 +9,7 @@ class MatchFactoryTest {
 
   @Test
   @DisplayName("createOnlineMatch returns StandardMatch when blitzMode is false")
-  void create_online_match_standard() {
+  void createOnlineMatchStandard() {
     Match match = MatchFactory.createOnlineMatch("Alice", "Bob", false);
 
     assertNotNull(match);
@@ -20,7 +20,7 @@ class MatchFactoryTest {
 
   @Test
   @DisplayName("createOnlineMatch returns BlitzMatch when blitzMode is true")
-  void create_online_match_blitz() {
+  void createOnlineMatchBlitz() {
     Match match = MatchFactory.createOnlineMatch("Alice", "Bob", true);
 
     assertNotNull(match);

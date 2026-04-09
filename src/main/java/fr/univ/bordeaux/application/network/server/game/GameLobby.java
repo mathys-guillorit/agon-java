@@ -1,8 +1,12 @@
-package fr.univ.bordeaux.application.network.server;
+package fr.univ.bordeaux.application.network.server.game;
 
 /** Represents a lobby between two players before the game starts. */
 public class GameLobby {
+
+  /** Identifier of the host player who created the lobby. */
   private final int hostId;
+
+  /** Identifier of the guest player invited into the lobby. */
   private final int guestId;
 
   /**
@@ -11,7 +15,7 @@ public class GameLobby {
    * @param hostId the host player ID
    * @param guestId the guest player ID
    */
-  public GameLobby(int hostId, int guestId) {
+  public GameLobby(final int hostId, final int guestId) {
     this.hostId = hostId;
     this.guestId = guestId;
   }

@@ -1,0 +1,61 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package fr.univ.bordeaux.technical {
+    package ait {
+        class AiFrameworkAdapter <<adapter>> {
+            + requestDecision(gameState): Move
+        }
+        class AiEngine <<engine>> {
+            + infer(input): String
+        }
+    }
+
+    package config {
+        class GameConfig <<model>> {
+            - aiDecoder: AIDecoder
+            - langDecoder: LangDecoder
+            + getAIDecoder(): AIDecoder
+            + getLangDecoder(): LangDecoder
+        }
+    }
+
+    package lang {
+        interface ITranslation {
+            + translate(key: String): String
+        }
+        class TranslationProvider implements ITranslation {
+            - locale: Locale
+            - properties: Properties
+            + translate(key: String): String
+        }
+    }
+
+    package storage {
+        interface PRepository {
+            + save(data: Object): void
+            + load(id: String): Object
+        }
+        class PStorage implements PRepository {
+            + saveAIData(data): void
+        }
+        class PDatasource {
+            + read(path: String): byte[]
+            + write(path: String, data: byte[]): void
+        }
+    }
+
+    package utils {
+        class GameLogger {
+            + {static} info(msg: String): void
+            + {static} error(msg: String): void
+            + {static} debug(msg: String): void
+        }
+    }
+}
+
+AiFrameworkAdapter -- AiEngine
+AiEngine -- GameConfig : uses decoder
+PRepository -- PDatasource : uses
+
+@enduml
