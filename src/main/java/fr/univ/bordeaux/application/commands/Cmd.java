@@ -51,7 +51,8 @@ public abstract class Cmd implements CmdAction {
   }
 
   /**
-   * Provides access to the current UI context. * @return The {@link GameUserInterface} instance.
+   * Provides access to the current UI context.
+   * @return The {@link GameUserInterface} instance.
    */
   public GameUserInterface getCtx() {
     return this.ui;
@@ -148,8 +149,10 @@ public abstract class Cmd implements CmdAction {
 
   /**
    * Show Help information about how to use the command (detailed).
+   * * <p>This method captures the output of {@link HelpFormatter} by redirecting
+   * {@link System#out} temporarily to a byte array stream.
    *
-   * @see <a href="https://jline.org/docs/architecture/">jline.org/docs/architecture </a>
+   * @return A formatted help string containing usage and options.
    */
   @Override
   public String getHelp() {

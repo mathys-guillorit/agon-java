@@ -1,0 +1,18 @@
+@startuml
+package io{
+package config{}
+
+package storage{}
+package lang{
+class LangService
+interface LangTranslationProvider{
+}
+}
+
+
+package utils{
+class GameLogger
+class LoadLocalFile
+}
+}
+@enduml

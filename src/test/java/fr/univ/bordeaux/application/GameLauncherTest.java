@@ -54,7 +54,7 @@ class GameLauncherTest {
 
     // Intercepte le lancement de l'interface graphique
     @Override
-    protected void launchGUI(GameConfig config, AgonRegister<CmdAction> cmds, AppContext context) {
+    protected void launchGUI(GameConfig config, AgonRegister<CmdAction> cmds,CommandLine cmd, AppContext context) {
       this.guiLaunched = true;
     }
 

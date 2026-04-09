@@ -12,26 +12,6 @@ import java.util.ArrayList;
  * RestrictedAgonBoard} data into a visual ASCII-art hexagon suitable for the console.
  */
 public class ConsoleRenderer {
-
-  /*private RestrictedAgonBoard board;
-  private ArrayList<Character> lines;
-
-  **
-   * Constructs a new ConsoleRenderer.
-   *
-   * <p>Initializes the list of row identifiers from 'K' (top) down to 'A' (bottom) to match the
-   * visual representation of the Agon board.
-   *
-   * @param board The game board data source (read-only interface).
-   *
-  public ConsoleRenderer(RestrictedAgonBoard board) {
-    this.board = board;
-    this.lines = new ArrayList<>();
-    final short K_Letter = 75; // ASCII K
-    final short A_Letter = 65; // ASCII A
-    for (short c = K_Letter; c >= A_Letter; c--) this.lines.add((char) c);
-  }*/
-
   /**
    * Calculates the indentation (spaces) needed for each line to form the hexagonal shape.
    *

@@ -10,11 +10,20 @@ import java.util.logging.Logger;
  *
  * <p>This class wraps {@link Logger} to provide configurable logging levels (debug, verbose,
  * warning, error) and ensures consistent formatting across the application.
+ * It follows the Singleton pattern to ensure a unique logging context.
  */
 public final class GameLogger {
+
+  /** The unique singleton instance of the GameLogger. */
   private static GameLogger instance;
+
+  /** The internal Java Logger instance. */
   private final Logger logger;
 
+  /**
+   * Private constructor to initialize the logger with a custom ConsoleHandler.
+   * Disables parent handlers to avoid duplicate logs in the console.
+   */
   private GameLogger() {
     this.logger = Logger.getLogger("AgonGame");
     this.logger.setUseParentHandlers(false);
@@ -32,7 +41,7 @@ public final class GameLogger {
   /**
    * Returns the singleton instance of the GameLogger.
    *
-   * @return the unique GameLogger instance
+   * @return The unique {@link GameLogger} instance.
    */
   public static synchronized GameLogger getInstance() {
     if (instance == null) {
@@ -41,7 +50,10 @@ public final class GameLogger {
     return instance;
   }
 
-  /** Enables or disables verbose mode. */
+  /**
+   * Enables or disables verbose mode.
+   *  @param enabled If true, sets the level to INFO; otherwise, sets it to WARNING.
+   */
   public void setVerbose(final boolean enabled) {
     if (enabled) {
       updateLevel(Level.INFO);
@@ -50,7 +62,10 @@ public final class GameLogger {
     }
   }
 
-  /** Enables or disables debug mode. */
+  /**
+   * Enables or disables debug mode.
+   * @param enabled If true, sets the level to FINE; otherwise, sets it to WARNING.
+   */
   public void setDebugMode(final boolean enabled) {
     if (enabled) {
       updateLevel(Level.FINE);
@@ -59,7 +74,10 @@ public final class GameLogger {
     }
   }
 
-  /** Updates the logger and handler levels. */
+  /**
+   * Updates the logging level for both the logger and all its attached handlers.
+   * @param newLevel The new {@link Level} to apply.
+   */
   private void updateLevel(final Level newLevel) {
     this.logger.setLevel(newLevel);
     for (Handler handler : this.logger.getHandlers()) {
@@ -67,42 +85,66 @@ public final class GameLogger {
     }
   }
 
-  /** Returns true if DEBUG/FINE logs are enabled. */
+  /**
+   * Checks if DEBUG (FINE) logs are currently enabled.
+   * @return {@code true} if loggable at FINE level, {@code false} otherwise.
+   */
   public static boolean isDebugEnabled() {
     return getInstance().logger.isLoggable(Level.FINE);
   }
 
-  /** Returns true if INFO logs are enabled. */
+  /**
+   * Checks if INFO logs are currently enabled.
+   * @return {@code true} if loggable at INFO level, {@code false} otherwise.
+   */
   public static boolean isInfoEnabled() {
     return getInstance().logger.isLoggable(Level.INFO);
   }
 
-  /** Returns true if WARNING logs are enabled. */
+  /**
+   * Checks if WARNING logs are currently enabled.
+   * @return {@code true} if loggable at WARNING level, {@code false} otherwise.
+   */
   public static boolean isWarnEnabled() {
     return getInstance().logger.isLoggable(Level.WARNING);
   }
 
-  /** Returns true if ERROR/SEVERE logs are enabled. */
+  /**
+   * Checks if ERROR (SEVERE) logs are currently enabled.
+   * @return {@code true} if loggable at SEVERE level, {@code false} otherwise.
+   */
   public static boolean isErrorEnabled() {
     return getInstance().logger.isLoggable(Level.SEVERE);
   }
 
-  /** Logs a debug message. */
+  /**
+   * Logs a message at the DEBUG (FINE) level.
+   * @param message The message to log.
+   */
   public static void debug(final String message) {
     getInstance().logger.log(Level.FINE, "[DEBUG] " + message);
   }
 
-  /** Logs an info message. */
+  /**
+   * Logs a message at the INFO level.
+   * @param message The message to log.
+   */
   public static void info(final String message) {
     getInstance().logger.log(Level.INFO, "[INFO] " + message);
   }
 
-  /** Logs a warning message. */
+  /**
+   * Logs a message at the WARNING level.
+   * @param message The message to log.
+   */
   public static void warn(final String message) {
     getInstance().logger.log(Level.WARNING, "[WARN] " + message);
   }
 
-  /** Logs an error message. */
+  /**
+   * Logs a message at the ERROR (SEVERE) level.
+   * @param message The message to log.
+   */
   public static void error(final String message) {
     getInstance().logger.log(Level.SEVERE, "[ERROR] " + message);
   }

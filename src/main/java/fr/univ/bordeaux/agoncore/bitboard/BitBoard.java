@@ -17,7 +17,7 @@ public class BitBoard {
   /** Bits 64 to 127 (Upper half of the board; Agon uses up to index 120). */
   private long high;
 
-  /** Constructs an empty BitBoard with all bits initialized to zero. */
+  /** Constructs an empty BitBoard with all bits initialized to zero (0L). */
   public BitBoard() {
     this.low = 0L;
     this.high = 0L;
@@ -47,9 +47,9 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise OR (Union) operation.
+   * Performs a bitwise OR (Union) operation between two bitboards.
    *
-   * @param bitBoard2 The second operand.
+   * @param bitBoard2 The second operand for the OR operation.
    * @return A new {@link BitBoard} containing bits set in either board.
    */
   public BitBoard orOperation(final BitBoard bitBoard2) {
@@ -60,9 +60,9 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise AND (Intersection) operation.
+   * Performs a bitwise AND (Intersection) operation between two bitboards.
    *
-   * @param bitBoard2 The second operand.
+   * @param bitBoard2 The second operand for the AND operation.
    * @return A new {@link BitBoard} containing only bits set in both boards.
    */
   public BitBoard andOperation(final BitBoard bitBoard2) {
@@ -73,9 +73,9 @@ public class BitBoard {
   }
 
   /**
-   * Performs a bitwise NOT (Inversion) operation.
+   * Performs a bitwise NOT (Inversion) operation on the current board.
    *
-   * @return A new {@link BitBoard} with all bits flipped.
+   * @return A new {@link BitBoard} with all bits flipped (1 becomes 0 and vice-versa).
    */
   public BitBoard complementOperation() {
     final BitBoard bitBoard = new BitBoard();
@@ -128,10 +128,9 @@ public class BitBoard {
    * Shifts the entire bitboard content in a specific direction.
    *
    * <p>This method maintains bit continuity across the 64-bit boundary by calculating the
-   * carry-over between the {@code low} and {@code high} segments.
+   * carry-over between the {@code low} and {@code high} segments using unsigned shifts.
    *
-   * @param n The shift offset (corresponds to {@link Direction#getValue()}). Positive moves bits
-   *     toward higher indices, negative toward lower.
+   * @param n The shift offset. Positive moves bits toward higher indices, negative toward lower.
    * @return A new shifted {@link BitBoard}.
    */
   public BitBoard shiftBitboard(final int n) {
@@ -153,9 +152,9 @@ public class BitBoard {
   }
 
   /**
-   * Checks if no pieces are present on this bitboard.
+   * Checks if no bits are set on this bitboard.
    *
-   * @return {@code true} if all bits are 0.
+   * @return {@code true} if all bits are 0, meaning the board or layer is empty.
    */
   public boolean isEmpty() {
     return (this.low == 0 && this.high == 0);
@@ -164,9 +163,10 @@ public class BitBoard {
   /**
    * Compares this BitBoard with another object for equality.
    *
-   * @param obj The board to compare against.
-   * @return {@code true} if both boards have the same bits set.
+   * @param obj The object to compare against.
+   * @return {@code true} if the other object is a BitBoard with identical bit states.
    */
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
@@ -179,9 +179,9 @@ public class BitBoard {
   }
 
   /**
-   * Returns the total count of set bits (Hamming weight).
+   * Returns the total count of set bits, also known as Hamming weight or population count.
    *
-   * @return The number of pieces or occupied tiles on this board.
+   * @return The number of set bits (occupied tiles) on this board.
    */
   public int countBits() {
     return Long.bitCount(low) + Long.bitCount(high);
@@ -191,9 +191,9 @@ public class BitBoard {
    * Expands the current bitboard state to include all adjacent hexagonal neighbors.
    *
    * <p>Technically, this performs a morphological dilation using a hexagonal structuring element.
-   * It is used to find all reachable or surrounding tiles.
+   * It is used to find all reachable or surrounding tiles in a single pass.
    *
-   * @return A new {@link BitBoard} representing the dilated area.
+   * @return A new {@link BitBoard} representing the dilated area (original bits + neighbors).
    */
   public BitBoard dilation() {
     GameLogger.debug("BitBoard: calculating dilation (hexagonal neighbors)...");
@@ -207,7 +207,7 @@ public class BitBoard {
   /**
    * Scans the bitboard for the next set bit after a given index.
    *
-   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find pieces rapidly, which
+   * <p>This uses the CPU-optimized {@code Long.numberOfTrailingZeros} to find bits rapidly, which
    * is critical for efficient move generation loops.
    *
    * @param currentBit The index to start scanning from (exclusive). Use {@code -1} for the start.
@@ -238,8 +238,8 @@ public class BitBoard {
   /**
    * Synchronizes this bitboard's state with another without creating a new object.
    *
-   * @param bitBoard The source {@link BitBoard}.
-   * @return This {@link BitBoard} after the update.
+   * @param bitBoard The source {@link BitBoard} to copy from.
+   * @return This {@link BitBoard} instance after the update.
    */
   public BitBoard copy(BitBoard bitBoard) {
     this.low = bitBoard.low;
@@ -247,7 +247,9 @@ public class BitBoard {
     return this;
   }
 
-  /** Returns a string representation of the raw bits for hashing purposes. */
+  /** * Returns a string representation of the raw bits (low:high) for hashing or logging purposes.
+   * @return A {@link String} formatted as "lowPart:highPart".
+   */
   public String getRawValueString() {
     return this.low + ":" + this.high;
   }

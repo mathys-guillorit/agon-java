@@ -36,7 +36,11 @@ public class LoadLocalFile {
       this.content = lines.toString();
     }
   }
-
+  /**
+   * Retrieves the raw text content of the loaded file.
+   *
+   * @return A {@link String} containing the full content of the resource.
+   */
   public String getContent() {
     return content;
   }

@@ -31,31 +31,46 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-/** The GameLauncher class is the entry point for the Agon application. */
+/**
+ * The GameLauncher class is the entry point for the Agon application.
+ * It handles command-line arguments, initializes the configuration,
+ * and bootstraps either the CLI or GUI environment.
+ */
 public class GameLauncher {
 
+  /** Command-line options defined for the application launch. */
   private final Options options;
+
+  /** Path to the local configuration file (.agonrc). */
   private final String configPath = System.getProperty("user.dir") + File.separator + ".agonrc";
 
+  /**
+   * Constructs a new GameLauncher and initializes supported command-line options.
+   */
   public GameLauncher() {
     this.options = new Options();
     this.setupOptions();
   }
 
+  /**
+   * Configures the available command-line options using Apache Commons CLI.
+   * Includes help, version, verbose, debug, gui, and contest modes.
+   */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
     options.addOption("V", "version", false, "Displays version information");
     options.addOption("v", "verbose", false, "Enables verbose output.");
     options.addOption("d", "debug", false, "Enables debug mode.");
     options.addOption("g", "gui", false, "Starts the graphical interface.");
-    options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
-    options.addOption("t", "time", true, "Sets the time limit for each player (in minutes).");
-    options.addOption(
-        "a", "ai", true, "Replace the given color by an Ai. Can be both using A for color.");
     options.addOption(
         "c", "contest", false, "Launches contest mode (reads file and outputs move).");
+    ConfigBinder.fillOptions(options);
   }
 
+  /**
+   * Main entry point for launching the application logic.
+   * @param args Array of command-line arguments provided at startup.
+   */
   public void launch(final String... args) {
     final AgonRegister<CmdAction> cmds = new AgonRegister<>();
     final CommandLineParser parser = new DefaultParser();
@@ -74,6 +89,11 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Handles information-only requests such as displaying help or version info.
+   * @param cmd  The parsed command line.
+   * @param cmds The registry of commands.
+   */
   private void handleInfoOptions(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
     if (cmd.hasOption("h")) {
       this.fillRegister(cmds, null, null, null, new AppContext(new LocalProfile("Temp")));
@@ -83,6 +103,11 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Initializes game configuration and context before starting the appropriate interface.
+   * @param cmd  The parsed command line.
+   * @param cmds The registry of commands.
+   */
   private void setupAndStartGame(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
     final GameConfig config = loadInitialConfig();
     applyConfigOptions(cmd, config);
@@ -99,6 +124,11 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Updates the game configuration based on verbose and debug flags.
+   * @param cmd    The parsed command line.
+   * @param config The game configuration to update.
+   */
   private void applyConfigOptions(final CommandLine cmd, final GameConfig config) {
     if (cmd.hasOption("v")) {
       config.setVerbose(true);
@@ -110,6 +140,11 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Creates the application context, determining the player name and execution mode.
+   * @param cmd The parsed command line.
+   * @return The initialized {@link AppContext}.
+   */
   private AppContext createAppContext(final CommandLine cmd) {
     final AppMode mode;
     final String playerName = askPlayerName();
@@ -127,6 +162,14 @@ public class GameLauncher {
     return context;
   }
 
+  /**
+   * Processes file arguments and handles the specialized contest mode.
+   * @param cmd      The parsed command line.
+   * @param cmds     The command registry.
+   * @param context  The application context.
+   * @param filePath The path of the file to load, if provided.
+   * @return true if the game should proceed to start, false if it should stop (e.g., contest finished).
+   */
   private boolean processArgumentsAndContest(
       final CommandLine cmd,
       final AgonRegister<CmdAction> cmds,
@@ -162,6 +205,10 @@ public class GameLauncher {
     return true;
   }
 
+  /**
+   * Loads the configuration from the .agonrc file or creates a default one if missing.
+   * @return The loaded {@link GameConfig}.
+   */
   private GameConfig loadInitialConfig() {
     final ConfigParser configParser = new ConfigParser();
     GameConfig config;
@@ -175,6 +222,9 @@ public class GameLauncher {
     return config;
   }
 
+  /**
+   * Generates a default configuration file on the local disk.
+   */
   private void createDefaultConfigFile() {
     final ConfigSerializer serializer = new ConfigSerializer();
     try {
@@ -185,6 +235,10 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Prompts the user via terminal to enter their player name.
+   * @return The non-empty player name.
+   */
   protected String askPlayerName() {
     final Scanner scanner = new Scanner(System.in);
     System.out.print("Enter your player name: ");
@@ -197,6 +251,10 @@ public class GameLauncher {
     return name;
   }
 
+  /**
+   * Prompts the user to choose between Local and Online application modes.
+   * @return The selected {@link AppMode}.
+   */
   protected AppMode askApplicationMode() {
     final Scanner scanner = new Scanner(System.in);
     System.out.println("Select mode:");
@@ -212,6 +270,14 @@ public class GameLauncher {
     return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
 
+  /**
+   * Starts either the GUI or the CLI based on startup arguments.
+   * @param config         The game configuration.
+   * @param cmd            The parsed command line.
+   * @param cmds           The command registry.
+   * @param filePathToLoad The file to load at startup, if any.
+   * @param context        The application context.
+   */
   protected void startGame(
       final GameConfig config,
       final CommandLine cmd,
@@ -221,23 +287,39 @@ public class GameLauncher {
 
     if (cmd.hasOption("g")) {
       System.out.println("Starting Agon GUI...");
-      launchGUI(config, cmds, context);
+      launchGUI(config, cmds,cmd,context);
     } else {
       System.out.println("Starting Agon Shell...");
       launchCLI(config, cmd, cmds, filePathToLoad, context);
     }
   }
 
-  protected void launchGUI(GameConfig config, AgonRegister<CmdAction> cmds, AppContext context) {
+  /**
+   * Initializes and starts the JavaFX Graphical User Interface.
+   * @param config  The game configuration.
+   * @param cmds    The command registry.
+   * @param cmd     The parsed command line.
+   * @param context The application context.
+   */
+  protected void launchGUI(GameConfig config, AgonRegister<CmdAction> cmds,CommandLine cmd, AppContext context) {
     final AgonGui gui = new AgonGui(config, context);
     final GameEngine gameEngine = new GameEngine(gui, cmds);
     context.setGameEngine(gameEngine);
     gameEngine.setAppContext(context);
     this.fillRegister(cmds, gui, config, gameEngine, context);
+    ConfigBinder.bindOptionsToConfig(cmd, config, gui);
     gui.start();
     gameEngine.start();
   }
 
+  /**
+   * Initializes and starts the interactive Command Line Interface using JLine.
+   * @param config         The game configuration.
+   * @param cmd            The parsed command line.
+   * @param cmds           The command registry.
+   * @param filePathToLoad The file to load at startup, if any.
+   * @param context        The application context.
+   */
   protected void launchCLI(
       GameConfig config,
       CommandLine cmd,
@@ -286,6 +368,14 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Populates the command register with all available game and network commands.
+   *  @param cmds          The registry to populate.
+   * @param userInterface The active user interface (CLI or GUI).
+   * @param config        The game configuration.
+   * @param engine        The game engine.
+   * @param context       The application context.
+   */
   private void fillRegister(
       final AgonRegister<CmdAction> cmds,
       final GameUserInterface userInterface,
@@ -322,6 +412,10 @@ public class GameLauncher {
     cmds.register("quit", new CmdQuit(userInterface, context));
   }
 
+  /**
+   * Prints the help message to the console, listing CLI options and shell commands.
+   *  @param cmds The registry containing available shell commands.
+   */
   private void printHelp(final AgonRegister<CmdAction> cmds) {
     final HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("agon [OPTIONS]", options);
@@ -343,6 +437,9 @@ public class GameLauncher {
             + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
   }
 
+  /**
+   * Displays the application version information by reading the version.txt file.
+   */
   private void printVersion() {
     try {
       System.out.println(getVersionContent());
@@ -353,10 +450,20 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Loads the content of the help documentation from a local file.
+   *  @return The help content as a String.
+   * @throws IOException If the file cannot be read.
+   */
   protected String getHelpContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/helpGameLauncher.txt").getContent();
   }
 
+  /**
+   * Loads the content of the version information from a local file.
+   *  @return The version content as a String.
+   * @throws IOException If the file cannot be read.
+   */
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }

@@ -57,16 +57,7 @@ public class CmdCreate extends Cmd {
     this.gameEngine = gameEngine;
     this.args = args;
     Options options = super.getOptions();
-    options.addOption("a", "ai", true, "Set the [Color] player with an Ai.\n");
-    options.addOption("b", "blitz", false, "Set the game mode to blitz\n");
-    options.addOption("t", "time", true, "Set the reflexion time for both player\n");
-    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
-    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
-    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
-    options.addOption(
-        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
-    options.addOption(
-        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
+    ConfigBinder.fillOptions(options);
   }
 
   /**

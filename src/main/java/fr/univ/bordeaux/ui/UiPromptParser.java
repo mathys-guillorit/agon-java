@@ -4,7 +4,7 @@ import fr.univ.bordeaux.agoncore.bitboard.CoordinateMapper;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
-import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -14,35 +14,39 @@ import org.jline.reader.Parser;
 import org.jline.reader.impl.DefaultParser;
 
 /**
- * Utility class to parse terminal input into executable {@link CmdAction} instances. The parser
- * follows a two-step logic:
+ * Utility class to parse terminal input into executable {@link CmdAction} instances.
  *
+ * <p>The parser follows a multi-step logic:
  * <ol>
- *   <li>It checks if the input matches a command registered in the {@link AgonRegister} (e.g.,
- *       "help", "save").
- *   <li>If no command matches, it attempts to parse the input as a move (e.g., "a1b2") or a
- *       relocation (e.g., "a1") using Regex patterns.
+ * <li>Checks for compound commands (e.g., "server start" translated to "server_start").</li>
+ * <li>Checks if the input matches a standard registered command (e.g., "help", "save").</li>
+ * <li>Attempts to parse the input as a move (e.g., "a1b2") or a relocation (e.g., "a1")
+ * using Regular Expressions if no command matches.</li>
  * </ol>
  */
 public class UiPromptParser {
+
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
   private static final Parser parser = new DefaultParser();
 
-  /** Pattern for standard moves: origin (letter+digit) + destination (letter+digit). Ex: "a1b2" */
+  /** * Regex pattern for standard moves: origin (letter + digit) + destination (letter + digit).
+   * Example: "a1b2", "k11a1".
+   */
   private static final Pattern MOVE_PATTERN =
       Pattern.compile("^([a-k])(\\d{1,2})([a-k])(\\d{1,2})$");
 
-  /** Pattern for relocation moves (one coordinate). Ex: "a1" */
+  /** * Regex pattern for relocation moves (single coordinate).
+   * Example: "a1", "f6".
+   */
   private static final Pattern RELOCATION_PATTERN = Pattern.compile("^([a-k])(\\d{1,2})$");
 
   /**
    * Parses a raw line from the terminal and returns the corresponding {@link CmdAction}.
    *
-   * @param line The raw string entered by the user.
-   * @param registry The command registry containing available keywords.
-   * @param ui The user interface context to pass to newly created commands.
-   * @return A {@link CmdAction} ready for execution, or {@code null} if the input is invalid or
-   *     empty.
+   * @param line The raw string entered by the user in the shell.
+   * @param registry The {@link AgonRegister} containing all available command keywords.
+   * @param ui The {@link GameUserInterface} context to be injected into the created command.
+   * @return A {@link CmdAction} ready for execution, or {@code null} if the input is invalid.
    */
   public static CmdAction parse(
       final String line, AgonRegister<CmdAction> registry, GameUserInterface ui) {
@@ -79,7 +83,6 @@ public class UiPromptParser {
     // 2. Fallback to classic one-word commands such as "join"
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
-    // Try to find the command in the registry, otherwise fallback to move/relocation parsing
     return registry
         .get(firstWord)
         .map(
@@ -101,18 +104,17 @@ public class UiPromptParser {
    * Fallback method to handle inputs that are not registered commands.
    *
    * <p>Uses {@code MOVE_PATTERN} and {@code RELOCATION_PATTERN} to detect if the user typed raw
-   * coordinates to move a piece.
+   * coordinates to move a piece. If a match is found, it calculates the bitboard indices
+   * using {@link CoordinateMapper}.
    *
-   * @param input The raw input string.
-   * @param ui The UI context.
+   * @param input The raw input string from the user.
+   * @param ui The {@link GameUserInterface} context for error reporting.
    * @return A {@link CmdMove} instance if coordinates are valid, {@code null} otherwise.
    */
   private static CmdAction handleDefault(String input, GameUserInterface ui) {
     String lowerInput = input.toLowerCase().trim();
     Matcher moveMatcher = MOVE_PATTERN.matcher(lowerInput);
     Matcher relocationMatcher = RELOCATION_PATTERN.matcher(lowerInput);
-
-    // Case 1: Standard Move (e.g., a1b2)
     if (moveMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches MOVE_PATTERN (" + lowerInput + ")");
       char letterFrom = moveMatcher.group(1).charAt(0);
@@ -130,8 +132,6 @@ public class UiPromptParser {
         return null;
       }
     }
-
-    // Case 2: Relocation (e.g., a1)
     if (relocationMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches RELOCATION_PATTERN (" + lowerInput + ")");
       char letter = relocationMatcher.group(1).charAt(0);
@@ -153,10 +153,10 @@ public class UiPromptParser {
   }
 
   /**
-   * Checks if a column number is within the valid Agon board range.
+   * Checks if a column number is within the valid Agon board range (1 to 11).
    *
-   * @param col The column index to check.
-   * @return true if between 1 and 11 inclusive.
+   * @param col The column value to validate.
+   * @return {@code true} if the coordinate is within the board boundaries.
    */
   private static boolean isValidCoord(int col) {
     return col >= 1 && col <= 11;
