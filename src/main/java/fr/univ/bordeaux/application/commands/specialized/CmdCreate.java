@@ -26,7 +26,7 @@ public class CmdCreate extends Cmd {
   /** The core game engine to be updated with the new match manager. */
   private GameEngine gameEngine;
 
-  /** Arguments passed by the user (e.g., -p1Ia true). */
+  /** Arguments passed by the user (e.g., -a black). */
   private String[] args;
 
   /**

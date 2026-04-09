@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.technical.io.config;
 
+import java.util.Arrays;
+
 /**
  * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
  * rules (like blitz mode and timeouts), and Artificial Intelligence settings (like algorithms,
@@ -62,8 +64,10 @@ public class GameConfig {
    *
    * @param timeout The timeout duration in seconds.
    */
-  public void setTimeout(int timeout) {
+  public boolean setTimeout(int timeout) {
+    if (timeout < 0) return false;
     this.timeout = timeout;
+    return true;
   }
 
   /**
@@ -80,8 +84,12 @@ public class GameConfig {
    *
    * @param mode The name of the AI algorithm (e.g., {@code "MINIMAX"}).
    */
-  public void setAiMode(String mode) {
-    this.aiMode = mode;
+  public boolean setAiMode(String mode) {
+    if (Arrays.asList("minimax", "iterative", "mcts").contains(mode)) {
+      this.aiMode = mode;
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -89,8 +97,13 @@ public class GameConfig {
    *
    * @param depth The maximum number of turns ahead the AI should calculate.
    */
-  public void setAiDepth(int depth) {
-    this.aiDepth = depth;
+  public boolean setAiDepth(int depth) {
+    if (depth<=0){
+      return false;
+    }else {
+      this.aiDepth = depth;
+      return true;
+    }
   }
 
   /**
@@ -98,8 +111,10 @@ public class GameConfig {
    *
    * @param timeLimit The calculation time limit in seconds.
    */
-  public void setAiTimeLimit(int timeLimit) {
+  public boolean setAiTimeLimit(int timeLimit) {
+    if (timeLimit <= 0) return false;
     this.aiTimeLimit = timeLimit;
+    return true;
   }
 
   /**
@@ -116,8 +131,13 @@ public class GameConfig {
    *
    * @param heuristic The name of the heuristic strategy (e.g., {@code "MIXED"}).
    */
-  public void setAiHeuristic(String heuristic) {
-    this.aiHeuristic = heuristic;
+  public boolean setAiHeuristic(String heuristic) throws IllegalArgumentException{
+    if (Arrays.asList("centrality","mixed","mobility","uct","ml").contains(heuristic)) {
+      this.aiHeuristic = heuristic;
+      return true;
+    }
+    return false;
+
   }
 
   /**
@@ -273,9 +293,9 @@ public class GameConfig {
     string.append("[aiDepth]=").append(aiDepth).append("\n");
     string.append("[aiIterativeDeepening]=").append(aiIterativeDeepening).append("\n");
     string.append("[aiTimeLimit]=").append(aiTimeLimit).append("\n");
-    string.append("[aiHeuristique]=").append(aiHeuristic).append("\n");
-    string.append("[whiteIsAI]=").append(whiteIsAi).append("\n");
-    string.append("[blackIsAI]=").append(blackIsAi).append("\n");
+    string.append("[aiHeuristic]=").append(aiHeuristic).append("\n");
+    string.append("[whiteIsAi]=").append(whiteIsAi).append("\n");
+    string.append("[blackIsAi]=").append(blackIsAi).append("\n");
     return string.toString();
   }
 

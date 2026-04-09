@@ -13,6 +13,7 @@ import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.ObservableMatch;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
