@@ -260,5 +260,4 @@ public class AgonGui implements GameUserInterface, MatchObserver {
   public boolean getPaused() {
     return isPaused;
   }
-
 }

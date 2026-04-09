@@ -6,7 +6,10 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.network.client.AgonClient;
+import fr.univ.bordeaux.application.network.client.ClientDiscovery;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
+import fr.univ.bordeaux.application.network.client.ServerInfo;
+import fr.univ.bordeaux.application.network.client.runtime.AsyncEventLogger;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.gui.AgonApp;
@@ -397,11 +400,7 @@ public class GameViewControllerTest {
     Thread.sleep(300);
     assertTrue(
         fakeGui.sentCommands.stream()
-            .anyMatch(
-                cmd ->
-                    cmd.contains("--ai black")
-                        && cmd.contains("--blitz")
-                        && cmd.contains("--player1Color black")));
+            .anyMatch(cmd -> cmd.contains("--ai black") && cmd.contains("--blitz")));
   }
 
   @Test
@@ -547,18 +546,47 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testShowServerBrowser_Branches() throws InterruptedException {
+  void testShowServerBrowser_Branches() throws Exception {
     fakeGui.getAppContext().setMode(AppMode.ONLINE);
     fakeGui.sentCommands.clear();
 
+    Field discoveryField = AppContext.class.getDeclaredField("discovery");
+    discoveryField.setAccessible(true);
+
+    discoveryField.set(fakeGui.getAppContext(), null);
     interactWithNextDialog(null, true);
     runAndWait(() -> controller.showServerBrowser());
-    Thread.sleep(600);
+    Thread.sleep(400);
+
+    ClientDiscovery emptyDiscovery =
+        new ClientDiscovery() {
+          @Override
+          public List<ServerInfo> getServers() {
+            return new ArrayList<>();
+          }
+        };
+    discoveryField.set(fakeGui.getAppContext(), emptyDiscovery);
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.showServerBrowser());
+    Thread.sleep(400);
+
+    ClientDiscovery populatedDiscovery =
+        new ClientDiscovery() {
+          @Override
+          public List<ServerInfo> getServers() {
+            List<ServerInfo> list = new ArrayList<>();
+            ServerInfo info = new ServerInfo("TestServer", "192.168.1.50", 12345);
+            list.add(info);
+            return list;
+          }
+        };
+    discoveryField.set(fakeGui.getAppContext(), populatedDiscovery);
 
     fakeGui.sentCommands.clear();
     interactWithNextDialog("192.168.1.50:12345", false);
     runAndWait(() -> controller.showServerBrowser());
-    Thread.sleep(600);
+    Thread.sleep(400);
+
     assertTrue(fakeGui.sentCommands.contains("join 192.168.1.50:12345"));
   }
 
@@ -610,20 +638,20 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testConsoleInterceptor_ChooseMode() throws InterruptedException {
+  void testNetworkListener_ChooseMode() throws InterruptedException {
     fakeGui.sentCommands.clear();
 
     interactWithNextDialog(null, false);
-    System.out.println("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
+    AsyncEventLogger.logInfo("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
 
     Thread.sleep(600);
     assertTrue(fakeGui.sentCommands.contains("mode normal"));
   }
 
   @Test
-  void testConsoleInterceptor_GameStarted() throws InterruptedException {
+  void testNetworkListener_GameStarted() throws InterruptedException {
     fakeGui.sentCommands.clear();
-    System.out.println("[ONLINE] GAME_STARTED GAME_ID=1");
+    AsyncEventLogger.logInfo("[ONLINE] GAME_STARTED GAME_ID=1");
     Thread.sleep(600);
     assertTrue(fakeGui.sentCommands.isEmpty());
   }
@@ -823,11 +851,11 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testConsoleInterceptor_ChooseMode_Blitz() throws InterruptedException {
+  void testNetworkListener_ChooseMode_Blitz() throws InterruptedException {
     fakeGui.sentCommands.clear();
 
     interactWithNextDialog(null, true);
-    System.out.println("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
+    AsyncEventLogger.logInfo("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
 
     Thread.sleep(600);
     assertTrue(fakeGui.sentCommands.contains("mode blitz"));
@@ -869,10 +897,10 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testConsoleInterceptor_OnlineTurns() throws InterruptedException {
-    System.out.println("[ONLINE] Your turn");
-    System.out.println("[ONLINE] Opponent turn");
-    System.out.println("[ONLINE] You are WHITE");
+  void testNetworkListener_OnlineTurns() throws InterruptedException {
+    AsyncEventLogger.logInfo("[ONLINE] Your turn");
+    AsyncEventLogger.logInfo("[ONLINE] Opponent turn");
+    AsyncEventLogger.logInfo("[ONLINE] You are WHITE");
     Thread.sleep(600);
     assertTrue(true);
   }

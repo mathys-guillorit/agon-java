@@ -170,7 +170,8 @@ public class AppContext implements OnlineGameStartListener {
   @Override
   public void onOnlineGameStarted(final OnlineGameInfo info) {
     final Match localMatch =
-        MatchFactory.createOnlineMatch(info.getWhitePlayerName(), info.getBlackPlayerName(), info.isBlitzMode());
+        MatchFactory.createOnlineMatch(
+            info.getWhitePlayerName(), info.getBlackPlayerName(), info.isBlitzMode());
     final Color localColor = extractLocalColor(info);
 
     this.onlineGameActive = true;
@@ -184,9 +185,9 @@ public class AppContext implements OnlineGameStartListener {
     LOGGER.info(
         "[ONLINE] WHITE=" + info.getWhitePlayerName() + " BLACK=" + info.getBlackPlayerName());
 
-        if (gameEngine != null) {
-            gameEngine.previewMatch(localMatch);
-        }
+    if (gameEngine != null) {
+      gameEngine.previewMatch(localMatch);
+    }
 
     if (myOnlineTurn) {
       LOGGER.info("[ONLINE] Your turn");
@@ -274,7 +275,7 @@ public class AppContext implements OnlineGameStartListener {
           LOGGER.severe("[ONLINE] Failed to apply confirmed local move: " + rawMove);
         } else {
           myOnlineTurn = false;
-            onlineMatch.startTurn();
+          onlineMatch.startTurn();
           applied = true;
         }
       }
@@ -311,7 +312,7 @@ public class AppContext implements OnlineGameStartListener {
           LOGGER.severe("[ONLINE] Failed to apply opponent move: " + rawMove);
         } else {
           myOnlineTurn = true;
-            onlineMatch.startTurn();
+          onlineMatch.startTurn();
           applied = true;
         }
       }

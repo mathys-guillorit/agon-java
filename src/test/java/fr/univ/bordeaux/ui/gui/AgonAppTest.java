@@ -160,4 +160,54 @@ public class AgonAppTest {
         });
     latch.await(2, TimeUnit.SECONDS);
   }
+
+  @Test
+  @DisplayName("Couverture à 100% de la méthode setupShortcuts et bindShortcut")
+  void testSetupShortcuts_FullCoverage() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            AgonApp app = new AgonApp();
+            GameConfig config = new GameConfig();
+
+            config.getShortcuts().clear();
+
+            config.getShortcuts().put("shortcut_new", "Ctrl+N");
+            config.getShortcuts().put("shortcut_load", "Ctrl+L");
+            config.getShortcuts().put("shortcut_save", "Ctrl+S");
+            config.getShortcuts().put("shortcut_config", "Ctrl+C");
+            config.getShortcuts().put("shortcut_info", "Ctrl+I");
+            config.getShortcuts().put("shortcut_quit", "Ctrl+Q");
+            config.getShortcuts().put("shortcut_hint", "Ctrl+H");
+
+            config.getShortcuts().put("shortcut_undo", "   ");
+            config.getShortcuts().put("shortcut_redo", null);
+
+            config.getShortcuts().put("shortcut_pause", "NOT_A_VALID_KEY_COMBINATION");
+
+            AgonGui gui = new AgonGui(config, null);
+            AgonApp.setGui(gui);
+
+            GameViewController fakeController = new GameViewController();
+            setPrivateStaticField(AgonApp.class, "controller", fakeController);
+
+            Scene fakeScene = new Scene(new Pane());
+            setPrivateStaticField(AgonApp.class, "scene", fakeScene);
+
+            app.setupShortcuts();
+
+            assertEquals(
+                7,
+                fakeScene.getAccelerators().size(),
+                "Seuls les 7 raccourcis valides doivent être enregistrés");
+
+          } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+          } finally {
+            latch.countDown();
+          }
+        });
+    latch.await(5, TimeUnit.SECONDS);
+  }
 }

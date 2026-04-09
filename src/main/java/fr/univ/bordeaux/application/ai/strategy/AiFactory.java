@@ -6,7 +6,6 @@ import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,7 +48,8 @@ public final class AiFactory {
         if (heuristic == null) {
           resultAi = null;
         } else {
-          resultAi = new MinimaxStrategy(
+          resultAi =
+              new MinimaxStrategy(
                   heuristic,
                   color,
                   config.getAiDepth(),

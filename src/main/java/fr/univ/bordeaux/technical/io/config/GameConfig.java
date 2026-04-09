@@ -50,7 +50,8 @@ public class GameConfig {
   private boolean blackIsAi;
 
   /** Map of keyboard shortcuts. */
-  private Map<String, String> shortcuts = createDefaultShortcuts();;
+  private Map<String, String> shortcuts = createDefaultShortcuts();
+  ;
 
   public GameConfig() {}
 
@@ -273,7 +274,8 @@ public class GameConfig {
   /**
    * Retrieves the map containing all configured keyboard shortcuts.
    *
-   * @return A map where the key is the shortcut identifier and the value is the assigned key combination.
+   * @return A map where the key is the shortcut identifier and the value is the assigned key
+   *     combination.
    */
   public Map<String, String> getShortcuts() {
     return shortcuts;
@@ -291,7 +293,8 @@ public class GameConfig {
   /**
    * Enables or disables the manual placement of Pawns and Queens.
    *
-   * @param manualPlacement {@code true} to allow the players to manually choose the initial placement of their pawns, {@code false} to make it automatic.
+   * @param manualPlacement {@code true} to allow the players to manually choose the initial
+   *     placement of their pawns, {@code false} to make it automatic.
    */
   public void setManualPlacement(final boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
@@ -300,7 +303,8 @@ public class GameConfig {
   /**
    * Sets the entire map of keyboard shortcuts.
    *
-   * @param shortcuts A map containing the shortcut identifiers and their corresponding key combinations.
+   * @param shortcuts A map containing the shortcut identifiers and their corresponding key
+   *     combinations.
    */
   public void setShortcuts(final Map<String, String> shortcuts) {
     this.shortcuts = shortcuts;
@@ -309,7 +313,7 @@ public class GameConfig {
   /**
    * Adds or updates a single keyboard shortcut in the configuration.
    *
-   * @param key   The shortcut identifier (must start with "shortcut_").
+   * @param key The shortcut identifier (must start with "shortcut_").
    * @param value The key combination assigned to this shortcut.
    */
   public void addShortcut(final String key, final String value) {

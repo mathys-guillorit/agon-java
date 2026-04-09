@@ -89,7 +89,6 @@ public class ConfigSerializer implements Serializer<GameConfig> {
         final String value = entry.getValue();
         writer.write(key + " = " + value + "\n");
       }
-
     }
   }
 }

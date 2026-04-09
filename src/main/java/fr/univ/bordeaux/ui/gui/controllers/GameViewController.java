@@ -1,12 +1,11 @@
 package fr.univ.bordeaux.ui.gui.controllers;
 
-import fr.univ.bordeaux.agoncore.agonelements.PieceType;
-import fr.univ.bordeaux.agoncore.bitboard.RestrictedAgonBoard;
 import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.match.Match;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.ClientDiscovery;
 import fr.univ.bordeaux.application.network.client.ServerInfo;
+import fr.univ.bordeaux.application.network.client.runtime.AsyncEventLogger;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
 import fr.univ.bordeaux.technical.utils.GameLogger;
@@ -14,7 +13,6 @@ import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +60,7 @@ public class GameViewController {
   public void setAgonGui(final AgonGui agonGui) {
     this.agonGui = agonGui;
     Platform.runLater(this::promptSessionSetup);
-    setupConsoleInterceptor();
+    setupNetworkListener();
   }
 
   /**
@@ -133,27 +131,27 @@ public class GameViewController {
     }
   }
 
-    private void handleTurnAndPauseMessages(final String originalMsg, final String lowerMsg) {
-        if (lowerMsg.contains("game paused")) {
-            updateMessage(originalMsg);
-        } else if (agonGui != null && agonGui.getAppContext().isOnlineGameActive()) {
-            final boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
-            final String myColor = agonGui.getAppContext().getLocalOnlineColor().toString();
-            final String oppColor = myColor.equals("WHITE") ? "BLACK" : "WHITE";
+  private void handleTurnAndPauseMessages(final String originalMsg, final String lowerMsg) {
+    if (lowerMsg.contains("game paused")) {
+      updateMessage(originalMsg);
+    } else if (agonGui != null && agonGui.getAppContext().isOnlineGameActive()) {
+      final boolean isMyTurn = agonGui.getAppContext().isMyOnlineTurn();
+      final String myColor = agonGui.getAppContext().getLocalOnlineColor().toString();
+      final String oppColor = myColor.equals("WHITE") ? "BLACK" : "WHITE";
 
-            String customMsg =
-                    isMyTurn ? "Your turn! (You are " + myColor + ")" : "Opponent's turn (" + oppColor + ")";
+      String customMsg =
+          isMyTurn ? "Your turn! (You are " + myColor + ")" : "Opponent's turn (" + oppColor + ")";
 
-            if (originalMsg.contains("Time left:")) {
-                final String timePart = originalMsg.substring(originalMsg.indexOf("Time left:"));
-                customMsg += "   |   " + timePart;
-            }
+      if (originalMsg.contains("Time left:")) {
+        final String timePart = originalMsg.substring(originalMsg.indexOf("Time left:"));
+        customMsg += "   |   " + timePart;
+      }
 
-            updateMessage(customMsg);
-        } else {
-            updateMessage(originalMsg);
-        }
+      updateMessage(customMsg);
+    } else {
+      updateMessage(originalMsg);
     }
+  }
 
   private void handleDialogPrompts(final String originalMsg, final String lowerMsg) {
     if (lowerMsg.contains("invitation_received")) {
@@ -288,6 +286,7 @@ public class GameViewController {
     final ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
     dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
 
+    // --- JOUEURS ---
     final ComboBox<String> p1Type = new ComboBox<>();
     p1Type.getItems().addAll("Human", "AI");
     p1Type.setValue("Human");
@@ -300,12 +299,58 @@ public class GameViewController {
     p2Type.getItems().addAll("Human", "AI");
     p2Type.setValue("AI");
 
+    // --- CONFIGURATION IA (Globale, basée sur CmdCreate) ---
+    final ComboBox<String> aiMode = new ComboBox<>();
+    aiMode.getItems().addAll("Random", "Minimax", "MCTS");
+    aiMode.setValue("Minimax");
+
+    final ComboBox<String> aiMinimaxScoring = new ComboBox<>();
+    aiMinimaxScoring.getItems().addAll("Mobility", "Centrality", "ML");
+    aiMinimaxScoring.setValue("Mobility");
+
+    final Spinner<Integer> aiDepth = new Spinner<>(1, 10, 3);
+
+    final ComboBox<String> aiMctsSelection = new ComboBox<>();
+    aiMctsSelection.getItems().addAll("UCT", "ML");
+    aiMctsSelection.setValue("UCT");
+
+    // Création des lignes de paramètres IA
+    final HBox scoringBox = new HBox(10, new Label("Heuristic:"), aiMinimaxScoring);
+    final HBox depthBox = new HBox(10, new Label("Depth:"), aiDepth);
+    final HBox mctsBox = new HBox(10, new Label("Selection:"), aiMctsSelection);
+
+    // Le panneau IA complet
+    final VBox aiSettingsBox = new VBox(10);
+    aiSettingsBox.setPadding(new Insets(10));
+    aiSettingsBox.setStyle("-fx-border-color: lightgray; -fx-border-radius: 5;");
+    aiSettingsBox
+        .getChildren()
+        .addAll(
+            new Label("--- AI Configuration ---"),
+            new HBox(10, new Label("Strategy:"), aiMode),
+            scoringBox,
+            depthBox,
+            mctsBox);
+
+    aiSettingsBox
+        .visibleProperty()
+        .bind(p1Type.valueProperty().isEqualTo("AI").or(p2Type.valueProperty().isEqualTo("AI")));
+    aiSettingsBox.managedProperty().bind(aiSettingsBox.visibleProperty());
+
+    scoringBox.visibleProperty().bind(aiMode.valueProperty().isEqualTo("Minimax"));
+    scoringBox.managedProperty().bind(scoringBox.visibleProperty());
+    depthBox.visibleProperty().bind(aiMode.valueProperty().isEqualTo("Minimax"));
+    depthBox.managedProperty().bind(depthBox.visibleProperty());
+
+    mctsBox.visibleProperty().bind(aiMode.valueProperty().isEqualTo("MCTS"));
+    mctsBox.managedProperty().bind(mctsBox.visibleProperty());
+
     final CheckBox blitzCheck = new CheckBox("Enable Blitz mode");
     final Spinner<Integer> timeSpinner = new Spinner<>(1, 60, 5);
     timeSpinner.setDisable(true);
-
     blitzCheck.setOnAction(e -> timeSpinner.setDisable(!blitzCheck.isSelected()));
 
+    // --- LAYOUT ---
     final GridPane grid = new GridPane();
     grid.setHgap(10);
     grid.setVgap(10);
@@ -319,9 +364,10 @@ public class GameViewController {
     grid.add(new Label("PLayer 2 :"), 0, 2);
     grid.add(p2Type, 1, 2);
 
-    grid.add(blitzCheck, 0, 3, 2, 1);
-    grid.add(new Label("Time (minutes) :"), 0, 4);
-    grid.add(timeSpinner, 1, 4);
+    grid.add(aiSettingsBox, 0, 3, 2, 1);
+    grid.add(blitzCheck, 0, 4, 2, 1);
+    grid.add(new Label("Time (minutes) :"), 0, 5);
+    grid.add(timeSpinner, 1, 5);
 
     dialog.getDialogPane().setContent(grid);
 
@@ -330,23 +376,36 @@ public class GameViewController {
           String res = null;
           if (dialogButton == createButtonType) {
             final StringBuilder cmd = new StringBuilder("new");
-
             final String p1ColorStr = p1Color.getValue().toLowerCase();
             final String p2ColorStr = "white".equals(p1ColorStr) ? "black" : "white";
 
-            if ("AI".equals(p1Type.getValue())) {
+            boolean p1IsAi = "AI".equals(p1Type.getValue());
+            boolean p2IsAi = "AI".equals(p2Type.getValue());
+
+            // CORRECTION ICI : Gestion de l'option --ai selon le nombre d'IA
+            if (p1IsAi && p2IsAi) {
+              cmd.append(" --ai a"); // "a" ou "all" pour définir les deux joueurs en IA
+            } else if (p1IsAi) {
               cmd.append(" --ai ").append(p1ColorStr);
-            }
-            if ("AI".equals(p2Type.getValue())) {
+            } else if (p2IsAi) {
               cmd.append(" --ai ").append(p2ColorStr);
             }
 
-            cmd.append(" --player1Color ").append(p1ColorStr);
+            if (p1IsAi || p2IsAi) {
+              cmd.append(" --ai-mode ").append(aiMode.getValue().toLowerCase());
+              if ("Minimax".equals(aiMode.getValue())) {
+                cmd.append(" --ai-minimax-scoring ")
+                    .append(aiMinimaxScoring.getValue().toLowerCase());
+                cmd.append(" --ai-minimax-depth ").append(aiDepth.getValue());
+              } else if ("MCTS".equals(aiMode.getValue())) {
+                cmd.append(" --ai-mcts-selection ")
+                    .append(aiMctsSelection.getValue().toLowerCase());
+              }
+            }
 
             if (blitzCheck.isSelected()) {
               cmd.append(" --blitz --time ").append(timeSpinner.getValue());
             }
-
             res = cmd.toString();
           }
           return res;
@@ -696,44 +755,33 @@ public class GameViewController {
     }
   }
 
-    private void refreshBoardFromNetwork() {
-        if (agonGui != null && agonGui.getAppContext() != null) {
-            final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
-            if (match != null) {
-                agonGui.onMatchUpdate(match);
-            }
-        }
+  private void refreshBoardFromNetwork() {
+    if (agonGui != null && agonGui.getAppContext() != null) {
+      final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
+      if (match != null) {
+        agonGui.onMatchUpdate(match);
+      }
     }
+  }
 
   /**
-   * Intercepts standard console output (System.out) to capture background network events and
-   * trigger corresponding JavaFX visual updates.
+   * Cleanly subscribes to the client's network events to update the graphical interface without
+   * needing to hijack the standard console output (System.out).
    */
-  private void setupConsoleInterceptor() {
-    final PrintStream originalOut = System.out;
-
-    System.setOut(
-        new PrintStream(originalOut) {
-          @Override
-          public void println(final String x) {
-            super.println(x);
-
-            if (x != null) {
-              if (x.contains("INVITATION_RECEIVED")) {
-                Platform.runLater(() -> promptInvitation(x));
-              } else if (x.contains("CHOOSE_MODE")) {
-                Platform.runLater(() -> promptGameMode());
-              } else if (x.contains("GAME_STARTED GAME_ID")) {
-                Platform.runLater(GameViewController.this::refreshBoardFromNetwork);
-              } else if (x.contains("Your turn")
-                  || x.contains("Opponent turn")
-                  || x.contains("You are")) {
-                String cleanText = x.replace("[ONLINE]", "").trim();
-                Platform.runLater(
-                    () -> {
-                      refreshBoardFromNetwork();
-                    });
-              }
+  private void setupNetworkListener() {
+    AsyncEventLogger.setEventObserver(
+        message -> {
+          if (message != null) {
+            if (message.contains("INVITATION_RECEIVED")) {
+              Platform.runLater(() -> promptInvitation(message));
+            } else if (message.contains("CHOOSE_MODE")) {
+              Platform.runLater(() -> promptGameMode());
+            } else if (message.contains("GAME_STARTED GAME_ID")) {
+              Platform.runLater(this::refreshBoardFromNetwork);
+            } else if (message.contains("Your turn")
+                || message.contains("Opponent turn")
+                || message.contains("You are")) {
+              Platform.runLater(this::refreshBoardFromNetwork);
             }
           }
         });

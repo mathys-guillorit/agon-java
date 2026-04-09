@@ -71,7 +71,8 @@ public class GameSaveSerializer implements Serializer<GameSaveData> {
    * @param config The GameConfig object to serialize.
    * @throws IOException If an I/O error occurs during writing.
    */
-  private void writeConfig(final BufferedWriter writer, final GameConfig config) throws IOException {
+  private void writeConfig(final BufferedWriter writer, final GameConfig config)
+      throws IOException {
     writer.write("verbose = " + config.isVerbose() + "\n");
     writer.write("debug = " + config.isDebug() + "\n");
     writer.write("placement = " + config.isManualPlacement() + "\n");

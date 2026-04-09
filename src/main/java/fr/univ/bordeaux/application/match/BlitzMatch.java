@@ -105,12 +105,12 @@ public class BlitzMatch extends Match {
    * @return {@code true} if the timer was successfully stopped.
    */
   public boolean pause() {
-      isPaused = !isPaused;
+    isPaused = !isPaused;
     if (isPaused) {
       GameLogger.info("BlitzMatch: Game paused.");
       this.getCurrentTimer().stop();
     } else {
-        this.getCurrentTimer().start();
+      this.getCurrentTimer().start();
     }
     return true;
   }
