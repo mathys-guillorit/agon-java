@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.ui.gui;
 
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
 import java.io.IOException;
 import java.util.Map;
@@ -81,7 +82,7 @@ public class AgonApp extends Application {
       try {
         scene.getAccelerators().put(KeyCombination.valueOf(shortcut), runnable);
       } catch (IllegalArgumentException e) {
-        System.err.println("[WARNING] Invalid shortcut " + shortcut);
+        GameLogger.error("[WARNING] Invalid shortcut " + shortcut);
       }
     }
   }

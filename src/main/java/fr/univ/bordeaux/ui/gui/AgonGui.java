@@ -7,6 +7,7 @@ import fr.univ.bordeaux.application.match.BlitzMatch;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.gui.controllers.GameViewController;
@@ -157,7 +158,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
 
   @Override
   public void showError(final String error) {
-    System.err.println("[GUI ERROR] " + error);
+    GameLogger.error("[GUI ERROR] " + error);
     Platform.runLater(
         () -> {
           final GameViewController controller = AgonApp.getController();
@@ -245,7 +246,7 @@ public class AgonGui implements GameUserInterface, MatchObserver {
       final StringBuilder sb =
           new StringBuilder("Current Player: " + currentMatch.getCurrentPlayer().getColor());
       if (currentMatch instanceof BlitzMatch blitzMatch) {
-        sb.append("   |   Time left: ").append(blitzMatch.getRemainingTime());
+        sb.append("   |   Time left: ").append(blitzMatch.getCurrentPlayerRemainingTime());
       }
       showMessage(sb.toString());
     }
@@ -260,11 +261,4 @@ public class AgonGui implements GameUserInterface, MatchObserver {
     return isPaused;
   }
 
-  @Override
-  public AtomicBoolean getDebugMode() {
-    return debugMode;
-  }
-
-  @Override
-  public void setVerbose(final boolean state) {}
 }

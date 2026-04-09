@@ -9,6 +9,7 @@ import fr.univ.bordeaux.application.network.client.ClientDiscovery;
 import fr.univ.bordeaux.application.network.client.ServerInfo;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.io.config.ConfigSerializer;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.gui.AgonApp;
 import fr.univ.bordeaux.ui.gui.AgonGui;
 import fr.univ.bordeaux.ui.gui.components.HexagonCanvas;
@@ -485,7 +486,7 @@ public class GameViewController {
       try {
         playerName = agonGui.getAppContext().getProfile().getName();
       } catch (Exception ignored) {
-        System.err.println("Could not retrieve player name.");
+        GameLogger.error("Could not retrieve player name.");
       }
 
       updateMessage("Logged in as: " + playerName);
@@ -541,7 +542,7 @@ public class GameViewController {
             serverList.getItems().add("No local servers found...");
           } else {
             for (final ServerInfo s : servers) {
-              serverList.getItems().add(s.name + " @ " + s.ip + ":" + s.tcpPort);
+              serverList.getItems().add(s.name + " @ " + s.serverIp + ":" + s.tcpPort);
             }
           }
         } catch (Exception e) {
@@ -699,7 +700,6 @@ public class GameViewController {
         if (agonGui != null && agonGui.getAppContext() != null) {
             final Match match = agonGui.getAppContext().getCurrentOnlineMatch();
             if (match != null) {
-                // En transmettant le match au GUI, la Timeline du Blitz démarre automatiquement !
                 agonGui.onMatchUpdate(match);
             }
         }
@@ -813,7 +813,7 @@ public class GameViewController {
                 new ConfigSerializer().save(agonGui.getConfig(), ".agonrc");
               }
             } catch (Exception e) {
-              System.err.println("Failed to save shortcuts to .agonrc: " + e.getMessage());
+              GameLogger.error("Failed to save shortcuts to .agonrc: " + e.getMessage());
             }
             AgonApp.refreshShortcuts();
             showInfo("Shortcuts updated successfully !");
