@@ -1,7 +1,7 @@
 package fr.univ.bordeaux.technical.io.config;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
@@ -10,27 +10,56 @@ import java.util.Map;
  */
 public class GameConfig {
 
-  private boolean verbose = false;
-  private boolean debug = false;
-  private boolean blitzMode = false;
-  private boolean manualPlacement = false;
+  /** Verbose mode flag. */
+  private boolean verbose;
+
+  /** Debug mode flag. */
+  private boolean debug;
+
+  /** Blitz mode flag. */
+  private boolean blitzMode;
+
+  /** Manual placement flag. */
+  private boolean manualPlacement;
+
+  /** Timeout duration in seconds. */
   private int timeout = 30;
-  private boolean aiActive = false;
+
+  /** Global AI activation flag. */
+  private boolean aiActive;
+
+  /** The AI algorithm mode. */
   private String aiMode = "minimax";
+
+  /** Maximum depth for the AI search. */
   private int aiDepth = 4;
+
+  /** Maximum computation time for AI in seconds. */
   private int aiTimeLimit = 5;
-  private boolean aiIterativeDeepening = true;
+
+  /** Flag for AI iterative deepening. */
+  private boolean iterDeepening = true;
+
+  /** The heuristic strategy name. */
   private String aiHeuristic = "mixed";
-  private boolean whiteIsAi = false;
-  private boolean blackIsAi = false;
-  private Map<String, String> shortcuts = createDefaultShortcuts();
+
+  /** Flag indicating if White is AI. */
+  private boolean whiteIsAi;
+
+  /** Flag indicating if Black is AI. */
+  private boolean blackIsAi;
+
+  /** Map of keyboard shortcuts. */
+  private Map<String, String> shortcuts = createDefaultShortcuts();;
+
+  public GameConfig() {}
 
   /**
    * Sets whether the Black player is controlled by an Artificial Intelligence.
    *
    * @param blackIsAi {@code true} if Black is an AI, {@code false} if human.
    */
-  public void setBlackAi(boolean blackIsAi) {
+  public void setBlackAi(final boolean blackIsAi) {
     this.blackIsAi = blackIsAi;
   }
 
@@ -39,7 +68,7 @@ public class GameConfig {
    *
    * @param verbose {@code true} to enable verbose output, {@code false} otherwise.
    */
-  public void setVerbose(boolean verbose) {
+  public void setVerbose(final boolean verbose) {
     this.verbose = verbose;
   }
 
@@ -48,7 +77,7 @@ public class GameConfig {
    *
    * @param debug {@code true} to enable debug logs and features, {@code false} otherwise.
    */
-  public void setDebug(boolean debug) {
+  public void setDebug(final boolean debug) {
     this.debug = debug;
   }
 
@@ -57,7 +86,7 @@ public class GameConfig {
    *
    * @param blitzMode {@code true} to enable blitz mode, {@code false} for untimed games.
    */
-  public void setBlitzMode(boolean blitzMode) {
+  public void setBlitzMode(final boolean blitzMode) {
     this.blitzMode = blitzMode;
   }
 
@@ -66,17 +95,17 @@ public class GameConfig {
    *
    * @param timeout The timeout duration in seconds.
    */
-  public void setTimeout(int timeout) {
+  public void setTimeout(final int timeout) {
     this.timeout = timeout;
   }
 
   /**
    * Globally enables or disables the use of Artificial Intelligence in the game.
    *
-   * @param ai {@code true} to allow AI players, {@code false} to force human-only players.
+   * @param isAiActive {@code true} to allow AI players, {@code false} to force human players.
    */
-  public void setAi(boolean ai) {
-    this.aiActive = ai;
+  public void setAi(final boolean isAiActive) {
+    this.aiActive = isAiActive;
   }
 
   /**
@@ -84,7 +113,7 @@ public class GameConfig {
    *
    * @param mode The name of the AI algorithm (e.g., {@code "MINIMAX"}).
    */
-  public void setAiMode(String mode) {
+  public void setAiMode(final String mode) {
     this.aiMode = mode;
   }
 
@@ -93,7 +122,7 @@ public class GameConfig {
    *
    * @param depth The maximum number of turns ahead the AI should calculate.
    */
-  public void setAiDepth(int depth) {
+  public void setAiDepth(final int depth) {
     this.aiDepth = depth;
   }
 
@@ -102,17 +131,17 @@ public class GameConfig {
    *
    * @param timeLimit The calculation time limit in seconds.
    */
-  public void setAiTimeLimit(int timeLimit) {
+  public void setAiTimeLimit(final int timeLimit) {
     this.aiTimeLimit = timeLimit;
   }
 
   /**
    * Sets whether the AI should use the Iterative Deepening technique.
    *
-   * @param iterativeDeepening {@code true} to enable Iterative Deepening, {@code false} otherwise.
+   * @param itDeepening {@code true} to enable Iterative Deepening, {@code false} otherwise.
    */
-  public void setAiIterativeDeepening(boolean iterativeDeepening) {
-    this.aiIterativeDeepening = iterativeDeepening;
+  public void setAiIterativeDeepening(final boolean itDeepening) {
+    this.iterDeepening = itDeepening;
   }
 
   /**
@@ -120,7 +149,7 @@ public class GameConfig {
    *
    * @param heuristic The name of the heuristic strategy (e.g., {@code "MIXED"}).
    */
-  public void setAiHeuristic(String heuristic) {
+  public void setAiHeuristic(final String heuristic) {
     this.aiHeuristic = heuristic;
   }
 
@@ -202,7 +231,7 @@ public class GameConfig {
    * @return {@code true} if Iterative Deepening is active, {@code false} otherwise.
    */
   public boolean isAiIterativeDeepening() {
-    return aiIterativeDeepening;
+    return iterDeepening;
   }
 
   /**
@@ -244,8 +273,7 @@ public class GameConfig {
   /**
    * Retrieves the map containing all configured keyboard shortcuts.
    *
-   * @return A map where the key is the shortcut identifier (e.g., "shortcut_new") and the value is
-   *     the assigned key combination (e.g., "ctrl+n").
+   * @return A map where the key is the shortcut identifier and the value is the assigned key combination.
    */
   public Map<String, String> getShortcuts() {
     return shortcuts;
@@ -256,48 +284,41 @@ public class GameConfig {
    *
    * @param whiteIsAi {@code true} if White is an AI, {@code false} if human.
    */
-  public void setWhiteAi(boolean whiteIsAi) {
+  public void setWhiteAi(final boolean whiteIsAi) {
     this.whiteIsAi = whiteIsAi;
   }
 
   /**
    * Enables or disables the manual placement of Pawns and Queens.
    *
-   * @param manualPlacement {@code true} to allow the players to manually choose the initial
-   *     placement of their pawns, {@code false} to make it automatic.
+   * @param manualPlacement {@code true} to allow the players to manually choose the initial placement of their pawns, {@code false} to make it automatic.
    */
-  public void setManualPlacement(boolean manualPlacement) {
+  public void setManualPlacement(final boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
   }
 
   /**
    * Sets the entire map of keyboard shortcuts.
    *
-   * @param shortcuts A map containing the shortcut identifiers and their corresponding key
-   *     combinations.
+   * @param shortcuts A map containing the shortcut identifiers and their corresponding key combinations.
    */
-  public void setShortcuts(Map<String, String> shortcuts) {
+  public void setShortcuts(final Map<String, String> shortcuts) {
     this.shortcuts = shortcuts;
   }
 
   /**
    * Adds or updates a single keyboard shortcut in the configuration.
    *
-   * @param key The shortcut identifier (must start with "shortcut_").
+   * @param key   The shortcut identifier (must start with "shortcut_").
    * @param value The key combination assigned to this shortcut.
    */
-  public void addShortcut(String key, String value) {
+  public void addShortcut(final String key, final String value) {
     shortcuts.put(key, value);
   }
 
-  /**
-   * String representation of the object.
-   *
-   * @see Object .toString() method for more infos
-   * @return {@link String}
-   */
+  @Override
   public String toString() {
-    StringBuilder string = new StringBuilder();
+    final StringBuilder string = new StringBuilder(256);
     string.append("[verbose]=").append(verbose).append("\n");
     string.append("[debug]=").append(debug).append("\n");
     string.append("[blitzMode]=").append(blitzMode).append("\n");
@@ -305,7 +326,7 @@ public class GameConfig {
     string.append("[aiActive]=").append(aiActive).append("\n");
     string.append("[aiMode]=").append(aiMode).append("\n");
     string.append("[aiDepth]=").append(aiDepth).append("\n");
-    string.append("[aiIterativeDeepening]=").append(aiIterativeDeepening).append("\n");
+    string.append("[aiIterativeDeepening]=").append(iterDeepening).append("\n");
     string.append("[aiTimeLimit]=").append(aiTimeLimit).append("\n");
     string.append("[aiHeuristique]=").append(aiHeuristic).append("\n");
     string.append("[whiteIsAI]=").append(whiteIsAi).append("\n");
@@ -319,7 +340,7 @@ public class GameConfig {
    * @return A new GameConfig instance with the same settings.
    */
   public GameConfig copy() {
-    GameConfig clone = new GameConfig();
+    final GameConfig clone = new GameConfig();
 
     clone.setVerbose(this.verbose);
     clone.setDebug(this.debug);
@@ -335,16 +356,16 @@ public class GameConfig {
     clone.setAiMode(this.aiMode);
     clone.setAiDepth(this.aiDepth);
     clone.setAiTimeLimit(this.aiTimeLimit);
-    clone.setAiIterativeDeepening(this.aiIterativeDeepening);
+    clone.setAiIterativeDeepening(this.iterDeepening);
     clone.setAiHeuristic(this.aiHeuristic);
 
-    clone.setShortcuts(new HashMap<>(this.shortcuts));
+    clone.setShortcuts(new ConcurrentHashMap<>(this.shortcuts));
 
     return clone;
   }
 
   private Map<String, String> createDefaultShortcuts() {
-    Map<String, String> shortcuts = new HashMap<>();
+    final Map<String, String> shortcuts = new ConcurrentHashMap<>();
     shortcuts.put("shortcut_new", "Ctrl+N");
     shortcuts.put("shortcut_load", "Ctrl+L");
     shortcuts.put("shortcut_save", "Ctrl+S");

@@ -84,4 +84,5 @@ class ConfigSerializerTest {
     assertTrue(content.contains("shortcut_undo = ctrl+z"));
     assertTrue(content.contains("shortcut_redo = ctrl+y"));
   }
+
 }

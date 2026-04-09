@@ -114,9 +114,8 @@ class AiFactoryTest {
 
     AbstractAgonAi ai = AiFactory.createAi(config, Color.BLACK);
 
-    assertNull(
-        ai,
-        "The factory should return null (or handle gracefully) for an unknown heuristic in minimax.");
+    assertNotNull(ai, "The factory should fallback to Mixed heuristic and return an instance.");
+    assertInstanceOf(MinimaxStrategy.class, ai, "The returned Ai should be a MinimaxStrategy.");
   }
 
   @Test
@@ -148,6 +147,7 @@ class AiFactoryTest {
 
     AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
-    assertNull(ai, "The factory should return null for an unknown selection heuristic in mcts.");
+    assertNotNull(ai, "The factory should fallback to Uct heuristic and return an instance.");
+    assertInstanceOf(MctsStrategy.class, ai, "The returned Ai should be an MctsStrategy.");
   }
 }

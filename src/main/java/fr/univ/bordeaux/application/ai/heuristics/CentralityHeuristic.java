@@ -48,9 +48,9 @@ public class CentralityHeuristic extends AbstractHeuristic {
    * @return The squared inverted distance to the center (ranging from 1 to 36).
    */
   @Override
-  protected long getFactor(AgonBoard board, int index) {
-    long dist = board.getCentrality(index);
-    long inverted = 6 - dist;
+  protected long getFactor(final AgonBoard board, final int index) {
+    final long dist = board.getCentrality(index);
+    final long inverted = 6 - dist;
     return inverted * inverted;
   }
 }

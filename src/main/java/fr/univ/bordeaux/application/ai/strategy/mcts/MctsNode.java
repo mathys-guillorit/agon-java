@@ -53,7 +53,7 @@ public class MctsNode {
    * @param playerToMove The player whose turn it is to play next.
    * @param legalMoves The complete list of legal moves available from this current state.
    */
-  public MctsNode(MctsNode parent, Move move, Color playerToMove, List<Move> legalMoves) {
+  public MctsNode(final MctsNode parent, final Move move, final Color playerToMove, final List<Move> legalMoves) {
     this.parent = parent;
     this.move = move;
     this.playerToMove = playerToMove;
@@ -71,7 +71,7 @@ public class MctsNode {
    * @param score The outcome of the simulation (e.g., 1.0 for a win, 0.0 for a loss, 0.5 for a
    *     draw).
    */
-  public void updateStats(double score) {
+  public void updateStats(final double score) {
     this.visitCount++;
     this.winScore += score;
   }
@@ -85,12 +85,15 @@ public class MctsNode {
    * @return A randomly selected {@link Move} which is concurrently removed from the untried list,
    *     or {@code null} if no untried moves remain.
    */
-  public Move popRandomUntriedMove(Random random) {
+  public Move popRandomUntriedMove(final Random random) {
+    final Move retMove;
     if (untriedMoves.isEmpty()) {
-      return null;
+      retMove = null;
+    }else{
+      final int index = random.nextInt(untriedMoves.size());
+      retMove = untriedMoves.remove(index);
     }
-    int index = random.nextInt(untriedMoves.size());
-    return untriedMoves.remove(index);
+    return retMove;
   }
 
   /**
@@ -98,7 +101,7 @@ public class MctsNode {
    *
    * @param child The expanded {@link MctsNode} to attach to this node.
    */
-  public void addChild(MctsNode child) {
+  public void addChild(final MctsNode child) {
     this.children.add(child);
   }
 

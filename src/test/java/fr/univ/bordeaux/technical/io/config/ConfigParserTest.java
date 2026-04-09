@@ -172,7 +172,10 @@ class ConfigParserTest {
   @Test
   void testParseShortcuts() throws IOException {
     Path configFile = tempDir.resolve("shortcuts.agonrc");
-    String content = "timeout = 30\n" + "shortcut_new = ctrl+n\n" + "shortcut_quit = ctrl+q\n";
+    String content =
+            "timeout = 30\n" +
+                    "shortcut_new = ctrl+n\n" +
+                    "shortcut_quit = ctrl+q\n";
     Files.writeString(configFile, content);
 
     ConfigParser parser = new ConfigParser();
