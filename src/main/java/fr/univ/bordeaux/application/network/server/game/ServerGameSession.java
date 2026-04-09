@@ -1,9 +1,8 @@
-package fr.univ.bordeaux.application.network.server;
+package fr.univ.bordeaux.application.network.server.game;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.application.match.Match;
-import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.player.Player;
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
 import fr.univ.bordeaux.application.network.protocol.MoveParsed;
@@ -16,18 +15,22 @@ import fr.univ.bordeaux.application.network.protocol.MoveProtocolParser;
  *
  * <ul>
  *   <li>linking two connected players to a game instance,
- *   <li>holding the associated {@link MatchManager},
+ *   <li>holding the associated match,
  *   <li>providing utility methods to identify players in the session.
  * </ul>
  */
 public class ServerGameSession {
 
+  /** Unique identifier of the game session. */
   private final int gameId;
 
+  /** Player assigned to the white side. */
   private final OnlinePlayer whitePlayer;
 
+  /** Player assigned to the black side. */
   private final OnlinePlayer blackPlayer;
 
+  /** Underlying match instance used to validate and apply moves. */
   private final Match match;
 
   /**
@@ -39,7 +42,10 @@ public class ServerGameSession {
    * @param match the match associated with this game
    */
   public ServerGameSession(
-      int gameId, OnlinePlayer whitePlayer, OnlinePlayer blackPlayer, Match match) {
+      final int gameId,
+      final OnlinePlayer whitePlayer,
+      final OnlinePlayer blackPlayer,
+      final Match match) {
     this.gameId = gameId;
     this.whitePlayer = whitePlayer;
     this.blackPlayer = blackPlayer;
@@ -88,99 +94,107 @@ public class ServerGameSession {
    * @param playerId the player ID to check
    * @return true if the player belongs to this session, false otherwise
    */
-  public boolean containsPlayer(int playerId) {
+  public boolean containsPlayer(final int playerId) {
     return whitePlayer.getId() == playerId || blackPlayer.getId() == playerId;
   }
 
   /**
    * Returns the opponent of the given player in this game session.
    *
-   * <p>If the provided player ID corresponds to the white player, the black player is returned, and
-   * vice versa.
-   *
    * @param playerId the ID of the player
    * @return the opponent player, or null if the player is not part of this session
    */
-  public OnlinePlayer getOpponent(int playerId) {
+  public OnlinePlayer getOpponent(final int playerId) {
+    OnlinePlayer opponent = null;
+
     if (whitePlayer.getId() == playerId) {
-      return blackPlayer;
+      opponent = blackPlayer;
+    } else if (blackPlayer.getId() == playerId) {
+      opponent = whitePlayer;
     }
-    if (blackPlayer.getId() == playerId) {
-      return whitePlayer;
-    }
-    return null;
+
+    return opponent;
   }
 
   /**
    * Returns the color associated with a given player in this session.
    *
-   * <p>The color is determined by the role assigned at game creation: one player is white and the
-   * other is black.
-   *
    * @param playerId the ID of the player
    * @return {@link Color#WHITE}, {@link Color#BLACK}, or null if the player is not part of this
    *     session
    */
-  public Color getColorOfPlayer(int playerId) {
+  public Color getColorOfPlayer(final int playerId) {
+    Color color = null;
+
     if (whitePlayer.getId() == playerId) {
-      return Color.WHITE;
+      color = Color.WHITE;
+    } else if (blackPlayer.getId() == playerId) {
+      color = Color.BLACK;
     }
-    if (blackPlayer.getId() == playerId) {
-      return Color.BLACK;
-    }
-    return null;
+
+    return color;
   }
 
   /**
    * Returns a human-readable label describing the role of a player.
    *
-   * <p>This method converts the player's color into a string representation used in the network
-   * protocol (e.g., "WHITE" or "BLACK").
-   *
    * @param playerId the ID of the player
    * @return "WHITE", "BLACK", or "UNKNOWN" if the player is not part of this session
    */
-  public String getRoleLabel(int playerId) {
-    Color color = getColorOfPlayer(playerId);
+  public String getRoleLabel(final int playerId) {
+    final Color color = getColorOfPlayer(playerId);
+    String roleLabel = "UNKNOWN";
 
     if (color == Color.WHITE) {
-      return "WHITE";
-    }
-    if (color == Color.BLACK) {
-      return "BLACK";
+      roleLabel = "WHITE";
+    } else if (color == Color.BLACK) {
+      roleLabel = "BLACK";
     }
 
-    return "UNKNOWN";
+    return roleLabel;
   }
 
   /**
    * Indicates whether it is currently the turn of the given player.
    *
-   * <p>This method compares the player's assigned color with the current player in the underlying
-   * {@link Match} instance.
-   *
    * @param playerId the ID of the player
    * @return true if it is this player's turn, false otherwise
    */
-  public boolean isPlayersTurn(int playerId) {
-    if (match == null) {
-      return false;
+  public boolean isPlayersTurn(final int playerId) {
+    boolean playersTurn = false;
+
+    if (match != null) {
+      final Color color = getColorOfPlayer(playerId);
+
+      if (color != null) {
+        final Player currentPlayer = getCurrentPlayer();
+
+        if (currentPlayer != null && currentPlayer.getColor() == color) {
+          playersTurn = true;
+        }
+      }
     }
 
-    Color color = getColorOfPlayer(playerId);
-    if (color == null) {
-      return false;
+    return playersTurn;
+  }
+
+  /**
+   * Returns the current player of the underlying match.
+   *
+   * @return the current player, or null if unavailable
+   */
+  private Player getCurrentPlayer() {
+    Player currentPlayer = null;
+
+    if (match != null) {
+      currentPlayer = match.getCurrentPlayer();
     }
 
-    Player current = match.getCurrentPlayer();
-    return current != null && current.getColor() == color;
+    return currentPlayer;
   }
 
   /**
    * Returns a formatted string describing the role distribution in this game.
-   *
-   * <p>This is mainly used for debugging or initial client notification, showing which player is
-   * assigned to white and which to black.
    *
    * @return a string formatted as "WHITE=name BLACK=name"
    */
@@ -195,72 +209,76 @@ public class ServerGameSession {
    * @param rawMove the compact move text (e.g. "e2e4")
    * @return true if the move was accepted and applied, false otherwise
    */
-  public boolean playMove(int playerId, String rawMove) {
-    if (!containsPlayer(playerId)) {
-      return false;
-    }
+  public boolean playMove(final int playerId, final String rawMove) {
+    boolean moveAccepted = false;
 
-    if (match == null) {
-      return false;
-    }
+    if (containsPlayer(playerId) && match != null && isPlayersTurn(playerId)) {
+      final MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
 
-    if (!isPlayersTurn(playerId)) {
-      return false;
-    }
+      if (parsedMove != null) {
+        final Color playerColor = getColorOfPlayer(playerId);
 
-    MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
-    if (parsedMove == null) {
-      return false;
-    }
+        if (playerColor != null) {
+          final boolean replacementMove = isReplacementMoveRequired(playerId);
 
-    Color playerColor = getColorOfPlayer(playerId);
-    if (playerColor == null) {
-      return false;
-    }
-
-    boolean replacementRequired = isReplacementMoveRequired(playerId);
-
-    // Replacement phase: only short format like "e3" is allowed
-    if (replacementRequired) {
-      if (parsedMove.hasSource()) {
-        return false;
+          if (replacementMove) {
+            moveAccepted = playReplacementMove(parsedMove, playerColor);
+          } else {
+            moveAccepted = playNormalMove(parsedMove, playerColor);
+          }
+        }
       }
-
-      Move replacementMove = new Move(-1, parsedMove.getToIndex(), playerColor);
-
-      return match.move(replacementMove);
     }
 
-    // Normal phase: only full format like "j5i4" is allowed
+    return moveAccepted;
+  }
+
+  /**
+   * Applies a replacement move when the current phase requires it.
+   *
+   * @param parsedMove the parsed move
+   * @param playerColor the moving player color
+   * @return true if the move was accepted, false otherwise
+   */
+  private boolean playReplacementMove(final MoveParsed parsedMove, final Color playerColor) {
+    boolean moveAccepted = false;
+
     if (!parsedMove.hasSource()) {
-      return false;
+      final Move replacementMove = new Move(-1, parsedMove.getToIndex(), playerColor);
+      moveAccepted = match.move(replacementMove);
     }
 
-    Move normalMove = new Move(parsedMove.getFromIndex(), parsedMove.getToIndex(), playerColor);
+    return moveAccepted;
+  }
 
-    return match.move(normalMove);
+  /**
+   * Applies a normal move when the current phase allows it.
+   *
+   * @param parsedMove the parsed move
+   * @param playerColor the moving player color
+   * @return true if the move was accepted, false otherwise
+   */
+  private boolean playNormalMove(final MoveParsed parsedMove, final Color playerColor) {
+    boolean moveAccepted = false;
+
+    if (parsedMove.hasSource()) {
+      final Move normalMove =
+          new Move(parsedMove.getFromIndex(), parsedMove.getToIndex(), playerColor);
+      moveAccepted = match.move(normalMove);
+    }
+
+    return moveAccepted;
   }
 
   /**
    * Checks whether the given player must perform a replacement move.
    *
-   * <p>A replacement move is required when the underlying match indicates that the player still has
-   * pieces to relocate instead of playing a normal move.
-   *
    * @param playerId the ID of the player to check
    * @return true if the player must perform a replacement move, false otherwise
    */
-  private boolean isReplacementMoveRequired(int playerId) {
-    if (match == null) {
-      return false;
-    }
-
-    Color color = getColorOfPlayer(playerId);
-    if (color == null) {
-      return false;
-    }
-
-    return match.isReplacementMoveRequired(color);
+  private boolean isReplacementMoveRequired(final int playerId) {
+    final Color color = getColorOfPlayer(playerId);
+    return match != null && color != null && match.isReplacementMoveRequired(color);
   }
 
   /**

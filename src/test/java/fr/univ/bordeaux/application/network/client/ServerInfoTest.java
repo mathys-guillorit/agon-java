@@ -9,7 +9,7 @@ class ServerInfoTest {
 
   @Test
   @DisplayName("Server key is correctly formatted")
-  void key_test() {
+  void keyTest() {
     ServerInfo s = new ServerInfo("S", "127.0.0.1", 1234);
 
     String key = s.key();

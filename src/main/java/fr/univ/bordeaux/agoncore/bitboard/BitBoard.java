@@ -105,7 +105,9 @@ public class BitBoard {
         this.low &= ~(1L << index);
       }
     }
-    GameLogger.debug("BitBoard: bit " + index + " set to " + value);
+    if (GameLogger.isDebugEnabled()) {
+      GameLogger.debug("BitBoard: bit " + index + " set to " + value);
+    }
   }
 
   /**
@@ -144,7 +146,9 @@ public class BitBoard {
     } else {
       shiftedBitBoard = this;
     }
-    GameLogger.debug("BitBoard: performing shift of " + n);
+    if (GameLogger.isDebugEnabled()) {
+      GameLogger.debug("BitBoard: performing shift of " + n);
+    }
     return shiftedBitBoard;
   }
 

@@ -34,7 +34,6 @@ final class NetworkCommandTestSupport {
   }
 
   static final class TestUi implements GameUserInterface {
-
     final List<String> messages = new ArrayList<>();
     final List<String> warnings = new ArrayList<>();
     final List<String> errors = new ArrayList<>();
@@ -81,7 +80,6 @@ final class NetworkCommandTestSupport {
   }
 
   static class FakeAgonClient extends AgonClient {
-
     boolean connected;
     boolean alive = true;
     boolean connectResult = true;
@@ -100,8 +98,17 @@ final class NetworkCommandTestSupport {
     String awayResponse;
     String backResponse;
 
+    boolean acceptInvitationResult;
+    boolean declineInvitationResult;
+    boolean cancelInvitationResult;
+    boolean chooseModeResult;
+    boolean acceptInvitationCalled;
+    boolean declineInvitationCalled;
+    boolean cancelInvitationCalled;
+    String chosenMode;
+
     FakeAgonClient() {
-      super(new LocalProfile("TestPlayer")); // ✅ IMPORTANT
+      super(new LocalProfile("TestPlayer"));
     }
 
     @Override
@@ -160,13 +167,37 @@ final class NetworkCommandTestSupport {
     }
 
     @Override
-    public String setAway() {
+    public String requestAwayStatus() {
       return awayResponse;
     }
 
     @Override
-    public String setBack() {
+    public String requestBackStatus() {
       return backResponse;
+    }
+
+    @Override
+    public boolean acceptInvitation() {
+      acceptInvitationCalled = true;
+      return acceptInvitationResult;
+    }
+
+    @Override
+    public boolean declineInvitation() {
+      declineInvitationCalled = true;
+      return declineInvitationResult;
+    }
+
+    @Override
+    public boolean cancelInvitation() {
+      cancelInvitationCalled = true;
+      return cancelInvitationResult;
+    }
+
+    @Override
+    public boolean chooseMode(String mode) {
+      chosenMode = mode;
+      return chooseModeResult;
     }
   }
 }

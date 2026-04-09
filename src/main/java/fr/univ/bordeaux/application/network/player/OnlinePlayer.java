@@ -5,9 +5,16 @@ import fr.univ.bordeaux.application.network.server.ClientHandler;
 /** Represents a player registered on a server. */
 public class OnlinePlayer {
 
-  private final int id;
+  /** Unique server-local player identifier. */
+  private final int playerId;
+
+  /** Unique client identifier used for reconnection. */
   private final String clientId;
+
+  /** Display name of the player. */
   private final String name;
+
+  /** Current status of the player. */
   private PlayerStatus status;
 
   /** Client handler currently associated with this player. */
@@ -16,14 +23,19 @@ public class OnlinePlayer {
   /**
    * Creates a new online player.
    *
-   * @param id unique server-local id
+   * @param playerId unique server-local id
+   * @param clientId unique client id
    * @param name player display name
    * @param status initial player status
    * @param handler associated client handler
    */
   public OnlinePlayer(
-      int id, String clientId, String name, PlayerStatus status, ClientHandler handler) {
-    this.id = id;
+      final int playerId,
+      final String clientId,
+      final String name,
+      final PlayerStatus status,
+      final ClientHandler handler) {
+    this.playerId = playerId;
     this.clientId = clientId;
     this.name = name;
     this.status = status;
@@ -36,7 +48,7 @@ public class OnlinePlayer {
    * @return player id
    */
   public int getId() {
-    return id;
+    return playerId;
   }
 
   /**
@@ -71,7 +83,7 @@ public class OnlinePlayer {
    *
    * @param status new player status
    */
-  public void setStatus(PlayerStatus status) {
+  public void setStatus(final PlayerStatus status) {
     this.status = status;
   }
 
@@ -89,7 +101,7 @@ public class OnlinePlayer {
    *
    * @param handler new handler
    */
-  public void setHandler(ClientHandler handler) {
+  public void setHandler(final ClientHandler handler) {
     this.handler = handler;
   }
 

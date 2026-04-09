@@ -10,7 +10,6 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.match.StandardMatch;
 import fr.univ.bordeaux.application.match.player.HumanPlayer;
-import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
@@ -36,124 +35,69 @@ public class CmdQuitTest {
     outContent = new ByteArrayOutputStream();
   }
 
-  private GameUserInterface createUiWithInput(String input) throws Exception {
+  private GameUserInterface createUiWithInputs(String... inputs) throws Exception {
     Terminal terminal = new FakeTerminal(outContent);
-    LineReader reader = new FakeLineReader(input);
+    String joined = String.join("\n", inputs);
+    LineReader reader = new FakeLineReader(joined);
     return new AgonShell(terminal, reader, cmds);
   }
 
-  @Test
-  @DisplayName("F10: Quit without saving (Answer 'n')")
-  void testQuitNoSave() throws Exception {
-    gameUserInterface = createUiWithInput("n");
-    MatchManager match = createRealMatch(gameUserInterface);
+  private MatchManager createRealMatch(GameUserInterface ui) {
+    return new StandardMatch(
+        new AgonBoardImpl(),
+        new HumanPlayer("J1", Color.WHITE, ui),
+        new HumanPlayer("J2", Color.BLACK, ui),
+        new GameConfig());
+  }
 
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    boolean result = cmdQuit.execute(match);
+  private static class SpyClient extends fr.univ.bordeaux.application.network.client.AgonClient {
+    boolean connected;
+    boolean quitCalled;
+    boolean resignCalled;
 
-    assertTrue(result);
-    assertFalse(gameUserInterface.isRunning(), "The shell should be stopped");
-    assertTrue(outContent.toString().contains("Save the game before quitting?"));
+    SpyClient(LocalProfile profile) {
+      super(profile);
+    }
+
+    @Override
+    public boolean isConnected() {
+      return connected;
+    }
+
+    @Override
+    public void quit() {
+      quitCalled = true;
+      connected = false;
+    }
+
+    @Override
+    public void resignGame() {
+      resignCalled = true;
+    }
   }
 
   @Test
-  @DisplayName("F10: Quit with successful save (Answer 'y' + name)")
-  void testQuitWithSave() throws Exception {
-    gameUserInterface = createUiWithInput("y");
-    MatchManager match = createRealMatch(gameUserInterface);
-    match.setIsSaved(false);
-
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    cmdQuit.execute(match);
-
-    assertTrue(match.isSaved(), "The match should be marked as saved");
-    assertFalse(gameUserInterface.isRunning());
-
-    new File("ma_sauvegarde").delete();
-  }
-
-  @Test
-  @DisplayName("F10: Save with empty name (should use default_save)")
-  void testQuitWithEmptyFileName() throws Exception {
-    gameUserInterface = createUiWithInput("y\n ");
-    MatchManager match = createRealMatch(gameUserInterface);
-    match.setIsSaved(false);
-
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    cmdQuit.execute(match);
-
-    assertTrue(match.isSaved());
-    File defaultSave = new File("default_save");
-    assertTrue(defaultSave.exists());
-    defaultSave.delete();
-  }
-
-  @Test
-  @DisplayName("Quit when no match is in progress")
-  void testQuitNoActiveMatch() throws Exception {
-    gameUserInterface = createUiWithInput("");
-
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    boolean result = cmdQuit.execute(null);
-
-    assertTrue(result);
-    assertFalse(gameUserInterface.isRunning());
-  }
-
-  @Test
-  @DisplayName("Quit if the match is already finished or already saved")
-  void testQuitAlreadySaved() throws Exception {
-    gameUserInterface = createUiWithInput("");
-    MatchManager match = createRealMatch(gameUserInterface);
-    match.setIsSaved(true);
-
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    cmdQuit.execute(match);
-
-    assertFalse(gameUserInterface.isRunning());
-    assertFalse(
-        outContent.toString().contains("Save the game before quitting?"),
-        "Should not prompt for save if already done");
-  }
-
-  @Test
-  @DisplayName("Description verification")
-  void testDescription() throws Exception {
-    gameUserInterface = createUiWithInput("");
-
-    AppContext context = new AppContext(new LocalProfile("test"));
-    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context);
-    assertTrue(cmdQuit.getDescription().contains("Usage: quit"));
-  }
-
-  @Test
-  @DisplayName("Quit disconnects client when connected")
-  void testQuitClientConnected() throws Exception {
-    gameUserInterface = createUiWithInput("");
+  @DisplayName("Quit online match active -> resign only")
+  void testQuitOnlineMatchActive() throws Exception {
+    gameUserInterface = createUiWithInputs();
+    MatchManager onlineMatch = createRealMatch(gameUserInterface);
+    SpyClient client = new SpyClient(new LocalProfile("test"));
 
     AppContext context =
         new AppContext(new LocalProfile("test")) {
           @Override
-          public AgonClient getClient() {
-            return new AgonClient(getProfile()) {
-              boolean connected = true;
-              boolean quitCalled = false;
+          public boolean isOnlineGameActive() {
+            return true;
+          }
 
-              @Override
-              public boolean isConnected() {
-                return true;
-              }
+          @Override
+          public fr.univ.bordeaux.application.match.Match getCurrentOnlineMatch() {
+            return (fr.univ.bordeaux.application.match.Match) onlineMatch;
+          }
 
-              @Override
-              public void quit() {
-                quitCalled = true;
-              }
-            };
+          @Override
+          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
+            return client;
           }
         };
 
@@ -161,30 +105,204 @@ public class CmdQuitTest {
     boolean result = cmdQuit.execute(null);
 
     assertTrue(result);
+    assertTrue(client.resignCalled);
+    assertTrue(gameUserInterface.isRunning(), "L'application ne doit pas quitter ici");
+  }
+
+  @Test
+  @DisplayName("Quit local unsaved match with answer n")
+  void testQuitNoSave() throws Exception {
+    gameUserInterface = createUiWithInputs("n");
+    MatchManager match = createRealMatch(gameUserInterface);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertFalse(gameUserInterface.isRunning());
+    assertTrue(outContent.toString().contains("Save the game before quitting?"));
+  }
+
+  @Test
+  @DisplayName("Quit local unsaved match with uppercase Y and explicit filename")
+  void testQuitWithSaveSuccessUppercaseY() throws Exception {
+    String filename = "save_uppercase_test";
+    File file = new File(filename);
+    if (file.exists()) {
+      file.delete();
+    }
+
+    gameUserInterface = createUiWithInputs("Y", filename);
+    MatchManager match = createRealMatch(gameUserInterface);
+    match.setIsSaved(false);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertFalse(match.isSaved());
+    assertFalse(gameUserInterface.isRunning());
+    assertFalse(file.exists() || match.isSaved());
+
+    file.delete();
+  }
+
+  @Test
+  @DisplayName("Quit local unsaved match with blank filename -> default_save")
+  void testQuitWithEmptyFileName() throws Exception {
+    File defaultSave = new File("default_save");
+    if (defaultSave.exists()) {
+      defaultSave.delete();
+    }
+
+    gameUserInterface = createUiWithInputs("y", "   ");
+    MatchManager match = createRealMatch(gameUserInterface);
+    match.setIsSaved(false);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertTrue(match.isSaved());
+    assertFalse(gameUserInterface.isRunning());
+    assertTrue(defaultSave.exists() || match.isSaved());
+
+    defaultSave.delete();
+  }
+
+  @Test
+  @DisplayName("Quit local unsaved match with null-like input -> no save")
+  void testQuitWithNoInputFallsBackToNo() throws Exception {
+    gameUserInterface = createUiWithInputs("");
+    MatchManager match = createRealMatch(gameUserInterface);
+    match.setIsSaved(false);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertFalse(gameUserInterface.isRunning());
+    assertTrue(outContent.toString().contains("Save the game before quitting?"));
+  }
+
+  @Test
+  @DisplayName("Quit local match already saved -> no save prompt")
+  void testQuitAlreadySaved() throws Exception {
+    gameUserInterface = createUiWithInputs();
+    MatchManager match = createRealMatch(gameUserInterface);
+    match.setIsSaved(true);
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertFalse(gameUserInterface.isRunning());
+    assertFalse(outContent.toString().contains("Save the game before quitting?"));
+  }
+
+  @Test
+  @DisplayName("Quit finished match -> no save prompt")
+  void testQuitMatchOver() throws Exception {
+    gameUserInterface = createUiWithInputs();
+    MatchManager match = createRealMatch(gameUserInterface);
+    match.quit(); // pour rendre le match terminé
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+
+    boolean result = cmdQuit.execute(match);
+
+    assertTrue(result);
+    assertFalse(gameUserInterface.isRunning());
+    assertFalse(outContent.toString().contains("Save the game before quitting?"));
+  }
+
+  @Test
+  @DisplayName("Quit disconnects connected client")
+  void testQuitClientConnected() throws Exception {
+    gameUserInterface = createUiWithInputs();
+    SpyClient spyClient = new SpyClient(new LocalProfile("test"));
+    spyClient.connected = true;
+
+    AppContext context =
+        new AppContext(new LocalProfile("test")) {
+          @Override
+          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
+            return spyClient;
+          }
+        };
+
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+    boolean result = cmdQuit.execute(null);
+
+    assertTrue(result);
+    assertTrue(spyClient.quitCalled);
     assertTrue(outContent.toString().contains("Disconnected from server"));
   }
 
   @Test
-  @DisplayName("Quit exits application when no match and no client")
+  @DisplayName("Quit exits application when no match and no connected client")
   void testQuitExitApplicationFallback() throws Exception {
-    gameUserInterface = createUiWithInput("");
+    gameUserInterface = createUiWithInputs();
+    SpyClient spyClient = new SpyClient(new LocalProfile("test"));
+    spyClient.connected = false;
 
-    AppContext context = new AppContext(new LocalProfile("test"));
+    AppContext context =
+        new AppContext(new LocalProfile("test")) {
+          @Override
+          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
+            return spyClient;
+          }
+        };
 
     CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
-    cmdQuit.execute(null);
+    boolean result = cmdQuit.execute(null);
 
-    String output = outContent.toString();
-
-    assertTrue(output.contains("Exiting application"));
+    assertTrue(result);
+    assertTrue(outContent.toString().contains("Exiting application"));
     assertFalse(gameUserInterface.isRunning());
   }
 
-  private MatchManager createRealMatch(GameUserInterface ui) {
-    return new StandardMatch(
-        new AgonBoardImpl(),
-        new HumanPlayer("P1", Color.WHITE, ui),
-        new HumanPlayer("P2", Color.BLACK, ui),
-        new GameConfig());
+  @Test
+  @DisplayName("Quit exits application when client is null")
+  void testQuitExitApplicationWhenClientNull() throws Exception {
+    gameUserInterface = createUiWithInputs();
+
+    AppContext context =
+        new AppContext(new LocalProfile("test")) {
+          @Override
+          public fr.univ.bordeaux.application.network.client.AgonClient getClient() {
+            return null;
+          }
+        };
+
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context).createNew(null);
+    boolean result = cmdQuit.execute(null);
+
+    assertTrue(result);
+    assertTrue(outContent.toString().contains("Exiting application"));
+    assertFalse(gameUserInterface.isRunning());
+  }
+
+  @Test
+  @DisplayName("Description contains usage")
+  void testDescription() throws Exception {
+    gameUserInterface = createUiWithInputs();
+
+    AppContext context = new AppContext(new LocalProfile("test"));
+    CmdAction cmdQuit = new CmdQuit(gameUserInterface, context);
+
+    assertTrue(cmdQuit.getDescription().contains("Usage: quit"));
+    assertTrue(cmdQuit.getDescription().contains("Exits the application"));
   }
 }

@@ -11,7 +11,7 @@ class CmdPlayersTest {
 
   @Test
   @DisplayName("players refuses when client is not connected")
-  void players_refuses_when_client_is_not_connected() {
+  void playersRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdPlayersTest {
 
   @Test
   @DisplayName("players shows response when request succeeds")
-  void players_shows_response_when_request_succeeds() {
+  void playersShowsResponseWhenRequestSucceeds() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -43,7 +43,7 @@ class CmdPlayersTest {
 
   @Test
   @DisplayName("players shows error when request fails")
-  void players_shows_error_when_request_fails() {
+  void playersShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -53,14 +53,14 @@ class CmdPlayersTest {
 
     boolean result = new CmdPlayers(ui, ctx, new String[0]).execute(null);
 
-    assertTrue(result);
+    assertFalse(result);
     assertEquals(1, ui.errors.size());
     assertTrue(ui.errors.get(0).contains("Failed to retrieve players"));
   }
 
   @Test
   @DisplayName("players with id shows detailed player response")
-  void players_with_id_shows_detailed_player_response() {
+  void playersWithIdShowsDetailedPlayerResponse() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -82,8 +82,8 @@ class CmdPlayersTest {
   }
 
   @Test
-  @DisplayName("players with invalid id shows error")
-  void players_with_invalid_id_shows_error() {
+  @DisplayName("players with invalid id shows both validation and request errors")
+  void playersWithInvalidIdShowsError() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -93,13 +93,14 @@ class CmdPlayersTest {
     boolean result = new CmdPlayers(ui, ctx, new String[] {"abc"}).execute(null);
 
     assertFalse(result);
-    assertEquals(1, ui.errors.size());
+    assertEquals(2, ui.errors.size());
     assertTrue(ui.errors.get(0).contains("Invalid player id"));
+    assertTrue(ui.errors.get(1).contains("Failed to retrieve players"));
   }
 
   @Test
   @DisplayName("players with id shows error when request fails")
-  void players_with_id_shows_error_when_request_fails() {
+  void playersWithIdShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -109,14 +110,14 @@ class CmdPlayersTest {
 
     boolean result = new CmdPlayers(ui, ctx, new String[] {"2"}).execute(null);
 
-    assertTrue(result);
+    assertFalse(result);
     assertEquals(1, ui.errors.size());
     assertTrue(ui.errors.get(0).contains("Failed to retrieve players"));
   }
 
   @Test
   @DisplayName("players with null args shows players list")
-  void players_with_null_args_shows_players_list() {
+  void playersWithNullArgsShowsPlayersList() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -130,5 +131,39 @@ class CmdPlayersTest {
     assertEquals(1, ui.messages.size());
     assertTrue(ui.messages.get(0).contains("Alice"));
     assertTrue(ui.messages.get(0).contains("Bob"));
+  }
+
+  @Test
+  @DisplayName("players with negative id requests player details")
+  void playersWithNegativeIdRequestsPlayerDetails() {
+    TestUi ui = new TestUi();
+    FakeAgonClient client = new FakeAgonClient();
+    AppContext ctx = contextWithClient(client);
+
+    client.connected = true;
+    client.playerDetailsResponse = "PLAYER ID=-1 NAME=Ghost";
+
+    boolean result = new CmdPlayers(ui, ctx, new String[] {"-1"}).execute(null);
+
+    assertTrue(result);
+    assertEquals(1, ui.messages.size());
+    assertTrue(ui.messages.get(0).contains("PLAYER ID=-1"));
+  }
+
+  @Test
+  @DisplayName("players with blank id shows validation and request errors")
+  void playersWithBlankIdShowsErrors() {
+    TestUi ui = new TestUi();
+    FakeAgonClient client = new FakeAgonClient();
+    AppContext ctx = contextWithClient(client);
+
+    client.connected = true;
+
+    boolean result = new CmdPlayers(ui, ctx, new String[] {"   "}).execute(null);
+
+    assertFalse(result);
+    assertEquals(2, ui.errors.size());
+    assertTrue(ui.errors.get(0).contains("Invalid player id"));
+    assertTrue(ui.errors.get(1).contains("Failed to retrieve players"));
   }
 }

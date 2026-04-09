@@ -27,28 +27,28 @@ public enum Direction {
    *
    * <p>Index offset: {@code +12}.
    */
-  NORTHEAST(12),
+  NORTH_EAST(12),
 
   /**
    * Move to the upper-left neighbor.
    *
    * <p>Index offset: {@code +11}.
    */
-  NORTHWEST(11),
+  NORTH_WEST(11),
 
   /**
    * Move to the lower-right neighbor.
    *
    * <p>Index offset: {@code -11}.
    */
-  SOUTHEAST(-11),
+  SOUTH_EAST(-11),
 
   /**
    * Move to the lower-left neighbor.
    *
    * <p>Index offset: {@code -12}.
    */
-  SOUTHWEST(-12);
+  SOUTH_WEST(-12);
 
   /** The integer shift value applied to a bitboard index. */
   private final int value;
@@ -76,10 +76,10 @@ public enum Direction {
     return switch (d) {
       case EAST -> WEST;
       case WEST -> EAST;
-      case NORTHEAST -> SOUTHWEST;
-      case SOUTHWEST -> NORTHEAST;
-      case NORTHWEST -> SOUTHEAST;
-      case SOUTHEAST -> NORTHWEST;
+      case NORTH_EAST -> SOUTH_WEST;
+      case SOUTH_WEST -> NORTH_EAST;
+      case NORTH_WEST -> SOUTH_EAST;
+      case SOUTH_EAST -> NORTH_WEST;
     };
   }
 

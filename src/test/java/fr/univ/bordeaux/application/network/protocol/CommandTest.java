@@ -11,7 +11,7 @@ class CommandTest {
 
   @Test
   @DisplayName("Command constructor without raw argument stores type and args")
-  void constructor_without_raw_arg() {
+  void constructorWithoutRawArg() {
     Map<String, String> args = new HashMap<>();
     args.put("NAME", "Alice");
 
@@ -25,7 +25,7 @@ class CommandTest {
 
   @Test
   @DisplayName("Command constructor with raw argument stores all values")
-  void constructor_with_raw_arg() {
+  void constructorWithRawArg() {
     Map<String, String> args = new HashMap<>();
     args.put("PLAYER_ID", "4");
 
@@ -38,7 +38,7 @@ class CommandTest {
 
   @Test
   @DisplayName("GetArg returns null when key does not exist")
-  void get_arg_unknown_key() {
+  void getArgUnknownKey() {
     Command command = new Command(CommandType.PING, Map.of());
 
     assertNull(command.getArg("missing"));
@@ -46,7 +46,7 @@ class CommandTest {
 
   @Test
   @DisplayName("GetArgs returns stored map")
-  void get_args() {
+  void getArgs() {
     Map<String, String> args = new HashMap<>();
     args.put("A", "1");
     args.put("B", "2");

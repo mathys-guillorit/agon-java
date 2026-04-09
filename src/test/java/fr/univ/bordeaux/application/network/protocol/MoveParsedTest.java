@@ -9,7 +9,7 @@ class MoveParsedTest {
 
   @Test
   @DisplayName("MoveParsed stores full move values correctly")
-  void constructor_full_move() {
+  void constructorFullMove() {
     MoveParsed move = new MoveParsed("e2", "e4", 10, 20);
 
     assertEquals("e2", move.getSourceText());
@@ -21,7 +21,7 @@ class MoveParsedTest {
 
   @Test
   @DisplayName("MoveParsed stores replacement move values correctly")
-  void constructor_short_move() {
+  void constructorShortMove() {
     MoveParsed move = new MoveParsed(null, "e4", -1, 20);
 
     assertNull(move.getSourceText());
@@ -33,7 +33,7 @@ class MoveParsedTest {
 
   @Test
   @DisplayName("HasSource returns false when source text is blank")
-  void has_source_blank_text() {
+  void hasSourceBlankText() {
     MoveParsed move = new MoveParsed("   ", "e4", 10, 20);
 
     assertFalse(move.hasSource());
@@ -41,7 +41,7 @@ class MoveParsedTest {
 
   @Test
   @DisplayName("HasSource returns false when from index is negative")
-  void has_source_negative_index() {
+  void hasSourceNegativeIndex() {
     MoveParsed move = new MoveParsed("e2", "e4", -1, 20);
 
     assertFalse(move.hasSource());

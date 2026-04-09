@@ -121,10 +121,10 @@ class BitBoardTest {
     BitBoard dilated = bb.dilation();
     assertTrue(dilated.isSet(index + Direction.EAST.getValue()));
     assertTrue(dilated.isSet(index + Direction.WEST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NORTHEAST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NORTHWEST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SOUTHEAST.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SOUTHWEST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NORTH_EAST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NORTH_WEST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SOUTH_EAST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SOUTH_WEST.getValue()));
     assertFalse(dilated.isSet(index));
   }
 }

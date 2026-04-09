@@ -9,21 +9,21 @@ class PlayerStatusTest {
 
   @Test
   @DisplayName("Enum contains IDLE and INGAME")
-  void enum_values_test() {
+  void enumValuesTest() {
     assertNotNull(PlayerStatus.IDLE);
     assertNotNull(PlayerStatus.INGAME);
   }
 
   @Test
   @DisplayName("Enum valueOf works correctly")
-  void enum_valueof_test() {
+  void enumValueofTest() {
     assertEquals(PlayerStatus.IDLE, PlayerStatus.valueOf("IDLE"));
     assertEquals(PlayerStatus.INGAME, PlayerStatus.valueOf("INGAME"));
   }
 
   @Test
   @DisplayName("Enum toString returns correct names")
-  void enum_to_string_test() {
+  void enumToStringTest() {
     assertEquals("IDLE", PlayerStatus.IDLE.toString());
     assertEquals("INGAME", PlayerStatus.INGAME.toString());
   }

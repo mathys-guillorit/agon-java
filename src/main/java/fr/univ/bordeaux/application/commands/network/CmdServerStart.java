@@ -6,35 +6,16 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-/**
- * Command used to start a local TCP server.
- *
- * <p>This command allows the user to launch a game server on a specified port. If no port is
- * provided, a default port (12345) is used.
- *
- * <p>Usage:
- *
- * <ul>
- *   <li>{@code server_start} → starts server on default port (12345)
- *   <li>{@code server_start 5555} → starts server on port 5555
- * </ul>
- *
- * <p>This command:
- *
- * <ul>
- *   <li>Checks if a server is already running
- *   <li>Parses the port argument safely
- *   <li>Starts the server
- *   <li>Stores it inside the application context
- * </ul>
- */
+/** Starts a local TCP server. Uses the given port or the default port if none is provided. */
 public class CmdServerStart extends Cmd {
 
   /** Default port used if no argument is provided. */
-  private static final int DEFAULT_PORT = 12345;
+  private static final int DEFAULT_PORT = 12_345;
 
-  /** Shared application context (contains server, client, etc.). */
+  /** Shared application context (server, client, profile, etc.). */
   private final AppContext context;
 
   /** Command arguments provided by the parser. */
@@ -43,15 +24,15 @@ public class CmdServerStart extends Cmd {
   /**
    * Constructor used during command registration.
    *
-   * @param ui User interface context
-   * @param context Application context
+   * @param userInterface user interface context
+   * @param context application context
    */
-  public CmdServerStart(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdServerStart(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("server_start");
     this.setDesc(
-        "Usage: server start [PORT]\n"
+        "Usage: server_start [PORT]\n"
             + "Description: starts the local TCP server on the given port.\n"
             + "If no port is provided, the default port 12345 is used.\n");
   }
@@ -59,86 +40,132 @@ public class CmdServerStart extends Cmd {
   /**
    * Internal constructor used when the command is executed with arguments.
    *
-   * @param ui User interface
-   * @param context Application context
-   * @param args Command arguments
+   * @param userInterface user interface
+   * @param context application context
+   * @param args command arguments
    */
-  private CmdServerStart(GameUserInterface ui, AppContext context, String[] args) {
-    this(ui, context);
+  private CmdServerStart(
+      final GameUserInterface userInterface, final AppContext context, final String[] args) {
+    this(userInterface, context);
     this.args = args;
   }
 
   /**
    * Creates a new instance of the command with parsed arguments.
    *
-   * @param args Arguments passed from the command line
-   * @return A new CmdServerStart instance
+   * @param args arguments passed from the command line
+   * @return a new CmdServerStart instance
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdServerStart(getCtx(), context, args);
   }
 
   /**
    * Executes the command.
    *
-   * @param match MatchManager (unused here)
+   * @param match match manager (unused here)
    * @return true if execution completed
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
     return run(args);
   }
 
   /**
    * Core logic of the server start command.
    *
-   * @param args Command arguments
+   * @param args command arguments
    * @return true if execution completed successfully
    */
-  private boolean run(String[] args) {
+  private boolean run(final String[] args) {
+    boolean result = false;
 
-    // 1. Check if a server is already running
-    if (context.getServer() != null && context.getServer().isRunning()) {
+    if (isServerRunning()) {
       getCtx().showWarn("[SERVER] A server is already running.");
-      return false;
-    }
+    } else {
+      final Integer parsedPort = parsePort(args);
 
-    int port = DEFAULT_PORT;
+      if (parsedPort != null) {
+        final String profileName = getProfileName();
+        final AgonServer server = new AgonServer(parsedPort, profileName);
 
-    // 2. Parse port argument if provided
-    if (args != null && args.length > 0) {
-
-      String raw = args[0].trim();
-
-      if (!raw.isEmpty()) {
-        try {
-          port = Integer.parseInt(raw);
-        } catch (NumberFormatException e) {
-          // Invalid port format
-          getCtx().showError("[SERVER] Invalid port: " + raw);
-          return false;
+        if (server.start()) {
+          context.setServer(server);
+          getCtx()
+              .showMessage(
+                  "[SERVER] Server started on " + getMachineAddress() + ":" + parsedPort + "\n");
+          result = true;
+        } else {
+          getCtx().showError("[SERVER] Failed to start on port " + parsedPort + ".");
         }
       }
     }
 
-    // 3. Create server instance
-    String profileName = context.getProfile().getName();
+    return result;
+  }
 
-    AgonServer server = new AgonServer(port, profileName);
+  /** Returns true if a server is already running. */
+  private boolean isServerRunning() {
+    return getServer() != null && getServer().isRunning();
+  }
 
-    // 4. Attempt to start the server
-    if (!server.start()) {
-      getCtx().showError("[SERVER] Failed to start. Port " + port + " may already be in use.");
-      return false;
+  /** Returns the current server from the application context. */
+  private AgonServer getServer() {
+    return context.getServer();
+  }
+
+  /** Returns the current profile name. */
+  private String getProfileName() {
+    final var profile = context.getProfile();
+    return profile.getName();
+  }
+
+  /**
+   * Parses the port from arguments.
+   *
+   * @param args command arguments
+   * @return parsed port, or the default port, or {@code null} if invalid
+   */
+  private Integer parsePort(final String[] args) {
+    Integer port = DEFAULT_PORT;
+    boolean valid = true;
+
+    if (args != null && args.length > 0) {
+      final String raw = args[0].trim();
+
+      if (!raw.isEmpty()) {
+        try {
+          port = Integer.parseInt(raw);
+        } catch (NumberFormatException exception) {
+          getCtx().showError("[SERVER] Invalid port: " + raw);
+          valid = false;
+        }
+      }
     }
 
-    // 5. Store server in context
-    context.setServer(server);
+    if (valid && (port < 1024 || port > 65_535)) {
+      getCtx().showError("[SERVER] Port must be between 1024 and 65535.");
+      valid = false;
+    }
 
-    // 6. Inform the user
-    getCtx().showMessage("[SERVER] Server started successfully on port " + port + "\n");
+    if (!valid) {
+      port = null;
+    }
 
-    return true;
+    return port;
+  }
+
+  /** Returns the machine IP address, or the loopback address if unavailable. */
+  private String getMachineAddress() {
+    String address;
+
+    try {
+      address = InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException exception) {
+      address = InetAddress.getLoopbackAddress().getHostAddress();
+    }
+
+    return address;
   }
 }

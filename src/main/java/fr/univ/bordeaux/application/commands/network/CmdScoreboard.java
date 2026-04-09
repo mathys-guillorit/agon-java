@@ -7,12 +7,7 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
-/**
- * Command used to display the scoreboard of the server.
- *
- * <p>This command retrieves and displays the statistics of all players who have played on the
- * server (wins, losses, games).
- */
+/** Displays the server scoreboard. Shows statistics of players (wins, losses, games). */
 public class CmdScoreboard extends Cmd {
 
   /** Application context. */
@@ -21,11 +16,11 @@ public class CmdScoreboard extends Cmd {
   /**
    * Constructor.
    *
-   * @param ui user interface
+   * @param userInterface user interface
    * @param context application context
    */
-  public CmdScoreboard(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdScoreboard(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
 
     this.setName("scoreboard");
@@ -39,42 +34,43 @@ public class CmdScoreboard extends Cmd {
    * Creates a new instance of the scoreboard command.
    *
    * @param args command arguments (unused)
-   * @return a new {@code CmdScoreboard} command
+   * @return a new CmdScoreboard command
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdScoreboard(getCtx(), context);
   }
 
   /**
    * Executes the scoreboard command.
    *
-   * <p>This method checks whether the client is connected, sends a request to retrieve the server
-   * scoreboard, and displays the result to the user.
-   *
    * @param match current match manager (unused)
-   * @return true if the command executed, false if the client is not connected
+   * @return true if execution succeeds, false otherwise
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
+    final AgonClient client = getClient();
+    boolean result = true;
 
-    AgonClient client = context.getClient();
+    if (client.isConnected()) {
+      final String response = client.requestScoreboard();
 
-    // Check connection
-    if (!client.isConnected()) {
-      getCtx().showWarn("[CLIENT] Not connected. Use join first.");
-      return false;
-    }
-
-    // Request scoreboard
-    String response = client.requestScoreboard();
-
-    if (response != null) {
-      getCtx().showMessage(response + "\n");
+      if (response != null) {
+        getCtx().showMessage(response + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Failed to retrieve scoreboard.");
+        result = false;
+      }
     } else {
-      getCtx().showError("[CLIENT] Failed to retrieve scoreboard.");
+      getCtx().showWarn("[CLIENT] Not connected. Use join first.");
+      result = false;
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

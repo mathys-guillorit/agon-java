@@ -5,24 +5,35 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Centralized logger utility for the Agon game.
+ *
+ * <p>This class wraps {@link Logger} to provide configurable logging levels (debug, verbose,
+ * warning, error) and ensures consistent formatting across the application.
+ */
 public final class GameLogger {
   private static GameLogger instance;
   private final Logger logger;
 
   private GameLogger() {
     this.logger = Logger.getLogger("AgonGame");
-
     this.logger.setUseParentHandlers(false);
     this.logger.setLevel(Level.OFF);
-    for (Handler h : this.logger.getHandlers()) {
-      this.logger.removeHandler(h);
+
+    for (Handler handler : this.logger.getHandlers()) {
+      this.logger.removeHandler(handler);
     }
 
-    ConsoleHandler consoleHandler = new ConsoleHandler();
+    final ConsoleHandler consoleHandler = new ConsoleHandler();
     consoleHandler.setLevel(Level.OFF);
     this.logger.addHandler(consoleHandler);
   }
 
+  /**
+   * Returns the singleton instance of the GameLogger.
+   *
+   * @return the unique GameLogger instance
+   */
   public static synchronized GameLogger getInstance() {
     if (instance == null) {
       instance = new GameLogger();
@@ -30,8 +41,8 @@ public final class GameLogger {
     return instance;
   }
 
-  /** Activé par l'option -v ou set verbose=true */
-  public void setVerbose(boolean enabled) {
+  /** Enables or disables verbose mode. */
+  public void setVerbose(final boolean enabled) {
     if (enabled) {
       updateLevel(Level.INFO);
     } else {
@@ -39,8 +50,8 @@ public final class GameLogger {
     }
   }
 
-  /** Activé par l'option -d ou set debug=true */
-  public void setDebugMode(boolean enabled) {
+  /** Enables or disables debug mode. */
+  public void setDebugMode(final boolean enabled) {
     if (enabled) {
       updateLevel(Level.FINE);
     } else {
@@ -48,27 +59,51 @@ public final class GameLogger {
     }
   }
 
-  /** Met à jour le niveau du Logger ET du Handler Console */
-  private void updateLevel(Level newLevel) {
+  /** Updates the logger and handler levels. */
+  private void updateLevel(final Level newLevel) {
     this.logger.setLevel(newLevel);
-    for (Handler h : this.logger.getHandlers()) {
-      h.setLevel(newLevel);
+    for (Handler handler : this.logger.getHandlers()) {
+      handler.setLevel(newLevel);
     }
   }
 
-  public static void debug(String msg) {
-    getInstance().logger.log(Level.FINE, "[DEBUG] " + msg);
+  /** Returns true if DEBUG/FINE logs are enabled. */
+  public static boolean isDebugEnabled() {
+    return getInstance().logger.isLoggable(Level.FINE);
   }
 
-  public static void info(String msg) {
-    getInstance().logger.log(Level.INFO, "[INFO] " + msg);
+  /** Returns true if INFO logs are enabled. */
+  public static boolean isInfoEnabled() {
+    return getInstance().logger.isLoggable(Level.INFO);
   }
 
-  public static void warn(String msg) {
-    getInstance().logger.log(Level.WARNING, "[WARN] " + msg);
+  /** Returns true if WARNING logs are enabled. */
+  public static boolean isWarnEnabled() {
+    return getInstance().logger.isLoggable(Level.WARNING);
   }
 
-  public static void error(String msg) {
-    getInstance().logger.log(Level.SEVERE, "[ERROR] " + msg);
+  /** Returns true if ERROR/SEVERE logs are enabled. */
+  public static boolean isErrorEnabled() {
+    return getInstance().logger.isLoggable(Level.SEVERE);
+  }
+
+  /** Logs a debug message. */
+  public static void debug(final String message) {
+    getInstance().logger.log(Level.FINE, "[DEBUG] " + message);
+  }
+
+  /** Logs an info message. */
+  public static void info(final String message) {
+    getInstance().logger.log(Level.INFO, "[INFO] " + message);
+  }
+
+  /** Logs a warning message. */
+  public static void warn(final String message) {
+    getInstance().logger.log(Level.WARNING, "[WARN] " + message);
+  }
+
+  /** Logs an error message. */
+  public static void error(final String message) {
+    getInstance().logger.log(Level.SEVERE, "[ERROR] " + message);
   }
 }

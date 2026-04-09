@@ -21,7 +21,7 @@ class ServerDiscoveryTest {
 
   @Test
   @DisplayName("ServerDiscovery starts and stops without crashing")
-  void discovery_start_stop() throws Exception {
+  void discoveryStartStop() throws Exception {
     discovery = new ServerDiscovery("S", 12345);
 
     discovery.start();
@@ -32,7 +32,7 @@ class ServerDiscoveryTest {
 
   @Test
   @DisplayName("ServerDiscovery start called twice does not crash")
-  void discovery_start_twice() throws Exception {
+  void discoveryStartTwice() throws Exception {
     discovery = new ServerDiscovery("S", 12345);
 
     discovery.start();
@@ -43,7 +43,7 @@ class ServerDiscoveryTest {
 
   @Test
   @DisplayName("ServerDiscovery stop called twice does not crash")
-  void discovery_stop_twice() {
+  void discoveryStopTwice() {
     discovery = new ServerDiscovery("S", 12345);
 
     discovery.stop();

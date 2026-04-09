@@ -73,10 +73,11 @@ public class MoveTest {
   }
 
   @Test
-  @DisplayName("Cas aux limites de equals (Type cast et null)")
+  @DisplayName("Cas aux limites de equals (null et autre type)")
   void testEqualsEdgeCases() {
     Move move = new Move(10, 20, Color.WHITE);
-    assertThrows(ClassCastException.class, () -> move.equals("une string"));
-    assertThrows(NullPointerException.class, () -> move.equals(null));
+
+    assertFalse(move.equals("une string"));
+    assertFalse(move.equals(null));
   }
 }

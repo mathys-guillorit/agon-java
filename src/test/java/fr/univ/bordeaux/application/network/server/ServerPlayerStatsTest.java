@@ -2,6 +2,7 @@ package fr.univ.bordeaux.application.network.server;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.network.server.game.ServerPlayerStats;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +10,7 @@ class ServerPlayerStatsTest {
 
   @Test
   @DisplayName("Constructor initializes stats with zero values")
-  void constructor_initializes_zero_values() {
+  void constructorInitializesZeroValues() {
     ServerPlayerStats stats = new ServerPlayerStats("Alice");
 
     assertEquals("Alice", stats.getPlayerName());
@@ -20,7 +21,7 @@ class ServerPlayerStatsTest {
 
   @Test
   @DisplayName("AddWin increments wins and games")
-  void add_win() {
+  void addWin() {
     ServerPlayerStats stats = new ServerPlayerStats("Alice");
 
     stats.addWin();
@@ -32,7 +33,7 @@ class ServerPlayerStatsTest {
 
   @Test
   @DisplayName("AddLoss increments losses and games")
-  void add_loss() {
+  void addLoss() {
     ServerPlayerStats stats = new ServerPlayerStats("Alice");
 
     stats.addLoss();
@@ -44,7 +45,7 @@ class ServerPlayerStatsTest {
 
   @Test
   @DisplayName("AddWin and AddLoss both update totals correctly")
-  void add_win_and_loss() {
+  void addWinAndLoss() {
     ServerPlayerStats stats = new ServerPlayerStats("Alice");
 
     stats.addWin();

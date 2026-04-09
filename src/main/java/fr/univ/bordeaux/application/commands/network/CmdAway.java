@@ -16,11 +16,11 @@ public class CmdAway extends Cmd {
   /**
    * Constructor.
    *
-   * @param ui user interface
+   * @param userInterface user interface
    * @param context application context
    */
-  public CmdAway(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdAway(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
 
     this.setName("away");
@@ -37,7 +37,7 @@ public class CmdAway extends Cmd {
    * @return new CmdAway instance
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdAway(getCtx(), context);
   }
 
@@ -48,22 +48,29 @@ public class CmdAway extends Cmd {
    * @return true if execution succeeds
    */
   @Override
-  public boolean execute(MatchManager match) {
-    AgonClient client = context.getClient();
+  public boolean execute(final MatchManager match) {
+    final AgonClient client = getClient();
+    final String response;
+    boolean result = true;
 
     if (!client.isConnected()) {
       getCtx().showWarn("[CLIENT] Not connected. Use join first.");
-      return false;
-    }
-
-    String response = client.setAway();
-
-    if (response != null) {
-      getCtx().showMessage(response + "\n");
+      result = false;
     } else {
-      getCtx().showError("[CLIENT] Failed to set away status.");
+      response = client.requestAwayStatus();
+
+      if (response != null) {
+        getCtx().showMessage(response + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Failed to set away status.");
+      }
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

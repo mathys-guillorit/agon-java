@@ -1,13 +1,20 @@
-package fr.univ.bordeaux.application.network.server;
+package fr.univ.bordeaux.application.network.server.game;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Stores the scoreboard of the current server. */
 public class ServerScoreboard {
 
-  private final Map<String, ServerPlayerStats> statsByPlayerName = new LinkedHashMap<>();
+  /** Scoreboard entries indexed by normalized player name. */
+  private final Map<String, ServerPlayerStats> statsByPlayerName = new ConcurrentHashMap<>();
+
+  /** Creates a new server scoreboard. */
+  public ServerScoreboard() {
+    // Explicit constructor required by PMD.
+  }
 
   /**
    * Returns the stats for a player, creating them if necessary.
@@ -15,9 +22,9 @@ public class ServerScoreboard {
    * @param playerName player name
    * @return stats associated with the player
    */
-  public ServerPlayerStats getOrCreateStats(String playerName) {
+  public ServerPlayerStats getOrCreateStats(final String playerName) {
     return statsByPlayerName.computeIfAbsent(
-        playerName.toLowerCase(), key -> new ServerPlayerStats(playerName));
+        playerName.toLowerCase(Locale.ROOT), key -> new ServerPlayerStats(playerName));
   }
 
   /**
@@ -25,7 +32,7 @@ public class ServerScoreboard {
    *
    * @param playerName player name
    */
-  public void recordWin(String playerName) {
+  public void recordWin(final String playerName) {
     getOrCreateStats(playerName).addWin();
   }
 
@@ -34,7 +41,7 @@ public class ServerScoreboard {
    *
    * @param playerName player name
    */
-  public void recordLoss(String playerName) {
+  public void recordLoss(final String playerName) {
     getOrCreateStats(playerName).addLoss();
   }
 
