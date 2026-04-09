@@ -6,6 +6,7 @@ import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.application.ai.heuristics.MctsSelectionHeuristic;
 import fr.univ.bordeaux.application.ai.strategy.AbstractAgonAi;
 import fr.univ.bordeaux.technical.utils.GameLogger;
+
 import java.util.List;
 import java.util.Random;
 
@@ -18,131 +19,142 @@ import java.util.Random;
  */
 public class MctsStrategy extends AbstractAgonAi {
 
+  /** Random number generator for MCTS rollouts. */
   private final Random random = new Random();
 
-  /**
-   * The heuristic strategy specifically used for evaluating and selecting nodes during the tree
-   * traversal phase.
-   */
-  private final MctsSelectionHeuristic selectionHeuristic;
+  /** The heuristic strategy used for evaluating and selecting nodes. */
+  private final MctsSelectionHeuristic selHeur;
 
   /**
    * Constructs a new MCTS strategy instance.
    *
-   * @param color The color played by this AI agent.
-   * @param selectionHeuristic The specific heuristic used for node selection (e.g., UCT or ML).
+   * @param color      The color played by this AI agent.
+   * @param selHeur    The specific heuristic used for node selection.
+   * @param timeLimit  The calculation time limit in seconds.
    */
-  public MctsStrategy(Color color, MctsSelectionHeuristic selectionHeuristic, int timeLimit) {
+  public MctsStrategy(final Color color, final MctsSelectionHeuristic selHeur, final int timeLimit) {
     super(null, color);
-    this.setTimeLimit(timeLimit * 1000L);
-    this.selectionHeuristic = selectionHeuristic;
+    this.timeLimit = timeLimit * 1000L;
+    this.selHeur = selHeur;
   }
 
-  /**
-   * Computes the best move for the current board state using the MCTS algorithm.
-   *
-   * <p>This method iteratively performs the four core phases of MCTS: Selection, Expansion,
-   * Simulation (Rollout), and Backpropagation, until the allocated time limit is exhausted.
-   *
-   * @param board The current state of the game board.
-   * @return The calculated optimal {@link Move}, or {@code null} if no legal moves are available.
-   */
   @Override
-  protected Move computeMove(AgonBoard board) {
+  protected Move computeMove(final AgonBoard board) {
     this.nodeCount = 0;
+    final List<Move> initMoves = board.generateLegalMoves(this.color);
+    final Move result;
 
-    List<Move> initialLegalMoves = board.generateLegalMoves(this.color);
+    if (initMoves.isEmpty()) {
+      result = null;
+    } else if (initMoves.size() == 1) {
+      result = initMoves.get(0);
+    } else {
+      final MctsNode root = new MctsNode(null, null, this.color, initMoves);
+      this.nodeCount++;
 
-    if (initialLegalMoves.isEmpty()) {
-      return null;
-    }
-    if (initialLegalMoves.size() == 1) {
-      return initialLegalMoves.get(0);
-    }
-
-    MctsNode root = new MctsNode(null, null, this.color, initialLegalMoves);
-    this.nodeCount++;
-
-    while (isTimeRemaining()) {
-      int depth = 0;
-      MctsNode node = root;
-
-      while (node.isFullyExpanded() && !node.isLeaf()) {
-        node = getBestChild(node, board);
-        board.applyMove(node.getMove());
-        depth++;
+      while (isTimeRemaining()) {
+        runMctsIteration(root, board);
       }
 
-      if (!node.isFullyExpanded()) {
-        Move untriedMove = node.popRandomUntriedMove(random);
-        board.applyMove(untriedMove);
-        depth++;
-
-        Color nextPlayer = (node.getPlayerToMove() == Color.WHITE) ? Color.BLACK : Color.WHITE;
-        List<Move> newLegalMoves = board.generateLegalMoves(nextPlayer);
-
-        MctsNode newNode = new MctsNode(node, untriedMove, nextPlayer, newLegalMoves);
-        node.addChild(newNode);
-        node = newNode;
-        this.nodeCount++;
-        GameLogger.debug("Node count :  " + this.nodeCount);
-      }
-
-      Color winner = checkWinner(board);
-      int rolloutMoves = 0;
-      Color turn = node.getPlayerToMove();
-
-      while (winner == null && rolloutMoves < 50 && isTimeRemaining()) {
-        List<Move> moves = board.generateLegalMoves(turn);
-        if (moves.isEmpty()) {
-          break;
-        }
-
-        Move randomMove = moves.get(random.nextInt(moves.size()));
-        board.applyMove(randomMove);
-        rolloutMoves++;
-
-        turn = (turn == Color.WHITE) ? Color.BLACK : Color.WHITE;
-        winner = checkWinner(board);
-      }
-
-      MctsNode tempNode = node;
-      while (tempNode != null) {
-        double score = 0.0;
-        if (winner == this.color) {
-          score = 1.0;
-        } else if (winner == null) {
-          score = 0.5;
-        }
-
-        tempNode.updateStats(score);
-        tempNode = tempNode.getParent();
-      }
-
-      for (int i = 0; i < depth + rolloutMoves; i++) {
-        board.undoMove();
-      }
+      final MctsNode bestChild = getBestChild(root, board);
+      result = bestChild != null ? bestChild.getMove() : initMoves.get(0);
     }
 
-    MctsNode bestChild = getBestChild(root, board);
-    return bestChild != null ? bestChild.getMove() : initialLegalMoves.get(0);
+    return result;
   }
 
   /**
-   * Evaluates and selects the best child node using the injected {@link MctsSelectionHeuristic}.
-   *
-   * @param node The parent node whose children are to be evaluated.
-   * @param board The current game board state (matching the parent node's state).
-   * @return The child {@link MctsNode} with the highest computed selection score.
+   * Executes a single complete iteration of the MCTS algorithm (Selection, Expansion, Simulation, Backpropagation).
    */
-  private MctsNode getBestChild(MctsNode node, AgonBoard board) {
+  private void runMctsIteration(final MctsNode root, final AgonBoard board) {
+    int depth = 0;
+    MctsNode node = root;
+
+    while (node.isFullyExpanded() && !node.isLeaf()) {
+      node = getBestChild(node, board);
+      board.applyMove(node.getMove());
+      depth++;
+    }
+
+    if (!node.isFullyExpanded()) {
+      final Move untried = node.popRandomUntriedMove(random);
+      board.applyMove(untried);
+      depth++;
+
+      final Color nextP = (node.getPlayerToMove() == Color.WHITE) ? Color.BLACK : Color.WHITE;
+      final List<Move> newMoves = board.generateLegalMoves(nextP);
+
+      final MctsNode newNode = new MctsNode(node, untried, nextP, newMoves);
+      node.addChild(newNode);
+      node = newNode;
+      this.nodeCount++;
+
+      GameLogger.debug("Node count :  " + this.nodeCount);
+    }
+
+    final int rollouts = simulate(board, node.getPlayerToMove());
+    final Color winner = checkWinner(board);
+
+    backpropagate(node, winner);
+
+    final int totalUndos = depth + rollouts;
+    for (int i = 0; i < totalUndos; i++) {
+      board.undoMove();
+    }
+  }
+
+  /**
+   * Performs a random simulation (rollout) from the current board state until a terminal state or depth limit is reached.
+   */
+  private int simulate(final AgonBoard board, final Color startTurn) {
+    int rolloutMoves = 0;
+    Color turn = startTurn;
+    Color winner = checkWinner(board);
+
+    while (winner == null && rolloutMoves < 50 && isTimeRemaining()) {
+      final List<Move> moves = board.generateLegalMoves(turn);
+      if (moves.isEmpty()) {
+        break;
+      }
+
+      final Move randMove = moves.get(random.nextInt(moves.size()));
+      board.applyMove(randMove);
+      rolloutMoves++;
+
+      turn = (turn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+      winner = checkWinner(board);
+    }
+    return rolloutMoves;
+  }
+
+  /**
+   * Backpropagates the simulation result up the tree to update node statistics.
+   */
+  private void backpropagate(final MctsNode startNode, final Color winner) {
+    MctsNode tempNode = startNode;
+    while (tempNode != null) {
+      final double score;
+      if (this.color.equals(winner)) {
+        score = 1.0;
+      } else if (winner == null) {
+        score = 0.5;
+      } else {
+        score = 0.0;
+      }
+
+      tempNode.updateStats(score);
+      tempNode = tempNode.getParent();
+    }
+  }
+
+  private MctsNode getBestChild(final MctsNode node, final AgonBoard board) {
     MctsNode bestChild = null;
     double bestValue = Double.NEGATIVE_INFINITY;
 
-    for (MctsNode child : node.getChildren()) {
+    for (final MctsNode child : node.getChildren()) {
       board.applyMove(child.getMove());
 
-      double nodeValue = this.selectionHeuristic.evaluateNode(node, child, board);
+      final double nodeValue = this.selHeur.evaluateNode(node, child, board);
 
       board.undoMove();
 
@@ -154,19 +166,15 @@ public class MctsStrategy extends AbstractAgonAi {
     return bestChild;
   }
 
-  /**
-   * Checks the current board state to determine if a victory condition has been met.
-   *
-   * @param board The current game board state.
-   * @return The winning {@link Color}, or {@code null} if there is no winner yet.
-   */
-  private Color checkWinner(AgonBoard board) {
+  private Color checkWinner(final AgonBoard board) {
+    final Color result;
     if (board.isGameWon(Color.WHITE)) {
-      return Color.WHITE;
+      result = Color.WHITE;
+    } else if (board.isGameWon(Color.BLACK)) {
+      result = Color.BLACK;
+    } else {
+      result = null;
     }
-    if (board.isGameWon(Color.BLACK)) {
-      return Color.BLACK;
-    }
-    return null;
+    return result;
   }
 }

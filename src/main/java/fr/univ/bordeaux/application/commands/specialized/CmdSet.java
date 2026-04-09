@@ -152,7 +152,7 @@ public final class CmdSet extends Cmd {
               feedback.append("  - AI Mode: ").append(value.toLowerCase()).append("\n");
             } else {
               getCtx()
-                  .showWarn("invalid aiMode. It must be centrality,mixed,ML,UCT or mobility.\n");
+                  .showWarn("invalid aiMode. It must be mcts,minimax or iterative.\n");
               return false;
             }
           }

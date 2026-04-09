@@ -2,15 +2,12 @@ package fr.univ.bordeaux.application.network.server.game;
 
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
 import fr.univ.bordeaux.application.network.server.ClientHandler;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** Sends end-of-game notifications to connected players. */
 public class GameResultNotifier {
 
-  /** Logger used for notification failures. */
-  private static final Logger LOGGER = Logger.getLogger(GameResultNotifier.class.getName());
 
   /** Creates a new game result notifier. */
   public GameResultNotifier() {
@@ -43,7 +40,7 @@ public class GameResultNotifier {
     try {
       receiverHandler.sendFromServer(message);
     } catch (IOException exception) {
-      LOGGER.log(Level.FINE, "[SERVER] Failed to send GAME_OVER message", exception);
+      GameLogger.error("[SERVER] Failed to send GAME_OVER message.");
     }
   }
 

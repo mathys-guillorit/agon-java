@@ -65,4 +65,24 @@ class ConfigSerializerTest {
     assertTrue(content.contains("ai_depth = 8"));
     assertTrue(content.contains("ai_color = ALL"));
   }
+
+  @Test
+  void testSaveShortcuts() throws IOException {
+    Path configFile = tempDir.resolve("shortcuts_save.agonrc");
+
+    GameConfig config = new GameConfig();
+    config.addShortcut("shortcut_undo", "ctrl+z");
+    config.addShortcut("shortcut_redo", "ctrl+y");
+
+    ConfigSerializer serializer = new ConfigSerializer();
+    serializer.save(config, configFile.toString());
+
+    assertTrue(Files.exists(configFile));
+    String content = Files.readString(configFile);
+
+    assertTrue(content.contains("[shortcuts]"));
+    assertTrue(content.contains("shortcut_undo = ctrl+z"));
+    assertTrue(content.contains("shortcut_redo = ctrl+y"));
+  }
+
 }

@@ -17,16 +17,12 @@ import fr.univ.bordeaux.application.network.server.lifecycle.ServerLifecycleMana
 import fr.univ.bordeaux.application.network.server.player.PlayerRegistry;
 import fr.univ.bordeaux.application.network.server.player.PlayerService;
 import fr.univ.bordeaux.application.network.server.player.PlayerViewService;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.net.Socket;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** Main TCP server facade coordinating lifecycle, players, games, and invitations. */
 public class AgonServer {
-
-  /** Logger used for server-level runtime failures. */
-  private static final Logger LOGGER = Logger.getLogger(AgonServer.class.getName());
 
   /** TCP port used by this server instance. */
   private final int port;
@@ -403,7 +399,7 @@ public class AgonServer {
       connectionRegistry.add(handler);
       lifecycleManager.submitClientHandler(handler);
     } catch (RuntimeException e) {
-      LOGGER.log(Level.FINE, "[SERVER] Error while registering a client", e);
+      GameLogger.error("[SERVER] Error while registering a client");
 
       try {
         clientSocket.close();

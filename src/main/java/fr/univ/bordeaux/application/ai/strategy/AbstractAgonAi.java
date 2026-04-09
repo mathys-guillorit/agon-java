@@ -49,14 +49,14 @@ public abstract class AbstractAgonAi implements AgonAi {
    *
    * @param heuristic The evaluation function to use.
    */
-  public AbstractAgonAi(Heuristic heuristic, Color color) {
+  public AbstractAgonAi(final Heuristic heuristic, final Color color) {
     this.heuristic = heuristic;
     this.color = color;
   }
 
   /** {@inheritDoc} */
   @Override
-  public void setTimeLimit(long millis) {
+  public void setTimeLimit(final long millis) {
     this.timeLimit = millis;
   }
 
@@ -93,7 +93,7 @@ public abstract class AbstractAgonAi implements AgonAi {
    * abstract {@link #computeMove(AgonBoard)} method.
    */
   @Override
-  public final Move getBestMove(AgonBoard board) {
+  public final Move getBestMove(final AgonBoard board) {
     this.startTime = System.currentTimeMillis();
     return computeMove(board);
   }

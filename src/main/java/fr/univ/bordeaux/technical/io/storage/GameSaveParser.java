@@ -42,12 +42,12 @@ public class GameSaveParser extends AbstractFileParser<GameSaveData> {
    *     structurally invalid.
    */
   @Override
-  protected GameSaveData processCleanLines(List<String> cleanLines) {
-    GameSaveBuilder builder = new GameSaveBuilder();
+  protected GameSaveData processCleanLines(final List<String> cleanLines) {
+    final GameSaveBuilder builder = new GameSaveBuilder();
 
     this.currentState = new IdleState();
 
-    for (String line : cleanLines) {
+    for (final String line : cleanLines) {
       try {
         if (line.startsWith("[") && line.endsWith("]")) {
           switchState(line.toLowerCase(), builder);
@@ -81,7 +81,7 @@ public class GameSaveParser extends AbstractFileParser<GameSaveData> {
    * @param builder The builder accumulating the game data, used here to mark section presence.
    * @throws IOException If the provided header string does not match any known valid sections.
    */
-  private void switchState(String header, GameSaveBuilder builder) throws IOException {
+  private void switchState(final String header, final GameSaveBuilder builder) throws IOException {
     switch (header) {
       case "[settings]":
         builder.markSettingsSection();

@@ -5,8 +5,9 @@ import fr.univ.bordeaux.application.ai.heuristics.*;
 import fr.univ.bordeaux.application.ai.strategy.mcts.MctsStrategy;
 import fr.univ.bordeaux.application.ai.strategy.minimax.MinimaxStrategy;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
-import java.util.HashMap;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Factory for AI. */
 public final class AiFactory {
@@ -20,9 +21,9 @@ public final class AiFactory {
    * @return {@link Map}
    * @throws IncompatibleAiConfigurationException if the configuration is invalid.
    */
-  public static Map<Color, AbstractAgonAi> createAiMap(GameConfig config)
+  public static Map<Color, AbstractAgonAi> createAiMap(final GameConfig config)
       throws IncompatibleAiConfigurationException {
-    Map<Color, AbstractAgonAi> aiMap = new HashMap<>();
+    final Map<Color, AbstractAgonAi> aiMap = new ConcurrentHashMap<>();
     if (config.isWhiteAi()) {
       aiMap.put(Color.WHITE, createAi(config, Color.WHITE));
     }
@@ -38,24 +39,23 @@ public final class AiFactory {
    * @param config {@link GameConfig}
    * @param color {@link Color}
    * @return {@link AbstractAgonAi}
-   * @throws IncompatibleAiConfigurationException if the heuristic and mode are incompatible.
+   * @throws IncompatibleAiConfigurationException if heuristic and mode don't match.
    */
-  public static AbstractAgonAi createAi(GameConfig config, Color color)
+  public static AbstractAgonAi createAi(final GameConfig config, final Color color)
       throws IncompatibleAiConfigurationException {
-    String mode = config.getAiMode();
-    String heuristicName = config.getAiHeuristic();
-
+    final AbstractAgonAi resultAi;
+    final String mode = config.getAiMode();
+    final String heuristicName = config.getAiHeuristic();
     boolean isIncompatible = false;
-    String expected = "";
 
     switch (mode) {
       case "minimax", "iterative" -> {
-        Heuristic heuristic = createHeuristic(heuristicName);
+        final Heuristic heuristic = createHeuristic(heuristicName);
         if (heuristic == null) {
           isIncompatible = true;
-          expected = "centrality, mobility or mixed";
+          resultAi = null;
         } else {
-          return new MinimaxStrategy(
+          resultAi = new MinimaxStrategy(
               heuristic,
               color,
               config.getAiDepth(),
@@ -64,68 +64,45 @@ public final class AiFactory {
         }
       }
       case "mcts" -> {
-        MctsSelectionHeuristic heuristic = createSelectionHeuristic(heuristicName);
+        final MctsSelectionHeuristic heuristic = createSelectionHeuristic(heuristicName);
         if (heuristic == null) {
           isIncompatible = true;
-          expected = "uct or ml";
+          resultAi = null;
         } else {
-          return new MctsStrategy(color, heuristic, config.getAiTimeLimit());
+          resultAi = new MctsStrategy(color, heuristic, config.getAiTimeLimit());
         }
       }
-      default -> {
-        return null;
-      }
+      default -> resultAi = null;
     }
 
     if (isIncompatible) {
-      String message =
-          "Incompatible configuration: Heuristic '"
-              + heuristicName
-              + "' is not compatible with mode '"
-              + mode
-              + "'. Expected "
-              + expected
-              + ". Falling back to default AI: Minimax, Mixed, Depth 4, Iterative.";
       config.setAiMode("minimax");
       config.setAiHeuristic("mixed");
       config.setAiDepth(4);
       config.setAiIterativeDeepening(true);
 
-      throw new IncompatibleAiConfigurationException(message);
+      throw new IncompatibleAiConfigurationException(
+          "Heuristic '" + heuristicName + "' is incompatible with mode '" + mode + "'. Creating a base default Ai : minimax iterative deepening, depth 4 , heuristic mixed.");
     }
 
-    return null;
+    return resultAi;
   }
 
-  private static Heuristic createHeuristic(String type) {
-    switch (type) {
-      case "centrality" -> {
-        return new CentralityHeuristic();
-      }
-      case "mobility" -> {
-        return new MobilityHeuristic();
-      }
-      case "mixed" -> {
-        return new MixedHeuristic(10, 1);
-      }
-      default -> {
-        return null;
-      }
-    }
+  private static Heuristic createHeuristic(final String type) {
+    return switch (type) {
+      case "centrality" -> new CentralityHeuristic();
+      case "mobility" -> new MobilityHeuristic();
+      case "mixed" -> new MixedHeuristic(10, 1);
+      default -> null;
+    };
   }
 
-  private static MctsSelectionHeuristic createSelectionHeuristic(String type) {
-    switch (type) {
-      case "uct" -> {
-        return new UctHeuristic(Math.sqrt(2));
-      }
-      case "ml" -> {
-        return new MlHeuristic(Math.sqrt(2));
-      }
-      default -> {
-        return null;
-      }
-    }
+  private static MctsSelectionHeuristic createSelectionHeuristic(final String type) {
+    return switch (type) {
+      case "uct" -> new UctHeuristic(Math.sqrt(2));
+      case "ml" -> new MlHeuristic(Math.sqrt(2));
+      default -> null;
+    };
   }
 
   /**
@@ -134,7 +111,7 @@ public final class AiFactory {
    * @param color {@link Color}
    * @return {@link AbstractAgonAi}
    */
-  public static AbstractAgonAi createHintAi(Color color) {
+  public static AbstractAgonAi createHintAi(final Color color) {
     return new MinimaxStrategy(new MixedHeuristic(10, 1), color, 4, true, 5);
   }
 }
