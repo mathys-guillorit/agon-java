@@ -57,7 +57,8 @@ public class ConfigBinderTest {
   @DisplayName("Test MCTS Selection: ML and UCT")
   void testAiMctsSelection() throws Exception {
 
-    CommandLine cmd = parser.parse(options, new String[] {"--ai-mode", "mcts", "--ai-mcts-selection", "ML"});
+    CommandLine cmd =
+        parser.parse(options, new String[] {"--ai-mode", "mcts", "--ai-mcts-selection", "ML"});
     ConfigBinder.bindOptionsToConfig(cmd, config, ui);
     assertEquals("ml", config.getAiHeuristic());
 
@@ -76,7 +77,8 @@ public class ConfigBinderTest {
   @Test
   @DisplayName("Test MCTS Selection: Invalid mode defaults to UCT")
   void testAiMctsSelectionInvalid() throws Exception {
-    CommandLine cmd = parser.parse(options, new String[] {"--ai-mode", "mcts", "--ai-mcts-selection", "RANDOM"});
+    CommandLine cmd =
+        parser.parse(options, new String[] {"--ai-mode", "mcts", "--ai-mcts-selection", "RANDOM"});
     ConfigBinder.bindOptionsToConfig(cmd, config, ui);
     assertTrue(out.toString().contains("Unreconised mode for mcts"));
   }
@@ -93,6 +95,7 @@ public class ConfigBinderTest {
     ConfigBinder.bindOptionsToConfig(cmdD, config, ui);
     assertTrue(config.isDebug());
   }
+
   @Test
   void testTimeoutWithoutBlitz() throws Exception {
     CommandLine cmd = parser.parse(options, new String[] {"-t", "5"});

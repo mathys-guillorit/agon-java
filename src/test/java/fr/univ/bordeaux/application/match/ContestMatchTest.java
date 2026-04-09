@@ -62,7 +62,8 @@ public class ContestMatchTest {
       ContestMatch.executeContest(file.toString());
       String output = outContent.toString().trim();
       assertFalse(output.isEmpty(), "The AI should have returned a move.");
-      boolean isValidFormat = output.matches("^[OX] ([a-z][0-9]{1,2} [a-z][0-9]{1,2}|reloc [A-G][0-9]{1,2})$");
+      boolean isValidFormat =
+          output.matches("^[OX] ([a-z][0-9]{1,2} [a-z][0-9]{1,2}|reloc [A-G][0-9]{1,2})$");
 
       assertTrue(isValidFormat, "Invalid move format received: " + output);
     } finally {

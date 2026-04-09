@@ -180,8 +180,6 @@ public class CmdQuitTest {
     assertFalse(gameUserInterface.isRunning());
   }
 
-
-
   private MatchManager createRealMatch(GameUserInterface ui) {
     return new StandardMatch(
         new AgonBoardImpl(),
@@ -189,5 +187,4 @@ public class CmdQuitTest {
         new HumanPlayer("P2", Color.BLACK, ui),
         new GameConfig());
   }
-
 }

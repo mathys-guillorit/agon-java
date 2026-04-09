@@ -13,7 +13,6 @@ import java.util.ArrayList;
  */
 public class ConsoleRenderer {
 
-
   /**
    * Calculates the indentation (spaces) needed for each line to form the hexagonal shape.
    *

@@ -109,8 +109,7 @@ public class CmdLoadTest {
 
     assertFalse(result);
     assertTrue(
-        outContent.toString().contains("Failed to load game"),
-        "The UI must display a read error");
+        outContent.toString().contains("Failed to load game"), "The UI must display a read error");
   }
 
   @Test

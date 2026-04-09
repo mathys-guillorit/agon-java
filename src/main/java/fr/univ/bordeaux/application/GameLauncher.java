@@ -130,8 +130,7 @@ public class GameLauncher {
         File file = new File(filePath);
 
         if (!file.exists() || file.isDirectory()) {
-          GameLogger.error(
-              "The file '" + filePath + "' does not exist or is a directory.");
+          GameLogger.error("The file '" + filePath + "' does not exist or is a directory.");
           return;
         }
 
@@ -140,8 +139,7 @@ public class GameLauncher {
           try {
             ContestMatch.executeContest(fileArg[0]);
           } catch (Exception e) {
-            GameLogger.error(
-                "Contest mode failed : " + e.getMessage());
+            GameLogger.error("Contest mode failed : " + e.getMessage());
           }
           return;
         }
@@ -173,8 +171,7 @@ public class GameLauncher {
     try {
       return configParser.parse(configPath);
     } catch (IOException e) {
-      GameLogger.info(
-          "No config file found. Creating a default file...");
+      GameLogger.info("No config file found. Creating a default file...");
       createDefaultConfigFile();
       return new GameConfig();
     }
@@ -189,11 +186,9 @@ public class GameLauncher {
     ConfigSerializer serializer = new ConfigSerializer();
     try {
       serializer.createDefault(configPath);
-      GameLogger.info(
-          "Minimal configuration file created at: " + configPath);
+      GameLogger.info("Minimal configuration file created at: " + configPath);
     } catch (IOException e) {
-      GameLogger.error(
-          "Failed to save default config: " + e.getMessage());
+      GameLogger.error("Failed to save default config: " + e.getMessage());
     }
   }
 

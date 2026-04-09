@@ -55,6 +55,7 @@ public final class GameLogger {
       h.setLevel(newLevel);
     }
   }
+
   public static void debug(String msg) {
     getInstance().logger.log(Level.FINE, "[DEBUG] " + msg);
   }

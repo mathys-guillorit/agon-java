@@ -98,9 +98,9 @@ public class GameConfig {
    * @param depth The maximum number of turns ahead the AI should calculate.
    */
   public boolean setAiDepth(int depth) {
-    if (depth<=0){
+    if (depth <= 0) {
       return false;
-    }else {
+    } else {
       this.aiDepth = depth;
       return true;
     }
@@ -131,13 +131,12 @@ public class GameConfig {
    *
    * @param heuristic The name of the heuristic strategy (e.g., {@code "MIXED"}).
    */
-  public boolean setAiHeuristic(String heuristic) throws IllegalArgumentException{
-    if (Arrays.asList("centrality","mixed","mobility","uct","ml").contains(heuristic)) {
+  public boolean setAiHeuristic(String heuristic) throws IllegalArgumentException {
+    if (Arrays.asList("centrality", "mixed", "mobility", "uct", "ml").contains(heuristic)) {
       this.aiHeuristic = heuristic;
       return true;
     }
     return false;
-
   }
 
   /**

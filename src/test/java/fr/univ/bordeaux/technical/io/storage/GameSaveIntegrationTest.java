@@ -30,7 +30,7 @@ class GameSaveIntegrationTest {
   @DisplayName("Should successfully serialize and parse a complete game save file")
   void testSaveAndLoadIntegration() throws IOException {
     GameConfig originalConfig = new GameConfig();
-    originalConfig.setAiMode("MCTS");
+    originalConfig.setAiMode("mcts");
     originalConfig.setTimeout(300);
 
     Color currentPlayer = Color.BLACK;
@@ -65,7 +65,7 @@ class GameSaveIntegrationTest {
 
     assertNotNull(loadedSaveData, "The loaded save data should not be null");
 
-    assertEquals("MCTS", loadedSaveData.getConfig().getAiMode(), "Ai Mode should match");
+    assertEquals("mcts", loadedSaveData.getConfig().getAiMode(), "Ai Mode should match");
     assertEquals(300, loadedSaveData.getConfig().getTimeout(), "Timeout should match");
 
     assertEquals(Color.BLACK, loadedSaveData.getCurrentPlayer(), "Current player should be Black");

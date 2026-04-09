@@ -33,8 +33,10 @@ public class History {
 
   /** Stack containing turns that were reverted and can be re-applied. */
   private final Stack<HistoryInformations> redoStack = new Stack<>();
-  /** * A map tracking how many times each board configuration has occurred.
-   * Key: String signature of the board, Value: count of occurrences.
+
+  /**
+   * * A map tracking how many times each board configuration has occurred. Key: String signature of
+   * the board, Value: count of occurrences.
    */
   private final Map<String, Integer> configurationCounts = new HashMap<>();
 
@@ -159,8 +161,8 @@ public class History {
   /**
    * Adds a new turn to the history along with its board state signature.
    *
-   * <p>This method updates the undo stack, records the board configuration for
-   * repetition checking, and clears the redo stacks to maintain a linear history.</p>
+   * <p>This method updates the undo stack, records the board configuration for repetition checking,
+   * and clears the redo stacks to maintain a linear history.
    *
    * @param informations The {@link HistoryInformations} of the turn.
    * @param boardSignature A unique {@link String} representing the board state after the move.
@@ -331,10 +333,12 @@ public class History {
 
     return textMoves;
   }
+
   /**
-   * Checks if the current board configuration has occurred three or more times.
-   * * <p>This is used to detect the "Triple Repetition" rule, which in many
-   * Agon implementations results in a draw or a loss for the player creating the loop.</p>
+   * Checks if the current board configuration has occurred three or more times. *
+   *
+   * <p>This is used to detect the "Triple Repetition" rule, which in many Agon implementations
+   * results in a draw or a loss for the player creating the loop.
    *
    * @param currentSignature The signature of the board state to check.
    * @return {@code true} if the state has occurred 3 times or more, {@code false} otherwise.

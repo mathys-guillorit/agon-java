@@ -288,14 +288,16 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .append("]")
         .toAnsi();
   }
+
   /**
    * Displays an error message to the user and logs it in the system.
    *
    * <p>This method performs two actions:
+   *
    * <ol>
-   * <li>It records the error in the {@link GameLogger} for debugging purposes.</li>
-   * <li>It prints the error to the command-line interface with a specific
-   * visual prefix to ensure the user notices it.</p>
+   *   <li>It records the error in the {@link GameLogger} for debugging purposes.
+   *   <li>It prints the error to the command-line interface with a specific visual prefix to ensure
+   *       the user notices it.
    * </ol>
    *
    * @param msg The error message to be displayed.
@@ -385,7 +387,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
     } else {
       String[] timers = match.getAllPlayersRemainingTime();
-      if (timers.length!=0) {
+      if (timers.length != 0) {
         this.showInfo(
             "Current turn: "
                 + match.getCurrentPlayer().getColor()

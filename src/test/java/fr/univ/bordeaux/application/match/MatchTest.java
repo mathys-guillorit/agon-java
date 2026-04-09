@@ -22,9 +22,7 @@ class MatchTest {
   private Player p2;
   private TestMatch match;
 
-  /**
-   * Concrete subclass used to test the abstract Match class.
-   */
+  /** Concrete subclass used to test the abstract Match class. */
   private static class TestMatch extends Match {
     public boolean startCalled = false;
     public boolean endCalled = false;
@@ -74,7 +72,8 @@ class MatchTest {
   }
 
   @Test
-  @DisplayName("Getters: getWhitePlayer and getBlackPlayer work even if players are swapped in constructor")
+  @DisplayName(
+      "Getters: getWhitePlayer and getBlackPlayer work even if players are swapped in constructor")
   void testGetWhiteAndBlackPlayerReversed() {
     Player blackFirst = new HumanPlayer("Black", Color.BLACK, null);
     Player whiteSecond = new HumanPlayer("White", Color.WHITE, null);
@@ -200,7 +199,8 @@ class MatchTest {
   void testHint() {
     Move hint = match.hint();
     assertNotNull(hint, "The AI should suggest a move");
-    assertEquals(Color.WHITE, hint.getColor(), "The suggested move should be for the current player");
+    assertEquals(
+        Color.WHITE, hint.getColor(), "The suggested move should be for the current player");
   }
 
   @Test

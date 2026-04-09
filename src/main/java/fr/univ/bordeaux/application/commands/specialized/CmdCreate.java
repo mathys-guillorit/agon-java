@@ -1,5 +1,6 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.application.ai.strategy.IncompatibleAiConfigurationException;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.GameEngine;
@@ -82,12 +83,22 @@ public class CmdCreate extends Cmd {
       CommandLine cmd = parser.parse(super.getOptions(), args);
       GameConfig matchConfig = this.gameConfig.copy();
       ConfigBinder.bindOptionsToConfig(cmd, matchConfig, super.getCtx());
-      MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
+
+      MatchManager match;
+      try {
+        match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      } catch (IncompatibleAiConfigurationException e) {
+        // En cas d'incompatibilité, la factory a déjà corrigé matchConfig.
+        // On affiche l'erreur (qui contient les détails du fallback) et on réessaie.
+        this.getCtx().showWarn("Warning: " + e.getMessage());
+        match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      }
+
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       GameLogger.error(e.getMessage());
-      this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
+      this.getCtx().showError("Error: " + e.getMessage());
       return false;
     }
 

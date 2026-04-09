@@ -5,9 +5,10 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 
 /**
- * Base implementation of the {@link Player} interface.
- * * <p>This abstract class provides common storage for player attributes like name
- * and color, which are shared by both human and AI player implementations.</p>
+ * Base implementation of the {@link Player} interface. *
+ *
+ * <p>This abstract class provides common storage for player attributes like name and color, which
+ * are shared by both human and AI player implementations.
  */
 public abstract class AbstractPlayer implements Player {
 
@@ -36,6 +37,7 @@ public abstract class AbstractPlayer implements Player {
    */
   @Override
   public abstract CmdAction getAction(AgonRegister<CmdAction> cmds);
+
   /**
    * Retrieves the name of the player.
    *

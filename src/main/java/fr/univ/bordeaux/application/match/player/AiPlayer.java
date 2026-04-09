@@ -10,8 +10,8 @@ import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 /**
  * Implementation of a player controlled by Artificial Intelligence.
  *
- * <p>This player uses an {@link AgonAi} strategy to evaluate the board
- * and decide the best move to execute during its turn.</p>
+ * <p>This player uses an {@link AgonAi} strategy to evaluate the board and decide the best move to
+ * execute during its turn.
  */
 public class AiPlayer extends AbstractPlayer {
 
@@ -38,8 +38,8 @@ public class AiPlayer extends AbstractPlayer {
   /**
    * Calculates the best action for the AI using its strategy engine.
    *
-   * <p>The AI analyzes the current board state and returns a {@link CmdMove}
-   * containing its chosen move.</p>
+   * <p>The AI analyzes the current board state and returns a {@link CmdMove} containing its chosen
+   * move.
    *
    * @param cmds The registry of available commands (unused by the AI).
    * @return A {@link CmdAction} representing the AI's chosen move.

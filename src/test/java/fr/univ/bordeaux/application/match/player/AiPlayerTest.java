@@ -20,9 +20,7 @@ public class AiPlayerTest {
   private AiPlayer aiPlayer;
   private Move fakeBestMove;
 
-  /**
-   * Simple stub for AI strategy to avoid running complex algorithms during tests.
-   */
+  /** Simple stub for AI strategy to avoid running complex algorithms during tests. */
   private class StubAi implements AgonAi {
     @Override
     public Move getBestMove(AgonBoard board) {

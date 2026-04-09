@@ -30,6 +30,7 @@ public class UiPromptParserTest {
   private AgonShell shell;
   private ByteArrayOutputStream outContent;
   private GameConfig config;
+
   @BeforeEach
   void setUp() throws Exception {
     registry = new AgonRegister<>();
@@ -56,8 +57,8 @@ public class UiPromptParserTest {
   }
 
   /**
-   * Verifies that the parser correctly handles a standard move string.
-   * Checks if the coordinate mapping works within the shell context.
+   * Verifies that the parser correctly handles a standard move string. Checks if the coordinate
+   * mapping works within the shell context.
    */
   @Test
   @DisplayName("Integration: Parse move 'a1b2' through AgonShell")
@@ -69,8 +70,8 @@ public class UiPromptParserTest {
   }
 
   /**
-   * Verifies that an invalid coordinate correctly triggers the styled [ERROR] output
-   * of the real AgonShell.
+   * Verifies that an invalid coordinate correctly triggers the styled [ERROR] output of the real
+   * AgonShell.
    */
   @Test
   @DisplayName("Integration: Out of bounds move triggers AgonShell error styling")
@@ -81,7 +82,8 @@ public class UiPromptParserTest {
 
     String output = outContent.toString();
     assertTrue(output.contains("ERROR"), "Output should contain 'ERROR'");
-    assertTrue(output.contains("out of bounds"), "Output should explain the error is 'out of bounds'");
+    assertTrue(
+        output.contains("out of bounds"), "Output should explain the error is 'out of bounds'");
   }
 
   /** Verifies that the parser is case-insensitive when using real shell inputs. */
@@ -89,7 +91,8 @@ public class UiPromptParserTest {
   @DisplayName("Integration: Case insensitivity in AgonShell")
   void testCaseInsensitivityInShell() {
     assertNotNull(UiPromptParser.parse("SHOW", registry, shell), "Should handle uppercase 'SHOW'");
-    assertNotNull(UiPromptParser.parse("F1G1", registry, shell), "Should handle uppercase moves like 'F1G1'");
+    assertNotNull(
+        UiPromptParser.parse("F1G1", registry, shell), "Should handle uppercase moves like 'F1G1'");
   }
 
   /** Verifies parsing of a relocation move (single coordinate) after a capture. */

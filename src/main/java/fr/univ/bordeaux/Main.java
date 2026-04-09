@@ -41,7 +41,6 @@ public class Main {
         System.err.println("[SERVER] Failed to start daemon mode.");
       }
       return;
-
     }
 
     // =========================================================

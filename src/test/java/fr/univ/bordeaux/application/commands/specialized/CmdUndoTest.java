@@ -65,14 +65,15 @@ public class CmdUndoTest {
     assertNull(board.getPieceAt(from));
     assertEquals(piece, board.getPieceAt(to));
     new CmdMove(
-        CoordinateMapper.toIndex('F', 11), CoordinateMapper.toIndex('F', 10), gameUserInterface)
+            CoordinateMapper.toIndex('F', 11), CoordinateMapper.toIndex('F', 10), gameUserInterface)
         .execute(match);
 
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"1"});
     boolean result = cmdUndo.execute(match);
 
     assertTrue(result, "Undo execution should return true");
-    assertEquals(piece, board.getPieceAt(from), "The piece should be back at its starting position");
+    assertEquals(
+        piece, board.getPieceAt(from), "The piece should be back at its starting position");
     assertNull(board.getPieceAt(to), "The destination square should be empty after undo");
     assertEquals(
         Color.WHITE,
@@ -93,16 +94,16 @@ public class CmdUndoTest {
             new GameConfig());
 
     new CmdMove(
-        CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), gameUserInterface)
+            CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), gameUserInterface)
         .execute(match);
     new CmdMove(
-        CoordinateMapper.toIndex('F', 11), CoordinateMapper.toIndex('F', 10), gameUserInterface)
+            CoordinateMapper.toIndex('F', 11), CoordinateMapper.toIndex('F', 10), gameUserInterface)
         .execute(match);
     new CmdMove(
-        CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), gameUserInterface)
+            CoordinateMapper.toIndex('F', 1), CoordinateMapper.toIndex('F', 2), gameUserInterface)
         .execute(match);
     new CmdMove(
-        CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), gameUserInterface)
+            CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), gameUserInterface)
         .execute(match);
 
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"2"});

@@ -135,9 +135,9 @@ public final class CmdSet extends Cmd {
           }
           case "timeout" -> {
             int val = Integer.parseInt(value);
-            if(gameConfig.setTimeout(val)){
+            if (gameConfig.setTimeout(val)) {
               feedback.append("  - Timeout: ").append(val).append("ms\n");
-            }else{
+            } else {
               getCtx().showWarn("invalid timeout. It must be greater than 0.\n");
               return false;
             }
@@ -148,27 +148,28 @@ public final class CmdSet extends Cmd {
             feedback.append("  - AI Active: ").append(val).append("\n");
           }
           case "aiMode" -> {
-            if(gameConfig.setAiMode(value.toLowerCase())){
+            if (gameConfig.setAiMode(value.toLowerCase())) {
               feedback.append("  - AI Mode: ").append(value.toLowerCase()).append("\n");
-            }else{
-              getCtx().showWarn("invalid aiMode. It must be centrality,mixed,ML,UCT or mobility.\n");
+            } else {
+              getCtx()
+                  .showWarn("invalid aiMode. It must be centrality,mixed,ML,UCT or mobility.\n");
               return false;
             }
           }
           case "aiDepth" -> {
             int val = Integer.parseInt(value);
-            if(gameConfig.setAiDepth(val)){
+            if (gameConfig.setAiDepth(val)) {
               feedback.append("  - AI Depth: ").append(val).append("\n");
-            }else{
+            } else {
               getCtx().showWarn("invalid aiDepth. It must be greater than 0.\n");
               return false;
             }
           }
           case "aiTimeLimit" -> {
             int val = Integer.parseInt(value);
-            if(gameConfig.setAiTimeLimit(val)){
+            if (gameConfig.setAiTimeLimit(val)) {
               feedback.append("  - AI Time Limit: ").append(val).append("s\n");
-            }else{
+            } else {
               getCtx().showWarn("invalid aiDepth. It must be greater than 0.\n");
               return false;
             }
@@ -179,10 +180,11 @@ public final class CmdSet extends Cmd {
             feedback.append("  - Iterative Deepening: ").append(val).append("\n");
           }
           case "aiHeuristic" -> {
-            if(gameConfig.setAiHeuristic(value.toLowerCase())){
+            if (gameConfig.setAiHeuristic(value.toLowerCase())) {
               feedback.append("  - Heuristic: ").append(value.toLowerCase()).append("\n");
-            }else{
-              getCtx().showWarn("invalid aiMode. It must be centrality,mixed,ML,UCT or mobility.\n");
+            } else {
+              getCtx()
+                  .showWarn("invalid aiMode. It must be centrality,mixed,ML,UCT or mobility.\n");
               return false;
             }
           }

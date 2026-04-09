@@ -1,7 +1,8 @@
 package fr.univ.bordeaux.application.match;
-import java.util.concurrent.atomic.AtomicBoolean;
+
 import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -21,7 +22,7 @@ public class GameTimer {
   private long lastStartTime;
 
   /** Indicates whether the timer is currently counting down. */
-  private final AtomicBoolean isRunning=new AtomicBoolean(false);
+  private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
   /** Lock for synchronizing access to timer state and controlling the background thread. */
   private final Lock lock = new ReentrantLock();

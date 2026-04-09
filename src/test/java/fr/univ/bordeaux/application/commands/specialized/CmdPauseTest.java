@@ -73,8 +73,7 @@ public class CmdPauseTest {
     Thread.sleep(1100);
 
     String timeAfterWait = match.getCurrentPlayerRemainingTime();
-    assertEquals(
-        timePaused, timeAfterWait, "Time should not have elapsed during the pause");
+    assertEquals(timePaused, timeAfterWait, "Time should not have elapsed during the pause");
   }
 
   @Test

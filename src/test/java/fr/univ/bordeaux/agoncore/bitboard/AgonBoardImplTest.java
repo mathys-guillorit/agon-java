@@ -222,9 +222,12 @@ class AgonBoardImplTest {
     captureBoard.applyMove(new Move(65, 64, Color.WHITE));
     assertNull(captureBoard.getPieceAt(63), "The queen should be captured before undo");
     assertTrue(captureBoard.undoMove(), "Undo should succeed because a move was played");
-    assertEquals(PieceType.BLACK_QUEEN, captureBoard.getPieceAt(63), "The queen must have returned");
     assertEquals(
-        PieceType.WHITE_PAWN, captureBoard.getPieceAt(65), "The white pawn must have returned to 65");
+        PieceType.BLACK_QUEEN, captureBoard.getPieceAt(63), "The queen must have returned");
+    assertEquals(
+        PieceType.WHITE_PAWN,
+        captureBoard.getPieceAt(65),
+        "The white pawn must have returned to 65");
     assertNull(captureBoard.getPieceAt(64), "Index 64 must be empty");
   }
 
@@ -284,8 +287,7 @@ class AgonBoardImplTest {
     boardReloc.applyMove(new Move(65, 64, Color.BLACK));
     BitBoard legalDestinations = boardReloc.generateLegalMovesBitboard(Color.WHITE);
     assertNotNull(legalDestinations, "The destination BitBoard must not be null");
-    assertFalse(
-        legalDestinations.isEmpty(), "There must be possible relocation cells");
+    assertFalse(legalDestinations.isEmpty(), "There must be possible relocation cells");
     assertFalse(legalDestinations.isSet(60), "A queen cannot be relocated onto the throne");
   }
 

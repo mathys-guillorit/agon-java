@@ -153,13 +153,7 @@ public class CmdTest {
     lineReader.setCompleter(completer);
     ArrayList<String> opts =
         new ArrayList<>(
-            Arrays.asList(
-                "--help ",
-                "-h --he",
-                "-",
-                "-h -m -r",
-                "-h -m -r --r",
-                "-h -m -r "));
+            Arrays.asList("--help ", "-h --he", "-", "-h -m -r", "-h -m -r --r", "-h -m -r "));
     String uinput;
     List<Candidate> candidates;
     List<Candidate> candidatesResult;

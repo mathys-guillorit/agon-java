@@ -3,8 +3,8 @@ package fr.univ.bordeaux.application.match;
 /**
  * Represents the current lifecycle state of a match.
  *
- * <p>This enumeration is used to track whether a game is actively being played 
- * or if it has reached a terminal state (victory, draw, or termination).</p>
+ * <p>This enumeration is used to track whether a game is actively being played or if it has reached
+ * a terminal state (victory, draw, or termination).
  */
 public enum MatchStatus {
   /** The match is currently in progress and accepting moves. */

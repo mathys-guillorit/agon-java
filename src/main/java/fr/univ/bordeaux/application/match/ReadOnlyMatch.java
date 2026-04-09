@@ -38,16 +38,16 @@ public interface ReadOnlyMatch {
    * @return the remaining time if applicable.
    */
   String getCurrentPlayerRemainingTime();
+
   /**
    * Retrieves the remaining reflection time for all players in the match.
    *
-   * <p>This method provides a snapshot of the timers for every participant.
-   * If the current match type does not support timed play, it returns an
-   * empty array.
+   * <p>This method provides a snapshot of the timers for every participant. If the current match
+   * type does not support timed play, it returns an empty array.
    *
-   * @return An array of {@link String} where first element represents white player
-   * remaining time and the second the black player timer (e.g., "05:30"). Returns an empty array if timers
-   * are not applicable.
+   * @return An array of {@link String} where first element represents white player remaining time
+   *     and the second the black player timer (e.g., "05:30"). Returns an empty array if timers are
+   *     not applicable.
    */
   String[] getAllPlayersRemainingTime();
 

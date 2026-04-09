@@ -70,8 +70,7 @@ public class CmdHintTest {
 
     // Note: I kept the logic of your assertFalse/assertTrue based on the original code
     assertFalse(
-        output.contains("Hint:"),
-        "Terminal should display a suggestion starting with 'Hint:'");
+        output.contains("Hint:"), "Terminal should display a suggestion starting with 'Hint:'");
     assertFalse(result, "Hint should return false to avoid ending the turn");
 
     board.initBaseConfiguration();

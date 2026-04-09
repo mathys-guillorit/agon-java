@@ -18,7 +18,7 @@ public class ConfigBinder {
    * @param config The configuration object to update.
    * @param ui The user interface context for feedback.
    */
-  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface  ui) {
+  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface ui) {
     GameLogger.debug("ConfigBinder: Starting binding process...");
 
     // --- F4 & F31: Blitz Mode ---
@@ -137,7 +137,7 @@ public class ConfigBinder {
         if (selection.equals("ML") || selection.equals("UCT")) {
           config.setAiHeuristic(selection.toLowerCase());
           GameLogger.info("AI mcts mode set to " + selection);
-        }else {
+        } else {
           ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
           GameLogger.info("AI mcts mode set to default (UCT).");
         }

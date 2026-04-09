@@ -13,7 +13,6 @@ import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.MatchObserver;
 import fr.univ.bordeaux.ui.ObservableMatch;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -347,16 +346,16 @@ public abstract class Match implements MatchManager, ObservableMatch {
     GameLogger.info(
         "Turn switched to: " + currentPlayer.getName() + " (" + currentPlayer.getColor() + ")");
   }
+
   /**
    * Retrieves the remaining reflection time for all players in the match.
    *
-   * <p>This method provides a snapshot of the timers for every participant.
-   * If the current match type does not support timed play, it returns an
-   * empty array.
+   * <p>This method provides a snapshot of the timers for every participant. If the current match
+   * type does not support timed play, it returns an empty array.
    *
-   * @return An array of {@link String} where first element represents white player
-   * remaining time and the second the black player timer (e.g., "05:30"). Returns an empty array if timers
-   * are not applicable.
+   * @return An array of {@link String} where first element represents white player remaining time
+   *     and the second the black player timer (e.g., "05:30"). Returns an empty array if timers are
+   *     not applicable.
    */
   @Override
   public String[] getAllPlayersRemainingTime() {

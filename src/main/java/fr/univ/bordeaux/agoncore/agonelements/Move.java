@@ -99,6 +99,7 @@ public class Move {
   public boolean isRelocationMove() {
     return from == -1;
   }
+
   /**
    * Computes the hash code for this Move based on its state.
    *
@@ -108,11 +109,12 @@ public class Move {
   public int hashCode() {
     return Objects.hash(from, destination, color, pieceType);
   }
+
   /**
    * Compares this move to the specified object.
    *
-   * <p>Two moves are considered equal if they have the same source, destination, and color.
-   * If piece types are provided for both, they must also match.
+   * <p>Two moves are considered equal if they have the same source, destination, and color. If
+   * piece types are provided for both, they must also match.
    *
    * @param obj The object to compare with.
    * @return {@code true} if the objects are equivalent, {@code false} otherwise.
