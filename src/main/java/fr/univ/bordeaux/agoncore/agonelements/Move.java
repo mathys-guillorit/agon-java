@@ -137,17 +137,27 @@ public class Move {
    */
   @Override
   public boolean equals(final Object obj) {
-    final Move move = (Move) obj;
-    if (this.pieceType != null && move.getPieceType() != null) {
-      return this.from == move.from
-          && this.destination == move.destination
-          && this.color == move.color
-          && this.pieceType == move.pieceType;
+    boolean isEqual = false;
+
+    if (this == obj) {
+      isEqual = true;
+    } else if (obj instanceof Move) {
+      final Move move = (Move) obj;
+      final boolean sameMainFields =
+          this.from == move.from
+              && this.destination == move.destination
+              && this.color == move.color;
+
+      if (this.pieceType != null && move.getPieceType() != null) {
+        isEqual = sameMainFields && this.pieceType == move.pieceType;
+      } else {
+        isEqual = sameMainFields;
+      }
     }
-    return this.from == move.from
-        && this.destination == move.destination
-        && this.color == move.color;
+
+    return isEqual;
   }
+
 
   /**
    * Returns a string representation of the move.
