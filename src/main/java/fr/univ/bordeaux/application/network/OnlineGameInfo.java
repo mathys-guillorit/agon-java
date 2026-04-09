@@ -10,11 +10,23 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
  */
 public class OnlineGameInfo {
 
+  /** Unique identifier assigned by the server to the online game. */
   private final int gameId;
+
+  /** Color assigned to the local player for this game. */
   private final Color localColor;
+
+  /** Display name of the white player. */
   private final String whitePlayerName;
+
+  /** Display name of the black player. */
   private final String blackPlayerName;
+
+  /** Indicates whether it is initially the local player's turn. */
   private final boolean myTurn;
+
+  /** Indicates whether the game is played in blitz mode. */
+  private final boolean blitzMode;
 
   /**
    * Creates a new online game description.
@@ -24,18 +36,21 @@ public class OnlineGameInfo {
    * @param whitePlayerName the display name of the white player
    * @param blackPlayerName the display name of the black player
    * @param myTurn true if it is initially the local player's turn
+   * @param blitzMode true if the game is a blitz match, false otherwise
    */
   public OnlineGameInfo(
-      int gameId,
-      Color localColor,
-      String whitePlayerName,
-      String blackPlayerName,
-      boolean myTurn) {
+      final int gameId,
+      final Color localColor,
+      final String whitePlayerName,
+      final String blackPlayerName,
+      final boolean myTurn,
+      final boolean blitzMode) {
     this.gameId = gameId;
     this.localColor = localColor;
     this.whitePlayerName = whitePlayerName;
     this.blackPlayerName = blackPlayerName;
     this.myTurn = myTurn;
+    this.blitzMode = blitzMode;
   }
 
   /**
@@ -81,5 +96,14 @@ public class OnlineGameInfo {
    */
   public boolean isMyTurn() {
     return myTurn;
+  }
+
+  /**
+   * Indicates whether the game is played in blitz mode.
+   *
+   * @return true if the game is a blitz match, false otherwise
+   */
+  public boolean isBlitzMode() {
+    return blitzMode;
   }
 }

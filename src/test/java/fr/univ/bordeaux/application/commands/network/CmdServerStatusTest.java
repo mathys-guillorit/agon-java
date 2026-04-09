@@ -26,7 +26,7 @@ class CmdServerStatusTest {
 
   @Test
   @DisplayName("server_status shows local server status when local server is running")
-  void server_status_shows_local_server_status_when_local_server_is_running() throws Exception {
+  void serverStatusShowsLocalServerStatusWhenLocalServerIsRunning() throws Exception {
     TestUi ui = new TestUi();
     AppContext ctx = newContext();
 
@@ -43,7 +43,7 @@ class CmdServerStatusTest {
 
   @Test
   @DisplayName("server_status shows remote server status when client is connected")
-  void server_status_shows_remote_server_status_when_client_is_connected() {
+  void serverStatusShowsRemoteServerStatusWhenClientIsConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -60,7 +60,7 @@ class CmdServerStatusTest {
 
   @Test
   @DisplayName("server_status shows error when remote server request fails")
-  void server_status_shows_error_when_remote_server_request_fails() {
+  void serverStatusShowsErrorWhenRemoteServerRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -77,7 +77,7 @@ class CmdServerStatusTest {
 
   @Test
   @DisplayName("server_status shows warning when neither local server nor remote connection exists")
-  void server_status_shows_warning_when_neither_local_server_nor_remote_connection_exists() {
+  void serverStatusShowsWarningWhenNeitherLocalServerNorRemoteConnectionExists() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

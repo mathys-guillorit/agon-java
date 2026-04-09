@@ -7,35 +7,20 @@ import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.ui.GameUserInterface;
 
-/**
- * Command used to stop the local TCP server.
- *
- * <p>Usage:
- *
- * <ul>
- *   <li>{@code server_stop}
- * </ul>
- *
- * <p>This command:
- *
- * <ul>
- *   <li>Checks if a server is currently running
- *   <li>Stops it safely
- *   <li>Removes it from the application context
- * </ul>
- */
+/** Command used to stop the local TCP server. */
 public class CmdServerStop extends Cmd {
 
+  /** Application context used to manage the local server. */
   private final AppContext context;
 
   /**
    * Constructs a new command to stop the local TCP server.
    *
-   * @param ui the user interface associated with this command.
+   * @param userInterface the user interface associated with this command.
    * @param context the application context used to manage the server state.
    */
-  public CmdServerStop(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdServerStop(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("server_stop");
     this.setDesc("Usage: server stop\n" + "Description: stops the local TCP server if running.\n");
@@ -48,35 +33,35 @@ public class CmdServerStop extends Cmd {
    * @return a new {@code CmdServerStop} command
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdServerStop(getCtx(), context);
   }
 
   /**
    * Executes the server stop command.
    *
-   * <p>This method checks whether a local server is currently running, stops it if present, and
-   * removes it from the application context.
-   *
    * @param match current match manager (unused)
    * @return true if the server was stopped, false if no server was running
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
+    final AgonServer server = getServer();
+    boolean result = true;
 
-    AgonServer server = context.getServer();
-
-    // Check if server exists
     if (server == null || !server.isRunning()) {
       getCtx().showWarn("[SERVER] No server is currently running.");
-      return false;
+      result = false;
+    } else {
+      server.stop();
+      context.setServer(null);
+      getCtx().showMessage("[SERVER] Server stopped successfully.\n");
     }
 
-    // Stop server
-    server.stop();
-    context.setServer(null);
+    return result;
+  }
 
-    getCtx().showMessage("[SERVER] Server stopped successfully.\n");
-    return true;
+  /** Returns the local server from the application context. */
+  private AgonServer getServer() {
+    return context.getServer();
   }
 }

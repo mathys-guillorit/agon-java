@@ -5,8 +5,13 @@ import java.util.Map;
 /** Represents a network command exchanged between a client and a server. */
 public class Command {
 
+  /** Type of the parsed command. */
   private final CommandType type;
+
+  /** Parsed key/value arguments of the command. */
   private final Map<String, String> args;
+
+  /** Optional raw argument for commands that carry a free-form payload. */
   private final String rawArg;
 
   /**
@@ -16,7 +21,7 @@ public class Command {
    * @param args a map containing the command arguments, or an empty map if the command has no
    *     arguments
    */
-  public Command(CommandType type, Map<String, String> args) {
+  public Command(final CommandType type, final Map<String, String> args) {
     this.type = type;
     this.args = args;
     this.rawArg = null;
@@ -29,7 +34,7 @@ public class Command {
    * @param args parsed key=value arguments
    * @param rawArgument optional raw argument
    */
-  public Command(CommandType type, Map<String, String> args, String rawArgument) {
+  public Command(final CommandType type, final Map<String, String> args, final String rawArgument) {
     this.type = type;
     this.args = args;
     this.rawArg = rawArgument;
@@ -50,7 +55,7 @@ public class Command {
    * @param key the argument name
    * @return The value associated with the key
    */
-  public String getArg(String key) {
+  public String getArg(final String key) {
     return args.get(key);
   }
 

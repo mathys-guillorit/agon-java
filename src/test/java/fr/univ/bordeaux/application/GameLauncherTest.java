@@ -37,28 +37,28 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("Constructeur")
-  void constructor_test() {
+  void constructorTest() {
     GameLauncher launcher = new GameLauncher();
     assertNotNull(launcher);
   }
 
   @Test
   @DisplayName("getHelpContent")
-  void get_help_content() throws Exception {
+  void getHelpContent() throws Exception {
     TestableGameLauncher launcher = new TestableGameLauncher();
     assertEquals("HELP CONTENT", launcher.getHelpContent());
   }
 
   @Test
   @DisplayName("getVersionContent")
-  void get_version_content() throws Exception {
+  void getVersionContent() throws Exception {
     TestableGameLauncher launcher = new TestableGameLauncher();
     assertEquals("VERSION CONTENT", launcher.getVersionContent());
   }
 
   @Test
   @DisplayName("askPlayerName redemande tant que la saisie est vide")
-  void ask_player_name() throws Exception {
+  void askPlayerName() throws Exception {
     GameLauncher launcher = new GameLauncher();
     System.setIn(new ByteArrayInputStream("\nAlice\n".getBytes()));
 
@@ -69,7 +69,7 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("askApplicationMode retourne LOCAL")
-  void ask_application_mode_local() throws Exception {
+  void askApplicationModeLocal() throws Exception {
     GameLauncher launcher = new GameLauncher();
     System.setIn(new ByteArrayInputStream("1\n".getBytes()));
 
@@ -80,7 +80,7 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("askApplicationMode retourne ONLINE")
-  void ask_application_mode_online() throws Exception {
+  void askApplicationModeOnline() throws Exception {
     GameLauncher launcher = new GameLauncher();
     System.setIn(new ByteArrayInputStream("2\n".getBytes()));
 
@@ -91,7 +91,7 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("askApplicationMode redemande après une saisie invalide")
-  void ask_application_mode_retry() throws Exception {
+  void askApplicationModeRetry() throws Exception {
     GameLauncher launcher = new GameLauncher();
     System.setIn(new ByteArrayInputStream("x\n3\n2\n".getBytes()));
 
@@ -102,7 +102,7 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("loadInitialConfig retourne toujours une config")
-  void load_initial_config() throws Exception {
+  void loadInitialConfig() throws Exception {
     GameLauncher launcher = new GameLauncher();
 
     GameConfig config =
@@ -113,7 +113,7 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("fillRegister enregistre toutes les commandes principales")
-  void fill_register() throws Exception {
+  void fillRegister() throws Exception {
     GameLauncher launcher = new GameLauncher();
     AgonRegister<CmdAction> cmds = new AgonRegister<>();
     AppContext context = new AppContext(new LocalProfile("Alice"));
@@ -156,14 +156,14 @@ class GameLauncherTest {
 
   @Test
   @DisplayName("createDefaultConfigFile ne plante pas")
-  void create_default_config_file() throws Exception {
+  void createDefaultConfigFile() throws Exception {
     GameLauncher launcher = new GameLauncher();
     assertDoesNotThrow(() -> invokePrivate(launcher, "createDefaultConfigFile", new Class<?>[] {}));
   }
 
   @Test
   @DisplayName("startGame avec option gui retourne immédiatement")
-  void start_game_gui_branch() throws Exception {
+  void startGameGuiBranch() throws Exception {
     GameLauncher launcher = new GameLauncher();
 
     org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();

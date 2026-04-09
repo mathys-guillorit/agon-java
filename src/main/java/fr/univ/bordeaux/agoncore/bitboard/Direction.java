@@ -13,42 +13,42 @@ public enum Direction {
    *
    * <p>Index offset: {@code +1}.
    */
-  East(1),
+  EAST(1),
 
   /**
    * Move one tile to the left.
    *
    * <p>Index offset: {@code -1}.
    */
-  West(-1),
+  WEST(-1),
 
   /**
    * Move to the upper-right neighbor.
    *
    * <p>Index offset: {@code +12}.
    */
-  NorthEast(12),
+  NORTH_EAST(12),
 
   /**
    * Move to the upper-left neighbor.
    *
    * <p>Index offset: {@code +11}.
    */
-  NorthWest(11),
+  NORTH_WEST(11),
 
   /**
    * Move to the lower-right neighbor.
    *
    * <p>Index offset: {@code -11}.
    */
-  SouthEast(-11),
+  SOUTH_EAST(-11),
 
   /**
    * Move to the lower-left neighbor.
    *
    * <p>Index offset: {@code -12}.
    */
-  SouthWest(-12);
+  SOUTH_WEST(-12);
 
   /** The integer shift value applied to a bitboard index. */
   private final int value;
@@ -74,12 +74,12 @@ public enum Direction {
    */
   public static Direction getOpposite(Direction d) {
     return switch (d) {
-      case East -> West;
-      case West -> East;
-      case NorthEast -> SouthWest;
-      case SouthWest -> NorthEast;
-      case NorthWest -> SouthEast;
-      case SouthEast -> NorthWest;
+      case EAST -> WEST;
+      case WEST -> EAST;
+      case NORTH_EAST -> SOUTH_WEST;
+      case SOUTH_WEST -> NORTH_EAST;
+      case NORTH_WEST -> SOUTH_EAST;
+      case SOUTH_EAST -> NORTH_WEST;
     };
   }
 

@@ -11,7 +11,7 @@ class CmdPingTest {
 
   @Test
   @DisplayName("ping refuses when client is not connected")
-  void ping_refuses_when_client_is_not_connected() {
+  void pingRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -27,7 +27,7 @@ class CmdPingTest {
 
   @Test
   @DisplayName("ping shows server response when connected")
-  void ping_shows_server_response_when_connected() {
+  void pingShowsServerResponseWhenConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -44,7 +44,7 @@ class CmdPingTest {
 
   @Test
   @DisplayName("ping shows error when response is null")
-  void ping_shows_error_when_response_is_null() {
+  void pingShowsErrorWhenResponseIsNull() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

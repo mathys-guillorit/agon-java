@@ -10,19 +10,19 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse returns null when move is null")
-  void parse_null() {
+  void parseNull() {
     assertNull(MoveProtocolParser.parse(null));
   }
 
   @Test
   @DisplayName("Parse returns null when move is blank")
-  void parse_blank() {
+  void parseBlank() {
     assertNull(MoveProtocolParser.parse("   "));
   }
 
   @Test
   @DisplayName("Parse handles valid full move")
-  void parse_valid_full_move() {
+  void parseValidFullMove() {
     MoveParsed move = MoveProtocolParser.parse("e2e4");
 
     assertNotNull(move);
@@ -35,7 +35,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse handles valid full move with uppercase letters")
-  void parse_valid_full_move_uppercase() {
+  void parseValidFullMoveUppercase() {
     MoveParsed move = MoveProtocolParser.parse("E2F3");
 
     assertNotNull(move);
@@ -46,7 +46,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse handles valid full move with two digit rows")
-  void parse_valid_full_move_two_digits() {
+  void parseValidFullMoveTwoDigits() {
     MoveParsed move = MoveProtocolParser.parse("e10f11");
 
     assertNotNull(move);
@@ -57,7 +57,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse handles valid short replacement move")
-  void parse_valid_short_move() {
+  void parseValidShortMove() {
     MoveParsed move = MoveProtocolParser.parse("e3");
 
     assertNotNull(move);
@@ -70,7 +70,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse handles valid short move with uppercase letter")
-  void parse_valid_short_move_uppercase() {
+  void parseValidShortMoveUppercase() {
     MoveParsed move = MoveProtocolParser.parse("K11");
 
     assertNotNull(move);
@@ -80,7 +80,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse returns null for invalid format")
-  void parse_invalid_format() {
+  void parseInvalidFormat() {
     assertNull(MoveProtocolParser.parse("invalid"));
     assertNull(MoveProtocolParser.parse("e2-e4"));
     assertNull(MoveProtocolParser.parse("1234"));
@@ -88,28 +88,28 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse returns null for invalid source row")
-  void parse_invalid_source_row() {
+  void parseInvalidSourceRow() {
     assertNull(MoveProtocolParser.parse("e0e4"));
     assertNull(MoveProtocolParser.parse("e12e4"));
   }
 
   @Test
   @DisplayName("Parse returns null for invalid destination row")
-  void parse_invalid_destination_row() {
+  void parseInvalidDestinationRow() {
     assertNull(MoveProtocolParser.parse("e2e0"));
     assertNull(MoveProtocolParser.parse("e2e12"));
   }
 
   @Test
   @DisplayName("Parse returns null for invalid short move row")
-  void parse_invalid_short_row() {
+  void parseInvalidShortRow() {
     assertNull(MoveProtocolParser.parse("e0"));
     assertNull(MoveProtocolParser.parse("e12"));
   }
 
   @Test
   @DisplayName("Parse returns null for invalid column")
-  void parse_invalid_column() {
+  void parseInvalidColumn() {
     assertNull(MoveProtocolParser.parse("l2e4"));
     assertNull(MoveProtocolParser.parse("e2l4"));
     assertNull(MoveProtocolParser.parse("l3"));
@@ -117,7 +117,7 @@ class MoveProtocolParserTest {
 
   @Test
   @DisplayName("Parse supports trimmed move text")
-  void parse_trimmed_move() {
+  void parseTrimmedMove() {
     MoveParsed move = MoveProtocolParser.parse("  e2e4  ");
 
     assertNotNull(move);

@@ -6,6 +6,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import java.util.Arrays;
 
 /**
  * Command used to display the list of connected players on the server or the details of a specific
@@ -22,14 +23,15 @@ public class CmdPlayers extends Cmd {
   /**
    * Constructor.
    *
-   * @param ui user interface
+   * @param userInterface user interface
    * @param context application context
    * @param args command arguments
    */
-  public CmdPlayers(GameUserInterface ui, AppContext context, String[] args) {
-    super(ui);
+  public CmdPlayers(
+      final GameUserInterface userInterface, final AppContext context, final String[] args) {
+    super(userInterface);
     this.context = context;
-    this.args = args;
+    this.args = args == null ? new String[0] : Arrays.copyOf(args, args.length);
 
     this.setName("players");
     this.setDesc(
@@ -46,7 +48,7 @@ public class CmdPlayers extends Cmd {
    * @return new CmdPlayers instance
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdPlayers(getCtx(), context, args);
   }
 
@@ -57,37 +59,57 @@ public class CmdPlayers extends Cmd {
    * @return true if execution succeeds
    */
   @Override
-  public boolean execute(MatchManager match) {
-    AgonClient client = context.getClient();
+  public boolean execute(final MatchManager match) {
+    final AgonClient client = getClient();
+    boolean result = true;
 
-    if (!client.isConnected()) {
+    if (client.isConnected()) {
+      final String response = getPlayersResponse(client);
+
+      if (response != null) {
+        getCtx().showMessage(response + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Failed to retrieve players.");
+        result = false;
+      }
+    } else {
       getCtx().showWarn("[CLIENT] Not connected. Use join first.");
-      return false;
+      result = false;
     }
 
-    String response;
+    return result;
+  }
 
-    if (args == null || args.length == 0) {
+  /** Returns the network client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
+  }
+
+  /** Returns the appropriate server response for the players request. */
+  private String getPlayersResponse(final AgonClient client) {
+    String response = null;
+
+    if (args.length == 0) {
       response = client.requestPlayers();
     } else {
-      int playerId;
+      final Integer playerId = parsePlayerId(args[0]);
 
-      try {
-        playerId = Integer.parseInt(args[0]);
-      } catch (NumberFormatException e) {
+      if (playerId == null) {
         getCtx().showError("[CLIENT] Invalid player id.");
-        return false;
+      } else {
+        response = client.requestPlayerDetails(playerId);
       }
-
-      response = client.requestPlayerDetails(playerId);
     }
 
-    if (response != null) {
-      getCtx().showMessage(response + "\n");
-    } else {
-      getCtx().showError("[CLIENT] Failed to retrieve players.");
-    }
+    return response;
+  }
 
-    return true;
+  /** Parses a player id or returns null if invalid. */
+  private Integer parsePlayerId(final String rawPlayerId) {
+    try {
+      return Integer.parseInt(rawPlayerId);
+    } catch (NumberFormatException exception) {
+      return null;
+    }
   }
 }

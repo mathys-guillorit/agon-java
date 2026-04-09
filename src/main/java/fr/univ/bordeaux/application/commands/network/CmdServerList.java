@@ -6,37 +6,25 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.ServerInfo;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import java.io.IOException;
 import java.util.List;
 
 /**
- * Command used to list available servers on the local network.
- *
- * <p>Usage:
- *
- * <ul>
- *   <li>{@code server_list}
- * </ul>
- *
- * <p>This command:
- *
- * <ul>
- *   <li>Ensures discovery is running
- *   <li>Retrieves detected servers
- *   <li>Displays them to the user
- * </ul>
+ * Lists available servers on the local network. Uses UDP discovery and displays detected servers.
  */
 public class CmdServerList extends Cmd {
 
+  /** Application context used for discovery and networking. */
   private final AppContext context;
 
   /**
-   * Constructs a command to list available servers on the local network.
+   * Constructs the server list command.
    *
-   * @param ui the user interface instance to display the results.
-   * @param context the application context used for UDP discovery and networking.
+   * @param userInterface user interface used to display results
+   * @param context application context used for discovery and networking
    */
-  public CmdServerList(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdServerList(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("server_list");
     this.setDesc(
@@ -52,41 +40,62 @@ public class CmdServerList extends Cmd {
    * @return a new {@code CmdServerList} command
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdServerList(getCtx(), context);
   }
 
   /**
    * Executes the server list command.
    *
-   * <p>This method ensures that the discovery service is running, retrieves the list of available
-   * servers on the local network, and displays them to the user.
-   *
    * @param match current match manager (unused)
-   * @return true if execution completes, false if discovery fails
+   * @return true if execution completes, false otherwise
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
+    boolean result = true;
 
-    // Ensure discovery process is active
+    if (ensureDiscoveryStarted()) {
+      final List<ServerInfo> servers = getServers();
+
+      if (servers.isEmpty()) {
+        getCtx().showWarn("[SERVER] No servers found on the network.");
+      } else {
+        for (final ServerInfo serverInfo : servers) {
+          getCtx()
+              .showMessage(
+                  serverInfo.name + " @ " + serverInfo.serverIp + ":" + serverInfo.tcpPort + "\n");
+        }
+      }
+    } else {
+      result = false;
+    }
+
+    return result;
+  }
+
+  /**
+   * Ensures the discovery service is started.
+   *
+   * @return true if discovery is available, false otherwise
+   */
+  private boolean ensureDiscoveryStarted() {
+    boolean result = true;
+
     try {
       context.ensureDiscoveryStarted();
-    } catch (Exception e) {
-      getCtx().showError("[SERVER] Discovery error: " + e.getMessage());
-      return false;
+    } catch (IllegalStateException exception) {
+      getCtx().showError("[SERVER] Discovery error: " + exception.getMessage());
+      result = false;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
 
-    List<ServerInfo> servers = context.getDiscovery().getServers();
+    return result;
+  }
 
-    // Display results
-    if (servers.isEmpty()) {
-      getCtx().showWarn("[SERVER] No servers found on the network.");
-    } else {
-      for (ServerInfo s : servers) {
-        getCtx().showMessage(s.name + " @ " + s.ip + ":" + s.tcpPort + "\n");
-      }
-    }
-
-    return true;
+  /** Returns the discovered servers list. */
+  private List<ServerInfo> getServers() {
+    final var discovery = context.getDiscovery();
+    return discovery.getServers();
   }
 }

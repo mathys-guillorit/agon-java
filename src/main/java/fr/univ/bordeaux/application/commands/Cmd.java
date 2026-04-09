@@ -123,7 +123,7 @@ public abstract class Cmd implements CmdAction {
    *
    * @param desc The new description string.
    */
-  public void setDesc(String desc) {
+  protected final void setDesc(String desc) {
     this.desc = desc;
   }
 
@@ -132,7 +132,7 @@ public abstract class Cmd implements CmdAction {
    *
    * @param name The new name string.
    */
-  public void setName(String name) {
+  protected final void setName(String name) {
     this.name = name;
   }
 

@@ -1,11 +1,18 @@
-package fr.univ.bordeaux.application.network.server;
+package fr.univ.bordeaux.application.network.server.game;
 
 /** Stores the persistent statistics of one player on the server. */
 public class ServerPlayerStats {
 
+  /** Display name of the player associated with this scoreboard entry. */
   private final String playerName;
+
+  /** Total number of wins recorded for this player. */
   private int wins;
+
+  /** Total number of losses recorded for this player. */
   private int losses;
+
+  /** Total number of games played by this player. */
   private int games;
 
   /**
@@ -13,7 +20,7 @@ public class ServerPlayerStats {
    *
    * @param playerName player name
    */
-  public ServerPlayerStats(String playerName) {
+  public ServerPlayerStats(final String playerName) {
     this.playerName = playerName;
   }
 

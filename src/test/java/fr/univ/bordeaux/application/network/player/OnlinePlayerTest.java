@@ -10,7 +10,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("Constructor initializes all fields correctly")
-  void constructor_test() {
+  void constructorTest() {
     ClientHandler handler = null;
 
     OnlinePlayer player = new OnlinePlayer(1, "client123", "Alice", PlayerStatus.IDLE, handler);
@@ -24,7 +24,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("Getters return correct values")
-  void getters_test() {
+  void gettersTest() {
     OnlinePlayer player = new OnlinePlayer(2, "client456", "Bob", PlayerStatus.INGAME, null);
 
     assertEquals(2, player.getId());
@@ -36,7 +36,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("setStatus updates player status correctly")
-  void set_status_test() {
+  void setStatusTest() {
     OnlinePlayer player = new OnlinePlayer(3, "client789", "Charlie", PlayerStatus.IDLE, null);
 
     player.setStatus(PlayerStatus.INGAME);
@@ -46,7 +46,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("setHandler updates handler correctly")
-  void set_handler_test() {
+  void setHandlerTest() {
     OnlinePlayer player = new OnlinePlayer(4, "client000", "Dave", PlayerStatus.IDLE, null);
 
     ClientHandler handler = null; // on reste simple (pas besoin de mock ici)
@@ -57,7 +57,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("Handler can be updated from null to non-null")
-  void handler_update_test() {
+  void handlerUpdateTest() {
     OnlinePlayer player = new OnlinePlayer(5, "client999", "Eve", PlayerStatus.IDLE, null);
 
     ClientHandler fakeHandler = new ClientHandler(null, null);
@@ -68,7 +68,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("isAvailable returns true only when status is IDLE")
-  void is_available_test() {
+  void isAvailableTest() {
     OnlinePlayer player = new OnlinePlayer(6, "client111", "Frank", PlayerStatus.IDLE, null);
 
     assertTrue(player.isAvailable());
@@ -82,7 +82,7 @@ class OnlinePlayerTest {
 
   @Test
   @DisplayName("isAway returns true only when status is AWAY")
-  void is_away_test() {
+  void isAwayTest() {
     OnlinePlayer player = new OnlinePlayer(7, "client222", "Grace", PlayerStatus.IDLE, null);
 
     assertFalse(player.isAway());
