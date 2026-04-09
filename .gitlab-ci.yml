@@ -34,7 +34,7 @@ default:
     # télécharge les dépendances si absentes dans le cache
     - mvn $MAVEN_CLI_OPTS -q -DskipTests dependency:go-offline || true
   script:
-    - mvn test || mvn -o test
+    - mvn -T 40 test || mvn -o -T 40 test
 
 # Template for all java jobs (avec Microsoft OpenJDK)
 .java_template:
@@ -64,14 +64,14 @@ check-format:
   tags:
     - Boursouflet
   script:
-    - mvn spotless:check || (echo "Le code n'est pas correctement formaté. Voici les corrections nécessaires :"; mvn spotless:apply --dry-run)
+    - mvn spotless:check || (echo "code is not correctly formatted check here to fix:"; mvn spotless:apply --dry-run)
   allow_failure: true
 
 jacoco85p:
   extends: .test_java
   stage: coverage-check
   script:
-    - mvn test jacoco:report
+    - mvn -T 40 test jacoco:report
     - mvn jacoco:check
   allow_failure: true
 
