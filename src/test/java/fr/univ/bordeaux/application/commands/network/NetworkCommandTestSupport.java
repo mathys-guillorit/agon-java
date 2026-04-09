@@ -167,12 +167,12 @@ final class NetworkCommandTestSupport {
     }
 
     @Override
-    public String setAway() {
+    public String requestAwayStatus() {
       return awayResponse;
     }
 
     @Override
-    public String setBack() {
+    public String requestBackStatus() {
       return backResponse;
     }
 

@@ -11,7 +11,7 @@ class CmdDeclineTest {
 
   @Test
   @DisplayName("decline refuses when client is not connected")
-  void decline_refuses_when_client_is_not_connected() {
+  void declineRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdDeclineTest {
 
   @Test
   @DisplayName("decline sends request when connected")
-  void decline_sends_request_when_connected() {
+  void declineSendsRequestWhenConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdDeclineTest {
 
   @Test
   @DisplayName("decline shows error when request fails")
-  void decline_shows_error_when_request_fails() {
+  void declineShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

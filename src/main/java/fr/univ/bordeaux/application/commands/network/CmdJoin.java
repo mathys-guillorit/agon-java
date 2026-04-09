@@ -6,33 +6,19 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MatchManager;
 import fr.univ.bordeaux.application.network.client.AgonClient;
 import fr.univ.bordeaux.ui.GameUserInterface;
+import java.util.Objects;
 
 /**
- * Command used to connect a client to a remote game server.
- *
- * <p>This command supports the following formats:
- *
- * <ul>
- *   <li>{@code join} → connect to default localhost:12345
- *   <li>{@code join 192.168.1.10}
- *   <li>{@code join 192.168.1.10:12345}
- * </ul>
- *
- * <p>The command ensures:
- *
- * <ul>
- *   <li>Disconnection if a dead connection exists
- *   <li>Safe parsing of host and port
- *   <li>User feedback via UI
- * </ul>
+ * Connects a client to a remote game server. Supported formats: {@code join} and {@code join
+ * IP:PORT}.
  */
 public class CmdJoin extends Cmd {
 
   /** Default host used if none is provided. */
-  private static final String DEFAULT_HOST = "localhost";
+  private static final String DEFAULT_HOST = "127.0.0.1";
 
   /** Default port used if none is provided. */
-  private static final int DEFAULT_PORT = 12345;
+  private static final int DEFAULT_PORT = 12_345;
 
   /** Shared application context (client, server, etc.). */
   private final AppContext context;
@@ -43,96 +29,157 @@ public class CmdJoin extends Cmd {
   /**
    * Constructor used during command registration.
    *
-   * @param ui User interface context
-   * @param context Application context
+   * @param userInterface user interface context
+   * @param context application context
    */
-  public CmdJoin(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdJoin(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("join");
     this.setDesc(
-        "Usage: join [HOST[:PORT]]\n" + "Description: connects to a remote game server.\n");
+        "Usage: join [IP:PORT]\n"
+            + "Description: connects to a remote game server.\n"
+            + "Without argument, connects to 127.0.0.1:12345.\n");
   }
 
   /** Internal constructor used when the command is executed with arguments. */
-  private CmdJoin(GameUserInterface ui, AppContext context, String[] args) {
-    this(ui, context);
+  private CmdJoin(
+      final GameUserInterface userInterface, final AppContext context, final String[] args) {
+    this(userInterface, context);
     this.args = args;
   }
 
   /** Creates a new instance of the command with parsed arguments. */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdJoin(getCtx(), context, args);
   }
 
   /**
    * Executes the command.
    *
-   * @param match Not used (network command independent from game state)
+   * @param match not used (network command independent from game state)
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
     return run(args);
   }
 
   /**
    * Core logic of the join command.
    *
-   * @param args Command arguments
+   * @param args command arguments
    * @return true if execution completed
    */
-  private boolean run(String[] args) {
+  private boolean run(final String[] args) {
+    final AgonClient client = getClient();
 
-    AgonClient client = context.getClient();
+    if (isAlreadyConnected(client)) {
+      getCtx().showWarn("[CLIENT] Already connected.\n");
+      return false;
+    }
 
-    // If already connected, check if connection is still valid
-    if (client.isConnected()) {
-      if (client.isAlive()) {
-        getCtx().showWarn("[CLIENT] Already connected.\n");
-        return false;
-      } else {
-        // Clean dead connection
-        client.disconnectSilently();
+    disconnectIfDead(client);
+
+    final ConnectionTarget connectionTarget = parseConnectionTarget(args);
+    if (connectionTarget == null) {
+      return false;
+    }
+
+    if (client.connect(connectionTarget.host(), connectionTarget.port())) {
+      getCtx()
+          .showMessage(
+              "[CLIENT] Connected to "
+                  + connectionTarget.host()
+                  + ":"
+                  + connectionTarget.port()
+                  + "\n");
+      return true;
+    }
+
+    getCtx().showError("[CLIENT] Connection failed.");
+    return false;
+  }
+
+  /** Returns the client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
+  }
+
+  /** Returns true when the client is already connected and alive. */
+  private boolean isAlreadyConnected(final AgonClient client) {
+    return client.isConnected() && client.isAlive();
+  }
+
+  /** Disconnects the client if a dead connection is still present. */
+  private void disconnectIfDead(final AgonClient client) {
+    if (client.isConnected() && !client.isAlive()) {
+      client.disconnectSilently();
+    }
+  }
+
+  /**
+   * Parses the connection target from command arguments. Accepted formats: {@code join} and {@code
+   * join IP:PORT}.
+   *
+   * @param args command arguments
+   * @return parsed connection target, or {@code null} if invalid
+   */
+  private ConnectionTarget parseConnectionTarget(final String[] args) {
+    if (!hasTargetArgument(args)) {
+      return new ConnectionTarget(DEFAULT_HOST, DEFAULT_PORT);
+    }
+
+    final String rawArgument = args[0].trim();
+    final int colonIndex = rawArgument.lastIndexOf(':');
+
+    if (colonIndex <= 0 || colonIndex == rawArgument.length() - 1) {
+      getCtx().showError("[CLIENT] Usage: join IP:PORT");
+      return null;
+    }
+
+    final String host = rawArgument.substring(0, colonIndex).trim();
+    final String portPart = rawArgument.substring(colonIndex + 1).trim();
+
+    if (host.isEmpty()) {
+      getCtx().showError("[CLIENT] Invalid host.");
+      return null;
+    }
+
+    final Integer port = parsePort(portPart);
+    if (port == null) {
+      return null;
+    }
+
+    return new ConnectionTarget(host, port);
+  }
+
+  /** Returns true when a non-blank target argument is present. */
+  private boolean hasTargetArgument(final String[] args) {
+    return args != null && args.length > 0 && !args[0].isBlank();
+  }
+
+  /** Parses a port and validates its range. */
+  private Integer parsePort(final String portPart) {
+    try {
+      final int parsedPort = Integer.parseInt(portPart);
+
+      if (parsedPort < 1024 || parsedPort > 65535) {
+        getCtx().showError("[CLIENT] Port must be between 1024 and 65535.");
+        return null;
       }
+
+      return parsedPort;
+    } catch (NumberFormatException exception) {
+      getCtx().showError("[CLIENT] Invalid port: " + portPart);
+      return null;
     }
+  }
 
-    String host = DEFAULT_HOST;
-    int port = DEFAULT_PORT;
-
-    // Parse input arguments (host[:port])
-    if (args != null && args.length > 0 && !args[0].isBlank()) {
-
-      String raw = args[0].trim();
-      int colonIndex = raw.lastIndexOf(':');
-
-      if (colonIndex != -1) {
-        // Extract host and port
-        String hostPart = raw.substring(0, colonIndex).trim();
-        String portPart = raw.substring(colonIndex + 1).trim();
-
-        if (!hostPart.isEmpty()) {
-          host = hostPart;
-        }
-
-        try {
-          port = Integer.parseInt(portPart);
-        } catch (Exception e) {
-          getCtx().showWarn("[CLIENT] Invalid port, using default.");
-        }
-
-      } else {
-        host = raw;
-      }
+  /** Immutable host/port pair for connection attempts. */
+  private record ConnectionTarget(String host, int port) {
+    private ConnectionTarget {
+      host = Objects.requireNonNull(host);
     }
-
-    // Attempt connection
-    if (client.connect(host, port)) {
-      getCtx().showMessage("[CLIENT] Connected to " + host + ":" + port + "\n");
-    } else {
-      getCtx().showError("[CLIENT] Connection failed.");
-    }
-
-    return true;
   }
 }

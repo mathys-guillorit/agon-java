@@ -22,12 +22,16 @@ public class CoordinateMapper {
    */
   public static int toIndex(char letter, int col) {
     if (letter > 'K' || letter < 'A' || col > 11 || col < 1) {
-      GameLogger.debug("CoordinateMapper: Invalid input " + letter + col);
+      if (GameLogger.isDebugEnabled()) {
+        GameLogger.debug("CoordinateMapper: Invalid input " + letter + col);
+      }
       return -1;
     }
     int base = 'A';
     int index = (((int) letter - base) * (11)) + (col - 1);
-    GameLogger.debug("CoordinateMapper: " + letter + col + " -> index " + index);
+    if (GameLogger.isDebugEnabled()) {
+      GameLogger.debug("CoordinateMapper: " + letter + col + " -> index " + index);
+    }
     return index;
   }
 
@@ -38,11 +42,15 @@ public class CoordinateMapper {
    * @return a {@link String} representing the coordinate in letter + digit format.
    */
   public static String toAbaPro(int index) {
-    if (index < 0) return "reloc";
+    if (index < 0) {
+      return "reloc";
+    }
     char letter = (char) ('A' + (index / 11));
     int col = (index % 11) + 1;
     String res = "" + letter + col;
-    GameLogger.debug("CoordinateMapper: index " + index + " -> AbaPro " + res);
+    if (GameLogger.isDebugEnabled()) {
+      GameLogger.debug("CoordinateMapper: index " + index + " -> AbaPro " + res);
+    }
     return res;
   }
 
@@ -62,7 +70,9 @@ public class CoordinateMapper {
     char letter = (char) ('a' + rowOffset);
 
     String res = "" + letter + col;
-    GameLogger.debug("CoordinateMapper: index " + index + " -> coord " + res);
+    if (GameLogger.isDebugEnabled()) {
+      GameLogger.debug("CoordinateMapper: index " + index + " -> coord " + res);
+    }
     return res;
   }
 
@@ -77,10 +87,14 @@ public class CoordinateMapper {
       char letter = Character.toUpperCase(coord.charAt(0));
       int col = Integer.parseInt(coord.substring(1));
       int index = toIndex(letter, col);
-      GameLogger.debug("CoordinateMapper: parsed string " + coord + " to index " + index);
+      if (GameLogger.isDebugEnabled()) {
+        GameLogger.debug("CoordinateMapper: parsed string " + coord + " to index " + index);
+      }
       return index;
     } catch (Exception e) {
-      GameLogger.debug("CoordinateMapper: Failed to parse coordinate string: " + coord);
+      if (GameLogger.isDebugEnabled()) {
+        GameLogger.debug("CoordinateMapper: Failed to parse coordinate string: " + coord);
+      }
       return -1;
     }
   }

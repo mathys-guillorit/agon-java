@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
-import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoardImpl;
 import fr.univ.bordeaux.application.AppContext;
@@ -492,11 +491,6 @@ public class AgonShellTest {
           @Override
           public GameConfig getGameConfig() {
             return new GameConfig();
-          }
-
-          @Override
-          public Move hint() {
-            return null;
           }
         };
 

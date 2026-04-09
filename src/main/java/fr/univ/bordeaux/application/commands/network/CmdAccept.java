@@ -19,25 +19,26 @@ public class CmdAccept extends Cmd {
   /**
    * Constructor used during command registration.
    *
-   * @param ui User interface context
+   * @param userInterface User interface context
    * @param context Application context
    */
-  public CmdAccept(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdAccept(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("accept");
     this.setDesc("Usage: accept\n" + "Description: accepts the current invitation.\n");
   }
 
   /** Internal constructor used when the command is executed with arguments. */
-  private CmdAccept(GameUserInterface ui, AppContext context, String[] args) {
-    this(ui, context);
+  private CmdAccept(
+      final GameUserInterface userInterface, final AppContext context, final String[] args) {
+    this(userInterface, context);
     this.args = args;
   }
 
   /** Creates a new instance of the command with parsed arguments. */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdAccept(getCtx(), context, args);
   }
 
@@ -47,7 +48,7 @@ public class CmdAccept extends Cmd {
    * @param match Not used (network command independent from game state)
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
     return run(args);
   }
 
@@ -58,20 +59,24 @@ public class CmdAccept extends Cmd {
    * @return true if execution completed
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  private boolean run(String[] args) {
-    AgonClient client = context.getClient();
+  private boolean run(final String[] args) {
+    final AgonClient client = getClient();
+    boolean result = true;
 
     if (!client.isConnected()) {
       getCtx().showWarn("[CLIENT] Not connected.\n");
-      return false;
-    }
-
-    if (client.acceptInvitation()) {
+      result = false;
+    } else if (client.acceptInvitation()) {
       getCtx().showMessage("[CLIENT] Accept request sent.\n");
     } else {
       getCtx().showError("[CLIENT] Failed to send accept request.");
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the network client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

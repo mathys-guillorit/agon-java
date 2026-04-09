@@ -18,8 +18,8 @@ public class CmdPing extends Cmd {
   private final AppContext context;
 
   /** Constructor. */
-  public CmdPing(GameUserInterface ui, AppContext context) {
-    super(ui);
+  public CmdPing(final GameUserInterface userInterface, final AppContext context) {
+    super(userInterface);
     this.context = context;
     this.setName("ping");
     this.setDesc(
@@ -35,7 +35,7 @@ public class CmdPing extends Cmd {
    * @return a new {@code CmdPing} command
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdPing(getCtx(), context);
   }
 
@@ -46,25 +46,29 @@ public class CmdPing extends Cmd {
    * @return true if the command was executed, false if the client is not connected
    */
   @Override
-  public boolean execute(MatchManager match) {
+  public boolean execute(final MatchManager match) {
+    final AgonClient client = getClient();
+    final String response;
+    boolean result = true;
 
-    AgonClient client = context.getClient();
-
-    // Ensure client is connected
     if (!client.isConnected()) {
       getCtx().showWarn("[CLIENT] Not connected. Use join first.");
-      return false;
-    }
-
-    // Send ping request
-    String response = client.pingRttMs();
-
-    if (response != null) {
-      getCtx().showMessage(response + "\n");
+      result = false;
     } else {
-      getCtx().showError("[CLIENT] Connection lost.");
+      response = client.pingRttMs();
+
+      if (response != null) {
+        getCtx().showMessage(response + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Connection lost.");
+      }
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

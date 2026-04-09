@@ -11,7 +11,7 @@ class CmdCancelTest {
 
   @Test
   @DisplayName("cancel refuses when client is not connected")
-  void cancel_refuses_when_client_is_not_connected() {
+  void cancelRefusesWhenClientIsNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdCancelTest {
 
   @Test
   @DisplayName("cancel sends request when connected")
-  void cancel_sends_request_when_connected() {
+  void cancelSendsRequestWhenConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdCancelTest {
 
   @Test
   @DisplayName("cancel shows error when request fails")
-  void cancel_shows_error_when_request_fails() {
+  void cancelShowsErrorWhenRequestFails() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

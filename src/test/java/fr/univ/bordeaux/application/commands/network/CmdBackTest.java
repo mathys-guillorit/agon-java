@@ -11,7 +11,7 @@ class CmdBackTest {
 
   @Test
   @DisplayName("back refuses when client is not connected")
-  void back_refuses_when_not_connected() {
+  void backRefusesWhenNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdBackTest {
 
   @Test
   @DisplayName("back shows response when request succeeds")
-  void back_shows_response_when_success() {
+  void backShowsResponseWhenSuccess() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdBackTest {
 
   @Test
   @DisplayName("back shows error when request fails")
-  void back_shows_error_when_failed() {
+  void backShowsErrorWhenFailed() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

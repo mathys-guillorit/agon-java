@@ -1,183 +1,118 @@
 package fr.univ.bordeaux.application.network.server;
 
-import fr.univ.bordeaux.application.match.Match;
-import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
-import fr.univ.bordeaux.application.network.player.PlayerStatus;
-import java.io.IOException;
-import java.net.ServerSocket;
+import fr.univ.bordeaux.application.network.server.game.GameLobby;
+import fr.univ.bordeaux.application.network.server.game.GameManager;
+import fr.univ.bordeaux.application.network.server.game.GameMode;
+import fr.univ.bordeaux.application.network.server.game.GameResultNotifier;
+import fr.univ.bordeaux.application.network.server.game.GameService;
+import fr.univ.bordeaux.application.network.server.game.ServerGameSession;
+import fr.univ.bordeaux.application.network.server.game.ServerPlayerStats;
+import fr.univ.bordeaux.application.network.server.invitation.Invitation;
+import fr.univ.bordeaux.application.network.server.invitation.InvitationCleaner;
+import fr.univ.bordeaux.application.network.server.invitation.InvitationManager;
+import fr.univ.bordeaux.application.network.server.invitation.InvitationService;
+import fr.univ.bordeaux.application.network.server.lifecycle.ClientConnectionRegistry;
+import fr.univ.bordeaux.application.network.server.lifecycle.ServerLifecycleManager;
+import fr.univ.bordeaux.application.network.server.player.PlayerRegistry;
+import fr.univ.bordeaux.application.network.server.player.PlayerService;
+import fr.univ.bordeaux.application.network.server.player.PlayerViewService;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/**
- * TCP game server entry point.
- *
- * <p>This class is responsible for:
- *
- * <ul>
- *   <li>accepting incoming client connections,
- *   <li>managing connected players,
- *   <li>handling player registration and reconnection,
- *   <li>providing server discovery information.
- * </ul>
- */
+/** Main TCP server facade coordinating lifecycle, players, games, and invitations. */
 public class AgonServer {
 
+  /** Logger used for server-level runtime failures. */
+  private static final Logger LOGGER = Logger.getLogger(AgonServer.class.getName());
+
+  /** TCP port used by this server instance. */
   private final int port;
+
+  /** Logical discovery name of this server instance. */
   private final String name;
-  private ServerSocket serverSocket;
-  private Thread acceptClientThread;
-  private final List<ClientHandler> currentClients =
-      Collections.synchronizedList(new ArrayList<>());
-  private ServerDiscovery discovery;
-  private volatile boolean running = false;
-  private final AtomicInteger nextPlayerId = new AtomicInteger(1);
 
-  private final Map<String, OnlinePlayer> playersByClientId = new ConcurrentHashMap<>();
+  /** Registry storing currently connected client handlers. */
+  private final ClientConnectionRegistry connectionRegistry = new ClientConnectionRegistry();
 
-  /** Active connected players (id -> player). */
-  private final Map<Integer, OnlinePlayer> players = new ConcurrentHashMap<>();
+  /** Lifecycle manager handling socket startup, shutdown, and accept loop. */
+  private final ServerLifecycleManager lifecycleManager;
 
-  private final ServerScoreboard scoreboard = new ServerScoreboard();
+  /** Player service handling registration and active player state. */
+  private final PlayerService playerService = new PlayerRegistry();
 
-  private final Map<Integer, ServerGameSession> activeGames = new ConcurrentHashMap<>();
-  private final Map<Integer, Integer> playerToGame = new ConcurrentHashMap<>();
-  private final AtomicInteger nextGameId = new AtomicInteger(1);
+  /** Formatter service building player-related network responses. */
+  private final PlayerViewService playerViewService = new PlayerViewService();
 
-  private static final int INVITATION_TIMEOUT_SECONDS = 300;
+  /** Game service handling active matches, lobbies, and scoreboard state. */
+  private final GameService gameService = new GameManager(playerService, new GameResultNotifier());
 
-  private final Map<Integer, Invitation> invitationsByInviter = new ConcurrentHashMap<>();
-  private final Map<Integer, Invitation> invitationsByInvited = new ConcurrentHashMap<>();
+  /** Invitation service handling invitations and their state transitions. */
+  private final InvitationService invitationService = new InvitationManager(playerService);
 
-  private final Map<Integer, GameLobby> lobbiesByPlayer = new ConcurrentHashMap<>();
-
-  private Thread invitationCleanerThread;
+  /** Background cleaner removing expired invitations periodically. */
+  private final InvitationCleaner invitationCleaner = new InvitationCleaner(invitationService);
 
   /**
    * Creates a new server with a specified owner name and port.
    *
-   * @param port the TCP port to listen on
-   * @param ownerName the name of the local profile owning this server
+   * @param port the TCP port listened to by the server
+   * @param ownerName the local profile name owning this server
    */
-  public AgonServer(int port, String ownerName) {
+  public AgonServer(final int port, final String ownerName) {
     this.port = port;
     this.name = "AgonServer_" + ownerName + "_" + port;
+    this.lifecycleManager = new ServerLifecycleManager(port, name);
   }
 
   /**
-   * Creates a new server using the default port (12345).
+   * Creates a new server using the default port (12_345).
    *
-   * @param ownerName the name of the local profile owning this server
+   * @param ownerName the local profile name owning this server
    */
-  public AgonServer(String ownerName) {
-    this(12345, ownerName);
+  public AgonServer(final String ownerName) {
+    this(12_345, ownerName);
   }
 
   /**
-   * Starts the TCP server and initializes the discovery service.
+   * Starts the server lifecycle and invitation cleaner.
    *
-   * <p>This method opens the server socket and launches a dedicated thread to accept incoming
-   * client connections.
-   *
-   * @return true if the server started successfully, false otherwise
+   * @return {@code true} if startup succeeded, {@code false} otherwise
    */
   public boolean start() {
-    if (running) {
-      return true;
+    final boolean started = lifecycleManager.start(this::registerNewClient);
+
+    if (started) {
+      invitationCleaner.start();
     }
 
-    try {
-      serverSocket = new ServerSocket(port);
-      discovery = new ServerDiscovery(name, port);
-      discovery.start();
-    } catch (IOException e) {
-      System.err.println("[SERVER] Failed to start on port " + port);
-      return false;
-    }
-
-    running = true;
-    acceptClientThread = new Thread(this::acceptClientLoop, "acceptClientThread");
-    acceptClientThread.start();
-    startInvitationCleaner();
-
-    return true;
+    return started;
   }
 
   /**
-   * Main loop responsible for accepting incoming client connections.
+   * Stops the server and all active client handlers.
    *
-   * <p>Each accepted socket is associated with a new {@link ClientHandler} running in its own
-   * thread.
-   */
-  private void acceptClientLoop() {
-    while (running) {
-      try {
-        Socket clientSocket = serverSocket.accept();
-
-        ClientHandler handler = new ClientHandler(clientSocket, this);
-        currentClients.add(handler);
-        new Thread(handler).start();
-
-      } catch (IOException e) {
-        break;
-      }
-    }
-  }
-
-  /**
-   * Stops the server and closes all active connections.
-   *
-   * <p>This method:
-   *
-   * <ul>
-   *   <li>terminates all connected client handlers,
-   *   <li>clears the active players list,
-   *   <li>stops the discovery service,
-   *   <li>closes the server socket.
-   * </ul>
-   *
-   * @return true if the server was stopped successfully
+   * @return {@code true} if shutdown completed
    */
   public boolean stop() {
-    if (!running) {
+    if (!lifecycleManager.isRunning()) {
       return true;
     }
 
-    running = false;
-
-    List<ClientHandler> clientSnapshot;
-    synchronized (currentClients) {
-      clientSnapshot = new ArrayList<>(currentClients);
-    }
+    final List<ClientHandler> clientSnapshot = connectionRegistry.snapshot();
 
     for (ClientHandler handler : clientSnapshot) {
       handler.stop();
     }
 
-    currentClients.clear();
-    players.clear();
+    connectionRegistry.clear();
+    playerService.clearActivePlayers();
+    gameService.clearRuntimeState();
 
-    if (discovery != null) {
-      discovery.stop();
-      discovery = null;
-    }
-
-    try {
-      if (serverSocket != null) {
-        serverSocket.close();
-      }
-    } catch (IOException ignored) {
-      // Ignored
-    }
-
-    if (invitationCleanerThread != null) {
-      invitationCleanerThread.interrupt();
-    }
+    invitationCleaner.stop();
+    lifecycleManager.stop();
 
     return true;
   }
@@ -185,16 +120,16 @@ public class AgonServer {
   /**
    * Returns the TCP port used by this server instance.
    *
-   * @return the TCP port number on which the server is listening
+   * @return the TCP port number
    */
   public int getPort() {
     return port;
   }
 
   /**
-   * Returns the logical name of the server used for discovery.
+   * Returns the logical discovery name of this server instance.
    *
-   * @return the server name broadcasted over the network
+   * @return the server discovery name
    */
   public String getName() {
     return name;
@@ -203,68 +138,45 @@ public class AgonServer {
   /**
    * Indicates whether the server is currently running.
    *
-   * @return true if the server is active, false otherwise
+   * @return {@code true} if the server is running, {@code false} otherwise
    */
   public boolean isRunning() {
-    return running;
+    return lifecycleManager.isRunning();
   }
 
   /**
-   * Removes a client handler from the active connections list.
+   * Removes a client handler from the active connection registry.
    *
-   * @param handler the client handler to remove
+   * @param handler the handler to remove
    */
-  public void removeClient(ClientHandler handler) {
-    currentClients.remove(handler);
+  public void removeClient(final ClientHandler handler) {
+    connectionRegistry.remove(handler);
   }
 
   /**
    * Returns the number of currently connected clients.
    *
-   * @return the number of active client connections
+   * @return the connected client count
    */
   public int getConnectedClientsCount() {
-    return currentClients.size();
+    return connectionRegistry.count();
   }
 
   /**
    * Registers a player on the server or reconnects an existing one.
    *
-   * <p>If a player with the same name already exists, their previous instance is reused and
-   * associated with the new connection. Otherwise, a new player is created with a unique
-   * identifier.
-   *
-   * @param clientId the player's client id
-   * @param name the player's display name
-   * @param handler the client handler associated with the connection
-   * @return the registered or reconnected player instance, or null if the name is invalid
+   * @param clientId the player persistent client identifier
+   * @param name the player display name
+   * @param handler the handler associated with the active connection
+   * @return the registered player, or {@code null} if registration fails
    */
-  public OnlinePlayer registerPlayer(String clientId, String name, ClientHandler handler) {
+  public OnlinePlayer registerPlayer(
+      final String clientId, final String name, final ClientHandler handler) {
+    final OnlinePlayer player = playerService.registerPlayer(clientId, name, handler);
 
-    if (clientId == null || clientId.isBlank() || name == null || name.isBlank()) {
-      return null;
+    if (player != null) {
+      gameService.getPlayerStats(player.getName());
     }
-
-    String cleanClientId = clientId.trim();
-
-    OnlinePlayer existing = playersByClientId.get(cleanClientId);
-
-    if (existing != null) {
-      existing.setHandler(handler);
-      existing.setStatus(PlayerStatus.IDLE);
-      players.put(existing.getId(), existing);
-      scoreboard.getOrCreateStats(existing.getName());
-      return existing;
-    }
-
-    int id = nextPlayerId.getAndIncrement();
-
-    OnlinePlayer player =
-        new OnlinePlayer(id, cleanClientId, name.trim(), PlayerStatus.IDLE, handler);
-
-    players.put(id, player);
-    playersByClientId.put(cleanClientId, player);
-    scoreboard.getOrCreateStats(player.getName());
 
     return player;
   }
@@ -272,547 +184,234 @@ public class AgonServer {
   /**
    * Detaches a player from the server.
    *
-   * <p>The player remains stored for future reconnections, but is removed from the list of
-   * currently active players.
-   *
-   * @param player the player to disconnect
+   * @param player the player to detach
    */
-  public synchronized void removePlayer(OnlinePlayer player) {
+  public void removePlayer(final OnlinePlayer player) {
     if (player == null) {
       return;
     }
 
-    removeInvitation(player.getId());
-
-    GameLobby lobby = lobbiesByPlayer.remove(player.getId());
-    if (lobby != null) {
-      lobbiesByPlayer.remove(lobby.getHostId());
-      lobbiesByPlayer.remove(lobby.getGuestId());
-
-      OnlinePlayer host = players.get(lobby.getHostId());
-      OnlinePlayer guest = players.get(lobby.getGuestId());
-
-      if (host != null) {
-        host.setStatus(PlayerStatus.IDLE);
-      }
-
-      if (guest != null) {
-        guest.setStatus(PlayerStatus.IDLE);
-      }
-    }
-
-    player.setHandler(null);
-    player.setStatus(PlayerStatus.IDLE);
-    players.remove(player.getId());
+    invitationService.removeInvitation(player.getId());
+    gameService.removeLobbyForPlayer(player.getId());
+    playerService.detachPlayer(player);
   }
 
   /**
-   * Returns the formatted list of currently connected players.
+   * Returns the formatted list of currently active players.
    *
-   * <p>Each player is represented as a single line containing their ID, name, and status. The
-   * response is terminated with an "END" marker.
-   *
-   * @return a multi-line string describing all active players
+   * @return a protocol-compatible multi-line players response
    */
   public String getPlayersList() {
-    if (players.isEmpty()) {
-      return "PLAYERS_EMPTY\nEND";
-    }
-
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("=== PLAYERS ===\n");
-    for (OnlinePlayer p : players.values()) {
-      sb.append("ID=")
-          .append(p.getId())
-          .append(" NAME=")
-          .append(p.getName())
-          .append(" STATUS=")
-          .append(p.getStatus().name().toLowerCase())
-          .append("\n");
-    }
-    sb.append("===============\n");
-    sb.append("END");
-    return sb.toString();
+    return playerViewService.formatPlayersList(playerService.getActivePlayers());
   }
 
   /**
-   * Returns the number of currently connected players.
+   * Returns the number of currently active players.
    *
-   * @return the number of active players
+   * @return the active player count
    */
   public int getPlayerCount() {
-    return players.size();
+    return playerService.getPlayerCount();
   }
 
   /**
-   * Returns the scoreboard of all players registered on this server.
+   * Returns the formatted scoreboard response.
    *
-   * <p>The scoreboard includes each player's number of wins, losses, and total games played. The
-   * response is formatted as multiple lines and terminated by an "END" marker.
-   *
-   * @return a formatted multi-line scoreboard string
+   * @return a protocol-compatible scoreboard response
    */
   public String getScoreboard() {
-
-    if (scoreboard.isEmpty()) {
-      return "SCOREBOARD_EMPTY\nEND";
-    }
-
-    StringBuilder sb = new StringBuilder();
-    sb.append("=== SCOREBOARD ===\n");
-
-    for (ServerPlayerStats stats : scoreboard.getAllStats()) {
-      sb.append("NAME=")
-          .append(stats.getPlayerName())
-          .append(" WINS=")
-          .append(stats.getWins())
-          .append(" LOSSES=")
-          .append(stats.getLosses())
-          .append(" GAMES=")
-          .append(stats.getGames())
-          .append("\n");
-    }
-
-    sb.append("==================\n");
-    sb.append("END");
-    return sb.toString();
+    return gameService.getScoreboard();
   }
 
   /**
-   * Returns the number of currently active game sessions.
+   * Returns the number of currently active games.
    *
-   * @return the number of games in progress
+   * @return the active game count
    */
   public int getActiveGameCount() {
-    return activeGames.size();
+    return gameService.getActiveGameCount();
   }
 
   /**
-   * Checks whether a player is currently involved in a game.
+   * Indicates whether a player is currently involved in a game.
    *
-   * @param playerId the ID of the player
-   * @return true if the player is in a game, false otherwise
+   * @param playerId the player identifier
+   * @return {@code true} if the player is in a game, {@code false} otherwise
    */
-  public boolean isPlayerInGame(int playerId) {
-    return playerToGame.containsKey(playerId);
+  public boolean isPlayerInGame(final int playerId) {
+    return gameService.isPlayerInGame(playerId);
   }
 
   /**
-   * Returns the game ID associated with a given player.
+   * Returns the current game id associated with a player.
    *
-   * <p>If the player is not currently in a game, null is returned.
-   *
-   * @param playerId the ID of the player
-   * @return the game ID, or null if none exists
+   * @param playerId the player identifier
+   * @return the game id, or {@code null} if none exists
    */
-  public Integer getGameIdByPlayer(int playerId) {
-    return playerToGame.get(playerId);
+  public Integer getGameIdByPlayer(final int playerId) {
+    return gameService.getGameIdByPlayer(playerId);
   }
 
   /**
-   * Retrieves a game session by its identifier.
+   * Returns a game session by id.
    *
-   * @param gameId the ID of the game
-   * @return the corresponding game session, or null if not found
+   * @param gameId the game identifier
+   * @return the game session, or {@code null} if not found
    */
-  public ServerGameSession getGameById(int gameId) {
-    return activeGames.get(gameId);
+  public ServerGameSession getGameById(final int gameId) {
+    return gameService.getGameById(gameId);
   }
 
   /**
-   * Returns a connected player by its ID.
+   * Returns an active player by id.
    *
-   * @param playerId the player ID
-   * @return the player instance, or null if not found
+   * @param playerId the player identifier
+   * @return the active player, or {@code null} if not found
    */
-  public OnlinePlayer getPlayerById(int playerId) {
-    return players.get(playerId);
+  public OnlinePlayer getPlayerById(final int playerId) {
+    return playerService.getPlayerById(playerId);
   }
 
   /**
    * Starts a new game between two players.
    *
-   * <p>This method:
-   *
-   * <ul>
-   *   <li>randomly assigns colors,
-   *   <li>creates a real server-side match,
-   *   <li>creates and registers a new game session,
-   *   <li>links both players to the created game,
-   *   <li>updates both players to INGAME status.
-   * </ul>
-   *
-   * @param requesterId the player requesting the game
-   * @param targetId the opponent player
-   * @return the created game session, or null if creation failed
+   * @param requesterId the identifier of the requesting player
+   * @param targetId the identifier of the opponent player
+   * @param mode the selected game mode
+   * @return the created game session, or {@code null} if creation failed
    */
-  public ServerGameSession startNewGame(int requesterId, int targetId, GameMode mode) {
-
-    OnlinePlayer requester = players.get(requesterId);
-    OnlinePlayer target = players.get(targetId);
-
-    if (requester == null || target == null || mode == null) {
-      return null;
-    }
-
-    int gameId = nextGameId.getAndIncrement();
-
-    // random color for players
-    boolean requesterIsWhite = Math.random() < 0.5;
-    OnlinePlayer whitePlayer = requesterIsWhite ? requester : target;
-    OnlinePlayer blackPlayer = requesterIsWhite ? target : requester;
-
-    Match match =
-        MatchFactory.createOnlineMatch(
-            whitePlayer.getName(), blackPlayer.getName(), mode == GameMode.BLITZ);
-    ServerGameSession session = new ServerGameSession(gameId, whitePlayer, blackPlayer, match);
-
-    activeGames.put(gameId, session);
-    playerToGame.put(requester.getId(), gameId);
-    playerToGame.put(target.getId(), gameId);
-
-    requester.setStatus(PlayerStatus.INGAME);
-    target.setStatus(PlayerStatus.INGAME);
-
-    return session;
+  public ServerGameSession startNewGame(
+      final int requesterId, final int targetId, final GameMode mode) {
+    return gameService.startNewGame(requesterId, targetId, mode);
   }
 
   /**
-   * Finishes an active game session and updates the server state.
-   *
-   * <p>This method removes the game from the active sessions, resets both players to idle status,
-   * updates the scoreboard, and notifies the winner and loser with a final {@code GAME_OVER}
-   * message.
+   * Finishes an active game session.
    *
    * @param session the game session to finish
-   * @param winnerPlayerId the ID of the winning player
-   * @param reason the reason associated with the game end
+   * @param winnerPlayerId the winner player identifier
+   * @param reason the end-of-game reason
    */
-  public synchronized void finishGame(
-      ServerGameSession session, int winnerPlayerId, String reason) {
-    if (session == null) {
-      return;
-    }
-
-    int gameId = session.getGameId();
-
-    ServerGameSession removed = activeGames.remove(gameId);
-    if (removed == null) {
-      return;
-    }
-
-    OnlinePlayer white = removed.getwhitePlayer();
-    OnlinePlayer black = removed.getblackPlayer();
-
-    playerToGame.remove(white.getId());
-    playerToGame.remove(black.getId());
-
-    white.setStatus(PlayerStatus.IDLE);
-    black.setStatus(PlayerStatus.IDLE);
-
-    OnlinePlayer loser = removed.getOpponent(winnerPlayerId);
-    OnlinePlayer winner = null;
-
-    if (white.getId() == winnerPlayerId) {
-      winner = white;
-    } else if (black.getId() == winnerPlayerId) {
-      winner = black;
-    }
-
-    if (winner != null && loser != null) {
-      scoreboard.getOrCreateStats(winner.getName()).addWin();
-      scoreboard.getOrCreateStats(loser.getName()).addLoss();
-
-      if (winner.getHandler() != null) {
-        try {
-          winner
-              .getHandler()
-              .sendFromServer(
-                  "GAME_OVER RESULT=WIN REASON=" + reason + " OPPONENT=" + loser.getName());
-        } catch (IOException ignored) {
-          // Ignored
-        }
-      }
-
-      if (loser.getHandler() != null) {
-        try {
-          loser
-              .getHandler()
-              .sendFromServer(
-                  "GAME_OVER RESULT=LOSS REASON=" + reason + " OPPONENT=" + winner.getName());
-        } catch (IOException ignored) {
-          // Ignored
-        }
-      }
-    }
+  public void finishGame(
+      final ServerGameSession session, final int winnerPlayerId, final String reason) {
+    gameService.finishGame(session, winnerPlayerId, reason);
   }
 
   /**
    * Returns the formatted details of a connected player.
    *
-   * <p>The returned information includes the player id, name, client id, current status, and
-   * scoreboard statistics.
-   *
-   * @param playerId the id of the player to describe
-   * @return a formatted string describing the player, or an error message if not found
+   * @param playerId the player identifier to describe
+   * @return a protocol-compatible player details response
    */
-  public String getPlayerDetails(int playerId) {
-    OnlinePlayer player = players.get(playerId);
+  public String getPlayerDetails(final int playerId) {
+    final OnlinePlayer player = playerService.getPlayerById(playerId);
 
     if (player == null) {
-      return "ERROR MESSAGE=PLAYER_NOT_FOUND";
+      return playerViewService.formatPlayerDetails(null, new ServerPlayerStats("UNKNOWN"));
     }
 
-    ServerPlayerStats stats = scoreboard.getOrCreateStats(player.getName());
-
-    return "PLAYER ID="
-        + player.getId()
-        + " NAME="
-        + player.getName()
-        + " STATUS="
-        + player.getStatus().name().toLowerCase()
-        + " WINS="
-        + stats.getWins()
-        + " LOSSES="
-        + stats.getLosses()
-        + " GAMES="
-        + stats.getGames();
-  }
-
-  /** Starts the background thread that removes expired invitations. */
-  private void startInvitationCleaner() {
-    invitationCleanerThread =
-        new Thread(
-            () -> {
-              while (running) {
-                try {
-                  Thread.sleep(1000);
-                  cleanExpiredInvitations();
-                } catch (InterruptedException ignored) {
-                  break;
-                }
-              }
-            },
-            "invitation-cleaner-thread");
-
-    invitationCleanerThread.start();
-  }
-
-  /** Removes all expired invitations from the server. */
-  private synchronized void cleanExpiredInvitations() {
-    List<Invitation> expiredInvitations = new ArrayList<>();
-
-    for (Invitation invitation : invitationsByInviter.values()) {
-      if (invitation.isExpired()) {
-        expiredInvitations.add(invitation);
-      }
-    }
-
-    for (Invitation invitation : expiredInvitations) {
-      invitationsByInviter.remove(invitation.getInviterId());
-      invitationsByInvited.remove(invitation.getInvitedId());
-
-      OnlinePlayer inviter = players.get(invitation.getInviterId());
-      OnlinePlayer invited = players.get(invitation.getInvitedId());
-
-      if (inviter != null && inviter.getStatus() == PlayerStatus.WAITGAME) {
-        inviter.setStatus(PlayerStatus.IDLE);
-      }
-
-      if (invited != null && invited.getStatus() == PlayerStatus.WAITGAME) {
-        invited.setStatus(PlayerStatus.IDLE);
-      }
-    }
+    final ServerPlayerStats stats = gameService.getPlayerStats(player.getName());
+    return playerViewService.formatPlayerDetails(player, stats);
   }
 
   /**
    * Returns the invitation sent by a player.
    *
-   * @param inviterId the inviter player ID
-   * @return the invitation, or null if none exists
+   * @param inviterId the inviter player identifier
+   * @return the invitation, or {@code null} if none exists
    */
-  public Invitation getInvitationByInviter(int inviterId) {
-    return invitationsByInviter.get(inviterId);
+  public Invitation getInvitationByInviter(final int inviterId) {
+    return invitationService.getInvitationByInviter(inviterId);
   }
 
   /**
    * Returns the invitation received by a player.
    *
-   * @param invitedId the invited player ID
-   * @return the invitation, or null if none exists
+   * @param invitedId the invited player identifier
+   * @return the invitation, or {@code null} if none exists
    */
-  public Invitation getInvitationByInvited(int invitedId) {
-    return invitationsByInvited.get(invitedId);
+  public Invitation getInvitationByInvited(final int invitedId) {
+    return invitationService.getInvitationByInvited(invitedId);
   }
 
   /**
    * Creates a new invitation between two players.
    *
-   * @param inviterId the inviter player ID
-   * @param invitedId the invited player ID
-   * @return true if the invitation was created, false otherwise
+   * @param inviterId the inviter player identifier
+   * @param invitedId the invited player identifier
+   * @return {@code true} if the invitation was created, {@code false} otherwise
    */
-  public synchronized boolean createInvitation(int inviterId, int invitedId) {
-    OnlinePlayer inviter = players.get(inviterId);
-    OnlinePlayer invited = players.get(invitedId);
-
-    if (inviter == null || invited == null) {
-      return false;
-    }
-
-    if (inviterId == invitedId) {
-      return false;
-    }
-
-    if (inviter.getStatus() != PlayerStatus.IDLE || invited.getStatus() != PlayerStatus.IDLE) {
-      return false;
-    }
-
-    long expiresAt = System.currentTimeMillis() + INVITATION_TIMEOUT_SECONDS * 1000;
-    Invitation invitation = new Invitation(inviterId, invitedId, expiresAt);
-
-    invitationsByInviter.put(inviterId, invitation);
-    invitationsByInvited.put(invitedId, invitation);
-
-    inviter.setStatus(PlayerStatus.WAITGAME);
-    invited.setStatus(PlayerStatus.WAITGAME);
-
-    return true;
+  public boolean createInvitation(final int inviterId, final int invitedId) {
+    return invitationService.createInvitation(inviterId, invitedId);
   }
 
   /**
-   * Removes an invitation and resets both players to idle.
+   * Removes an invitation involving a player.
    *
-   * @param invitation the invitation to clear
+   * @param playerId the inviter or invited player identifier
+   * @return the removed invitation, or {@code null} if none existed
    */
-  private void clearInvitation(Invitation invitation) {
-    if (invitation == null) {
-      return;
-    }
-
-    invitationsByInviter.remove(invitation.getInviterId());
-    invitationsByInvited.remove(invitation.getInvitedId());
-
-    OnlinePlayer inviter = players.get(invitation.getInviterId());
-    OnlinePlayer invited = players.get(invitation.getInvitedId());
-
-    if (inviter != null) {
-      inviter.setStatus(PlayerStatus.IDLE);
-    }
-
-    if (invited != null) {
-      invited.setStatus(PlayerStatus.IDLE);
-    }
+  public Invitation removeInvitation(final int playerId) {
+    return invitationService.removeInvitation(playerId);
   }
 
   /**
-   * Declines or cancels a pending invitation.
+   * Accepts an invitation and creates the associated lobby.
    *
-   * @param playerId the inviter or invited player ID
-   * @return the removed invitation, or null if none exists
+   * @param invitedId the invited player identifier
+   * @return the created lobby, or {@code null} if acceptance failed
    */
-  public synchronized Invitation removeInvitation(int playerId) {
-    Invitation invitation = invitationsByInviter.get(playerId);
-
-    if (invitation == null) {
-      invitation = invitationsByInvited.get(playerId);
-    }
+  public GameLobby acceptInvitation(final int invitedId) {
+    final Invitation invitation = invitationService.acceptInvitation(invitedId);
 
     if (invitation == null) {
       return null;
     }
 
-    clearInvitation(invitation);
-    return invitation;
-  }
-
-  /**
-   * Accepts the pending invitation received by a player.
-   *
-   * @param invitedId the invited player ID
-   * @return the created lobby, or null if the invitation could not be accepted
-   */
-  public synchronized GameLobby acceptInvitation(int invitedId) {
-    Invitation invitation = invitationsByInvited.get(invitedId);
-
-    if (invitation == null) {
-      return null;
-    }
-
-    OnlinePlayer inviter = players.get(invitation.getInviterId());
-    OnlinePlayer invited = players.get(invitation.getInvitedId());
-
-    if (invitation.isExpired() || inviter == null || invited == null) {
-      clearInvitation(invitation);
-      return null;
-    }
-
-    invitationsByInviter.remove(invitation.getInviterId());
-    invitationsByInvited.remove(invitation.getInvitedId());
-
-    GameLobby lobby = new GameLobby(inviter.getId(), invited.getId());
-    lobbiesByPlayer.put(inviter.getId(), lobby);
-    lobbiesByPlayer.put(invited.getId(), lobby);
-
-    return lobby;
+    return gameService.createLobby(invitation.getInviterId(), invitation.getInvitedId());
   }
 
   /**
    * Returns the lobby associated with a player.
    *
-   * @param playerId the player ID
-   * @return the lobby, or null if none exists
+   * @param playerId the player identifier
+   * @return the corresponding lobby, or {@code null} if none exists
    */
-  public GameLobby getLobbyByPlayer(int playerId) {
-    return lobbiesByPlayer.get(playerId);
+  public GameLobby getLobbyByPlayer(final int playerId) {
+    return gameService.getLobbyByPlayer(playerId);
   }
 
   /**
    * Starts a game from a lobby using the selected mode.
    *
-   * @param hostId the host player ID
+   * @param hostId the host player identifier
    * @param mode the selected game mode
-   * @return the created game session, or null if creation failed
+   * @return the created game session, or {@code null} if creation failed
    */
+  public ServerGameSession chooseMode(final int hostId, final GameMode mode) {
+    return gameService.chooseMode(hostId, mode);
+  }
+
   /**
-   * Starts a game from a lobby using the selected mode.
+   * Creates and registers a new client handler for an accepted socket.
    *
-   * @param hostId the host player ID
-   * @param mode the selected game mode
-   * @return the created game session, or null if creation failed
+   * @param clientSocket the accepted client socket
    */
-  public synchronized ServerGameSession chooseMode(int hostId, GameMode mode) {
-    if (mode == null) {
-      return null;
-    }
+  private void registerNewClient(final Socket clientSocket) {
+    try {
+      final ClientHandler handler = new ClientHandler(clientSocket, this);
+      connectionRegistry.add(handler);
+      lifecycleManager.submitClientHandler(handler);
+    } catch (RuntimeException e) {
+      LOGGER.log(Level.FINE, "[SERVER] Error while registering a client", e);
 
-    GameLobby lobby = lobbiesByPlayer.get(hostId);
-
-    if (lobby == null || lobby.getHostId() != hostId) {
-      return null;
-    }
-
-    int guestId = lobby.getGuestId();
-
-    lobbiesByPlayer.remove(hostId);
-    lobbiesByPlayer.remove(guestId);
-
-    ServerGameSession session = startNewGame(hostId, guestId, mode);
-
-    if (session == null) {
-      OnlinePlayer host = players.get(hostId);
-      OnlinePlayer guest = players.get(guestId);
-
-      if (host != null) {
-        host.setStatus(PlayerStatus.IDLE);
+      try {
+        clientSocket.close();
+      } catch (Exception ignored) {
+        // Ignored
       }
 
-      if (guest != null) {
-        guest.setStatus(PlayerStatus.IDLE);
-      }
+      throw e;
     }
-
-    return session;
   }
 }

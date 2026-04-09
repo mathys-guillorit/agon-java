@@ -11,7 +11,7 @@ class CmdAwayTest {
 
   @Test
   @DisplayName("away refuses when client is not connected")
-  void away_refuses_when_not_connected() {
+  void awayRefusesWhenNotConnected() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -25,7 +25,7 @@ class CmdAwayTest {
 
   @Test
   @DisplayName("away shows response when request succeeds")
-  void away_shows_response_when_success() {
+  void awayShowsResponseWhenSuccess() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);
@@ -42,7 +42,7 @@ class CmdAwayTest {
 
   @Test
   @DisplayName("away shows error when request fails")
-  void away_shows_error_when_failed() {
+  void awayShowsErrorWhenFailed() {
     TestUi ui = new TestUi();
     FakeAgonClient client = new FakeAgonClient();
     AppContext ctx = contextWithClient(client);

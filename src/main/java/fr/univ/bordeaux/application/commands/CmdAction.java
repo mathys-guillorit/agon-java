@@ -43,4 +43,11 @@ public interface CmdAction {
    * @return {@link Options}
    */
   Options getOptions();
+
+  /**
+   * Show Help informations about how to use the command. (detailed)
+   *
+   * @return {@link String} the usage of the command
+   */
+  String getHelp();
 }

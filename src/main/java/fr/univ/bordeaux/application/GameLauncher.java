@@ -323,8 +323,11 @@ public class GameLauncher {
                       });
             });
     System.out.println(
-        "\nHow to move your pieces : \n\n[letter1][col1][letter2][col2] to move your piece from letter1-col1 to letter2-col2\n"
-            + "if you have a piece to relocate you have to enter the tile where you want to put it [letter][col]\n"
+        "\nHow to move your pieces : "
+            + "\n\n[letter1][col1][letter2][col2] to move your piece "
+            + "from letter1-col1 to letter2-col2\n"
+            + "if you have a piece to relocate you have to enter the tile "
+            + "where you want to put it [letter][col]\n"
             + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
     ;
   }

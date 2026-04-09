@@ -15,7 +15,7 @@ class CmdServerListTest {
 
   @Test
   @DisplayName("server_list shows warning when no server is found")
-  void server_list_shows_warning_when_no_server_is_found() {
+  void serverListShowsWarningWhenNoServerIsFound() {
     TestUi ui = new TestUi();
 
     AppContext ctx =
@@ -43,7 +43,7 @@ class CmdServerListTest {
 
   @Test
   @DisplayName("server_list shows all discovered servers")
-  void server_list_shows_all_discovered_servers() {
+  void serverListShowsAllDiscoveredServers() {
     TestUi ui = new TestUi();
 
     AppContext ctx =
@@ -69,19 +69,23 @@ class CmdServerListTest {
     assertTrue(result);
     assertEquals(2, ui.messages.size());
     assertTrue(ui.messages.get(0).contains("S1"));
+    assertTrue(ui.messages.get(0).contains("192.168.1.10"));
+    assertTrue(ui.messages.get(0).contains("1234"));
     assertTrue(ui.messages.get(1).contains("S2"));
+    assertTrue(ui.messages.get(1).contains("192.168.1.11"));
+    assertTrue(ui.messages.get(1).contains("5678"));
   }
 
   @Test
-  @DisplayName("server_list shows error when discovery fails")
-  void server_list_shows_error_when_discovery_fails() {
+  @DisplayName("server_list shows error when discovery startup throws IllegalStateException")
+  void serverListShowsErrorWhenDiscoveryFails() {
     TestUi ui = new TestUi();
 
     AppContext ctx =
         new AppContext(new LocalProfile("TestPlayer")) {
           @Override
           public void ensureDiscoveryStarted() {
-            throw new RuntimeException("boom");
+            throw new IllegalStateException("boom");
           }
         };
 

@@ -1,0 +1,82 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package fr.univ.bordeaux.agoncore {
+
+    package agonelements {
+        enum Color {
+            BLACK
+            WHITE
+        }
+
+        class Move {
+            - fromIndex: int
+            - toIndex: int
+            + getFrom(): int
+            + getTo(): int
+        }
+
+        enum PieceType {
+            QUEEN
+            NOBLE
+        }
+    }
+
+    package bitboard {
+        interface BitBoard {
+            + get(index: int): boolean
+            + set(index: int): void
+            + clear(index: int): void
+        }
+
+        interface AgonBoard {
+            + getPieceAt(index: int): PieceType
+            + getColorAt(index: int): Color
+            + movePiece(move: Move): void
+        }
+
+        interface RestrictedAgonBoard {
+            + getPieceAt(index: int): PieceType
+            + getColorAt(index: int): Color
+        }
+
+        class AgonBoardImpl implements AgonBoard, RestrictedAgonBoard {
+            - blackQueens: long
+            - whiteQueens: long
+            - blackNobles: long
+            - whiteNobles: long
+            + getPieceAt(index: int): PieceType
+            + getColorAt(index: int): Color
+        }
+
+        class CoordinateMapper {
+            + {static} toIndex(row: char, col: int): int
+            + {static} toCoords(index: int): String
+        }
+
+        enum Direction {
+            N, NE, SE, S, SW, NW
+        }
+    }
+
+    package history {
+        class History {
+            - moves: List<Move>
+            + addMove(move: Move): void
+            + undo(): Move
+        }
+        class HistoryInformations {
+            - turn: int
+            - lastMove: Move
+        }
+    }
+}
+
+' Relations
+AgonBoardImpl *-- "4" BitBoard : uses long bitboards
+AgonBoardImpl ..> agonelements.Move : executes
+AgonBoardImpl ..> agonelements.Color : uses
+AgonBoardImpl ..> agonelements.PieceType : uses
+history.History o-- agonelements.Move : contains
+
+@enduml

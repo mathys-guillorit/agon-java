@@ -12,7 +12,7 @@ class CmdServerStopTest {
 
   @Test
   @DisplayName("server_stop stops running server and clears context")
-  void server_stop_stops_running_server_and_clears_context() throws Exception {
+  void serverStopStopsRunningServerAndClearsContext() throws Exception {
     TestUi ui = new TestUi();
     AppContext ctx = newContext();
 
@@ -30,7 +30,7 @@ class CmdServerStopTest {
 
   @Test
   @DisplayName("server_stop refuses when no server exists")
-  void server_stop_refuses_when_no_server_exists() {
+  void serverStopRefusesWhenNoServerExists() {
     TestUi ui = new TestUi();
     AppContext ctx = newContext();
 
@@ -43,7 +43,7 @@ class CmdServerStopTest {
 
   @Test
   @DisplayName("server_stop refuses when server exists but is not running")
-  void server_stop_refuses_when_server_exists_but_is_not_running() throws Exception {
+  void serverStopRefusesWhenServerExistsButIsNotRunning() throws Exception {
     TestUi ui = new TestUi();
     AppContext ctx = newContext();
 

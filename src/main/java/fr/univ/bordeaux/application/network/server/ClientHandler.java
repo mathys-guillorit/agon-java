@@ -1,10 +1,9 @@
 package fr.univ.bordeaux.application.network.server;
 
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
-import fr.univ.bordeaux.application.network.player.PlayerStatus;
 import fr.univ.bordeaux.application.network.protocol.Command;
 import fr.univ.bordeaux.application.network.protocol.CommandParser;
-import fr.univ.bordeaux.application.network.protocol.CommandType;
+import fr.univ.bordeaux.application.network.server.clientcommand.ClientCommandProcessor;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,20 +12,36 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** Handles the communication lifecycle for a single TCP client. */
 public class ClientHandler implements Runnable {
 
-  private final Socket socket;
-  private final AgonServer server;
-  private final CommandParser parser = new CommandParser();
-  private volatile boolean running = true;
+  /** Logger used for client handler runtime errors. */
+  private static final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
+
+  /** TCP socket associated with the connected client. */
+  final Socket socket;
+
+  /** Server facade used to access the network game services. */
+  final AgonServer server;
+
+  /** Command processor responsible for handling parsed client commands. */
+  private final ClientCommandProcessor commandProcessor;
+
+  /** Indicates whether the handler is still active. */
+  private final AtomicBoolean running = new AtomicBoolean(true);
+
+  /** Lock used to serialize writes to the client output stream. */
+  private final Object sendLock = new Object();
 
   /** Output stream used to send messages to the client. */
   private BufferedWriter out;
 
   /** Player associated with this connection. */
-  private OnlinePlayer player;
+  OnlinePlayer player;
 
   /**
    * Creates a new client handler for the given socket.
@@ -34,33 +49,17 @@ public class ClientHandler implements Runnable {
    * @param socket the TCP socket associated with the connected client
    * @param server the server instance this handler belongs to
    */
-  public ClientHandler(Socket socket, AgonServer server) {
+  public ClientHandler(final Socket socket, final AgonServer server) {
     this.socket = socket;
     this.server = server;
+    this.commandProcessor = new ClientCommandProcessor();
   }
 
   /** Stops the client handler gracefully. */
   public void stop() {
-    if (!running) {
-      return;
-    }
-
-    running = false;
-
-    try {
-      if (out != null && socket != null && !socket.isClosed()) {
-        send("BYE");
-      }
-    } catch (IOException ignored) {
-      // Ignored
-    }
-
-    try {
-      if (socket != null && !socket.isClosed()) {
-        socket.close();
-      }
-    } catch (IOException e) {
-      System.err.println("[SERVER] Error while closing client socket: " + e.getMessage());
+    if (running.compareAndSet(true, false)) {
+      sendByeIfPossible();
+      closeSocketQuietly();
     }
   }
 
@@ -70,125 +69,23 @@ public class ClientHandler implements Runnable {
     try {
       socket.setSoTimeout(60_000);
 
-      BufferedReader in =
-          new BufferedReader(
-              new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
-      this.out =
-          new BufferedWriter(
-              new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+      try (BufferedReader reader =
+              new BufferedReader(
+                  new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+          BufferedWriter writer =
+              new BufferedWriter(
+                  new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII))) {
 
-      while (running && !socket.isClosed()) {
-        String line;
-
-        try {
-          line = in.readLine();
-        } catch (SocketTimeoutException e) {
-          break;
-        }
-
-        if (line == null) {
-          break;
-        }
-
-        Command cmd = parser.parse(line);
-
-        if (cmd.getType() == CommandType.PING) {
-          send("PONG TIME=0ms");
-
-        } else if (cmd.getType() == CommandType.STATUS) {
-          send(
-              "STATUS_OK port="
-                  + server.getPort()
-                  + " clients="
-                  + server.getConnectedClientsCount()
-                  + " players="
-                  + server.getPlayerCount()
-                  + " games="
-                  + server.getActiveGameCount());
-
-        } else if (cmd.getType() == CommandType.LOGIN) {
-          handleLogin(cmd);
-
-        } else if (cmd.getType() == CommandType.PLAYERS) {
-          handlePlayers(cmd);
-
-        } else if (cmd.getType() == CommandType.SCOREBOARD) {
-          send(server.getScoreboard());
-
-        } else if (cmd.getType() == CommandType.NEW) {
-          handleNew(cmd);
-
-        } else if (cmd.getType() == CommandType.ACCEPT) {
-          handleAccept();
-
-        } else if (cmd.getType() == CommandType.DECLINE) {
-          handleDecline();
-
-        } else if (cmd.getType() == CommandType.CANCEL) {
-          handleCancel();
-
-        } else if (cmd.getType() == CommandType.MODE) {
-          handleMode(cmd);
-
-        } else if (cmd.getType() == CommandType.MOVE) {
-          handleMove(cmd);
-
-        } else if (cmd.getType() == CommandType.RESIGN) {
-          handleResign();
-
-        } else if (cmd.getType() == CommandType.AWAY) {
-          handleAway();
-
-        } else if (cmd.getType() == CommandType.BACK) {
-          handleBack();
-
-        } else if (cmd.getType() == CommandType.QUIT) {
-          break;
-        }
+        out = writer;
+        processClientLoop(reader);
       }
-
     } catch (IOException e) {
-      if (running) {
-        System.err.println("[SERVER] ClientHandler error: " + e.getMessage());
-      }
+      logRuntimeFailure(e);
     } finally {
-      if (player != null && server != null) {
-        Integer gameId = server.getGameIdByPlayer(player.getId());
-
-        if (gameId != null) {
-          ServerGameSession session = server.getGameById(gameId);
-
-          if (session != null) {
-            OnlinePlayer opponent = session.getOpponent(player.getId());
-
-            if (opponent != null) {
-              server.finishGame(session, opponent.getId(), "OPPONENT_LEFT");
-            }
-          }
-        }
-
-        server.removePlayer(player);
-      }
-
-      if (server != null) {
-        server.removeClient(this);
-      }
-
+      out = null;
+      commandProcessor.handleDisconnect(this);
+      server.removeClient(this);
       stop();
-    }
-  }
-
-  /**
-   * Sends a raw message to the client followed by a newline and flushes the buffer.
-   *
-   * @param msg the string message to send
-   * @throws IOException if the message cannot be written to the socket
-   */
-  private synchronized void send(String msg) throws IOException {
-    if (out != null) {
-      out.write(msg);
-      out.write('\n');
-      out.flush();
     }
   }
 
@@ -198,452 +95,115 @@ public class ClientHandler implements Runnable {
    * @param msg the message to send
    * @throws IOException if the message cannot be written to the socket
    */
-  public void sendFromServer(String msg) throws IOException {
-    send(msg);
+  public void sendFromServer(final String msg) throws IOException {
+    synchronized (sendLock) {
+      if (out != null) {
+        out.write(msg);
+        out.write('\n');
+        out.flush();
+      }
+    }
   }
 
   /**
-   * Handles LOGIN command.
+   * Processes the main client read loop.
    *
-   * @param cmd parsed LOGIN command
-   * @throws IOException if sending a response fails
+   * @param reader the reader bound to the current client socket
+   * @throws IOException if an I/O error occurs while handling the socket
    */
-  private void handleLogin(Command cmd) throws IOException {
-    if (player != null) {
-      send("ERROR ALREADY_LOGGED_IN");
-      return;
+  private void processClientLoop(final BufferedReader reader) throws IOException {
+    while (running.get() && !socket.isClosed()) {
+      final String receivedLine = readNextLine(reader);
+
+      if (receivedLine == null) {
+        running.set(false);
+      } else {
+        final Command command = CommandParser.parse(receivedLine);
+        final boolean shouldQuit = commandProcessor.handleCommand(command, this);
+
+        if (shouldQuit) {
+          running.set(false);
+        }
+      }
     }
-
-    String name = cmd.getArgs().get("NAME");
-    String clientId = cmd.getArgs().get("CLIENT_ID");
-
-    if (name == null || name.isBlank()) {
-      send("ERROR MESSAGE=MISSING_NAME");
-      return;
-    }
-
-    if (clientId == null || clientId.isBlank()) {
-      send("ERROR MESSAGE=MISSING_CLIENT_ID");
-      return;
-    }
-
-    player = server.registerPlayer(clientId, name, this);
-
-    if (player == null) {
-      send("ERROR MESSAGE=LOGIN_FAILED");
-      return;
-    }
-
-    send(
-        "WELCOME ID="
-            + player.getId()
-            + " NAME="
-            + player.getName()
-            + " STATUS="
-            + player.getStatus().name().toLowerCase());
   }
 
   /**
-   * Handles NEW command.
+   * Reads the next line from the client connection.
    *
-   * @param cmd parsed NEW command
-   * @throws IOException if sending a response fails
+   * @param reader the reader bound to the socket
+   * @return the received line, or {@code null} if client disconnected
+   * @throws IOException if an unexpected I/O error occurs
    */
-  private void handleNew(Command cmd) throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
+  private String readNextLine(final BufferedReader reader) throws IOException {
+    String receivedLine = null;
 
-    String targetValue = cmd.getArgs().get("PLAYER_ID");
-    if (targetValue == null) {
-      send("ERROR MESSAGE=MISSING_PLAYER_ID");
-      return;
-    }
-
-    int targetId;
     try {
-      targetId = Integer.parseInt(targetValue);
-    } catch (NumberFormatException e) {
-      send("ERROR MESSAGE=INVALID_PLAYER_ID");
-      return;
+      receivedLine = reader.readLine();
+    } catch (SocketTimeoutException e) {
+      receivedLine = null;
     }
 
-    OnlinePlayer target = server.getPlayerById(targetId);
-
-    if (target == null) {
-      send("ERROR MESSAGE=PLAYER_NOT_FOUND");
-      return;
-    }
-    if (target.getId() == player.getId()) {
-      send("ERROR MESSAGE=CANNOT_PLAY_SELF");
-      return;
-    }
-    if (player.getStatus() != PlayerStatus.IDLE) {
-      send("ERROR MESSAGE=YOU_ARE_BUSY");
-      return;
-    }
-    if (target.getStatus() != PlayerStatus.IDLE) {
-      send("ERROR MESSAGE=PLAYER_BUSY");
-      return;
-    }
-    if (!server.createInvitation(player.getId(), targetId)) {
-      send("ERROR MESSAGE=INVITATION_FAILED");
-      return;
-    }
-
-    send("INVITATION_SENT PLAYER=" + target.getName() + " TIMEOUT=300s");
-
-    if (target.getHandler() != null) {
-      try {
-        target.getHandler().send("INVITATION_RECEIVED FROM=" + player.getName() + " EXPIRES=300s");
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
+    return receivedLine;
   }
 
-  /**
-   * Handles ACCEPT command.
-   *
-   * @throws IOException if sending a response fails
-   */
-  private void handleAccept() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    Invitation invitation = server.getInvitationByInvited(player.getId());
-    if (invitation == null) {
-      send("ERROR MESSAGE=NO_PENDING_INVITATION");
-      return;
-    }
-
-    GameLobby lobby = server.acceptInvitation(player.getId());
-    if (lobby == null) {
-      send("ERROR MESSAGE=INVITATION_ACCEPT_FAILED");
-      return;
-    }
-
-    OnlinePlayer host = server.getPlayerById(lobby.getHostId());
-
-    send("LOBBY_JOINED HOST=" + (host != null ? host.getName() : "UNKNOWN"));
-    send("WAITING_MODE");
-
-    if (host != null && host.getHandler() != null) {
-      try {
-        host.getHandler().send("INVITATION_ACCEPTED PLAYER=" + player.getName());
-        host.getHandler().send("CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
-  }
-
-  /**
-   * Handles DECLINE command.
-   *
-   * @throws IOException if sending a response fails
-   */
-  private void handleDecline() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    Invitation invitation = server.getInvitationByInvited(player.getId());
-    if (invitation == null) {
-      send("ERROR MESSAGE=NO_PENDING_INVITATION");
-      return;
-    }
-
-    OnlinePlayer inviter = server.getPlayerById(invitation.getInviterId());
-    server.removeInvitation(player.getId());
-
-    send("DECLINE_OK");
-
-    if (inviter != null && inviter.getHandler() != null) {
-      try {
-        inviter.getHandler().send("INVITATION_DECLINED PLAYER=" + player.getName());
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
-  }
-
-  /**
-   * Handles CANCEL command.
-   *
-   * @throws IOException if sending a response fails
-   */
-  private void handleCancel() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    Invitation invitation = server.getInvitationByInviter(player.getId());
-    if (invitation == null) {
-      send("ERROR MESSAGE=NO_SENT_INVITATION");
-      return;
-    }
-
-    OnlinePlayer invited = server.getPlayerById(invitation.getInvitedId());
-    server.removeInvitation(player.getId());
-
-    send("CANCEL_OK");
-
-    if (invited != null && invited.getHandler() != null) {
-      try {
-        invited.getHandler().send("INVITATION_CANCELED PLAYER=" + player.getName());
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
-  }
-
-  /**
-   * Handles MODE command.
-   *
-   * @param cmd parsed MODE command
-   * @throws IOException if sending a response fails
-   */
-  private void handleMode(Command cmd) throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    String rawMode = cmd.getRawArgument();
-    if (rawMode == null || rawMode.isBlank()) {
-      send("ERROR MESSAGE=MISSING_MODE");
-      return;
-    }
-
-    GameMode mode;
-    if ("normal".equalsIgnoreCase(rawMode)) {
-      mode = GameMode.NORMAL;
-    } else if ("blitz".equalsIgnoreCase(rawMode)) {
-      mode = GameMode.BLITZ;
-    } else {
-      send("ERROR MESSAGE=INVALID_MODE");
-      return;
-    }
-
-    GameLobby lobby = server.getLobbyByPlayer(player.getId());
-    if (lobby == null) {
-      send("ERROR MESSAGE=NOT_IN_LOBBY");
-      return;
-    }
-    if (lobby.getHostId() != player.getId()) {
-      send("ERROR MESSAGE=ONLY_HOST_CAN_CHOOSE_MODE");
-      return;
-    }
-
-    ServerGameSession session = server.chooseMode(player.getId(), mode);
-    if (session == null) {
-      send("ERROR MESSAGE=GAME_CREATION_FAILED");
-      return;
-    }
-
-    OnlinePlayer guest = server.getPlayerById(lobby.getGuestId());
-    if (guest == null) {
-      send("ERROR MESSAGE=OPPONENT_NOT_FOUND");
-      return;
-    }
-
-    String roles = session.describeRoles();
-    String requesterColor = session.getRoleLabel(player.getId());
-    String targetColor = session.getRoleLabel(guest.getId());
-
-    send(
-        "GAME_STARTED GAME_ID="
-            + session.getGameId()
-            + " MODE="
-            + mode.name()
-            + " OPPONENT_ID="
-            + guest.getId()
-            + " OPPONENT_NAME="
-            + guest.getName()
-            + " COLOR="
-            + requesterColor
-            + " "
-            + roles);
-
-    if (guest.getHandler() != null) {
-      try {
-        guest
-            .getHandler()
-            .send(
-                "GAME_STARTED GAME_ID="
-                    + session.getGameId()
-                    + " MODE="
-                    + mode.name()
-                    + " OPPONENT_ID="
-                    + player.getId()
-                    + " OPPONENT_NAME="
-                    + player.getName()
-                    + " COLOR="
-                    + targetColor
-                    + " "
-                    + roles);
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
-  }
-
-  /**
-   * Handles MOVE command.
-   *
-   * @param cmd parsed MOVE command
-   * @throws IOException if sending a response fails
-   */
-  private void handleMove(Command cmd) throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    Integer gameId = server.getGameIdByPlayer(player.getId());
-    if (gameId == null) {
-      send("ERROR MESSAGE=NOT_IN_GAME");
-      return;
-    }
-
-    ServerGameSession session = server.getGameById(gameId);
-    if (session == null) {
-      send("ERROR MESSAGE=GAME_NOT_FOUND");
-      return;
-    }
-
-    String rawMove = cmd.getRawArgument();
-    if (rawMove == null || rawMove.isBlank()) {
-      send("ERROR MESSAGE=MISSING_MOVE");
-      return;
-    }
-
-    boolean ok = session.playMove(player.getId(), rawMove);
-
-    if (!ok) {
-      send(
-          session.isPlayersTurn(player.getId())
-              ? "ERROR MESSAGE=INVALID_MOVE"
-              : "ERROR MESSAGE=NOT_YOUR_TURN");
-      return;
-    }
-
-    send("MOVE_OK " + rawMove);
-
-    OnlinePlayer opponent = session.getOpponent(player.getId());
-    if (opponent != null && opponent.getHandler() != null) {
-      try {
-        opponent.getHandler().send("OPPONENT_MOVE " + rawMove);
-      } catch (IOException ignored) {
-        // Ignored
-      }
-    }
-
-    if (session.isGameOver()) {
-      server.finishGame(session, player.getId(), "NORMAL_END");
-    }
-  }
-
-  /**
-   * Handles RESIGN command.
-   *
-   * @throws IOException if sending a response fails
-   */
-  private void handleResign() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
-
-    Integer gameId = server.getGameIdByPlayer(player.getId());
-    if (gameId == null) {
-      send("ERROR MESSAGE=NOT_IN_GAME");
-      return;
-    }
-
-    ServerGameSession session = server.getGameById(gameId);
-    if (session == null) {
-      send("ERROR MESSAGE=GAME_NOT_FOUND");
-      return;
-    }
-
-    OnlinePlayer opponent = session.getOpponent(player.getId());
-    if (opponent == null) {
-      send("ERROR MESSAGE=OPPONENT_NOT_FOUND");
-      return;
-    }
-
-    server.finishGame(session, opponent.getId(), "OPPONENT_LEFT");
-  }
-
-  /**
-   * Handles PLAYERS command.
-   *
-   * @param cmd parsed PLAYERS command
-   * @throws IOException if sending a response fails
-   */
-  private void handlePlayers(Command cmd) throws IOException {
-    String playerIdValue = cmd.getRawArgument();
-
-    if (playerIdValue == null || playerIdValue.isBlank()) {
-      send(server.getPlayersList());
-      return;
-    }
-
-    int playerId;
+  /** Sends a termination message to the client when the socket is still open. */
+  private void sendByeIfPossible() {
     try {
-      playerId = Integer.parseInt(playerIdValue);
-    } catch (NumberFormatException e) {
-      send("ERROR MESSAGE=INVALID_PLAYER_ID");
-      return;
+      if (out != null && !socket.isClosed()) {
+        sendFromServer("BYE");
+      }
+    } catch (IOException ignored) {
+      // Ignored
     }
+  }
 
-    send(server.getPlayerDetails(playerId));
+  /** Closes the client socket while ignoring secondary shutdown failures. */
+  private void closeSocketQuietly() {
+    try {
+      if (!socket.isClosed()) {
+        socket.close();
+      }
+    } catch (IOException e) {
+      LOGGER.log(Level.FINE, "[SERVER] Error while closing client socket", e);
+    }
   }
 
   /**
-   * Handles AWAY command.
+   * Logs a runtime communication failure if the handler was still active.
    *
-   * @throws IOException if sending a response fails
+   * @param exception the exception raised during execution
    */
-  private void handleAway() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
+  private void logRuntimeFailure(final IOException exception) {
+    if (running.get()) {
+      LOGGER.log(Level.WARNING, "[SERVER] ClientHandler error", exception);
     }
-
-    if (player.getStatus() != PlayerStatus.IDLE) {
-      send("ERROR MESSAGE=CANNOT_SET_AWAY_NOW");
-      return;
-    }
-
-    player.setStatus(PlayerStatus.AWAY);
-    send("AWAY_OK STATUS=away");
   }
 
   /**
-   * Handles BACK command.
+   * Returns the server facade associated with this handler.
    *
-   * @throws IOException if sending a response fails
+   * @return the server facade
    */
-  private void handleBack() throws IOException {
-    if (player == null) {
-      send("ERROR MESSAGE=NOT_LOGGED_IN");
-      return;
-    }
+  public AgonServer getServer() {
+    return server;
+  }
 
-    if (player.getStatus() != PlayerStatus.AWAY) {
-      send("ERROR MESSAGE=CANNOT_SET_BACK_NOW");
-      return;
-    }
+  /**
+   * Returns the player bound to this handler.
+   *
+   * @return the bound player, or {@code null} if the client is not logged in
+   */
+  public OnlinePlayer getPlayer() {
+    return player;
+  }
 
-    player.setStatus(PlayerStatus.IDLE);
-    send("BACK_OK STATUS=idle");
+  /**
+   * Updates the player bound to this handler.
+   *
+   * @param player the player to bind to this handler
+   */
+  public void setPlayer(final OnlinePlayer player) {
+    this.player = player;
   }
 }

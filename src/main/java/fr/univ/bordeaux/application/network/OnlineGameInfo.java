@@ -10,11 +10,22 @@ import fr.univ.bordeaux.agoncore.agonelements.Color;
  */
 public class OnlineGameInfo {
 
+  /** Unique identifier assigned by the server to the online game. */
   private final int gameId;
+
+  /** Color assigned to the local player for this game. */
   private final Color localColor;
+
+  /** Display name of the white player. */
   private final String whitePlayerName;
+
+  /** Display name of the black player. */
   private final String blackPlayerName;
+
+  /** Indicates whether it is initially the local player's turn. */
   private final boolean myTurn;
+
+  /** Indicates whether the game is played in blitz mode. */
   private final boolean blitzMode;
 
   /**
@@ -28,12 +39,12 @@ public class OnlineGameInfo {
    * @param blitzMode true if the game is a blitz match, false otherwise
    */
   public OnlineGameInfo(
-      int gameId,
-      Color localColor,
-      String whitePlayerName,
-      String blackPlayerName,
-      boolean myTurn,
-      boolean blitzMode) {
+      final int gameId,
+      final Color localColor,
+      final String whitePlayerName,
+      final String blackPlayerName,
+      final boolean myTurn,
+      final boolean blitzMode) {
     this.gameId = gameId;
     this.localColor = localColor;
     this.whitePlayerName = whitePlayerName;

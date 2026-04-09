@@ -10,7 +10,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Constructor and getters store values correctly")
-  void constructor_and_getters() {
+  void constructorAndGetters() {
     PresenceMessage pm = new PresenceMessage("S", 12345);
 
     assertEquals("S", pm.getServerName());
@@ -19,7 +19,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("ToBytes encodes expected message format")
-  void to_bytes() {
+  void toBytes() {
     PresenceMessage pm = new PresenceMessage("S", 12345);
 
     byte[] data = pm.toBytes();
@@ -30,7 +30,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Parse decodes valid presence message")
-  void presence_encode_parse_ok() {
+  void presenceEncodeParseOk() {
     PresenceMessage pm = new PresenceMessage("S", 12345);
     byte[] data = pm.toBytes();
 
@@ -43,7 +43,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Parse returns null when tcp field is missing")
-  void parse_missing_tcp_returns_null() {
+  void parseMissingTcpReturnsNull() {
     byte[] bad = "name=S".getBytes(StandardCharsets.US_ASCII);
 
     assertNull(PresenceMessage.parse(bad, bad.length));
@@ -51,7 +51,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Parse returns null when name field is missing")
-  void parse_missing_name_returns_null() {
+  void parseMissingNameReturnsNull() {
     byte[] bad = "tcp=12345".getBytes(StandardCharsets.US_ASCII);
 
     assertNull(PresenceMessage.parse(bad, bad.length));
@@ -59,7 +59,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Parse supports reversed field order")
-  void parse_reversed_order() {
+  void parseReversedOrder() {
     byte[] data = "tcp=12345;name=S".getBytes(StandardCharsets.US_ASCII);
 
     PresenceMessage parsed = PresenceMessage.parse(data, data.length);
@@ -71,7 +71,7 @@ class PresenceMessageTest {
 
   @Test
   @DisplayName("Parse throws NumberFormatException when tcp value is invalid")
-  void parse_invalid_tcp_value() {
+  void parseInvalidTcpValue() {
     byte[] bad = "name=S;tcp=abc".getBytes(StandardCharsets.US_ASCII);
 
     assertThrows(NumberFormatException.class, () -> PresenceMessage.parse(bad, bad.length));

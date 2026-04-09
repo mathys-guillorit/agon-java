@@ -46,7 +46,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   private boolean isSaved = false;
 
   /** The UI observer to be notified of updates. */
-  private MatchObserver UiObserver;
+  private MatchObserver uiObserver;
 
   /** The winner of the match, null if the game is ongoing or a draw. */
   private Player winner;
@@ -146,6 +146,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Returns the player playing with the White pieces.
+   *
    * @return The player playing with the White pieces.
    */
   public Player getWhitePlayer() {
@@ -153,6 +155,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Returns the player playing with the Black pieces.
+   *
    * @return The player playing with the Black pieces.
    */
   public Player getBlackPlayer() {
@@ -160,6 +164,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Sets the winner of the match.
+   *
    * @param winner The player to be set as the winner.
    */
   protected void setWinner(Player winner) {
@@ -216,8 +222,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
   /** Triggers an update on the registered UI observer. */
   public void notifyUi() {
-    if (this.UiObserver != null) {
-      this.UiObserver.onMatchUpdate(this);
+    if (this.uiObserver != null) {
+      this.uiObserver.onMatchUpdate(this);
     }
   }
 
@@ -233,7 +239,9 @@ public abstract class Match implements MatchManager, ObservableMatch {
 
     // On mémorise si on a réussi à annuler le premier
     boolean resNoir = agonBoard.undoMove();
-    if (!resNoir) return false;
+    if (!resNoir) {
+      return false;
+    }
 
     boolean resBlanc = agonBoard.undoMove();
 
@@ -250,6 +258,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Indicates whether the current match state has been saved to persistent storage.
+   *
    * @return {@code true} if the current match state is saved to persistent storage.
    */
   public boolean isSaved() {
@@ -257,6 +267,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Updates the saved status of the match.
+   *
    * @param isSaved The new saved status of the match.
    */
   @Override
@@ -293,6 +305,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Returns the current match status.
+   *
    * @return The current {@link MatchStatus}.
    */
   public MatchStatus getMatchStatus() {
@@ -300,6 +314,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Indicates whether the match has reached a terminal state.
+   *
    * @return {@code true} if the match has reached a terminal state.
    */
   public boolean isMatchOver() {
@@ -307,6 +323,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Sets the status of the match.
+   *
    * @param status The new status to be assigned to the match.
    */
   protected void setMatchStatus(MatchStatus status) {
@@ -314,6 +332,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Returns the player who is currently active.
+   *
    * @return The {@link Player} who is currently active.
    */
   public Player getCurrentPlayer() {
@@ -321,14 +341,18 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Registers the observer for match updates.
+   *
    * @param observer The observer to register for match updates.
    */
   @Override
   public void setObserver(MatchObserver observer) {
-    this.UiObserver = observer;
+    this.uiObserver = observer;
   }
 
   /**
+   * Returns the underlying board instance.
+   *
    * @return The underlying board instance.
    */
   public AgonBoard getAgonBoard() {
@@ -336,6 +360,8 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /**
+   * Returns the game configuration associated with this match.
+   *
    * @return The game configuration associated with this match.
    */
   public GameConfig getGameConfig() {
