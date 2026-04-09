@@ -20,229 +20,208 @@ import org.junit.jupiter.api.*;
 
 public class AgonAppTest {
 
-    @BeforeAll
-    static void initJFX() throws InterruptedException {
-        System.setProperty("IS_TEST_ENV", "true");
-        CountDownLatch latch = new CountDownLatch(1);
-        try {
-            Platform.startup(
-                    () -> {
-                        Platform.setImplicitExit(false);
-                        latch.countDown();
-                    });
-        } catch (IllegalStateException e) {
-            Platform.runLater(
-                    () -> {
-                        Platform.setImplicitExit(false);
-                        latch.countDown();
-                    });
-        }
-        latch.await(2, TimeUnit.SECONDS);
+  @BeforeAll
+  static void initJFX() throws InterruptedException {
+    System.setProperty("IS_TEST_ENV", "true");
+    CountDownLatch latch = new CountDownLatch(1);
+    try {
+      Platform.startup(
+          () -> {
+            Platform.setImplicitExit(false);
+            latch.countDown();
+          });
+    } catch (IllegalStateException e) {
+      Platform.runLater(
+          () -> {
+            Platform.setImplicitExit(false);
+            latch.countDown();
+          });
     }
+    latch.await(2, TimeUnit.SECONDS);
+  }
 
-    @BeforeEach
-    void resetAgonApp() throws Exception {
-        setPrivateStaticField(AgonApp.class, "controller", null);
-        setPrivateStaticField(AgonApp.class, "agonGui", null);
-        setPrivateStaticField(AgonApp.class, "scene", null);
+  @BeforeEach
+  void resetAgonApp() throws Exception {
+    setPrivateStaticField(AgonApp.class, "controller", null);
+    setPrivateStaticField(AgonApp.class, "agonGui", null);
+    setPrivateStaticField(AgonApp.class, "scene", null);
+  }
+
+  @AfterEach
+  void tearDown() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          for (Window window : new ArrayList<>(Window.getWindows())) {
+            if (window instanceof Stage) {
+              ((Stage) window).close();
+            }
+          }
+          latch.countDown();
+        });
+    latch.await(2, TimeUnit.SECONDS);
+  }
+
+  private void setPrivateStaticField(Class<?> clazz, String fieldName, Object value)
+      throws Exception {
+    Field field = clazz.getDeclaredField(fieldName);
+    field.setAccessible(true);
+    field.set(null, value);
+  }
+
+  /**
+   * Extremely robust helper to ensure JUnit waits for the JavaFX task to finish and throws any
+   * hidden exceptions.
+   */
+  private void runOnFxThread(Runnable action) throws Exception {
+    AtomicReference<Throwable> thrown = new AtomicReference<>();
+    CountDownLatch latch = new CountDownLatch(1);
+    Platform.runLater(
+        () -> {
+          try {
+            action.run();
+          } catch (Throwable t) {
+            thrown.set(t);
+          } finally {
+            latch.countDown();
+          }
+        });
+
+    if (!latch.await(10, TimeUnit.SECONDS)) {
+      fail("The JavaFX task timed out.");
     }
-
-    @AfterEach
-    void tearDown() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(
-                () -> {
-                    for (Window window : new ArrayList<>(Window.getWindows())) {
-                        if (window instanceof Stage) {
-                            ((Stage) window).close();
-                        }
-                    }
-                    latch.countDown();
-                });
-        latch.await(2, TimeUnit.SECONDS);
+    if (thrown.get() != null) {
+      if (thrown.get() instanceof Exception) throw (Exception) thrown.get();
+      if (thrown.get() instanceof Error) throw (Error) thrown.get();
+      throw new RuntimeException(thrown.get());
     }
+  }
 
-    private void setPrivateStaticField(Class<?> clazz, String fieldName, Object value)
-            throws Exception {
-        Field field = clazz.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(null, value);
-    }
+  @Test
+  void testStaticGettersAndSetters() {
+    AgonGui gui = new AgonGui(null, null);
+    AgonApp.setGui(gui);
+    assertNull(AgonApp.getController());
+  }
 
-    /**
-     * Extremely robust helper to ensure JUnit waits for the JavaFX task
-     * to finish and throws any hidden exceptions.
-     */
-    private void runOnFxThread(Runnable action) throws Exception {
-        AtomicReference<Throwable> thrown = new AtomicReference<>();
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(
-                () -> {
-                    try {
-                        action.run();
-                    } catch (Throwable t) {
-                        thrown.set(t);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+  @Test
+  void testAppStart() throws Exception {
+    runOnFxThread(
+        () -> {
+          try {
+            AgonApp app = new AgonApp();
+            Stage stage = new Stage();
+            AgonApp.setGui(new AgonGui(new GameConfig(), null));
 
-        if (!latch.await(10, TimeUnit.SECONDS)) {
-            fail("The JavaFX task timed out.");
-        }
-        if (thrown.get() != null) {
-            if (thrown.get() instanceof Exception) throw (Exception) thrown.get();
-            if (thrown.get() instanceof Error) throw (Error) thrown.get();
-            throw new RuntimeException(thrown.get());
-        }
-    }
+            app.start(stage);
 
-    @Test
-    void testStaticGettersAndSetters() {
-        AgonGui gui = new AgonGui(null, null);
-        AgonApp.setGui(gui);
-        assertNull(AgonApp.getController());
-    }
+            assertNotNull(
+                AgonApp.getController(), "The controller should be instantiated by the FXML.");
+          } catch (IOException e) {
+            System.err.println("Note: FXML not found for testAppStart. Ignoring start() coverage.");
+          }
+        });
+  }
 
-    @Test
-    void testAppStart() throws Exception {
-        runOnFxThread(
-                () -> {
-                    try {
-                        AgonApp app = new AgonApp();
-                        Stage stage = new Stage();
-                        AgonApp.setGui(new AgonGui(new GameConfig(), null));
+  @Test
+  void testSetupShortcuts_NullBranches() throws Exception {
+    runOnFxThread(
+        () -> {
+          try {
+            AgonApp app = new AgonApp();
 
-                        app.start(stage);
+            AgonApp.setGui(null);
+            app.setupShortcuts();
 
-                        assertNotNull(AgonApp.getController(), "The controller should be instantiated by the FXML.");
-                    } catch (IOException e) {
-                        System.err.println("Note: FXML not found for testAppStart. Ignoring start() coverage.");
-                    }
-                });
-    }
+            AgonApp.setGui(new AgonGui(null, null));
+            app.setupShortcuts();
 
-    @Test
-    void testSetupShortcuts_NullBranches() throws Exception {
-        runOnFxThread(
-                () -> {
-                    try {
-                        AgonApp app = new AgonApp();
+            AgonGui guiWithConfig = new AgonGui(new GameConfig(), null);
+            AgonApp.setGui(guiWithConfig);
+            setPrivateStaticField(AgonApp.class, "controller", null);
+            app.setupShortcuts();
 
-                        // Test 1: Everything is null -> early return
-                        AgonApp.setGui(null);
-                        app.setupShortcuts();
+            setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
+            setPrivateStaticField(AgonApp.class, "scene", null);
+            app.setupShortcuts();
 
-                        // Test 2: Config is null -> early return
-                        AgonApp.setGui(new AgonGui(null, null));
-                        app.setupShortcuts();
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
 
-                        // Test 3: Controller is null -> early return
-                        AgonGui guiWithConfig = new AgonGui(new GameConfig(), null);
-                        AgonApp.setGui(guiWithConfig);
-                        setPrivateStaticField(AgonApp.class, "controller", null);
-                        app.setupShortcuts();
+  @Test
+  void testSetupShortcuts_FullCoverage() throws Exception {
+    runOnFxThread(
+        () -> {
+          try {
+            AgonApp app = new AgonApp();
+            GameConfig config = new GameConfig();
 
-                        // Test 4: Scene is null -> early return
-                        setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
-                        setPrivateStaticField(AgonApp.class, "scene", null);
-                        app.setupShortcuts();
+            config.getShortcuts().clear();
 
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
+            config.getShortcuts().put("shortcut_new", "Ctrl+1");
 
-    @Test
-    void testSetupShortcuts_FullCoverage() throws Exception {
-        runOnFxThread(
-                () -> {
-                    try {
-                        AgonApp app = new AgonApp();
-                        GameConfig config = new GameConfig();
+            config.getShortcuts().put("shortcut_load", "   ");
 
-                        // Clear configurations to control the exact inputs
-                        config.getShortcuts().clear();
+            config.getShortcuts().put("shortcut_save", "INVALID_COMBINATION_TO_CRASH");
 
-                        // Branch 1: Valid shortcut (try success)
-                        config.getShortcuts().put("shortcut_new", "Ctrl+1");
+            AgonGui gui = new AgonGui(config, null);
+            AgonApp.setGui(gui);
+            GameViewController fakeController = new GameViewController();
+            setPrivateStaticField(AgonApp.class, "controller", fakeController);
+            Scene fakeScene = new Scene(new Pane());
+            setPrivateStaticField(AgonApp.class, "scene", fakeScene);
 
-                        // Branch 2: Empty shortcut (if condition fails cleanly)
-                        config.getShortcuts().put("shortcut_load", "   ");
+            app.setupShortcuts();
 
-                        // Branch 3: Invalid shortcut (catch IllegalArgumentException)
-                        config.getShortcuts().put("shortcut_save", "INVALID_COMBINATION_TO_CRASH");
+            assertTrue(
+                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+1")),
+                "The valid shortcut should have been inserted into the scene accelerators.");
 
-                        // All other shortcuts will naturally return `null` and be ignored
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
 
-                        AgonGui gui = new AgonGui(config, null);
-                        AgonApp.setGui(gui);
-                        GameViewController fakeController = new GameViewController();
-                        setPrivateStaticField(AgonApp.class, "controller", fakeController);
-                        Scene fakeScene = new Scene(new Pane());
-                        setPrivateStaticField(AgonApp.class, "scene", fakeScene);
+  @Test
+  void testRefreshShortcuts_AllBranches() throws Exception {
+    runOnFxThread(
+        () -> {
+          try {
+            setPrivateStaticField(AgonApp.class, "scene", null);
+            AgonApp.refreshShortcuts();
 
-                        app.setupShortcuts();
+            Scene fakeScene = new Scene(new Pane());
+            setPrivateStaticField(AgonApp.class, "scene", fakeScene);
+            AgonApp.setGui(null);
+            AgonApp.refreshShortcuts();
 
-                        // Rather than asserting the exact size (which can fluctuate based on JavaFX background behaviors),
-                        // we verify that OUR valid shortcut was properly injected into the scene.
-                        assertTrue(
-                                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+1")),
-                                "The valid shortcut should have been inserted into the scene accelerators."
-                        );
+            GameConfig config = new GameConfig();
+            config.getShortcuts().clear();
+            config.getShortcuts().put("shortcut_new", "Ctrl+9");
 
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
+            AgonGui gui = new AgonGui(config, null);
+            AgonApp.setGui(gui);
+            setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
 
-    @Test
-    void testRefreshShortcuts_AllBranches() throws Exception {
-        runOnFxThread(
-                () -> {
-                    try {
-                        // Branch: scene is null
-                        setPrivateStaticField(AgonApp.class, "scene", null);
-                        AgonApp.refreshShortcuts();
+            fakeScene.getAccelerators().put(KeyCombination.valueOf("Ctrl+Z"), () -> {});
 
-                        // Branch: scene is valid, but agonGui is null
-                        Scene fakeScene = new Scene(new Pane());
-                        setPrivateStaticField(AgonApp.class, "scene", fakeScene);
-                        AgonApp.setGui(null);
-                        AgonApp.refreshShortcuts();
+            AgonApp.refreshShortcuts();
 
-                        // Full branch: clear and re-register
-                        GameConfig config = new GameConfig();
-                        config.getShortcuts().clear();
-                        config.getShortcuts().put("shortcut_new", "Ctrl+9");
+            assertTrue(
+                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+9")),
+                "The scene should contain the new shortcut after refresh.");
 
-                        AgonGui gui = new AgonGui(config, null);
-                        AgonApp.setGui(gui);
-                        setPrivateStaticField(AgonApp.class, "controller", new GameViewController());
+            assertFalse(
+                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+Z")),
+                "The scene should have cleared the old shortcuts.");
 
-                        // Put a fake shortcut in the scene
-                        fakeScene.getAccelerators().put(KeyCombination.valueOf("Ctrl+Z"), () -> {});
-
-                        // Execute refresh
-                        AgonApp.refreshShortcuts();
-
-                        // The new config (Ctrl+9) should be present
-                        assertTrue(
-                                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+9")),
-                                "The scene should contain the new shortcut after refresh."
-                        );
-
-                        // The old shortcut (Ctrl+Z) should be gone
-                        assertFalse(
-                                fakeScene.getAccelerators().containsKey(KeyCombination.valueOf("Ctrl+Z")),
-                                "The scene should have cleared the old shortcuts."
-                        );
-
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
 }
