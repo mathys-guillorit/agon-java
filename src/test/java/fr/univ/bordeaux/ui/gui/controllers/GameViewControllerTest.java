@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -27,10 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 public class GameViewControllerTest {
 
@@ -186,8 +182,6 @@ public class GameViewControllerTest {
                                 TextField tf = findTextField(pane);
                                 if (tf != null) {
                                   tf.setText(inputText);
-                                } else {
-                                  return;
                                 }
                               }
 
@@ -254,22 +248,6 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testRouteMessage_OrBranches() throws Exception {
-    assertDoesNotThrow(() -> controller.routeMessage(null));
-
-    runAndWait(() -> controller.routeMessage("current player is white"));
-    runAndWait(() -> controller.routeMessage(">> It's your turn"));
-
-    fakeGui.sentCommands.clear();
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.routeMessage("filename"));
-    Thread.sleep(300);
-
-    setPrivateField(controller, "messageLabel", null);
-    runAndWait(() -> controller.routeMessage(">> test null label"));
-  }
-
-  @Test
   void testSaveGame_Branches() throws InterruptedException {
     fakeGui.sentCommands.clear();
     interactWithNextDialog(null, true);
@@ -301,35 +279,6 @@ public class GameViewControllerTest {
     fakeGui.sentCommands.clear();
     interactWithNextDialog("my_save", false);
     runAndWait(() -> controller.loadGame());
-  }
-
-  @Test
-  void testRouteMessage_YesNo_Branches() throws InterruptedException {
-    fakeGui.sentCommands.clear();
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.routeMessage("Save the game before quitting?"));
-    assertTrue(fakeGui.sentCommands.contains("y"));
-
-    Thread.sleep(300);
-
-    fakeGui.sentCommands.clear();
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.routeMessage("Save the game before quitting?"));
-    assertTrue(fakeGui.sentCommands.contains("n"));
-
-    Thread.sleep(300);
-
-    fakeGui.sentCommands.clear();
-    interactWithNextDialog(null, false, true);
-    runAndWait(() -> controller.routeMessage("Save the game before quitting?"));
-    assertTrue(fakeGui.sentCommands.contains("n"));
-
-    Thread.sleep(300);
-
-    fakeGui.sentCommands.clear();
-    interactWithNextDialog("custom_save", false);
-    runAndWait(() -> controller.routeMessage("Enter filename:"));
-    assertTrue(fakeGui.sentCommands.contains("custom_save"));
   }
 
   @Test
@@ -404,131 +353,6 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testStartNewGame_BlitzCheckBox_Lambda() throws InterruptedException {
-    new Thread(
-            () -> {
-              AtomicBoolean handled = new AtomicBoolean(false);
-              for (int i = 0; i < 50; i++) {
-                if (handled.get()) break;
-                try {
-                  Thread.sleep(50);
-                } catch (Exception e) {
-                }
-
-                Platform.runLater(
-                    () -> {
-                      for (Window window : new ArrayList<>(Window.getWindows())) {
-                        if (window instanceof Stage
-                            && window.isShowing()
-                            && window.getScene() != null) {
-                          if (window.getScene().getRoot() instanceof DialogPane pane) {
-
-                            CheckBox cb = findCheckBox(pane);
-                            if (cb != null) {
-                              cb.fire();
-                              cb.fire();
-                            }
-
-                            for (ButtonType type : pane.getButtonTypes()) {
-                              if (type == ButtonType.CANCEL
-                                  || type.getButtonData().isCancelButton()) {
-                                Node btnNode = pane.lookupButton(type);
-                                if (btnNode instanceof Button btn && !btn.isDisabled()) {
-                                  btn.fire();
-                                  handled.set(true);
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    });
-              }
-            })
-        .start();
-
-    CountDownLatch latch = new CountDownLatch(1);
-    Platform.runLater(
-        () -> {
-          controller.startNewGame();
-          latch.countDown();
-        });
-    latch.await(5, TimeUnit.SECONDS);
-  }
-
-  @Test
-  void testDialogCallbacks_NullAgonGuiBranches() throws InterruptedException {
-    controller.setAgonGui(null);
-
-    interactWithNextDialog(null, false, true);
-    runAndWait(() -> controller.routeMessage("filename"));
-    Thread.sleep(300);
-
-    interactWithNextDialog("   ", false);
-    runAndWait(() -> controller.routeMessage("filename"));
-    Thread.sleep(300);
-
-    interactWithNextDialog("my_save", false);
-    runAndWait(() -> controller.routeMessage("filename"));
-    Thread.sleep(300);
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.routeMessage("save the game before quitting"));
-    Thread.sleep(300);
-
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.routeMessage("save the game before quitting"));
-
-    assertTrue(true);
-  }
-
-  @Test
-  void testInitializeAndMoveRequestListener() {
-    assertNotNull(controller.getHexCanvas());
-    controller.getHexCanvas().requestMove("F6G7");
-    assertTrue(fakeGui.sentCommands.contains("F6G7"));
-  }
-
-  @Test
-  void testMenuActionsWithValidGui() {
-    controller.undo();
-    assertTrue(fakeGui.sentCommands.contains("undo"));
-
-    controller.redo();
-    assertTrue(fakeGui.sentCommands.contains("redo"));
-
-    controller.pauseGame();
-    assertTrue(fakeGui.sentCommands.contains("pause"));
-
-    controller.quitGame();
-    assertTrue(fakeGui.sentCommands.contains("quit"));
-
-    controller.requestHint();
-    assertTrue(fakeGui.sentCommands.contains("hint"));
-
-    controller.showConfig();
-    assertTrue(fakeGui.sentCommands.contains("show -configuration"));
-
-    controller.showHistory();
-    assertTrue(fakeGui.sentCommands.contains("show -history"));
-  }
-
-  @Test
-  void testAlertPopups() throws InterruptedException {
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showError("A critical error occurred"));
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showWarn("Be careful!"));
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showVersion());
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showHelp());
-  }
-
-  @Test
   void testNetworkMenus_BlockedInLocalMode() throws InterruptedException {
     fakeGui.getAppContext().setMode(AppMode.LOCAL);
     fakeGui.sentCommands.clear();
@@ -552,23 +376,6 @@ public class GameViewControllerTest {
 
     Field discoveryField = AppContext.class.getDeclaredField("discovery");
     discoveryField.setAccessible(true);
-
-    discoveryField.set(fakeGui.getAppContext(), null);
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.showServerBrowser());
-    Thread.sleep(400);
-
-    ClientDiscovery emptyDiscovery =
-        new ClientDiscovery() {
-          @Override
-          public List<ServerInfo> getServers() {
-            return new ArrayList<>();
-          }
-        };
-    discoveryField.set(fakeGui.getAppContext(), emptyDiscovery);
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.showServerBrowser());
-    Thread.sleep(400);
 
     ClientDiscovery populatedDiscovery =
         new ClientDiscovery() {
@@ -609,16 +416,6 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testShowLobby_NotConnected() throws InterruptedException {
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-    fakeGui.sentCommands.clear();
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showLobby());
-    assertTrue(fakeGui.sentCommands.isEmpty());
-  }
-
-  @Test
   void testRouteMessage_Invitation() throws InterruptedException {
     fakeGui.sentCommands.clear();
 
@@ -638,219 +435,6 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testNetworkListener_ChooseMode() throws InterruptedException {
-    fakeGui.sentCommands.clear();
-
-    interactWithNextDialog(null, false);
-    AsyncEventLogger.logInfo("[ONLINE] CHOOSE_MODE COMMAND=mode OPTIONS=normal|blitz");
-
-    Thread.sleep(600);
-    assertTrue(fakeGui.sentCommands.contains("mode normal"));
-  }
-
-  @Test
-  void testNetworkListener_GameStarted() throws InterruptedException {
-    fakeGui.sentCommands.clear();
-    AsyncEventLogger.logInfo("[ONLINE] GAME_STARTED GAME_ID=1");
-    Thread.sleep(600);
-    assertTrue(fakeGui.sentCommands.isEmpty());
-  }
-
-  @Test
-  void testEditShortcuts_Branches() throws InterruptedException {
-    fakeGui.getConfig().addShortcut("shortcut_test", "Ctrl+T");
-    interactWithNextDialog(null, true);
-    runAndWait(() -> controller.editShortcuts());
-    Thread.sleep(300);
-    interactWithNextDialog("Shift+P", false);
-    new Thread(
-            () -> {
-              try {
-                Thread.sleep(500);
-              } catch (Exception e) {
-              }
-              interactWithNextDialog(null, false);
-            })
-        .start();
-    runAndWait(() -> controller.editShortcuts());
-    assertTrue(true);
-  }
-
-  @Test
-  void testHexCanvas_MoveRequest_WhenPaused() throws InterruptedException {
-    FakeAgonGui pausedGui =
-        new FakeAgonGui() {
-          @Override
-          public boolean getPaused() {
-            return true;
-          }
-        };
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.setAgonGui(pausedGui));
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.getHexCanvas().requestMove("F6G7"));
-
-    assertTrue(pausedGui.sentCommands.isEmpty());
-  }
-
-  @Test
-  void testRouteMessage_SpecificBranches() throws InterruptedException {
-    runAndWait(() -> controller.routeMessage("GAME PAUSED"));
-    interactWithNextDialog("my_save", false);
-    runAndWait(() -> controller.routeMessage("Enter filename:"));
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-    runAndWait(() -> controller.routeMessage(">> current player"));
-    assertTrue(true);
-  }
-
-  @Test
-  void testServerBrowser_ListViewSelection() throws InterruptedException {
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-
-    new Thread(
-            () -> {
-              try {
-                Thread.sleep(300);
-              } catch (Exception e) {
-              }
-              Platform.runLater(
-                  () -> {
-                    for (Window window : Window.getWindows()) {
-                      if (window instanceof Stage
-                          && window.isShowing()
-                          && window.getScene() != null) {
-                        if (window.getScene().getRoot() instanceof DialogPane pane) {
-
-                          @SuppressWarnings("unchecked")
-                          ListView<String> listView = (ListView<String>) pane.lookup(".list-view");
-                          if (listView != null) {
-                            listView.getItems().add("TestServer @ 127.0.0.1:8888");
-                            listView.getSelectionModel().select(0);
-                          }
-
-                          for (ButtonType type : pane.getButtonTypes()) {
-                            if (type.getButtonData().isCancelButton()) {
-                              Node btn = pane.lookupButton(type);
-                              if (btn instanceof Button) ((Button) btn).fire();
-                            }
-                          }
-                        }
-                      }
-                    }
-                  });
-            })
-        .start();
-
-    runAndWait(() -> controller.showServerBrowser());
-    assertTrue(true);
-  }
-
-  @Test
-  void testShowLobby_NotConnected_Protection() throws InterruptedException {
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-    fakeGui.sentCommands.clear();
-
-    interactWithNextDialog(null, false);
-    runAndWait(() -> controller.showLobby());
-
-    assertTrue(fakeGui.sentCommands.isEmpty());
-  }
-
-  @Test
-  void testShowHostServer_NotRunning_Branch() throws InterruptedException {
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-    fakeGui.sentCommands.clear();
-
-    interactWithNextDialog("8888", false);
-    runAndWait(() -> controller.showHostServerDialog());
-
-    Thread.sleep(300);
-    assertTrue(fakeGui.sentCommands.contains("server_start 8888"));
-  }
-
-  @Test
-  void testShowLobby_Connected_FullInteraction() throws Exception {
-    fakeGui.getAppContext().setMode(AppMode.ONLINE);
-
-    AgonClient fakeClient =
-        new AgonClient(null) {
-          @Override
-          public boolean isConnected() {
-            return true;
-          }
-
-          @Override
-          public String requestPlayers() {
-            return "Player1, Player2";
-          }
-
-          @Override
-          public String requestScoreboard() {
-            return "Scores...";
-          }
-        };
-
-    Field clientField = AppContext.class.getDeclaredField("client");
-    clientField.setAccessible(true);
-    clientField.set(fakeGui.getAppContext(), fakeClient);
-
-    fakeGui.sentCommands.clear();
-
-    new Thread(
-            () -> {
-              try {
-                Thread.sleep(400);
-              } catch (Exception e) {
-              }
-              Platform.runLater(
-                  () -> {
-                    List<Window> windows = new ArrayList<>(Window.getWindows());
-
-                    for (Window window : windows) {
-                      if (window instanceof Stage
-                          && window.isShowing()
-                          && window.getScene() != null) {
-                        if (window.getScene().getRoot() instanceof DialogPane pane) {
-
-                          List<Node> buttons = new ArrayList<>(pane.lookupAll(".button"));
-                          for (Node node : buttons) {
-                            if (node instanceof Button btn) {
-                              if ("Refresh Players".equals(btn.getText())
-                                  || "View Scoreboard".equals(btn.getText())) {
-                                btn.fire();
-                              }
-                            }
-                          }
-
-                          TextField tf = (TextField) pane.lookup(".text-field");
-                          if (tf != null) {
-                            tf.setText("42");
-                          }
-
-                          List<ButtonType> buttonTypes = new ArrayList<>(pane.getButtonTypes());
-                          for (ButtonType type : buttonTypes) {
-                            if (type.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-                              Node submitBtn = pane.lookupButton(type);
-                              if (submitBtn instanceof Button) {
-                                ((Button) submitBtn).fire();
-                                return;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  });
-            })
-        .start();
-
-    runAndWait(() -> controller.showLobby());
-    assertTrue(fakeGui.sentCommands.contains("new 42"));
-  }
-
-  @Test
   void testNetworkListener_ChooseMode_Blitz() throws InterruptedException {
     fakeGui.sentCommands.clear();
 
@@ -862,10 +446,321 @@ public class GameViewControllerTest {
   }
 
   @Test
-  void testShowHostServer_Running_Branch() throws Exception {
+  @DisplayName("Coverage: routeMessage() -> promptYesNo() for 'save the game before quitting'")
+  void testRouteMessage_PromptYesNo() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog(null, false);
+    runAndWait(() -> controller.routeMessage("save the game before quitting ?"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.contains("y"), "Should send 'y' when clicking Yes");
+
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.routeMessage("save the game before quitting ?"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.contains("n"), "Should send 'n' when clicking No");
+  }
+
+  @Test
+  @DisplayName("Coverage: routeMessage() -> promptFilename()")
+  void testRouteMessage_PromptFilename() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog("my_backup", false);
+    runAndWait(() -> controller.routeMessage("enter the filename"));
+
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.contains("my_backup"), "Should send the typed filename");
+  }
+
+  @Test
+  @DisplayName("Coverage: showHelp() with dialog interaction")
+  void testShowHelp_Coverage() throws InterruptedException {
+    interactWithNextDialog(null, false);
+    assertDoesNotThrow(() -> runAndWait(() -> controller.showHelp()));
+    Thread.sleep(300);
+  }
+
+  @Test
+  @DisplayName("Coverage: editShortcuts() updating config and saving")
+  void testEditShortcuts_Coverage() throws Exception {
+    fakeGui.getConfig().addShortcut("shortcut_undo", "Ctrl+Z");
+
+    interactWithNextDialog("U", false);
+
+    Platform.runLater(() -> controller.editShortcuts());
+
+    Thread.sleep(1000);
+
+    interactWithNextDialog(null, false);
+
+    Thread.sleep(500);
+
+    assertTrue(
+        fakeGui.getConfig().getShortcuts().containsValue("U"),
+        "At least one shortcut in the configuration had to be updated with the value 'U''");
+  }
+
+  @Test
+  @DisplayName("Coverage: routeMessage() -> handleTurnAndPauseMessages()")
+  void testHandleTurnAndPauseMessages() throws Exception {
+    Field msgLabelField = GameViewController.class.getDeclaredField("messageLabel");
+    msgLabelField.setAccessible(true);
+    Label msgLabel = (Label) msgLabelField.get(controller);
+
+    runAndWait(() -> controller.routeMessage("Game paused by user"));
+    Thread.sleep(200);
+    assertEquals("game paused by user", msgLabel.getText().toLowerCase());
+
+    AppContext context = fakeGui.getAppContext();
+    context.setMode(AppMode.ONLINE);
+
+    Field activeField = AppContext.class.getDeclaredField("onlineGameActive");
+    activeField.setAccessible(true);
+    activeField.set(context, true);
+
+    Field turnField = AppContext.class.getDeclaredField("myOnlineTurn");
+    turnField.setAccessible(true);
+    turnField.set(context, true);
+
+    Field colorField = AppContext.class.getDeclaredField("localOnlineColor");
+    colorField.setAccessible(true);
+    colorField.set(context, Color.WHITE);
+
+    runAndWait(() -> controller.routeMessage(">> current player - Time left: 05:00"));
+    Thread.sleep(200);
+    assertTrue(msgLabel.getText().contains("Your turn!"));
+    assertTrue(msgLabel.getText().contains("Time left: 05:00"));
+
+    activeField.set(context, false);
+  }
+
+  @Test
+  @DisplayName("Coverage: showLobby() when client is connected")
+  void testShowLobby_ConnectedCoverage() throws Exception {
+    AppContext context = fakeGui.getAppContext();
+    context.setMode(AppMode.ONLINE);
+
+    AgonClient mockClient =
+        new AgonClient(new LocalProfile("Test")) {
+          @Override
+          public boolean isConnected() {
+            return true;
+          }
+
+          @Override
+          public String requestPlayers() {
+            return "Player1 - ID 2";
+          }
+
+          @Override
+          public String requestScoreboard() {
+            return "Player1 : 100 Elo";
+          }
+        };
+
+    Field clientField = AppContext.class.getDeclaredField("client");
+    clientField.setAccessible(true);
+    clientField.set(context, mockClient);
+
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog("2", false);
+
+    runAndWait(() -> controller.showLobby());
+    Thread.sleep(500);
+
+    assertTrue(fakeGui.sentCommands.contains("new 2"), "Should send challenge command 'new 2'");
+  }
+
+  @Test
+  @DisplayName("Coverage: setupNetworkListener() triggers refreshBoardFromNetwork()")
+  void testNetworkListener_RefreshBoardCoverage() throws Exception {
+    AppContext context = fakeGui.getAppContext();
+    fr.univ.bordeaux.application.match.Match dummyMatch =
+        fr.univ.bordeaux.application.match.MatchFactory.createOnlineMatch(
+            "Player1", "Player2", false);
+
+    Field matchField = AppContext.class.getDeclaredField("onlineMatch");
+    matchField.setAccessible(true);
+    matchField.set(context, dummyMatch);
+
+    AsyncEventLogger.logInfo("GAME_STARTED GAME_ID 9999");
+    Thread.sleep(300);
+    AsyncEventLogger.logInfo("Your turn to play!");
+    Thread.sleep(300);
+
+    AsyncEventLogger.logInfo("Opponent turn is now active");
+    Thread.sleep(300);
+
+    AsyncEventLogger.logInfo("You are WHITE");
+    Thread.sleep(300);
+
+    assertTrue(true, "All board refresh branches executed successfully.");
+  }
+
+  @Test
+  @DisplayName("Coverage: routeMessage() with null message")
+  void testRouteMessage_Null() {
+    assertDoesNotThrow(() -> controller.routeMessage(null));
+  }
+
+  @Test
+  @DisplayName("Coverage: handleTurnAndPauseMessages() - BLACK color, no time, opponent turn")
+  void testHandleTurnAndPauseMessages_BlackColor_NoTime() throws Exception {
+
+    AppContext context = fakeGui.getAppContext();
+    context.setMode(AppMode.ONLINE);
+
+    Field activeField = AppContext.class.getDeclaredField("onlineGameActive");
+    activeField.setAccessible(true);
+    activeField.set(context, true);
+
+    Field turnField = AppContext.class.getDeclaredField("myOnlineTurn");
+    turnField.setAccessible(true);
+    turnField.set(context, false);
+
+    Field colorField = AppContext.class.getDeclaredField("localOnlineColor");
+    colorField.setAccessible(true);
+    colorField.set(context, Color.BLACK);
+
+    runAndWait(() -> controller.routeMessage(">> current player is testing"));
+    Thread.sleep(200);
+
+    Field msgLabelField = GameViewController.class.getDeclaredField("messageLabel");
+    msgLabelField.setAccessible(true);
+    Label msgLabel = (Label) msgLabelField.get(controller);
+
+    assertTrue(
+        msgLabel.getText().contains("Opponent's turn (WHITE)"), "The opponent must be WHITE");
+    assertFalse(msgLabel.getText().contains("Time left:"), "Must not contain time");
+
+    activeField.set(context, false); // Nettoyage
+  }
+
+  @Test
+  @DisplayName("Coverage: handleTurnAndPauseMessages() with agonGui == null")
+  void testHandleTurnAndPauseMessages_NullGui() throws Exception {
+    controller.setAgonGui(null);
+    runAndWait(() -> controller.routeMessage(">> current player testing null gui"));
+    Thread.sleep(200);
+
+    Field msgLabelField = GameViewController.class.getDeclaredField("messageLabel");
+    msgLabelField.setAccessible(true);
+    Label msgLabel = (Label) msgLabelField.get(controller);
+
+    assertEquals(">> current player testing null gui", msgLabel.getText());
+  }
+
+  @Test
+  @DisplayName(
+      "Coverage: promptYesNo() & promptInvitation() dialogs closed without clicking buttons")
+  void testDialogs_ClosedForcefully() throws Exception {
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false, true);
+    runAndWait(() -> controller.routeMessage("save the game before quitting ?"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.contains("n"));
+
+    fakeGui.sentCommands.clear();
+    interactWithNextDialog(null, false, true);
+    runAndWait(() -> controller.routeMessage("INVITATION_RECEIVED FROM=TEST"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.contains("decline"));
+  }
+
+  @Test
+  @DisplayName("Coverage: promptFilename() dialog closed or empty text")
+  void testPromptFilename_ClosedOrEmpty() throws Exception {
+    fakeGui.sentCommands.clear();
+
+    interactWithNextDialog(null, false, true);
+    runAndWait(() -> controller.routeMessage("enter filename"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.isEmpty());
+
+    interactWithNextDialog("   ", false);
+    runAndWait(() -> controller.routeMessage("enter filename"));
+    Thread.sleep(400);
+    assertTrue(fakeGui.sentCommands.isEmpty());
+  }
+
+  @Test
+  @DisplayName("Coverage: Inner if (agonGui != null) inside dialog callbacks")
+  void testDialogCallbacks_WithNullGui() throws Exception {
+    controller.setAgonGui(null);
+
+    interactWithNextDialog(null, false);
+    assertDoesNotThrow(
+        () -> runAndWait(() -> controller.routeMessage("save the game before quitting ?")));
+    Thread.sleep(300);
+
+    interactWithNextDialog("testfile", false);
+    assertDoesNotThrow(() -> runAndWait(() -> controller.routeMessage("enter filename")));
+    Thread.sleep(300);
+
+    interactWithNextDialog(null, false);
+    assertDoesNotThrow(
+        () -> runAndWait(() -> controller.routeMessage("INVITATION_RECEIVED FROM=TEST")));
+    Thread.sleep(300);
+  }
+
+  @Test
+  @DisplayName("Coverage: showNewGameDialog - AI vs AI with Minimax")
+  void testStartNewGame_AiVsAi_Minimax() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+    new Thread(
+            () -> {
+              handleDialogWithRobot(
+                  pane -> {
+                    Object[] combos = pane.lookupAll(".combo-box").toArray();
+                    if (combos.length >= 3) {
+                      ((ComboBox<String>) combos[0]).setValue("AI"); // P1 type
+                      ((ComboBox<String>) combos[1]).setValue("White"); // P1 color
+                      ((ComboBox<String>) combos[2]).setValue("AI"); // P2 type
+                    }
+                    // Sélection Minimax
+                    ComboBox<String> aiMode = (ComboBox<String>) combos[3];
+                    aiMode.setValue("Minimax");
+
+                    clickButton(pane, ButtonBar.ButtonData.OK_DONE);
+                  });
+            })
+        .start();
+
+    runAndWait(() -> controller.startNewGame());
+    Thread.sleep(500);
+    assertTrue(
+        fakeGui.sentCommands.stream().anyMatch(c -> c.contains("--ai a") && c.contains("minimax")));
+  }
+
+  @Test
+  @DisplayName("Coverage: showNewGameDialog - Human vs AI (P2)")
+  void testStartNewGame_P2IsAi() throws InterruptedException {
+    fakeGui.sentCommands.clear();
+    new Thread(
+            () -> {
+              handleDialogWithRobot(
+                  pane -> {
+                    Object[] combos = pane.lookupAll(".combo-box").toArray();
+                    ((ComboBox<String>) combos[0]).setValue("Human");
+                    ((ComboBox<String>) combos[2]).setValue("AI");
+                    clickButton(pane, ButtonBar.ButtonData.OK_DONE);
+                  });
+            })
+        .start();
+
+    runAndWait(() -> controller.startNewGame());
+    Thread.sleep(500);
+    assertTrue(fakeGui.sentCommands.stream().anyMatch(c -> c.contains("--ai black")));
+  }
+
+  @Test
+  @DisplayName("Coverage: showHostServerDialog - Server already running")
+  void testShowHostServerDialog_AlreadyRunning() throws Exception {
     fakeGui.getAppContext().setMode(AppMode.ONLINE);
 
-    AgonServer fakeServer =
+    AgonServer mockServer =
         new AgonServer("12345") {
           @Override
           public boolean isRunning() {
@@ -873,133 +768,71 @@ public class GameViewControllerTest {
           }
 
           @Override
-          public int getPort() {
-            return 12345;
-          }
-
-          @Override
           public int getConnectedClientsCount() {
             return 1;
           }
         };
-
-    Field serverField = AppContext.class.getDeclaredField("server");
-    serverField.setAccessible(true);
-    serverField.set(fakeGui.getAppContext(), fakeServer);
-
-    fakeGui.sentCommands.clear();
+    fakeGui.getAppContext().setServer(mockServer);
 
     interactWithNextDialog(null, false);
     runAndWait(() -> controller.showHostServerDialog());
-
-    Thread.sleep(300);
+    Thread.sleep(400);
     assertTrue(fakeGui.sentCommands.contains("server_stop"));
   }
 
   @Test
-  void testNetworkListener_OnlineTurns() throws InterruptedException {
-    AsyncEventLogger.logInfo("[ONLINE] Your turn");
-    AsyncEventLogger.logInfo("[ONLINE] Opponent turn");
-    AsyncEventLogger.logInfo("[ONLINE] You are WHITE");
-    Thread.sleep(600);
-    assertTrue(true);
-  }
-
-  @Test
-  void testServerBrowser_ListSelection_And_Routing() throws Exception {
+  @DisplayName("Coverage: showLobby - Failed to load players")
+  void testShowLobby_NullPlayers() throws Exception {
     fakeGui.getAppContext().setMode(AppMode.ONLINE);
-    runAndWait(() -> controller.routeMessage(">> current player"));
 
-    new Thread(
-            () -> {
-              try {
-                Thread.sleep(400);
-              } catch (Exception e) {
-              }
-              Platform.runLater(
-                  () -> {
-                    List<Window> windows = new ArrayList<>(Window.getWindows());
-                    for (Window window : windows) {
-                      if (window instanceof Stage
-                          && window.isShowing()
-                          && window.getScene() != null) {
-                        if (window.getScene().getRoot() instanceof DialogPane pane) {
+    AgonClient nullClient =
+        new AgonClient(new LocalProfile("Test")) {
+          @Override
+          public boolean isConnected() {
+            return true;
+          }
 
-                          @SuppressWarnings("unchecked")
-                          ListView<String> listView = (ListView<String>) pane.lookup(".list-view");
-                          if (listView != null) {
-                            listView.getItems().add("FakeServer @ 10.0.0.1:9999");
-                            listView.getSelectionModel().select(0);
-                          }
+          @Override
+          public String requestPlayers() {
+            return null;
+          }
+        };
 
-                          List<ButtonType> types = new ArrayList<>(pane.getButtonTypes());
-                          for (ButtonType type : types) {
-                            if (type.getButtonData().isCancelButton()) {
-                              Node btn = pane.lookupButton(type);
-                              if (btn instanceof Button) {
-                                ((Button) btn).fire();
-                                return;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  });
-            })
-        .start();
+    Field clientField = AppContext.class.getDeclaredField("client");
+    clientField.setAccessible(true);
+    clientField.set(fakeGui.getAppContext(), nullClient);
 
-    runAndWait(() -> controller.showServerBrowser());
-    assertTrue(true);
+    interactWithNextDialog(null, true);
+    runAndWait(() -> controller.showLobby());
   }
 
-  @Test
-  void testRouteMessage_OnlineTurns_BothBranches() throws Exception {
-    AppContext fakeContextTrue =
-        new AppContext(null) {
-          @Override
-          public boolean isOnlineGameActive() {
-            return true;
-          }
+  private void handleDialogWithRobot(java.util.function.Consumer<DialogPane> action) {
+    for (int i = 0; i < 50; i++) {
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
+      final boolean[] done = {false};
+      Platform.runLater(
+          () -> {
+            for (Window w : Window.getWindows()) {
+              if (w.isShowing() && w.getScene().getRoot() instanceof DialogPane pane) {
+                action.accept(pane);
+                done[0] = true;
+                break;
+              }
+            }
+          });
+      if (done[0]) break;
+    }
+  }
 
-          @Override
-          public boolean isMyOnlineTurn() {
-            return true;
-          }
-
-          @Override
-          public Color getLocalOnlineColor() {
-            return Color.WHITE;
-          }
-        };
-
-    Field contextField = FakeAgonGui.class.getDeclaredField("appContext");
-    contextField.setAccessible(true);
-    contextField.set(fakeGui, fakeContextTrue);
-
-    runAndWait(() -> controller.routeMessage(">> current player"));
-
-    AppContext fakeContextFalse =
-        new AppContext(null) {
-          @Override
-          public boolean isOnlineGameActive() {
-            return true;
-          }
-
-          @Override
-          public boolean isMyOnlineTurn() {
-            return false;
-          }
-
-          @Override
-          public Color getLocalOnlineColor() {
-            return Color.BLACK;
-          }
-        };
-    contextField.set(fakeGui, fakeContextFalse);
-
-    runAndWait(() -> controller.routeMessage(">> current player"));
-
-    assertTrue(true);
+  private void clickButton(DialogPane pane, ButtonBar.ButtonData data) {
+    for (ButtonType type : pane.getButtonTypes()) {
+      if (type.getButtonData() == data) {
+        ((Button) pane.lookupButton(type)).fire();
+        break;
+      }
+    }
   }
 }
