@@ -9,7 +9,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse returns UNKNOWN command when line is null")
-  void parse_null() {
+  void parseNull() {
     Command c = CommandParser.parse(null);
 
     assertEquals(CommandType.UNKNOWN, c.getType());
@@ -19,7 +19,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse returns UNKNOWN command when line is blank")
-  void parse_blank() {
+  void parseBlank() {
     Command c = CommandParser.parse("   ");
 
     assertEquals(CommandType.UNKNOWN, c.getType());
@@ -29,7 +29,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse handles command without arguments")
-  void parse_no_args() {
+  void parseNoArgs() {
     Command c = CommandParser.parse("PING");
 
     assertEquals(CommandType.PING, c.getType());
@@ -40,7 +40,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse handles key value arguments correctly")
-  void parse_key_value_args() {
+  void parseKeyValueArgs() {
     Command c = CommandParser.parse("LOGIN NAME=Alice CLIENT_ID=abc123");
 
     assertEquals(CommandType.LOGIN, c.getType());
@@ -51,7 +51,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse stores first non key value token as raw argument")
-  void parse_raw_argument() {
+  void parseRawArgument() {
     Command c = CommandParser.parse("MOVE e2e4");
 
     assertEquals(CommandType.MOVE, c.getType());
@@ -61,7 +61,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse supports both key value args and raw argument")
-  void parse_args_and_raw_argument() {
+  void parseArgsAndRawArgument() {
     Command c = CommandParser.parse("NEW PLAYER_ID=5 extraToken");
 
     assertEquals(CommandType.NEW, c.getType());
@@ -71,7 +71,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse ignores malformed tokens and keeps valid key value args")
-  void parse_good_and_bad_tokens() {
+  void parseGoodAndBadTokens() {
     Command c = CommandParser.parse("PONG a=1 bad =x b=2");
 
     assertEquals(CommandType.PONG, c.getType());
@@ -84,7 +84,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse keeps only first raw argument")
-  void parse_only_first_raw_argument() {
+  void parseOnlyFirstRawArgument() {
     Command c = CommandParser.parse("MOVE e2e4 anotherToken lastToken");
 
     assertEquals(CommandType.MOVE, c.getType());
@@ -93,7 +93,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse supports trimmed input")
-  void parse_trimmed_input() {
+  void parseTrimmedInput() {
     Command c = CommandParser.parse("   STATUS   ");
 
     assertEquals(CommandType.STATUS, c.getType());
@@ -102,7 +102,7 @@ class CommandParserTest {
 
   @Test
   @DisplayName("Parse returns UNKNOWN when command keyword is invalid")
-  void parse_invalid_command() {
+  void parseInvalidCommand() {
     Command c = CommandParser.parse("HELLO x=1");
 
     assertEquals(CommandType.UNKNOWN, c.getType());

@@ -1,7 +1,7 @@
 @startuml
 'https://plantuml.com/class-diagram
 
-package fr.univ.bordeaux.agoncore {
+package agoncore {
 
     package agonelements {
         enum Color {
@@ -10,10 +10,6 @@ package fr.univ.bordeaux.agoncore {
         }
 
         class Move {
-            - fromIndex: int
-            - toIndex: int
-            + getFrom(): int
-            + getTo(): int
         }
 
         enum PieceType {
@@ -23,35 +19,33 @@ package fr.univ.bordeaux.agoncore {
     }
 
     package bitboard {
-        interface BitBoard {
-            + get(index: int): boolean
-            + set(index: int): void
-            + clear(index: int): void
-        }
+        interface AgonBoard extends RestrictedAgonBoard{
+                    + applyMove(move: Move): boolean
+                    + undoMove(): boolean
+                    + redoMove(): boolean
+                    + isGameWon(color: Color): boolean
+                    + getMobility(index: int): int
+                    + getCentrality(index: int): int
+                    + initBaseConfiguration(): void
+                    + getHistory(): List<HistoryInformations>
+                    + getHistoryAsText(): List<String>
+                    + toTextList(): List<String>
+                    + hasPiecesToRelocate(color: Color): boolean
+                }
 
-        interface AgonBoard {
-            + getPieceAt(index: int): PieceType
-            + getColorAt(index: int): Color
-            + movePiece(move: Move): void
-        }
+
 
         interface RestrictedAgonBoard {
             + getPieceAt(index: int): PieceType
-            + getColorAt(index: int): Color
-        }
+            + List<Move> generateLegalMoves(Color color)
 
-        class AgonBoardImpl implements AgonBoard, RestrictedAgonBoard {
-            - blackQueens: long
-            - whiteQueens: long
-            - blackNobles: long
-            - whiteNobles: long
-            + getPieceAt(index: int): PieceType
-            + getColorAt(index: int): Color
+        }
+        class Bitboard{
+        }
+        class AgonBoardImpl implements AgonBoard{
         }
 
         class CoordinateMapper {
-            + {static} toIndex(row: char, col: int): int
-            + {static} toCoords(index: int): String
         }
 
         enum Direction {
@@ -61,22 +55,18 @@ package fr.univ.bordeaux.agoncore {
 
     package history {
         class History {
-            - moves: List<Move>
-            + addMove(move: Move): void
-            + undo(): Move
         }
         class HistoryInformations {
-            - turn: int
-            - lastMove: Move
         }
     }
 }
-
-' Relations
-AgonBoardImpl *-- "4" BitBoard : uses long bitboards
-AgonBoardImpl ..> agonelements.Move : executes
-AgonBoardImpl ..> agonelements.Color : uses
-AgonBoardImpl ..> agonelements.PieceType : uses
-history.History o-- agonelements.Move : contains
+History -- AgonBoardImpl
+Move -- HistoryInformations
+Move -- PieceType
+Move -- Color
+HistoryInformations -- History
+AgonBoardImpl -- Bitboard
+AgonBoardImpl --> CoordinateMapper
+Bitboard --> Direction
 
 @enduml

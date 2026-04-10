@@ -4,21 +4,28 @@ import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 
 /**
- * Utility class to bind CommandLine options to a GameConfig object. This prevents code duplication
- * between the main launcher and the 'new' command.
+ * Utility class to bind CommandLine options to a GameConfig object. *
+ *
+ * <p>This class centralizes the parsing logic for CLI arguments, ensuring consistency between the
+ * initial application launch and the 'new' game command. It handles game modes (Blitz), AI
+ * configurations (Minimax/MCTS), and logging levels.
  */
 public class ConfigBinder {
 
   /**
    * Binds parsed command line options to the provided game configuration.
    *
-   * @param cmd The parsed command line.
-   * @param config The configuration object to update.
-   * @param Ui The user interface context for feedback.
+   * <p>This method updates the {@link GameConfig} state based on flags like '-b' (blitz), '-a' (AI
+   * activation), and advanced AI parameters such as depth, scoring functions, and time limits.
+   *
+   * @param cmd The parsed {@link CommandLine} containing user arguments.
+   * @param config The {@link GameConfig} object to be updated.
+   * @param ui The {@link GameUserInterface} context for displaying feedback or warnings.
    */
-  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface Ui) {
+  public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface ui) {
     GameLogger.debug("ConfigBinder: Starting binding process...");
 
     // --- F4 & F31: Blitz Mode ---
@@ -38,7 +45,7 @@ public class ConfigBinder {
         }
       } else {
         GameLogger.debug("ConfigBinder: Option 't' provided but ignored (not in Blitz mode).");
-        Ui.showInfo("Option 't' ignored because option blitz (-b) is missing.");
+        ui.showInfo("Option 't' ignored because option blitz (-b) is missing.");
       }
     }
 
@@ -48,7 +55,7 @@ public class ConfigBinder {
       String aiValue = cmd.getOptionValue("a");
       if (aiValue == null) {
         GameLogger.info("ConfigBinder: No color specified for AI, defaulting to BLACK.");
-        Ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
+        ui.showInfo("No Color given for Ai player, setting by default black as Ai.");
         config.setBlackAi(true);
       } else {
         switch (aiValue.toLowerCase()) {
@@ -71,7 +78,7 @@ public class ConfigBinder {
           default:
             GameLogger.error(
                 "ConfigBinder: Invalid AI color '" + aiValue + "'. Defaulting to BLACK.");
-            Ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
+            ui.showInfo("Invalid Color given for Ai player, setting by default Black as Ai.");
             config.setBlackAi(true);
             break;
         }
@@ -131,15 +138,16 @@ public class ConfigBinder {
 
     if (cmd.hasOption("ai-mcts-selection")) {
       if (!isMcts) {
-        Ui.showInfo("Mcts mode for Ai is not active, option ai-mcts-selection is ignored.\n");
+        ui.showInfo("Mcts mode for Ai is not active, option ai-mcts-selection is ignored.\n");
       } else {
         String selection = cmd.getOptionValue("ai-mcts-selection");
         if (selection.equals("ML") || selection.equals("UCT")) {
           config.setAiHeuristic(selection.toLowerCase());
           GameLogger.info("AI mcts mode set to " + selection);
+        } else {
+          ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
+          GameLogger.info("AI mcts mode set to default (UCT).");
         }
-        Ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
-        GameLogger.info("AI mcts mode set to default (UCT).");
       }
     }
 
@@ -154,5 +162,27 @@ public class ConfigBinder {
       GameLogger.getInstance().setDebugMode(true);
       GameLogger.debug("ConfigBinder: Debug mode activated. Logging level increased.");
     }
+  }
+
+  /**
+   * Populates an {@link Options} object with all possible game configuration flags.
+   *
+   * <p>This includes short and long flags for Blitz mode, AI activation, and all technical AI
+   * parameters (heuristics, depth, mode).
+   *
+   * @param options The {@link Options} container to fill.
+   */
+  public static void fillOptions(Options options) {
+    options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
+    options.addOption("t", "time", true, "Sets the time limit for each player (in minutes).");
+    options.addOption(
+        "a", "ai", true, "Replace the given color by an Ai. Can be both using A for color.");
+    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
+    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
+    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
+    options.addOption(
+        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
+    options.addOption(
+        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
   }
 }

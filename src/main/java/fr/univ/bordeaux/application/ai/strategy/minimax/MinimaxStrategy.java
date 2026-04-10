@@ -25,10 +25,10 @@ public class MinimaxStrategy extends AbstractAgonAi {
   private final int maxDepth;
 
   /** Flag indicating whether to use iterative deepening instead of a single deep search. */
-  private final boolean iterativeDeepening;
+  private final boolean itDeepening;
 
   /** Flag to immediately halt the recursive search when time runs out. */
-  private volatile boolean timeoutReached = false;
+  private boolean timeoutReached;
 
   /**
    * Constructs a Minimax strategy with Iterative Deepening and time management.
@@ -36,82 +36,56 @@ public class MinimaxStrategy extends AbstractAgonAi {
    * @param heuristic The evaluation function used for leaf nodes.
    * @param color The color played by this AI.
    * @param maxDepth The absolute maximum depth limit for the recursion.
-   * @param iterativeDeepening {@code true} to enable Iterative Deepening, {@code false} for
-   *     standard Minimax.
+   * @param itDeepening {@code true} to enable Iterative Deepening, {@code false} for standard
+   *     Minimax.
    * @param timeLimitSeconds The maximum allowed calculation time per move in seconds.
    */
   public MinimaxStrategy(
-      Heuristic heuristic,
-      Color color,
-      int maxDepth,
-      boolean iterativeDeepening,
-      int timeLimitSeconds) {
+      final Heuristic heuristic,
+      final Color color,
+      final int maxDepth,
+      final boolean itDeepening,
+      final int timeLimitSeconds) {
     super(heuristic, color);
     this.maxDepth = maxDepth;
-    this.iterativeDeepening = iterativeDeepening;
-    this.setTimeLimit(timeLimitSeconds * 1000L);
+    this.itDeepening = itDeepening;
+    this.timeLimit = timeLimitSeconds * 1000L;
   }
 
-  /**
-   * Computes the best move for the current board state.
-   *
-   * <p>Initializes the search and manages the overall time limit. If Iterative Deepening is
-   * disabled, it performs a single search directly to {@code maxDepth}. If enabled, it loops
-   * through progressively deeper searches, retaining the best fully completed result before the
-   * time runs out.
-   *
-   * @param board The current game board.
-   * @return The optimal {@link Move} found within the constraints, or {@code null} if no legal
-   *     moves exist.
-   */
   @Override
-  protected Move computeMove(AgonBoard board) {
+  protected Move computeMove(final AgonBoard board) {
+    final Move result;
     this.timeoutReached = false;
 
-    List<Move> legalMoves = board.generateLegalMoves(this.color);
+    final List<Move> legalMoves = board.generateLegalMoves(this.color);
     if (legalMoves.isEmpty()) {
-      return null;
-    }
+      result = null;
+    } else if (!this.itDeepening) {
+      result = runMinimaxForDepth(board, legalMoves, this.maxDepth);
+    } else {
+      Move absoluteBestMove = legalMoves.getFirst();
+      for (int currentDepth = 1; currentDepth <= this.maxDepth; currentDepth++) {
+        final Move bestMoveForCurrentDepth = runMinimaxForDepth(board, legalMoves, currentDepth);
 
-    Move absoluteBestMove = legalMoves.getFirst();
-
-    if (!this.iterativeDeepening) {
-      return runMinimaxForDepth(board, legalMoves, this.maxDepth);
-    }
-
-    for (int currentDepth = 1; currentDepth <= this.maxDepth; currentDepth++) {
-
-      Move bestMoveForCurrentDepth = runMinimaxForDepth(board, legalMoves, currentDepth);
-
-      if (!this.timeoutReached && bestMoveForCurrentDepth != null) {
-        absoluteBestMove = bestMoveForCurrentDepth;
-      } else {
-        break;
+        if (!this.timeoutReached && bestMoveForCurrentDepth != null) {
+          absoluteBestMove = bestMoveForCurrentDepth;
+        } else {
+          break;
+        }
       }
+      result = absoluteBestMove;
     }
-
-    return absoluteBestMove;
+    return result;
   }
 
-  /**
-   * Executes the root layer of the Minimax algorithm for a specific target depth.
-   *
-   * <p>Iterates over all initially available legal moves and evaluates them using the recursive
-   * {@link #minimax} method. It keeps track of the best move found and immediately breaks the
-   * evaluation loop if a timeout occurs.
-   *
-   * @param board The current game board state.
-   * @param legalMoves The list of valid moves available from the root position.
-   * @param targetDepth The depth limit for this specific search run.
-   * @return The best {@link Move} evaluated at the given depth.
-   */
-  private Move runMinimaxForDepth(AgonBoard board, List<Move> legalMoves, int targetDepth) {
+  private Move runMinimaxForDepth(
+      final AgonBoard board, final List<Move> legalMoves, final int targetDepth) {
     Move bestMove = legalMoves.getFirst();
     long maxScore = Long.MIN_VALUE;
     long alpha = Long.MIN_VALUE;
-    long beta = Long.MAX_VALUE;
+    final long beta = Long.MAX_VALUE;
 
-    for (Move move : legalMoves) {
+    for (final Move move : legalMoves) {
       if (!this.timeoutReached && !isTimeRemaining()) {
         this.timeoutReached = true;
       }
@@ -122,7 +96,7 @@ public class MinimaxStrategy extends AbstractAgonAi {
       board.applyMove(move);
       this.nodeCount++;
 
-      long score = minimax(board, targetDepth - 1, false, alpha, beta);
+      final long score = minimax(board, targetDepth - 1, false, alpha, beta);
 
       board.undoMove();
 
@@ -139,23 +113,14 @@ public class MinimaxStrategy extends AbstractAgonAi {
     return bestMove;
   }
 
-  /**
-   * Recursive Minimax function with Alpha-Beta pruning and timeout checks.
-   *
-   * <p>Explores the game tree by alternating between the maximizing player (the AI) and the
-   * minimizing player (the opponent). It halts early and evaluates the board if a terminal state is
-   * reached (win, loss, depth 0, or no legal moves available).
-   *
-   * @param board The simulated game board at the current node.
-   * @param depth The remaining depth to explore before applying the heuristic.
-   * @param isMaximizingPlayer {@code true} if evaluating the AI's optimal move, {@code false} for
-   *     the opponent's.
-   * @param alpha The best guaranteed score for the maximizing player.
-   * @param beta The best guaranteed score for the minimizing player.
-   * @return The heuristic evaluation score of the current branch.
-   */
   private long minimax(
-      AgonBoard board, int depth, boolean isMaximizingPlayer, long alpha, long beta) {
+      final AgonBoard board,
+      final int depth,
+      final boolean isMaximizingPlayer,
+      final long alpha,
+      final long beta) {
+    final long result;
+
     GameLogger.debug("Node count :  " + this.nodeCount + "at depth : " + depth);
 
     if (!this.timeoutReached && !isTimeRemaining()) {
@@ -163,71 +128,104 @@ public class MinimaxStrategy extends AbstractAgonAi {
     }
 
     if (this.timeoutReached) {
-      return 0;
-    }
+      result = 0;
+    } else {
+      final Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
 
-    Color opponentColor = (this.color == Color.WHITE) ? Color.BLACK : Color.WHITE;
-
-    if (board.isGameWon(this.color)) {
-      return 1000000L + depth;
-    }
-    if (board.isGameWon(opponentColor)) {
-      return -1000000L - depth;
-    }
-    if (depth == 0) {
-      return this.heuristic.evaluate(board, this.color);
-    }
-
-    if (isMaximizingPlayer) {
-      List<Move> moves = board.generateLegalMoves(this.color);
-      if (moves.isEmpty()) {
-        return this.heuristic.evaluate(board, this.color);
+      if (board.isGameWon(this.color)) {
+        result = 1_000_000L + depth;
+      } else if (board.isGameWon(opponentColor)) {
+        result = -1_000_000L - depth;
+      } else if (depth == 0) {
+        result = this.heuristic.evaluate(board, this.color);
+      } else if (isMaximizingPlayer) {
+        result = evaluateMaximizing(board, depth, alpha, beta);
+      } else {
+        result = evaluateMinimizing(board, depth, alpha, beta, opponentColor);
       }
+    }
+    return result;
+  }
+
+  private long evaluateMaximizing(
+      final AgonBoard board, final int depth, final long alpha, final long beta) {
+    final long result;
+    final List<Move> moves = board.generateLegalMoves(this.color);
+
+    if (moves.isEmpty()) {
+      result = this.heuristic.evaluate(board, this.color);
+    } else {
       long maxEval = Long.MIN_VALUE;
-      for (Move move : moves) {
+      long currentAlpha = alpha;
+
+      for (final Move move : moves) {
         board.applyMove(move);
         this.nodeCount++;
 
-        long eval = minimax(board, depth - 1, false, alpha, beta);
+        final long eval = minimax(board, depth - 1, false, currentAlpha, beta);
 
         board.undoMove();
 
         if (this.timeoutReached) {
-          return 0;
+          break;
         }
 
         maxEval = Math.max(maxEval, eval);
-        alpha = Math.max(alpha, eval);
-        if (beta <= alpha) {
+        currentAlpha = Math.max(currentAlpha, eval);
+        if (beta <= currentAlpha) {
           break;
         }
       }
-      return maxEval;
-    } else {
-      List<Move> moves = board.generateLegalMoves(opponentColor);
-      if (moves.isEmpty()) {
-        return this.heuristic.evaluate(board, this.color);
+
+      if (this.timeoutReached) {
+        result = 0;
+      } else {
+        result = maxEval;
       }
+    }
+    return result;
+  }
+
+  private long evaluateMinimizing(
+      final AgonBoard board,
+      final int depth,
+      final long alpha,
+      final long beta,
+      final Color opponentColor) {
+    final long result;
+    final List<Move> moves = board.generateLegalMoves(opponentColor);
+
+    if (moves.isEmpty()) {
+      result = this.heuristic.evaluate(board, this.color);
+    } else {
       long minEval = Long.MAX_VALUE;
-      for (Move move : moves) {
+      long currentBeta = beta;
+
+      for (final Move move : moves) {
         board.applyMove(move);
         this.nodeCount++;
 
-        long eval = minimax(board, depth - 1, true, alpha, beta);
+        final long eval = minimax(board, depth - 1, true, alpha, currentBeta);
 
         board.undoMove();
 
         if (this.timeoutReached) {
-          return 0;
+          break;
         }
 
         minEval = Math.min(minEval, eval);
-        beta = Math.min(beta, eval);
-        if (beta <= alpha) {
+        currentBeta = Math.min(currentBeta, eval);
+        if (currentBeta <= alpha) {
           break;
         }
       }
-      return minEval;
+
+      if (this.timeoutReached) {
+        result = 0;
+      } else {
+        result = minEval;
+      }
     }
+    return result;
   }
 }

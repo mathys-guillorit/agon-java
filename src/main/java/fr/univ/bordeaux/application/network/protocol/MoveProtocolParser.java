@@ -30,7 +30,7 @@ public final class MoveProtocolParser {
       Pattern.compile("^([a-kA-K])(\\d{1,2})([a-kA-K])(\\d{1,2})$");
 
   /** Pattern matching a compact replacement move: destination letter + destination number. */
-  private static final Pattern SHORT_MOVE_PATTERN = Pattern.compile("^([a-kA-K])(\\d{1,2})$");
+  private static final Pattern SHORT_PATTERN = Pattern.compile("^([a-kA-K])(\\d{1,2})$");
 
   /** Utility class: no public constructor. */
   private MoveProtocolParser() {}
@@ -41,58 +41,47 @@ public final class MoveProtocolParser {
    * @param rawMove the compact move string
    * @return a {@link MoveParsed} object if parsing succeeds, or null if invalid
    */
-  public static MoveParsed parse(String rawMove) {
-    if (rawMove == null || rawMove.isBlank()) {
-      return null;
-    }
+  public static MoveParsed parse(final String rawMove) {
+    MoveParsed parsedMove = null;
 
-    String moveText = rawMove.trim();
+    if (rawMove != null && !rawMove.isBlank()) {
+      final String moveText = rawMove.trim();
 
-    Matcher fullMatcher = FULL_MOVE_PATTERN.matcher(moveText);
-    if (fullMatcher.matches()) {
-      char sourceLetter = Character.toUpperCase(fullMatcher.group(1).charAt(0));
-      int sourceNumber = Integer.parseInt(fullMatcher.group(2));
+      final Matcher fullMatcher = FULL_MOVE_PATTERN.matcher(moveText);
+      if (fullMatcher.matches()) {
+        final char sourceLetter = Character.toUpperCase(fullMatcher.group(1).charAt(0));
+        final int sourceNumber = Integer.parseInt(fullMatcher.group(2));
+        final char destinationLetter = Character.toUpperCase(fullMatcher.group(3).charAt(0));
+        final int destinationNumber = Integer.parseInt(fullMatcher.group(4));
 
-      char destinationLetter = Character.toUpperCase(fullMatcher.group(3).charAt(0));
-      int destinationNumber = Integer.parseInt(fullMatcher.group(4));
+        if (isValidRow(sourceNumber) && isValidRow(destinationNumber)) {
+          final int fromIndex = CoordinateMapper.toIndex(sourceLetter, sourceNumber);
+          final int toIndex = CoordinateMapper.toIndex(destinationLetter, destinationNumber);
+          final String sourceText =
+              Character.toString(Character.toLowerCase(sourceLetter)) + sourceNumber;
+          final String destinationText =
+              Character.toString(Character.toLowerCase(destinationLetter)) + destinationNumber;
 
-      if (!isValidRow(sourceNumber) || !isValidRow(destinationNumber)) {
-        return null;
-      }
+          parsedMove = new MoveParsed(sourceText, destinationText, fromIndex, toIndex);
+        }
+      } else {
+        final Matcher shortMatcher = SHORT_PATTERN.matcher(moveText);
+        if (shortMatcher.matches()) {
+          final char destinationLetter = Character.toUpperCase(shortMatcher.group(1).charAt(0));
+          final int destinationNumber = Integer.parseInt(shortMatcher.group(2));
 
-      try {
-        int fromIndex = CoordinateMapper.toIndex(sourceLetter, sourceNumber);
-        int toIndex = CoordinateMapper.toIndex(destinationLetter, destinationNumber);
+          if (isValidRow(destinationNumber)) {
+            final int toIndex = CoordinateMapper.toIndex(destinationLetter, destinationNumber);
+            final String destinationText =
+                Character.toString(Character.toLowerCase(destinationLetter)) + destinationNumber;
 
-        String sourceText = "" + Character.toLowerCase(sourceLetter) + sourceNumber;
-        String destinationText = "" + Character.toLowerCase(destinationLetter) + destinationNumber;
-
-        return new MoveParsed(sourceText, destinationText, fromIndex, toIndex);
-      } catch (Exception e) {
-        return null;
-      }
-    }
-
-    Matcher shortMatcher = SHORT_MOVE_PATTERN.matcher(moveText);
-    if (shortMatcher.matches()) {
-      char destinationLetter = Character.toUpperCase(shortMatcher.group(1).charAt(0));
-      int destinationNumber = Integer.parseInt(shortMatcher.group(2));
-
-      if (!isValidRow(destinationNumber)) {
-        return null;
-      }
-
-      try {
-        int toIndex = CoordinateMapper.toIndex(destinationLetter, destinationNumber);
-        String destinationText = "" + Character.toLowerCase(destinationLetter) + destinationNumber;
-
-        return new MoveParsed(null, destinationText, -1, toIndex);
-      } catch (Exception e) {
-        return null;
+            parsedMove = new MoveParsed(null, destinationText, -1, toIndex);
+          }
+        }
       }
     }
 
-    return null;
+    return parsedMove;
   }
 
   /**
@@ -101,7 +90,7 @@ public final class MoveProtocolParser {
    * @param value the numeric coordinate to validate
    * @return true if the value is between 1 and 11 inclusive
    */
-  private static boolean isValidRow(int value) {
+  private static boolean isValidRow(final int value) {
     return value >= 1 && value <= 11;
   }
 }

@@ -30,10 +30,10 @@ class BitBoardTest {
   void testSetBitBoundaries() {
     BitBoard bb = new BitBoard();
 
-    bb.setBit(0, 1L); // First bit of 'low'
-    bb.setBit(63, 1L); // Last bit of 'low'
-    bb.setBit(64, 1L); // First bit of 'high'
-    bb.setBit(120, 1L); // Agon board limit
+    bb.setBit(0, 1L);
+    bb.setBit(63, 1L);
+    bb.setBit(64, 1L);
+    bb.setBit(120, 1L);
 
     assertTrue(bb.isSet(0));
     assertTrue(bb.isSet(63));
@@ -48,16 +48,13 @@ class BitBoardTest {
     BitBoard b1 = new BitBoard(10);
     BitBoard b2 = new BitBoard(20);
 
-    // OR operation
     BitBoard orRes = b1.orOperation(b2);
     assertTrue(orRes.isSet(10) && orRes.isSet(20));
 
-    // AND operation
     BitBoard andRes = orRes.andOperation(b1);
     assertTrue(andRes.isSet(10));
     assertFalse(andRes.isSet(20));
 
-    // NOT operation (Complement)
     BitBoard empty = new BitBoard();
     BitBoard full = empty.complementOperation();
     assertTrue(full.isSet(0));
@@ -67,9 +64,8 @@ class BitBoardTest {
   @Test
   @DisplayName("Test bit shift with carry-over from low to high")
   void testShiftUpCarryOver() {
-    BitBoard bb = new BitBoard(63); // Last bit of 'low' segment
+    BitBoard bb = new BitBoard(63);
 
-    // Shift by +1 (Upwards)
     BitBoard shifted = bb.shiftBitboard(1);
 
     assertTrue(shifted.isSet(64), "The bit should have moved from index 63 to 64 (low -> high)");
@@ -79,9 +75,8 @@ class BitBoardTest {
   @Test
   @DisplayName("Test bit shift with carry-over from high to low")
   void testShiftDownCarryOver() {
-    BitBoard bb = new BitBoard(64); // First bit of 'high' segment
+    BitBoard bb = new BitBoard(64);
 
-    // Shift by -1 (Downwards)
     BitBoard shifted = bb.shiftBitboard(-1);
 
     assertTrue(shifted.isSet(63), "The bit should have moved from index 64 to 63 (high -> low)");
@@ -121,20 +116,15 @@ class BitBoardTest {
   @Test
   @DisplayName("Test dilation (neighbor generation)")
   void testDilation() {
-    int index = 60; // Center position
+    int index = 60;
     BitBoard bb = new BitBoard(index);
     BitBoard dilated = bb.dilation();
-
-    // Check that neighbors (based on Direction offsets) are activated:
-    // East(+1), West(-1), NE(+12), NW(+11), SE(-11), SW(-12)
-    assertTrue(dilated.isSet(index + Direction.East.getValue()));
-    assertTrue(dilated.isSet(index + Direction.West.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NorthEast.getValue()));
-    assertTrue(dilated.isSet(index + Direction.NorthWest.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SouthEast.getValue()));
-    assertTrue(dilated.isSet(index + Direction.SouthWest.getValue()));
-
-    // The center bit itself should not be activated by dilation alone
+    assertTrue(dilated.isSet(index + Direction.EAST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.WEST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NORTH_EAST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.NORTH_WEST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SOUTH_EAST.getValue()));
+    assertTrue(dilated.isSet(index + Direction.SOUTH_WEST.getValue()));
     assertFalse(dilated.isSet(index));
   }
 }

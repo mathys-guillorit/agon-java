@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,12 +21,14 @@ public class ContestMatchTest {
   @TempDir Path tempDir;
 
   @Test
+  @DisplayName("Verify ContestMatch constructor")
   public void testContestMatchConstructor() {
     ContestMatch match = new ContestMatch();
     assertNotNull(match, "ContestMatch instance should be successfully created.");
   }
 
   @Test
+  @DisplayName("Verify successful move calculation integration")
   public void testExecuteContestIntegration() throws Exception {
     List<String> boardLines =
         Arrays.asList(
@@ -42,15 +45,11 @@ public class ContestMatchTest {
             "     . . . . .");
 
     StringBuilder content = new StringBuilder();
-    content.append("[settings]\n");
-    content.append("timeout = 300\n");
-    content.append("[game]\n");
-    content.append("O\n");
+    content.append("[settings]\ntimeout = 300\n[game]\nO\n");
     for (String line : boardLines) {
       content.append(line).append("\n");
     }
-    content.append("[history]\n");
-    content.append("X c3 c5;\n");
+    content.append("[history]\nX c3 c5;\n");
 
     Path file = tempDir.resolve("contest_test.asv");
     Files.writeString(file, content.toString());
@@ -63,16 +62,21 @@ public class ContestMatchTest {
       ContestMatch.executeContest(file.toString());
       String output = outContent.toString().trim();
       assertFalse(output.isEmpty(), "The AI should have returned a move.");
-      assertTrue(output.length() >= 5, "Invalid move format.");
+      boolean isValidFormat =
+          output.matches("^[OX] ([a-z][0-9]{1,2} [a-z][0-9]{1,2}|reloc [A-G][0-9]{1,2})$");
+
+      assertTrue(isValidFormat, "Invalid move format received: " + output);
     } finally {
       System.setOut(originalOut);
     }
   }
 
-  /*@Test
+  @Test
+  @DisplayName("Verify behavior when no moves are possible")
   public void testExecuteContestNoMoveBranch() throws Exception {
     Path emptyFile = tempDir.resolve("no_move.asv");
 
+    // A completely blocked board where no moves can be made
     List<String> blockedBoard =
         Arrays.asList(
             "      O X O X O X",
@@ -94,34 +98,27 @@ public class ContestMatchTest {
     }
     sb.append("[history]\n");
     Files.writeString(emptyFile, sb.toString());
-    ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+
     ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    PrintStream originalErr = System.err;
     PrintStream originalOut = System.out;
-    System.setErr(new PrintStream(errContent));
     System.setOut(new PrintStream(outContent));
 
     try {
       ContestMatch.executeContest(emptyFile.toString());
-      String errorOutput = errContent.toString();
       String stdOutput = outContent.toString().trim();
-      assertTrue(
-          errorOutput.contains("The AI could not find any valid move."),
-          "Expected AI to fail to find a move. Instead it returned: '" + stdOutput + "'");
+      // If the AI finds no move, stdout should be empty as the error goes to Logger/Stderr
+      assertTrue(stdOutput.isEmpty(), "Output should be empty when no move is found.");
     } finally {
-      System.setErr(originalErr);
       System.setOut(originalOut);
     }
-  }*/
+  }
 
-  /**
-   * Tests the scenario where the save file is corrupted or invalid, causing the parser to return
-   * null and throwing an Exception.
-   */
   @Test
+  @DisplayName("Verify failure when parsing a corrupted file")
   public void testExecuteContestParseFailure() throws Exception {
     Path corruptFile = tempDir.resolve("corrupted.asv");
     Files.writeString(corruptFile, "[unknown_section]\nrandom nonsense\n");
+
     Exception exception =
         assertThrows(
             Exception.class,

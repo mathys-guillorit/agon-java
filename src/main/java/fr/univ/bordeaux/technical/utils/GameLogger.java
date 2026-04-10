@@ -6,37 +6,42 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Used for application error messages centralization for easy activation/deactivation across all
- * the app. group all information about what is shown in the app.
+ * Centralized logger utility for the Agon game.
  *
- * @apiNote do the if here so when pdm send Logger problems it's already treated for the specific
- *     conditional display.
+ * <p>This class wraps {@link Logger} to provide configurable logging levels (debug, verbose,
+ * warning, error) and ensures consistent formatting across the application. It follows the
+ * Singleton pattern to ensure a unique logging context.
  */
-public class GameLogger {
+public final class GameLogger {
+
+  /** The unique singleton instance of the GameLogger. */
   private static GameLogger instance;
+
+  /** The internal Java Logger instance. */
   private final Logger logger;
 
+  /**
+   * Private constructor to initialize the logger with a custom ConsoleHandler. Disables parent
+   * handlers to avoid duplicate logs in the console.
+   */
   private GameLogger() {
     this.logger = Logger.getLogger("AgonGame");
-
-    // FORCE LE SILENCE ABSOLU AU DÉBUT
     this.logger.setUseParentHandlers(false);
-    this.logger.setLevel(Level.OFF); // On commence par tout éteindre
+    this.logger.setLevel(Level.OFF);
 
-    // Nettoyage des handlers existants
-    for (Handler h : this.logger.getHandlers()) {
-      this.logger.removeHandler(h);
+    for (Handler handler : this.logger.getHandlers()) {
+      this.logger.removeHandler(handler);
     }
 
-    ConsoleHandler consoleHandler = new ConsoleHandler();
-    consoleHandler.setLevel(Level.OFF); // Éteint aussi le handler
+    final ConsoleHandler consoleHandler = new ConsoleHandler();
+    consoleHandler.setLevel(Level.OFF);
     this.logger.addHandler(consoleHandler);
   }
 
   /**
-   * Get the logger object (entrypoint).
+   * Returns the singleton instance of the GameLogger.
    *
-   * @return {@link GameLogger}
+   * @return The unique {@link GameLogger} instance.
    */
   public static synchronized GameLogger getInstance() {
     if (instance == null) {
@@ -45,8 +50,12 @@ public class GameLogger {
     return instance;
   }
 
-  /** Activated by the option {@code -v} or {@code set verbose=true}. */
-  public void setVerbose(boolean enabled) {
+  /**
+   * Enables or disables verbose mode.
+   *
+   * @param enabled If true, sets the level to INFO; otherwise, sets it to WARNING.
+   */
+  public void setVerbose(final boolean enabled) {
     if (enabled) {
       updateLevel(Level.INFO);
     } else {
@@ -54,38 +63,100 @@ public class GameLogger {
     }
   }
 
-  /** Activated by the option {@code -d} or {@code set debug=true}. */
-  public void setDebugMode(boolean enabled) {
+  /**
+   * Enables or disables debug mode.
+   *
+   * @param enabled If true, sets the level to FINE; otherwise, sets it to WARNING.
+   */
+  public void setDebugMode(final boolean enabled) {
     if (enabled) {
-      updateLevel(Level.FINE); // FINE est le standard Java pour le Debug
+      updateLevel(Level.FINE);
     } else {
       updateLevel(Level.WARNING);
     }
   }
 
-  /** Update the logger level AND console handler. */
-  private void updateLevel(Level newLevel) {
+  /**
+   * Updates the logging level for both the logger and all its attached handlers.
+   *
+   * @param newLevel The new {@link Level} to apply.
+   */
+  private void updateLevel(final Level newLevel) {
     this.logger.setLevel(newLevel);
-    for (Handler h : this.logger.getHandlers()) {
-      h.setLevel(newLevel);
+    for (Handler handler : this.logger.getHandlers()) {
+      handler.setLevel(newLevel);
     }
   }
 
-  // --- STATIC LOGGING METHODS ---
-
-  public static void debug(String msg) {
-    getInstance().logger.log(Level.FINE, "[DEBUG] " + msg);
+  /**
+   * Checks if DEBUG (FINE) logs are currently enabled.
+   *
+   * @return {@code true} if loggable at FINE level, {@code false} otherwise.
+   */
+  public static boolean isDebugEnabled() {
+    return getInstance().logger.isLoggable(Level.FINE);
   }
 
-  public static void info(String msg) {
-    getInstance().logger.log(Level.INFO, "[INFO] " + msg);
+  /**
+   * Checks if INFO logs are currently enabled.
+   *
+   * @return {@code true} if loggable at INFO level, {@code false} otherwise.
+   */
+  public static boolean isInfoEnabled() {
+    return getInstance().logger.isLoggable(Level.INFO);
   }
 
-  public static void warn(String msg) {
-    getInstance().logger.log(Level.WARNING, "[WARN] " + msg);
+  /**
+   * Checks if WARNING logs are currently enabled.
+   *
+   * @return {@code true} if loggable at WARNING level, {@code false} otherwise.
+   */
+  public static boolean isWarnEnabled() {
+    return getInstance().logger.isLoggable(Level.WARNING);
   }
 
-  public static void error(String msg) {
-    getInstance().logger.log(Level.SEVERE, "[ERROR] " + msg);
+  /**
+   * Checks if ERROR (SEVERE) logs are currently enabled.
+   *
+   * @return {@code true} if loggable at SEVERE level, {@code false} otherwise.
+   */
+  public static boolean isErrorEnabled() {
+    return getInstance().logger.isLoggable(Level.SEVERE);
+  }
+
+  /**
+   * Logs a message at the DEBUG (FINE) level.
+   *
+   * @param message The message to log.
+   */
+  public static void debug(final String message) {
+    getInstance().logger.log(Level.FINE, "[DEBUG] " + message);
+  }
+
+  /**
+   * Logs a message at the INFO level.
+   *
+   * @param message The message to log.
+   */
+  public static void info(final String message) {
+    getInstance().logger.log(Level.INFO, "[INFO] " + message);
+  }
+
+  /**
+   * Logs a message at the WARNING level.
+   *
+   * @param message The message to log.
+   */
+  public static void warn(final String message) {
+    getInstance().logger.log(Level.WARNING, "[WARN] " + message);
+  }
+
+  /**
+   * Logs a message at the ERROR (SEVERE) level.
+   *
+   * @param message The message to log.
+   */
+  public static void error(final String message) {
+    getInstance().logger.log(Level.SEVERE, "[ERROR] " + message);
   }
 }

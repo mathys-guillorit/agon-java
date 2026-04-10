@@ -89,7 +89,7 @@ public class LangService implements LangTranslationProvider {
    * @return {@link String} translated output of the token is invalid it throws and Exception
    *     ({@link MissingResourceException}) (development side only)
    */
-  public String translate(String token) {
+  public final String translate(String token) {
     return this.resBundle.getString(token);
   }
 

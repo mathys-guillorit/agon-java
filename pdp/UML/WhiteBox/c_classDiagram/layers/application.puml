@@ -1,33 +1,80 @@
 @startuml
 'https://plantuml.com/class-diagram
 
-package fr.univ.bordeaux.application {
+package application {
+package ai {
+    package heuristics {
+        interface Heuristic
+        interface MctsSelectionHeuristic
+        abstract class AbstractHeuristic
+        class CentralityHeuristic
+        class MobilityHeuristic
+        class MixedHeuristic
+        class MlHeuristic
+        class UctHeuristic
+    }
+
+    package strategy {
+        interface AgonAi {
+            +getBestMove(board: AgonBoard): Move
+            +setTimeLimit(millis: long): void
+        }
+
+        abstract class AbstractAgonAi
+        class AiFactory
+
+        package mcts {
+            class MctsStrategy
+            class MctsNode
+        }
+
+        package minimax {
+            class MinimaxStrategy
+        }
+    }
+}
+
+package commands {
+interface CmdAction{
++boolean execute(MatchManager match);
+   +createNew(String[] args):CmdAction
+   + getDescription():String
+   + getAutoCompleter():Completer
+   + getName():String
+   +getOptions(): Options
+   + getHelp():String
+}
+    abstract class Cmd implements CmdAction{
+    }
+
+class AgonRegister{}
+}
+AgonRegister--CmdAction
     class AppContext {
-        - profile: LocalProfile
-        - client: AgonClient
-        - server: AgonServer
-        - mode: AppMode
-        + getClient(): AgonClient
-        + getServer(): AgonServer
+    }
+    enum AppMode{
+    LOCAL
+    ONLINE
     }
 
     class GameLauncher {
-        - context: AppContext
-        - ui: GameUserInterface
-        + launch(): void
     }
 
     package match {
-        class MatchManager {
-            - currentMatch: Match
-            + createMatch(type: String): Match
+        interface MatchManager extends ReadOnlyMatch{
+          + move(Move move):boolean
+          + undo():boolean
+          + redo():boolean
+          + pause():boolean
+          + setIsSaved(boolean isSaved):void
+          + quit():void
+          + hint():Move
+          + startTurn():void
         }
 
-        abstract class Match implements ReadOnlyMatch {
-            - board: AgonBoard
-            - player1: Player
-            - player2: Player
-            + makeMove(move: Move): boolean
+        abstract class Match implements MatchManager {
+        }
+        class MatchFactory{
         }
 
         class StandardMatch extends Match
@@ -40,13 +87,22 @@ package fr.univ.bordeaux.application {
         }
 
         class GameEngine {
-            + validateMove(move: Move, board: AgonBoard): boolean
         }
 
+        class GameTimer{
+        }
+        enum MatchStatus{
+        RUNNING
+        FINISHED
+        }
+
+        record MoveDTO{
+        }
         package player {
             interface Player {
                 + getName(): String
                 + getColor(): Color
+                + getAction(AgonRegister<CmdAction> cmds): CmdAction
             }
             abstract class AbstractPlayer implements Player
             class HumanPlayer extends AbstractPlayer
@@ -55,11 +111,45 @@ package fr.univ.bordeaux.application {
         }
     }
 }
-
+MatchFactory..>Match
 ' Relations inter-couches
-GameLauncher --> AppContext : manages
-Match --> "1" fr.univ.bordeaux.agoncore.bitboard.AgonBoard : uses
-Match --> "2" player.Player : has
-Match ..> fr.univ.bordeaux.application.match.GameEngine : uses for validation
+GameLauncher --> AppContext
+Match --> AgonBoard
+Match --> Player
+Match ..> GameEngine
+BlitzMatch --> GameTimer
+GameEngine-->Player
+GameEngine -->MatchManager
+AppContext -->AppMode
+GameLauncher *-- AppContext
+GameLauncher ..> AgonRegister
+GameLauncher ..> GameConfig
 
+' Création des moteurs et UI
+GameLauncher ..> GameEngine
+GameLauncher ..> AgonGui
+GameLauncher ..> AgonShell
+GameLauncher ..> ContestMatch
+
+' Dépendances de méthodes (fillRegister)
+GameLauncher ..> CmdAction
+GameLauncher ..> AgonRegister
+AgonAi <|.. AbstractAgonAi
+AgonAi <|.. MctsStrategy
+AgonAi <|.. MinimaxStrategy
+Heuristic <|.. AbstractHeuristic
+Heuristic <|.. MixedHeuristic
+MctsSelectionHeuristic <|.. MlHeuristic
+MctsSelectionHeuristic <|.. UctHeuristic
+
+' --- RELATIONS D'HERITAGE (extends) ---
+AbstractHeuristic <|-- CentralityHeuristic
+AbstractHeuristic <|-- MobilityHeuristic
+AbstractAgonAi <|-- MinimaxStrategy
+AbstractAgonAi <|-- MctsStrategy
+
+' --- RELATIONS DE LA FACTORY ---
+AiFactory ..> MinimaxStrategy
+AiFactory ..> MctsStrategy
+MctsNode-- MctsStrategy
 @enduml

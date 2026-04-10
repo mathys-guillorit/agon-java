@@ -8,14 +8,30 @@ import java.util.List;
 
 /** A builder class responsible for progressively assembling a {@link GameSaveData}. */
 public class GameSaveBuilder {
+
+  /** Configuration object representing the settings. */
   private GameConfig config = new GameConfig();
-  private Color currentPlayer = null;
+
+  /** The current player whose turn it is to play. */
+  private Color currentPlayer;
+
+  /** List of strings representing the board's visual state. */
   private final List<String> boardLines = new ArrayList<>();
+
+  /** List of strings representing the move history. */
   private final List<String> historyMoves = new ArrayList<>();
 
-  private boolean hasSettingsSection = false;
-  private boolean hasGameSection = false;
-  private boolean hasHistorySection = false;
+  /** Flag indicating if the settings section was found. */
+  private boolean hasSettings;
+
+  /** Flag indicating if the game section was found. */
+  private boolean hasGame;
+
+  /** Flag indicating if the history section was found. */
+  private boolean hasHistory;
+
+  /** Constructs a new empty builder for game saves. */
+  public GameSaveBuilder() {}
 
   /**
    * Flags the {@code [settings]} section as present in the parsed save file.
@@ -24,7 +40,7 @@ public class GameSaveBuilder {
    * even if its contents are malformed or missing.
    */
   public void markSettingsSection() {
-    this.hasSettingsSection = true;
+    this.hasSettings = true;
   }
 
   /**
@@ -34,7 +50,7 @@ public class GameSaveBuilder {
    * state from a structurally corrupted or truncated file.
    */
   public void markGameSection() {
-    this.hasGameSection = true;
+    this.hasGame = true;
   }
 
   /**
@@ -45,46 +61,94 @@ public class GameSaveBuilder {
    * to an unclosed comment block or truncation).
    */
   public void markHistorySection() {
-    this.hasHistorySection = true;
+    this.hasHistory = true;
   }
 
-  public void setConfig(GameConfig config) {
+  /**
+   * Sets the game configuration parsed from the save file.
+   *
+   * @param config The extracted {@link GameConfig} object.
+   */
+  public void setConfig(final GameConfig config) {
     this.config = config;
   }
 
+  /**
+   * Retrieves the current game configuration held by the builder.
+   *
+   * @return The current {@link GameConfig}.
+   */
   public GameConfig getConfig() {
     return config;
   }
 
-  public void setCurrentPlayer(Color player) {
+  /**
+   * Sets the player whose turn it is to play next.
+   *
+   * @param player The {@link Color} representing the current player.
+   */
+  public void setCurrentPlayer(final Color player) {
     this.currentPlayer = player;
   }
 
-  public void addBoardLine(String line) {
+  /**
+   * Adds a single line to the board representation.
+   *
+   * @param line The string representing a line on the board.
+   */
+  public void addBoardLine(final String line) {
     this.boardLines.add(line);
   }
 
-  public void addHistoryMove(String move) {
+  /**
+   * Adds a move notation string to the history.
+   *
+   * @param move The standard string notation of the move.
+   */
+  public void addHistoryMove(final String move) {
     this.historyMoves.add(move);
   }
 
-  /** Validates and builds the final GameSaveData object. */
+  /**
+   * Validates and builds the final GameSaveData object.
+   *
+   * @return A fully constructed and validated {@link GameSaveData}.
+   * @throws IOException If the parsed data is incomplete or corrupted.
+   */
   public GameSaveData build() throws IOException {
-    if (!this.hasSettingsSection) {
+    validateSections();
+    validateData();
+    return new GameSaveData(config, currentPlayer, boardLines, historyMoves);
+  }
+
+  /**
+   * Checks that all required section headers were found in the file.
+   *
+   * @throws IOException If a structural section is missing.
+   */
+  private void validateSections() throws IOException {
+    if (!this.hasSettings) {
       throw new IOException("Settings section not set");
     }
-    if (!this.hasGameSection) {
+    if (!this.hasGame) {
       throw new IOException("Game section not set");
     }
-    if (!this.hasHistorySection) {
+    if (!this.hasHistory) {
       throw new IOException("History section not set");
     }
-    if (currentPlayer == null) {
+  }
+
+  /**
+   * Checks that the core game data is present and well-formed.
+   *
+   * @throws IOException If essential data points are missing.
+   */
+  private void validateData() throws IOException {
+    if (this.currentPlayer == null) {
       throw new IOException("Invalid save file: Missing current player in [game] section.");
     }
-    if (boardLines.isEmpty()) {
+    if (this.boardLines.isEmpty()) {
       throw new IOException("Invalid save file: Board representation is missing.");
     }
-    return new GameSaveData(config, currentPlayer, boardLines, historyMoves);
   }
 }

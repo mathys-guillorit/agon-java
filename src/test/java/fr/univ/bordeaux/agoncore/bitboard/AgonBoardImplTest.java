@@ -22,7 +22,6 @@ class AgonBoardImplTest {
 
   @BeforeEach
   void setUp() {
-    // Initialize an empty board
     board = new AgonBoardImpl();
   }
 
@@ -37,7 +36,7 @@ class AgonBoardImplTest {
     wPawns.setBit(63, 1L);
     board = new AgonBoardImpl(wQueen, bQueen, wPawns, bPawns);
     assertTrue(
-        board.applyMove(new Move(59, 60, Color.BLACK)), "La reine noire devrait pouvoir bouger");
+        board.applyMove(new Move(59, 60, Color.BLACK)), "The black queen should be able to move");
     assertEquals(PieceType.BLACK_QUEEN, board.getPieceAt(60));
     assertTrue(board.applyMove(new Move(63, 62, Color.WHITE)));
   }
@@ -47,11 +46,9 @@ class AgonBoardImplTest {
   void testCentrality() {
     assertEquals(0, board.getCentrality(THRONE), "Index 60 must be the Throne (Circle 0)");
 
-    // Check a direct neighbor of the throne (Circle 1)
     assertTrue(board.getNeighbors(THRONE).isSet(72));
     assertEquals(1, board.getCentrality(72), "A direct neighbor of the throne must be in circle 1");
 
-    // An index on the edges (Circle 5)
     assertEquals(5, board.getCentrality(1), "Index 0 must be on the outer edge (Circle 5)");
   }
 
@@ -117,7 +114,7 @@ class AgonBoardImplTest {
   }
 
   @Test
-  @DisplayName("Test de relocation : Priorité absolue")
+  @DisplayName("Relocation Test: Absolute Priority")
   void testRelocationPriority() {
     BitBoard wPawns = new BitBoard(59);
     BitBoard bQueen = new BitBoard(60);
@@ -134,7 +131,7 @@ class AgonBoardImplTest {
   }
 
   @Test
-  @DisplayName("Test de relocation : Priorité absolue")
+  @DisplayName("Relocation Test: Absolute Priority")
   void testRelocation() {
     BitBoard wPawns = new BitBoard(61);
     wPawns.setBit(64, 1L);
@@ -213,9 +210,9 @@ class AgonBoardImplTest {
   }
 
   @Test
-  @DisplayName("Test Undo après capture de la Reine Noire")
+  @DisplayName("Test Undo after Black Queen capture")
   void testUndoCaptureQueen() {
-    // 1. Setup avec captureBoard
+    // 1. Setup with captureBoard
     BitBoard whitePawns = new BitBoard();
     whitePawns.setBit(62, 1L);
     whitePawns.setBit(65, 1L);
@@ -223,16 +220,19 @@ class AgonBoardImplTest {
     AgonBoardImpl captureBoard =
         new AgonBoardImpl(new BitBoard(), blackQueen, whitePawns, new BitBoard());
     captureBoard.applyMove(new Move(65, 64, Color.WHITE));
-    assertNull(captureBoard.getPieceAt(63), "La reine devrait être capturée avant l'undo");
-    assertTrue(captureBoard.undoMove(), "L'undo devrait réussir car un coup a été joué");
-    assertEquals(PieceType.BLACK_QUEEN, captureBoard.getPieceAt(63), "La reine doit être revenue");
+    assertNull(captureBoard.getPieceAt(63), "The queen should be captured before undo");
+    assertTrue(captureBoard.undoMove(), "Undo should succeed because a move was played");
     assertEquals(
-        PieceType.WHITE_PAWN, captureBoard.getPieceAt(65), "Le pion blanc doit être revenu à 65");
-    assertNull(captureBoard.getPieceAt(64), "La case 64 doit être vide");
+        PieceType.BLACK_QUEEN, captureBoard.getPieceAt(63), "The queen must have returned");
+    assertEquals(
+        PieceType.WHITE_PAWN,
+        captureBoard.getPieceAt(65),
+        "The white pawn must have returned to 65");
+    assertNull(captureBoard.getPieceAt(64), "Index 64 must be empty");
   }
 
   @Test
-  @DisplayName("Test Undo Relocalisation Reine : déclenche setQueenRelocating(true)")
+  @DisplayName("Test Undo Queen Relocation : triggers setQueenRelocating(true)")
   void testUndoQueenRelocation() {
     BitBoard wQueen = new BitBoard(63);
     BitBoard bPawns = new BitBoard();
@@ -240,21 +240,21 @@ class AgonBoardImplTest {
     bPawns.setBit(65, 1L);
     AgonBoardImpl boardReloc2 = new AgonBoardImpl(wQueen, new BitBoard(), new BitBoard(), bPawns);
     boardReloc2.applyMove(new Move(65, 64, Color.BLACK));
-    assertNull(boardReloc2.getPieceAt(63), "La reine blanche devrait être capturée");
+    assertNull(boardReloc2.getPieceAt(63), "The white queen should be captured");
     Move relocationMove2 = new Move(-1, 61, Color.WHITE);
     assertTrue(boardReloc2.applyMove(relocationMove2));
     assertEquals(PieceType.WHITE_QUEEN, boardReloc2.getPieceAt(61));
     boolean undoResult2 = boardReloc2.undoMove();
-    assertTrue(undoResult2, "L'undo doit réussir");
-    assertNull(boardReloc2.getPieceAt(20), "La reine ne doit plus être sur le plateau");
+    assertTrue(undoResult2, "Undo must succeed");
+    assertNull(boardReloc2.getPieceAt(20), "The queen must no longer be on the board");
     List<Move> nextMoves2 = boardReloc2.generateLegalMoves(Color.WHITE);
     assertFalse(nextMoves2.isEmpty());
     boolean isRelocating2 = nextMoves2.stream().allMatch(m -> m.getFrom() == -1);
-    assertTrue(isRelocating2, "La reine blanche doit à nouveau être en attente de relocalisation");
+    assertTrue(isRelocating2, "The white queen must again be waiting for relocation");
   }
 
   @Test
-  @DisplayName("Test de la configuration initiale du plateau")
+  @DisplayName("Test initial board configuration")
   void testInitBaseConfiguration() {
 
     AgonBoardImpl baseBoard = new AgonBoardImpl();
@@ -277,7 +277,7 @@ class AgonBoardImplTest {
   }
 
   @Test
-  @DisplayName("Test generateLegalMovesBitboard : Cas de relocalisation")
+  @DisplayName("Test generateLegalMovesBitboard : Relocation case")
   void testGenerateLegalMovesWithRelocation() {
     BitBoard wQueen = new BitBoard(63);
     BitBoard bPawns = new BitBoard();
@@ -286,10 +286,9 @@ class AgonBoardImplTest {
     AgonBoardImpl boardReloc = new AgonBoardImpl(wQueen, new BitBoard(), new BitBoard(), bPawns);
     boardReloc.applyMove(new Move(65, 64, Color.BLACK));
     BitBoard legalDestinations = boardReloc.generateLegalMovesBitboard(Color.WHITE);
-    assertNotNull(legalDestinations, "Le BitBoard de destinations ne doit pas être nul");
-    assertFalse(
-        legalDestinations.isEmpty(), "Il doit y avoir des cases de relocalisation possibles");
-    assertFalse(legalDestinations.isSet(60), "Une reine ne peut pas être relocalisée sur le trône");
+    assertNotNull(legalDestinations, "The destination BitBoard must not be null");
+    assertFalse(legalDestinations.isEmpty(), "There must be possible relocation cells");
+    assertFalse(legalDestinations.isSet(60), "A queen cannot be relocated onto the throne");
   }
 
   @Test

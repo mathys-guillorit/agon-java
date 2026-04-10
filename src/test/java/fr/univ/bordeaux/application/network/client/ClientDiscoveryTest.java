@@ -33,7 +33,7 @@ class ClientDiscoveryTest {
 
   @Test
   @DisplayName("Start and stop are safe")
-  void start_and_stop_are_safe() {
+  void startAndStopAreSafe() {
     discovery = new ClientDiscovery();
 
     assertDoesNotThrow(
@@ -48,7 +48,7 @@ class ClientDiscoveryTest {
 
   @Test
   @DisplayName("Stop is safe before start and after start")
-  void stop_is_safe() {
+  void stopIsSafe() {
     discovery = new ClientDiscovery();
 
     assertDoesNotThrow(
@@ -64,7 +64,7 @@ class ClientDiscoveryTest {
 
   @Test
   @DisplayName("Invalid UDP payload is ignored")
-  void invalid_packet_is_ignored() throws Exception {
+  void invalidPacketIsIgnored() throws Exception {
     discovery = new ClientDiscovery();
     discovery.start();
 

@@ -5,53 +5,64 @@ import java.util.Objects;
 /**
  * Represents a single action performed by a player on the Agon board.
  *
- * <p>A move is characterized by a starting position (source), a destination position, the player's
- * color, and the specific rank of the piece being moved. This class encapsulates standard
- * displacements, as well as the mandatory relocations that occur after a piece is captured. *
+ * <p>A move is defined by:
  *
- * <p>In the case of a relocation, the {@code from} index is set to {@code -1}, indicating the piece
- * is being moved from the relocation queue (off-board) back onto the board's edge.
+ * <ul>
+ *   <li>a starting position (source)
+ *   <li>a destination position
+ *   <li>the player's color
+ *   <li>the type of piece being moved
+ * </ul>
+ *
+ * <p>This class handles both:
+ *
+ * <ul>
+ *   <li>standard movements on the board
+ *   <li>relocation moves after a capture
+ * </ul>
+ *
+ * <p>For relocation moves, the {@code from} index is set to {@code -1}. This indicates that the
+ * piece comes from the relocation reserve (off-board) and is placed back onto the board edge.
  */
 public class Move {
 
   /**
-   * The starting tile index (0-120).
+   * Source tile index.
    *
-   * <p>A value of {@code -1} indicates a "Relocation Move" where a piece returns to the board from
-   * the relocation reserve.
+   * <p>A value of {@code -1} indicates a relocation move from the reserve.
    */
   private final int from;
 
-  /** The destination tile index on the board (0-120). */
+  /** Destination tile index on the board. */
   private final int destination;
 
-  /** The color of the player performing the move. */
+  /** Color of the player performing the move. */
   private final Color color;
 
-  /** The type of piece (Pawn or Queen) being moved. */
+  /** Type of the moved piece. */
   private final PieceType pieceType;
 
   /**
-   * Constructs a new Move for general displacement.
+   * Constructs a move for a standard displacement.
    *
-   * @param from The source tile index. Use {@code -1} for relocation from the reserve.
-   * @param destination The destination tile index on the board.
-   * @param color The {@link Color} of the player making the move.
+   * @param from source tile index, or {@code -1} for relocation
+   * @param destination destination tile index
+   * @param color player color
    */
   public Move(final int from, final int destination, final Color color) {
     this.from = from;
     this.destination = destination;
     this.color = color;
-    this.pieceType = null; // Default if not specified
+    this.pieceType = null;
   }
 
   /**
-   * Constructs a new Move with explicit piece type identification.
+   * Constructs a move with an explicit piece type.
    *
-   * @param from The source tile index (or {@code -1} for relocation).
-   * @param destination The destination tile index.
-   * @param color The {@link Color} of the player.
-   * @param pieceType The {@link PieceType} rank of the piece.
+   * @param from source tile index, or {@code -1} for relocation
+   * @param destination destination tile index
+   * @param color player color
+   * @param pieceType moved piece type
    */
   public Move(final int from, final int destination, final Color color, final PieceType pieceType) {
     this.from = from;
@@ -61,68 +72,96 @@ public class Move {
   }
 
   /**
-   * Get the source of a Move.
+   * Returns the source tile index.
    *
-   * @return The source tile index. Returns {@code -1} if the move is a relocation.
+   * @return source tile index, or {@code -1} for a relocation move
    */
   public int getFrom() {
     return from;
   }
 
   /**
-   * Get the destination of a Move.
+   * Returns the destination tile index.
    *
-   * @return The destination tile index (0-120).
+   * @return destination tile index
    */
   public int getDestination() {
     return destination;
   }
 
   /**
-   * Get the color of the piece owner.
+   * Returns the player color.
    *
-   * @return The {@link Color} of the player who owns this move.
+   * @return player color
    */
   public Color getColor() {
     return color;
   }
 
   /**
-   * Get the PieceType of the piece that has been moved.
+   * Returns the moved piece type.
    *
-   * @return The {@link PieceType} being moved (Queen or Pawn).
+   * @return moved piece type
    */
   public PieceType getPieceType() {
     return pieceType;
   }
 
+  /**
+   * Indicates whether this move is a relocation move.
+   *
+   * @return {@code true} if the source index is {@code -1}, {@code false} otherwise
+   */
   public boolean isRelocationMove() {
     return from == -1;
   }
 
+  /**
+   * Computes the hash code for this Move based on its state.
+   *
+   * @return A hash code value for this object.
+   */
   @Override
   public int hashCode() {
     return Objects.hash(from, destination, color, pieceType);
   }
 
+  /**
+   * Compares this move to the specified object.
+   *
+   * <p>Two moves are considered equal if they have the same source, destination, and color. If
+   * piece types are provided for both, they must also match.
+   *
+   * @param obj The object to compare with.
+   * @return {@code true} if the objects are equivalent, {@code false} otherwise.
+   */
   @Override
-  public boolean equals(Object obj) {
-    Move move = (Move) obj;
-    if (this.pieceType != null && move.getPieceType() != null) {
-      return this.from == move.from
-          && this.destination == move.destination
-          && this.color == move.color
-          && this.pieceType == move.pieceType;
+  public boolean equals(final Object obj) {
+    boolean isEqual = false;
+
+    if (this == obj) {
+      isEqual = true;
+    } else if (obj instanceof Move) {
+      final Move move = (Move) obj;
+      final boolean sameMainFields =
+          this.from == move.from
+              && this.destination == move.destination
+              && this.color == move.color;
+
+      if (this.pieceType != null && move.getPieceType() != null) {
+        isEqual = sameMainFields && this.pieceType == move.pieceType;
+      } else {
+        isEqual = sameMainFields;
+      }
     }
-    return this.from == move.from
-        && this.destination == move.destination
-        && this.color == move.color;
+
+    return isEqual;
   }
 
   /**
-   * Returns a string representation of the move for debugging purposes.
+   * Returns a string representation of the move.
    *
-   * @return A formatted string containing the source, destination, and color.
+   * @return formatted move description
    */
   @Override
   public String toString() {

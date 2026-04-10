@@ -12,21 +12,24 @@ import fr.univ.bordeaux.application.commands.CmdAction;
  */
 public class NetworkPlayer extends AbstractPlayer {
 
-  public NetworkPlayer(String name, Color color) {
+  /**
+   * Creates a network player.
+   *
+   * @param name player name
+   * @param color player color
+   */
+  public NetworkPlayer(final String name, final Color color) {
     super(name, color);
   }
 
   /**
    * Returns the next action to perform for this player.
    *
-   * <p>This implementation is unused for network players, as their moves are received from the
-   * server rather than generated locally.
-   *
    * @param cmds command registry (unused)
-   * @return always null
+   * @return always null (network-driven player)
    */
   @Override
-  public CmdAction getAction(AgonRegister<CmdAction> cmds) {
+  public CmdAction getAction(final AgonRegister<CmdAction> cmds) {
     return null;
   }
 

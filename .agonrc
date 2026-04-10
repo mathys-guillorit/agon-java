@@ -17,3 +17,15 @@ ai_depth = 4
 ai_time_limit = 5
 ai_iterative_deepening = true
 ai_heuristic = mixed
+
+[shortcuts]
+shortcut_save = Ctrl+S
+shortcut_redo = Ctrl+R
+shortcut_hint = Ctrl+H
+shortcut_pause = Ctrl+P
+shortcut_info = Ctrl+I
+shortcut_undo = Ctrl+U
+shortcut_config = Ctrl+,
+shortcut_new = Ctrl+N
+shortcut_load = Ctrl+L
+shortcut_quit = Ctrl+Q

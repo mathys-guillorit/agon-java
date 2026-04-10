@@ -1,10 +1,12 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
+import fr.univ.bordeaux.application.ai.strategy.IncompatibleAiConfigurationException;
 import fr.univ.bordeaux.application.commands.Cmd;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
@@ -27,7 +29,7 @@ public class CmdCreate extends Cmd {
   /** The core game engine to be updated with the new match manager. */
   private GameEngine gameEngine;
 
-  /** Arguments passed by the user (e.g., -p1Ia true). */
+  /** Arguments passed by the user (e.g., -a black). */
   private String[] args;
 
   /**
@@ -56,16 +58,7 @@ public class CmdCreate extends Cmd {
     this.gameEngine = gameEngine;
     this.args = args;
     Options options = super.getOptions();
-    options.addOption("a", "ai", true, "Set the [Color] player with an Ai.\n");
-    options.addOption("b", "blitz", false, "Set the game mode to blitz\n");
-    options.addOption("t", "time", true, "Set the reflexion time for both player\n");
-    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
-    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
-    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
-    options.addOption(
-        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
-    options.addOption(
-        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
+    ConfigBinder.fillOptions(options);
   }
 
   /**
@@ -82,12 +75,25 @@ public class CmdCreate extends Cmd {
       CommandLine cmd = parser.parse(super.getOptions(), args);
       GameConfig matchConfig = this.gameConfig.copy();
       ConfigBinder.bindOptionsToConfig(cmd, matchConfig, super.getCtx());
-      MatchManager match = MatchFactory.createMatch(matchConfig, this.getCtx());
+
+      MatchManager match;
+      try {
+        match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      } catch (IncompatibleAiConfigurationException e) {
+        // En cas d'incompatibilité, la factory a déjà corrigé matchConfig.
+        // On affiche l'erreur (qui contient les détails du fallback) et on réessaie.
+        this.getCtx().showWarn("Warning: " + e.getMessage());
+        match = MatchFactory.createMatch(matchConfig, this.getCtx());
+      }
+
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
+      if (match instanceof ReadOnlyMatch) {
+        ((MatchObserver) super.getCtx()).onMatchUpdate((ReadOnlyMatch) match);
+      }
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       GameLogger.error(e.getMessage());
-      this.getCtx().showError("Invalid options for command 'new': " + e.getMessage());
+      this.getCtx().showError("Error: " + e.getMessage());
       return false;
     }
     return true;

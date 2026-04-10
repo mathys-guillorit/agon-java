@@ -25,7 +25,10 @@ public class MoveParsed {
   /** Destination coordinate as text (e.g. "e4" or "f11"). */
   private final String destinationText;
 
+  /** Internal source board index. */
   private final int fromIndex;
+
+  /** Internal destination board index. */
   private final int toIndex;
 
   /**
@@ -36,7 +39,11 @@ public class MoveParsed {
    * @param fromIndex internal source index
    * @param toIndex internal destination index
    */
-  public MoveParsed(String sourceText, String destinationText, int fromIndex, int toIndex) {
+  public MoveParsed(
+      final String sourceText,
+      final String destinationText,
+      final int fromIndex,
+      final int toIndex) {
     this.sourceText = sourceText;
     this.destinationText = destinationText;
     this.fromIndex = fromIndex;
@@ -79,6 +86,11 @@ public class MoveParsed {
     return toIndex;
   }
 
+  /**
+   * Indicates whether this parsed move has a valid source coordinate.
+   *
+   * @return true if the source exists and is not blank, false otherwise
+   */
   public boolean hasSource() {
     return fromIndex >= 0 && sourceText != null && !sourceText.isBlank();
   }

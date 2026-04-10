@@ -44,10 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.jline.reader.Candidate;
-import org.jline.reader.LineReader;
-import org.jline.reader.ParsedLine;
-import org.jline.reader.UserInterruptException;
+import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,8 +84,6 @@ public class AgonShellTest {
       Terminal terminal = createFakeTerminal();
       GameUserInterface userInterface = new AgonShell(terminal, reader, cmds);
       GameEngine gameEngine = new GameEngine(userInterface, cmds);
-
-      // Local / gameplay commands
       cmds.register("new", new CmdCreate(userInterface, config, gameEngine));
       cmds.register("quit", new CmdQuit(userInterface, context));
       cmds.register("hint", new CmdHint(userInterface));
@@ -154,17 +149,12 @@ public class AgonShellTest {
   @Test
   @DisplayName("test showMessage writes raw content to terminal")
   void testShowMessage() throws Exception {
-    // 1. On prépare la capture de la sortie
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    // On utilise soit TerminalBuilder soit ton FakeTerminal
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
 
-    // 2. On appelle la méthode
     String myMessage = "Hello Agon!";
     shell.showMessage(myMessage);
-
-    // 3. On vérifie que le message est bien présent dans le flux
     String output = out.toString();
     assertTrue(output.contains(myMessage), "Le terminal devrait afficher : " + myMessage);
   }
@@ -176,7 +166,6 @@ public class AgonShellTest {
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, reader, cmds);
     shell.getUserInput();
-    // no except thrown
     assertTrue(true);
   }
 
@@ -187,7 +176,7 @@ public class AgonShellTest {
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, reader, cmds);
     shell.getUserInput();
-    assertTrue(true); // no except thrown
+    assertTrue(true);
   }
 
   @Test
@@ -203,7 +192,6 @@ public class AgonShellTest {
   @DisplayName("test showError writes to terminal")
   void testShowError() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    // REMPLACEMENT : On utilise ton FakeTerminal au lieu du Builder
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
 
@@ -265,13 +253,10 @@ public class AgonShellTest {
   void testEmptyInputDoesNothing() {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Terminal terminal = new FakeTerminal(out);
-    // Simulation d'une entrée qui contient juste un espace ou vide
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(" "), cmds);
 
     String result = shell.getUserInput();
 
-    // CORRECTION : Selon ton code actuel, line.isEmpty() retourne null,
-    // mais si tu as modifié pour retourner "", ajuste ici :
     assertNull(result, "L'input devrait être null pour une ligne vide");
   }
 
@@ -309,11 +294,9 @@ public class AgonShellTest {
     Terminal terminal = createFakeTerminal();
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
 
-    // Une ligne vide signifie que l'utilisateur n'a encore rien tapé
     ParsedLine line = new DefaultParser().parse("", 0);
     List<Candidate> candidates = new ArrayList<>();
 
-    // 3. Appel de la méthode
     shell.globalCompleter(null, line, candidates);
 
     List<String> results = candidates.stream().map(Candidate::value).toList();
@@ -328,7 +311,6 @@ public class AgonShellTest {
     assertTrue(results.contains("undo"));
     assertTrue(results.contains("redo"));
 
-    // network commands should also now be suggested
     assertTrue(results.contains("join"));
     assertTrue(results.contains("ping"));
     assertTrue(results.contains("server_start"));
@@ -341,11 +323,8 @@ public class AgonShellTest {
   @DisplayName("test globalCompleter with empty input suggests all commands")
   void testGlobalCompleterWithInput() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    // On utilise soit TerminalBuilder soit ton FakeTerminal
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
-
-    // L'utilisateur a tapé "h"
     ParsedLine line = new DefaultParser().parse("h", 1);
     List<Candidate> candidates = new ArrayList<>();
 
@@ -366,16 +345,13 @@ public class AgonShellTest {
   @Test
   void testFirstIfExecution() {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    // On utilise soit TerminalBuilder soit ton FakeTerminal
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
-    // On crée une ligne sans aucun texte
     ParsedLine line = new DefaultParser().parse("", 0);
     List<Candidate> candidates = new ArrayList<>();
 
     shell.globalCompleter(null, line, candidates);
 
-    // Si on est entré dans le premier IF, on a toutes les commandes
     assertEquals(cmds.getKeys().size(), candidates.size());
   }
 
@@ -395,9 +371,8 @@ public class AgonShellTest {
   @Test
   @DisplayName("Test display the board in the shell")
   void testUpdateBoard() {
-    // 1. On prépare la capture de la sortie
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    // On utilise soit TerminalBuilder soit ton FakeTerminal
+
     Terminal terminal = new FakeTerminal(out);
     AgonShell shell = new AgonShell(terminal, new FakeLineReader(), cmds);
     AgonBoard agonboard = new AgonBoardImpl();
@@ -422,7 +397,6 @@ public class AgonShellTest {
             + "    B \\O . . . . . X/ 8\n"
             + "     A \\. X . . O ./ 7\n"
             + "        1 2 3 4 5 6";
-    // 3. On vérifie que le message est bien présent dans le flux
     String output = out.toString();
     assertTrue(
         output.contains(Board),
@@ -435,7 +409,6 @@ public class AgonShellTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     AgonShell shell = new AgonShell(new FakeTerminal(out), new FakeLineReader(), cmds);
 
-    // Créer un match fini
     AgonBoard board = new AgonBoardImpl();
     StandardMatch match =
         new StandardMatch(
@@ -444,8 +417,6 @@ public class AgonShellTest {
             new HumanPlayer("P2", Color.BLACK, shell),
             new GameConfig());
 
-    // Simuler la fin du match (via un setter ou en manipulant le board si nécessaire)
-    // Ici, on suppose qu'il y a un moyen de forcer l'état ou on utilise un ReadOnlyMatch anonyme
     ReadOnlyMatch finishedMatch =
         new ReadOnlyMatch() {
           @Override
@@ -506,12 +477,9 @@ public class AgonShellTest {
   void testDisplayHistory() {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     AgonShell shell = new AgonShell(new FakeTerminal(out), new FakeLineReader(), cmds);
-
-    // 1. Test vide
     shell.displayHistory(new ArrayList<>());
     assertTrue(out.toString().contains("history is currently empty"));
 
-    // 2. Test nombre impair (3 coups)
     out.reset();
     List<MoveDtO> moves =
         List.of(
@@ -522,7 +490,7 @@ public class AgonShellTest {
 
     String output = out.toString();
     assertTrue(output.contains("O a1 b2; X a7 b6;"));
-    assertTrue(output.contains("O b2 c3;")); // Le dernier coup O n'a pas de X correspondant
+    assertTrue(output.contains("O b2 c3;"));
     assertFalse(
         output.contains("X null"), "Ne devrait pas afficher de X pour le dernier tour incomplet");
   }
@@ -536,7 +504,6 @@ public class AgonShellTest {
     String result = shell.getUserInput();
 
     assertEquals("create -b", result, "La commande doit être trimée");
-    // Vérifier que c'est ajouté à l'historique
     assertTrue(reader.getHistory().iterator().hasNext());
   }
 
@@ -554,14 +521,12 @@ public class AgonShellTest {
     AgonShell shell = new AgonShell(createFakeTerminal(), eofReader, cmds);
     String result = shell.getUserInput();
 
-    // Vérifie que ton code fait bien : if (readLine == null) return "quit";
     assertEquals("quit", result);
   }
 
   @Test
   @DisplayName("getUserInput : EndOfFileException (JLine EOF) retourne 'quit'")
   void testGetUserInputEndOfFileException() throws Exception {
-    // Certains terminaux lèvent une EndOfFileException au lieu de renvoyer null
     LineReader eofExceptionReader =
         new FakeLineReader("") {
           @Override
@@ -579,7 +544,6 @@ public class AgonShellTest {
   @Test
   @DisplayName("getUserInput : Ctrl+C (UserInterruptException) retourne 'quit'")
   void testGetUserInputInterrupt() throws Exception {
-    // On crée un reader qui jette l'exception d'interruption
     LineReader interruptingReader =
         new FakeLineReader("") {
           @Override
@@ -601,17 +565,14 @@ public class AgonShellTest {
         new FakeLineReader("") {
           @Override
           public String readLine(String prompt) {
-            Thread.currentThread().interrupt(); // Simule l'interruption
+            Thread.currentThread().interrupt();
             throw new UserInterruptException("Timeout");
           }
         };
     AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
     String result = shell.getUserInput();
 
-    // Si tu as mis "return null" dans le catch UserInterruptException :
     assertNull(result);
-
-    // IMPORTANT : Nettoyer le thread pour ne pas polluer les autres tests
     Thread.interrupted();
   }
 
@@ -641,5 +602,16 @@ public class AgonShellTest {
     String result = shell.getUserInput();
 
     assertNull(result, "Une ligne vide (après trim) doit retourner null");
+  }
+
+  @Test
+  @DisplayName("askApplicationMode : boucle tant que le choix est invalide")
+  void testAskApplicationModeWithRetry() {
+    LineReader reader = new FakeLineReader("Alice", "3", "abc", "2");
+    AgonShell shell = new AgonShell(createFakeTerminal(), reader, cmds);
+
+    shell.initializeSession(context);
+
+    assertEquals(fr.univ.bordeaux.application.AppMode.ONLINE, context.getMode());
   }
 }

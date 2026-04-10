@@ -1,12 +1,5 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.agonelements.PieceType;
@@ -23,12 +16,15 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
-import java.io.ByteArrayOutputStream;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CmdRedoTest {
   private AgonRegister<CmdAction> cmds = new AgonRegister<>();
@@ -40,7 +36,6 @@ public class CmdRedoTest {
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
       gameUserInterface = new AgonShell(terminal, reader, cmds);
-      // Enregistrement du prototype
       cmds.register("redo", new CmdRedo(gameUserInterface));
     } catch (Exception e) {
       fail("Setup failed");
@@ -48,58 +43,51 @@ public class CmdRedoTest {
   }
 
   @Test
-  @DisplayName("Vérifier qu'un redo restaure bien un mouvement annulé")
+  @DisplayName("Verify that a redo correctly restores an undone move")
   void executeRedoTest() {
-    // 1. Initialisation
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
             board,
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
     int fromW = CoordinateMapper.toIndex('B', 1);
     int toW = CoordinateMapper.toIndex('C', 1);
-    PieceType whiteP = board.getPieceAt(fromW); // Un pion blanc
+    PieceType whiteP = board.getPieceAt(fromW);
     new CmdMove(fromW, toW, gameUserInterface).execute(match);
 
     int fromB = CoordinateMapper.toIndex('F', 11);
     int toB = CoordinateMapper.toIndex('F', 10);
-    PieceType blackQ = board.getPieceAt(fromB); // La reine noire
+    PieceType blackQ = board.getPieceAt(fromB);
     new CmdMove(fromB, toB, gameUserInterface).execute(match);
-
-    // --- UNDO ---
-    // Ton match.undo() annule les DEUX coups.
     match.undo();
 
-    // Vérification après Undo : tout le monde est revenu à sa place
-    assertEquals(whiteP, board.getPieceAt(fromW), "Le pion blanc doit être en B1");
-    assertEquals(blackQ, board.getPieceAt(fromB), "La reine noire doit être en F1");
+    assertEquals(whiteP, board.getPieceAt(fromW), "White pawn should be at B1");
+    assertEquals(blackQ, board.getPieceAt(fromB), "Black queen should be at F11");
     assertNull(board.getPieceAt(toW));
     assertNull(board.getPieceAt(toB));
 
-    // --- REDO ---
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {});
     cmdRedo.execute(match);
 
-    // Vérification après Redo : les deux coups sont réappliqués
     assertNull(board.getPieceAt(fromW));
-    assertEquals(whiteP, board.getPieceAt(toW), "Le pion blanc doit être revenu en C1");
+    assertEquals(whiteP, board.getPieceAt(toW), "White pawn should have returned to C1");
 
     assertNull(board.getPieceAt(fromB));
-    assertEquals(blackQ, board.getPieceAt(toB), "La reine noire doit être revenue en F2");
+    assertEquals(blackQ, board.getPieceAt(toB), "Black queen should have returned to F10");
   }
 
   @Test
-  @DisplayName("Vérifier que redo sans rien à rétablir ne crash pas")
+  @DisplayName("Verify that redo without anything to restore does not crash")
   void executeRedoEmptyTest() {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
-            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
+            board, new HumanPlayer("P1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"1"});
     boolean result = cmdRedo.execute(match);
@@ -108,16 +96,15 @@ public class CmdRedoTest {
   }
 
   @Test
-  @DisplayName("Vérifier createNew avec un nombre")
+  @DisplayName("Verify createNew with a number argument")
   void createNewTest() {
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {"5"});
     assertNotNull(cmdRedo);
-    // On vérifie indirectement que le nombre est accepté (pas d'exception)
-    assertFalse(cmdRedo.execute(null)); // False car match est null
+    assertFalse(cmdRedo.execute(null));
   }
 
   @Test
-  @DisplayName("Vérifier la description")
+  @DisplayName("Verify description content")
   void getDescriptionTest() {
     CmdAction cmdRedo = cmds.get("redo").get().createNew(new String[] {});
     String desc = cmdRedo.getDescription();
@@ -126,15 +113,15 @@ public class CmdRedoTest {
   }
 
   @Test
-  @DisplayName("Couverture : Redo quand il n'y a plus de coups à rétablir (Warning)")
+  @DisplayName("Coverage: Redo when there are no more moves to restore (Warning)")
   void testRedoMoreThanPossible() {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
             board,
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
     match.move(
@@ -148,22 +135,22 @@ public class CmdRedoTest {
   }
 
   @Test
-  @DisplayName("Couverture : Format de nombre invalide")
+  @DisplayName("Coverage: Invalid number format for redo")
   void testRedoInvalidFormat() {
     CmdAction cmd = cmds.get("redo").get().createNew(new String[] {"abc"});
     assertNotNull(cmd);
   }
 
   @Test
-  @DisplayName("Couverture : Atteindre 100% sur execute (branches if !match.redo)")
+  @DisplayName("Coverage: Reach 100% on execute (if !match.redo branches)")
   void testExecuteBranches() {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
             board,
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
     assertTrue(

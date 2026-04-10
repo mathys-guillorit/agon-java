@@ -16,12 +16,12 @@ public class CmdBack extends Cmd {
   /**
    * Constructor.
    *
-   * @param ui user interface
+   * @param userInterface user interface
    * @param context application context
    */
-  public CmdBack(GameUserInterface ui, AppContext context) {
+  public CmdBack(final GameUserInterface userInterface, final AppContext context) {
     super(
-        ui,
+        userInterface,
         "back",
         "back\n"
             + "Description: sets your status back to idle on the server.\n"
@@ -36,7 +36,7 @@ public class CmdBack extends Cmd {
    * @return new CmdBack instance
    */
   @Override
-  public CmdAction createNew(String[] args) {
+  public CmdAction createNew(final String[] args) {
     return new CmdBack(getCtx(), context);
   }
 
@@ -47,22 +47,29 @@ public class CmdBack extends Cmd {
    * @return true if execution succeeds
    */
   @Override
-  public boolean execute(MatchManager match) {
-    AgonClient client = context.getClient();
+  public boolean execute(final MatchManager match) {
+    final AgonClient client = getClient();
+    final String response;
+    boolean result = true;
 
     if (!client.isConnected()) {
       getCtx().showWarn("[CLIENT] Not connected. Use join first.");
-      return false;
-    }
-
-    String response = client.setBack();
-
-    if (response != null) {
-      getCtx().showMessage(response + "\n");
+      result = false;
     } else {
-      getCtx().showError("[CLIENT] Failed to reset player status.");
+      response = client.requestBackStatus();
+
+      if (response != null) {
+        getCtx().showMessage(response + "\n");
+      } else {
+        getCtx().showError("[CLIENT] Failed to reset player status.");
+      }
     }
 
-    return true;
+    return result;
+  }
+
+  /** Returns the client from the application context. */
+  private AgonClient getClient() {
+    return context.getClient();
   }
 }

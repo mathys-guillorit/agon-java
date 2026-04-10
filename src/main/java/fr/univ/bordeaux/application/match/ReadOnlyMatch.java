@@ -14,58 +14,64 @@ public interface ReadOnlyMatch {
   /**
    * Retrieves the player who is currently required to move.
    *
-   * @return the current player whose turn it is.
+   * @return The current {@link Player} whose turn it is.
    */
   Player getCurrentPlayer();
 
   /**
    * Accesses the current representation of the game board.
    *
-   * @return the current state of the board.
+   * @return The {@link AgonBoard} representing the current state of the board.
    */
   AgonBoard getAgonBoard();
 
   /**
    * Checks the persistence status of the current match.
    *
-   * @return true if the match has been saved.
+   * @return {@code true} if the match has been saved, {@code false} otherwise.
    */
   boolean isSaved();
 
   /**
-   * Gets the time left for the current turn or match as a string.
+   * Gets the time left for the current player's turn as a formatted string.
    *
-   * @return the remaining time if applicable.
+   * @return A {@link String} representing the remaining time (e.g., "00:30").
    */
   String getCurrentPlayerRemainingTime();
 
+  /**
+   * Retrieves the remaining time for all players involved in the match.
+   *
+   * @return An array of {@link String} where each element represents a player's remaining time.
+   */
   String[] getAllPlayersRemainingTime();
 
   /**
-   * Determines whether the game has reached a final state.
+   * Determines whether the game has reached a final state (win, draw, or repetition).
    *
-   * @return true if the match is finished.
+   * @return {@code true} if the match is finished, {@code false} otherwise.
    */
   boolean isMatchOver();
 
   /**
    * Provides the full list of moves played since the start of the game.
    *
-   * @return the history of moves.
+   * @return A {@link List} of {@link MoveDtO} objects representing the match history.
    */
   List<MoveDtO> getHistory();
 
   /**
    * Returns the settings and rules defined for this match.
    *
-   * @return the game configuration.
+   * @return The {@link GameConfig} associated with this match.
    */
   GameConfig getGameConfig();
 
   /**
    * Identifies the player who won the game.
    *
-   * @return the winner of the match, or null if game is not finished.
+   * @return The winning {@link Player}, or {@code null} if the game is still in progress or ended
+   *     in a draw.
    */
   Player getWinner();
 }

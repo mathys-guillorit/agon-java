@@ -1,11 +1,5 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import fr.univ.bordeaux.agoncore.agonelements.Color;
 import fr.univ.bordeaux.agoncore.agonelements.Move;
 import fr.univ.bordeaux.agoncore.bitboard.AgonBoard;
@@ -22,12 +16,15 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
-import java.io.ByteArrayOutputStream;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CmdShowTest {
   private AgonRegister<CmdAction> cmds = new AgonRegister<>();
@@ -44,7 +41,7 @@ public class CmdShowTest {
       Terminal terminal = new FakeTerminal(outContent);
       gameUserInterface = new AgonShell(terminal, reader, cmds);
 
-      // Enregistrement du prototype
+      // Registering the prototype
       cmds.register("show", new CmdShow(gameUserInterface, config));
     } catch (Exception e) {
       fail("Setup failed");
@@ -52,29 +49,24 @@ public class CmdShowTest {
   }
 
   @Test
-  @DisplayName("Vérifier l'affichage de la configuration")
+  @DisplayName("Verify configuration display")
   void testShowConfiguration() {
-    // 1. On prépare la commande avec l'argument -configuration
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-configuration"});
     assertNotNull(cmd);
 
-    // 2. Exécution (pas besoin de match pour la config)
     boolean result = cmd.execute(null);
 
-    // 3. Vérifications
     assertTrue(result);
-    // On vérifie que le contenu de config.toString() se retrouve dans le terminal
     assertTrue(outContent.toString().contains(config.toString()));
   }
 
   @Test
-  @DisplayName("Vérifier l'affichage du plateau (Board)")
+  @DisplayName("Verify board display")
   void testShowBoard() {
-    // Initialisation d'un match réel
     MatchManager match =
         new StandardMatch(
             new AgonBoardImpl(),
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
             null,
             new GameConfig());
 
@@ -82,17 +74,13 @@ public class CmdShowTest {
     boolean result = cmd.execute(match);
 
     assertFalse(result);
-    // Note : Ici on vérifie que l'UI a reçu l'ordre d'updateBoard.
-    // Comme updateBoard dans AgonShell écrit souvent sur le terminal,
-    // on peut vérifier si des caractères du plateau apparaissent.
   }
 
   @Test
-  @DisplayName("Vérifier l'erreur si aucun match n'est présent pour le plateau")
+  @DisplayName("Verify error when no match is present for board display")
   void testShowBoardNoMatch() {
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-board"});
 
-    // On passe null au lieu d'un match
     boolean result = cmd.execute(null);
 
     assertFalse(result);
@@ -100,7 +88,7 @@ public class CmdShowTest {
   }
 
   @Test
-  @DisplayName("Vérifier l'erreur si aucun match n'est présent pour le plateau")
+  @DisplayName("Verify error when no target is specified")
   void testShowNoTarget() {
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {});
     boolean result = cmd.execute(null);
@@ -111,17 +99,16 @@ public class CmdShowTest {
   }
 
   @Test
-  @DisplayName("Vérifier le refus de plusieurs cibles simultanées")
+  @DisplayName("Verify rejection of multiple simultaneous targets")
   void testMultipleTargetsError() {
-    // show -board -history (ne devrait pas être autorisé selon ton code)
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-board", "-history"});
 
-    assertNull(cmd, "Le factory createNew doit renvoyer null si plus d'une option est saisie");
+    assertNull(cmd, "The factory createNew should return null if more than one option is provided");
     assertTrue(outContent.toString().contains("Please specify only one target"));
   }
 
   @Test
-  @DisplayName("Vérifier l'affichage de l'historique")
+  @DisplayName("Verify history display")
   void testShowHistory() {
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-history"});
     AgonBoard board = new AgonBoardImpl();
@@ -149,9 +136,8 @@ public class CmdShowTest {
   }
 
   @Test
-  @DisplayName("Vérifier l'option -time (doit renvoyer false pour ne pas passer le tour)")
+  @DisplayName("Verify -time option (should return false to not skip turn)")
   void testShowTimeLogic() {
-    // 1. Setup avec un match Blitz
     CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-time"});
     boolean result = cmd.execute(null);
     assertFalse(result);
@@ -159,7 +145,8 @@ public class CmdShowTest {
         outContent
             .toString()
             .contains("This command can only be used when you are currently in a blitz match"),
-        "L'affichage doit contenir le temps");
+        "The display should inform that it's for blitz matches only");
+
     MatchManager matchBlitz =
         new BlitzMatch(
             new AgonBoardImpl(),
@@ -167,10 +154,8 @@ public class CmdShowTest {
             new HumanPlayer("test2", Color.BLACK, gameUserInterface),
             1,
             new GameConfig());
-
-    // 3. Exécution
     result = cmd.execute(matchBlitz);
-    assertFalse(result, "La commande show ne doit pas consommer le tour du joueur");
+    assertFalse(result, "The show command should not consume the player's turn");
 
     String output = outContent.toString();
     assertTrue(
@@ -180,14 +165,13 @@ public class CmdShowTest {
                 + "( "
                 + matchBlitz.getCurrentPlayer().getColor()
                 + " ) : "),
-        "Le temps formaté doit être présent");
+        "The formatted time should be present in output");
   }
 
   @Test
-  @DisplayName("Vérifier la gestion d'une cible invalide")
+  @DisplayName("Verify handling of invalid target")
   void testInvalidTarget() {
-    // createNew renverra null à cause du ParseException de Commons CLI
-    CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-inconnu"});
+    CmdAction cmd = cmds.get("show").get().createNew(new String[] {"-unknown"});
 
     assertNull(cmd);
     assertTrue(outContent.toString().contains("Invalid show command"));

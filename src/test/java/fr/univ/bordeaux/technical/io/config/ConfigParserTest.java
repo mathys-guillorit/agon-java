@@ -22,7 +22,7 @@ class ConfigParserTest {
     String content =
         "verbose = true\n"
             + "timeout = 600\n"
-            + "ai_mode = MCTS\n"
+            + "ai_mode = mcts\n"
             + "ai_color = BLACK\n"
             + "ai_depth = 3\n"
             + "ai_time_limit = 5\n"
@@ -36,7 +36,7 @@ class ConfigParserTest {
 
     assertTrue(config.isVerbose());
     assertEquals(600, config.getTimeout());
-    assertEquals("MCTS", config.getAiMode());
+    assertEquals("mcts", config.getAiMode());
     assertFalse(config.isManualPlacement());
     assertFalse(config.isWhiteAi());
     assertTrue(config.isBlackAi());
@@ -167,5 +167,19 @@ class ConfigParserTest {
     GameConfig configNone = parser.parse(configFile.toString());
     assertFalse(configNone.isWhiteAi());
     assertFalse(configNone.isBlackAi());
+  }
+
+  @Test
+  void testParseShortcuts() throws IOException {
+    Path configFile = tempDir.resolve("shortcuts.agonrc");
+    String content = "timeout = 30\n" + "shortcut_new = ctrl+n\n" + "shortcut_quit = ctrl+q\n";
+    Files.writeString(configFile, content);
+
+    ConfigParser parser = new ConfigParser();
+    GameConfig config = parser.parse(configFile.toString());
+
+    assertEquals("ctrl+n", config.getShortcuts().get("shortcut_new"));
+    assertEquals("ctrl+q", config.getShortcuts().get("shortcut_quit"));
+    assertTrue(config.getShortcuts().size() >= 2);
   }
 }

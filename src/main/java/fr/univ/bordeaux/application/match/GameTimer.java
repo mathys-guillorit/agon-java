@@ -1,7 +1,8 @@
 package fr.univ.bordeaux.application.match;
 
-import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -21,7 +22,7 @@ public class GameTimer {
   private long lastStartTime;
 
   /** Indicates whether the timer is currently counting down. */
-  private volatile boolean isRunning;
+  private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
   /** Lock for synchronizing access to timer state and controlling the background thread. */
   private final Lock lock = new ReentrantLock();
@@ -33,7 +34,7 @@ public class GameTimer {
   private final Runnable onTimeout;
 
   /** Control flag to stop the background thread permanently. */
-  private volatile boolean alive = true;
+  private final AtomicBoolean alive = new AtomicBoolean(true);
 
   /**
    * Constructs a GameTimer with a specified duration in minutes.
@@ -47,7 +48,6 @@ public class GameTimer {
       throw new IllegalArgumentException("Time cannot be negative: " + time);
     }
     this.remainingTimeMillis = TimeUnit.MINUTES.toMillis(time);
-    this.isRunning = false;
     this.onTimeout = onTimeout;
 
     GameLogger.info("GameTimer: Created with " + time + " minutes.");
@@ -70,7 +70,6 @@ public class GameTimer {
       throw new IllegalArgumentException("Time cannot be negative: " + time);
     }
     this.remainingTimeMillis = unit.toMillis(time);
-    this.isRunning = false;
     this.onTimeout = onTimeout;
 
     GameLogger.info("GameTimer: Created with custom duration (" + remainingTimeMillis + " ms).");
@@ -88,10 +87,10 @@ public class GameTimer {
    */
   private void runTimer() {
     try {
-      while (alive) {
+      while (alive.get()) {
         lock.lock();
         try {
-          while (!isRunning && alive) {
+          while (!isRunning.get() && alive.get()) {
             GameLogger.debug("GameTimer Thread: Entering await state.");
             isRunningCondition.await();
           }
@@ -99,7 +98,7 @@ public class GameTimer {
           lock.unlock();
         }
 
-        if (!alive) {
+        if (!alive.get()) {
           break;
         }
         long currentRemaining = getRemainingTimeMillis();
@@ -126,9 +125,9 @@ public class GameTimer {
   public void start() {
     lock.lock();
     try {
-      if (!isRunning && remainingTimeMillis > 0) {
+      if (!isRunning.get() && remainingTimeMillis > 0) {
         this.lastStartTime = System.currentTimeMillis();
-        this.isRunning = true;
+        this.isRunning.set(true);
         GameLogger.debug("GameTimer: Started/Resumed. Signal sent to background thread.");
         isRunningCondition.signal();
       }
@@ -146,9 +145,9 @@ public class GameTimer {
   public void stop() {
     lock.lock();
     try {
-      if (isRunning) {
+      if (isRunning.get()) {
         this.remainingTimeMillis = getRemainingTimeMillis();
-        this.isRunning = false;
+        this.isRunning.set(false);
         GameLogger.debug("GameTimer: Stopped. Remaining: " + getFormattedRemainingTime());
       }
     } finally {
@@ -164,10 +163,10 @@ public class GameTimer {
   private void handleTimeout() {
     lock.lock();
     try {
-      if (isRunning) {
+      if (isRunning.get()) {
         GameLogger.info("GameTimer: EXPIRED! Executing timeout callback.");
         this.remainingTimeMillis = 0;
-        this.isRunning = false;
+        this.isRunning.set(false);
         if (onTimeout != null) {
           onTimeout.run();
         }
@@ -183,7 +182,7 @@ public class GameTimer {
    * @return The remaining time, ensuring it is never negative.
    */
   public long getRemainingTimeMillis() {
-    if (isRunning) {
+    if (isRunning.get()) {
       long elapsedSinceLastStart = System.currentTimeMillis() - lastStartTime;
       return Math.max(0, remainingTimeMillis - elapsedSinceLastStart);
     }
@@ -198,7 +197,7 @@ public class GameTimer {
    */
   public void kill() {
     GameLogger.info("GameTimer: Killing background thread.");
-    alive = false;
+    alive.set(false);
     lock.lock();
     try {
       isRunningCondition.signal();
@@ -234,6 +233,6 @@ public class GameTimer {
    * @return {@code true} if running, {@code false} if paused or killed.
    */
   public boolean isRunning() {
-    return isRunning;
+    return isRunning.get();
   }
 }

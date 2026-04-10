@@ -1,18 +1,19 @@
 package fr.univ.bordeaux.application.network.server;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.application.network.player.OnlinePlayer;
-import fr.univ.bordeaux.application.network.player.PlayerStatus;
-import fr.univ.bordeaux.application.network.protocol.Command;
-import fr.univ.bordeaux.application.network.protocol.CommandType;
+import fr.univ.bordeaux.application.network.server.game.GameManager;
+import fr.univ.bordeaux.application.network.server.game.ServerGameSession;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -49,17 +50,21 @@ class ClientHandlerTest {
     return port;
   }
 
-  @SuppressWarnings("unchecked")
-  private <T> T getField(Object target, String name, Class<T> type) throws Exception {
-    Field f = target.getClass().getDeclaredField(name);
-    f.setAccessible(true);
-    return (T) f.get(target);
-  }
-
   private void setField(Object target, String name, Object value) throws Exception {
     Field f = target.getClass().getDeclaredField(name);
     f.setAccessible(true);
     f.set(target, value);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<Integer, ServerGameSession> activeGamesOf(AgonServer server) throws Exception {
+    Field gameServiceField = AgonServer.class.getDeclaredField("gameService");
+    gameServiceField.setAccessible(true);
+    Object gameService = gameServiceField.get(server);
+
+    Field activeGamesField = GameManager.class.getDeclaredField("activeGames");
+    activeGamesField.setAccessible(true);
+    return (Map<Integer, ServerGameSession>) activeGamesField.get(gameService);
   }
 
   private static class RawClient implements AutoCloseable {
@@ -128,14 +133,12 @@ class ClientHandlerTest {
     final RawClient c1;
     final RawClient c2;
     final int id1;
-    final int id2;
     final boolean c1IsWhite;
 
-    GameSetup(RawClient c1, RawClient c2, int id1, int id2, boolean c1IsWhite) {
+    GameSetup(RawClient c1, RawClient c2, int id1, boolean c1IsWhite) {
       this.c1 = c1;
       this.c2 = c2;
       this.id1 = id1;
-      this.id2 = id2;
       this.c1IsWhite = c1IsWhite;
     }
 
@@ -162,75 +165,30 @@ class ClientHandlerTest {
     int id2 = c2.loginAndExtractId("Bob", "cid2");
 
     c1.send("NEW PLAYER_ID=" + id2);
-    String newOk = c1.readLine();
-    String started = c2.readLine();
+    assertTrue(c1.readLine().startsWith("INVITATION_SENT"));
+    assertTrue(c2.readLine().startsWith("INVITATION_RECEIVED"));
 
-    assertTrue(newOk.startsWith("NEW_OK"));
-    assertTrue(started.startsWith("GAME_STARTED"));
+    c2.send("ACCEPT");
+    assertTrue(c2.readLine().startsWith("LOBBY_JOINED"));
+    assertTrue(c2.readLine().startsWith("WAITING_MODE"));
+    assertTrue(c1.readLine().startsWith("INVITATION_ACCEPTED"));
+    assertTrue(c1.readLine().startsWith("CHOOSE_MODE"));
 
-    return new GameSetup(c1, c2, id1, id2, newOk.contains("COLOR=WHITE"));
-  }
+    c1.send("MODE normal");
+    String started1 = c1.readLine();
+    String started2 = c2.readLine();
 
-  private ClientHandler newPrivateTestHandler() throws Exception {
-    if (server == null) {
-      server = new AgonServer(freePort(), "TestServer");
-    }
-    return new ClientHandler(null, server);
-  }
+    assertNotNull(started1);
+    assertNotNull(started2);
+    assertTrue(started1.startsWith("GAME_STARTED"));
+    assertTrue(started2.startsWith("GAME_STARTED"));
 
-  private OnlinePlayer newPlayer(
-      int id, String clientId, String name, PlayerStatus status, ClientHandler handler) {
-    return new OnlinePlayer(id, clientId, name, status, handler);
-  }
-
-  private String invokePrivateNoArgHandlerAndCaptureOutput(ClientHandler handler, String methodName)
-      throws Exception {
-    StringWriter sink = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(sink);
-
-    setField(handler, "out", writer);
-
-    Method method = ClientHandler.class.getDeclaredMethod(methodName);
-    method.setAccessible(true);
-    method.invoke(handler);
-
-    writer.flush();
-    return sink.toString().trim();
-  }
-
-  private String invokeHandlePlayersAndCaptureOutput(ClientHandler handler, String rawArgument)
-      throws Exception {
-    StringWriter sink = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(sink);
-
-    setField(handler, "out", writer);
-
-    Command cmd = new Command(CommandType.PLAYERS, Map.of(), rawArgument);
-
-    Method method = ClientHandler.class.getDeclaredMethod("handlePlayers", Command.class);
-    method.setAccessible(true);
-    method.invoke(handler, cmd);
-
-    writer.flush();
-    return sink.toString().trim();
-  }
-
-  private void assertPrivateStatusCommandResponse(
-      String methodName, OnlinePlayer player, String expectedResponse) throws Exception {
-    ClientHandler handler = newPrivateTestHandler();
-
-    if (player != null) {
-      player.setHandler(handler);
-      setField(handler, "player", player);
-    }
-
-    String response = invokePrivateNoArgHandlerAndCaptureOutput(handler, methodName);
-    assertEquals(expectedResponse, response);
+    return new GameSetup(c1, c2, id1, started1.contains("COLOR=WHITE"));
   }
 
   @Test
   @DisplayName("PING, STATUS and QUIT basic flow")
-  void ping_status_and_quit() throws Exception {
+  void pingStatusAndQuit() throws Exception {
     int port = startServer();
 
     try (RawClient client = new RawClient("127.0.0.1", port)) {
@@ -253,7 +211,7 @@ class ClientHandlerTest {
 
   @Test
   @DisplayName("LOGIN success and validation errors")
-  void login_cases() throws Exception {
+  void loginCases() throws Exception {
     int port = startServer();
 
     try (RawClient client = new RawClient("127.0.0.1", port)) {
@@ -279,11 +237,11 @@ class ClientHandlerTest {
 
   @Test
   @DisplayName("PLAYERS and SCOREBOARD after login")
-  void players_and_scoreboard() throws Exception {
+  void playersAndScoreboard() throws Exception {
     int port = startServer();
 
     try (RawClient client = new RawClient("127.0.0.1", port)) {
-      assertTrue(client.login("Alice", "cid1").startsWith("WELCOME"));
+      int id = client.loginAndExtractId("Alice", "cid1");
 
       client.send("PLAYERS");
       String players = client.readUntilEnd();
@@ -291,6 +249,15 @@ class ClientHandlerTest {
       assertTrue(players.contains("NAME=Alice"));
       assertTrue(players.contains("STATUS=idle"));
       assertTrue(players.contains("END"));
+
+      client.send("PLAYERS " + id);
+      String details = client.readLine();
+      assertNotNull(details);
+      assertTrue(details.contains("PLAYER ID=" + id));
+      assertTrue(details.contains("NAME=Alice"));
+      assertTrue(details.contains("WINS=0"));
+      assertTrue(details.contains("LOSSES=0"));
+      assertTrue(details.contains("GAMES=0"));
 
       client.send("SCOREBOARD");
       String scoreboard = client.readUntilEnd();
@@ -304,8 +271,27 @@ class ClientHandlerTest {
   }
 
   @Test
-  @DisplayName("NEW, MOVE and RESIGN require login")
-  void commands_require_login() throws Exception {
+  @DisplayName("PLAYERS with invalid id and valid player information")
+  void playersCommandVariants() throws Exception {
+    int port = startServer();
+
+    try (RawClient client = new RawClient("127.0.0.1", port)) {
+      int id = client.loginAndExtractId("Alice", "cid1");
+
+      client.send("PLAYERS abc");
+      assertEquals("ERROR MESSAGE=INVALID_PLAYER_ID", client.readLine());
+
+      client.send("PLAYERS " + id);
+      String valid = client.readLine();
+      assertNotNull(valid);
+      assertTrue(valid.contains("PLAYER ID=" + id));
+      assertTrue(valid.contains("NAME=Alice"));
+    }
+  }
+
+  @Test
+  @DisplayName("NEW, MOVE and RESIGN require login, then game")
+  void commandsRequireLoginAndGame() throws Exception {
     int port = startServer();
 
     try (RawClient client = new RawClient("127.0.0.1", port)) {
@@ -318,12 +304,6 @@ class ClientHandlerTest {
       client.send("RESIGN");
       assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
     }
-  }
-
-  @Test
-  @DisplayName("MOVE and RESIGN require active game")
-  void commands_require_game() throws Exception {
-    int port = startServer();
 
     try (RawClient client = new RawClient("127.0.0.1", port)) {
       assertTrue(client.login("Alice", "cid1").startsWith("WELCOME"));
@@ -338,7 +318,7 @@ class ClientHandlerTest {
 
   @Test
   @DisplayName("NEW validates id, self-play and busy cases")
-  void new_validation_and_busy() throws Exception {
+  void newValidationAndBusy() throws Exception {
     int port = startServer();
 
     try (RawClient c1 = new RawClient("127.0.0.1", port);
@@ -350,7 +330,7 @@ class ClientHandlerTest {
       c3.login("Charlie", "cid3");
 
       c1.send("NEW");
-      assertEquals("ERROR MESSAGE=MISSING_PLAYER_ID", c1.readLine());
+      assertEquals("ERROR MESSAGE=INVALID_PLAYER_ID", c1.readLine());
 
       c1.send("NEW PLAYER_ID=abc");
       assertEquals("ERROR MESSAGE=INVALID_PLAYER_ID", c1.readLine());
@@ -362,8 +342,8 @@ class ClientHandlerTest {
       assertEquals("ERROR MESSAGE=CANNOT_PLAY_SELF", c1.readLine());
 
       c1.send("NEW PLAYER_ID=" + id2);
-      assertTrue(c1.readLine().startsWith("NEW_OK"));
-      assertTrue(c2.readLine().startsWith("GAME_STARTED"));
+      assertTrue(c1.readLine().startsWith("INVITATION_SENT"));
+      assertTrue(c2.readLine().startsWith("INVITATION_RECEIVED"));
 
       c1.send("NEW PLAYER_ID=" + id2);
       assertEquals("ERROR MESSAGE=YOU_ARE_BUSY", c1.readLine());
@@ -374,35 +354,110 @@ class ClientHandlerTest {
   }
 
   @Test
-  @DisplayName("NEW success notifies both players")
-  void new_success() throws Exception {
+  @DisplayName("Invitation flow covers NEW ACCEPT DECLINE CANCEL MODE")
+  void invitationAndModeFlow() throws Exception {
     int port = startServer();
 
     try (RawClient c1 = new RawClient("127.0.0.1", port);
         RawClient c2 = new RawClient("127.0.0.1", port)) {
 
-      int id1 = c1.loginAndExtractId("Alice", "cid1");
+      c1.loginAndExtractId("Alice", "cid1");
       int id2 = c2.loginAndExtractId("Bob", "cid2");
 
-      c1.send("NEW PLAYER_ID=" + id2);
+      c2.send("ACCEPT");
+      assertEquals("ERROR MESSAGE=NO_PENDING_INVITATION", c2.readLine());
 
+      c2.send("DECLINE");
+      assertEquals("ERROR MESSAGE=NO_PENDING_INVITATION", c2.readLine());
+
+      c1.send("CANCEL");
+      assertEquals("ERROR MESSAGE=NO_SENT_INVITATION", c1.readLine());
+
+      c1.send("MODE normal");
+      assertEquals("ERROR MESSAGE=NOT_IN_LOBBY", c1.readLine());
+
+      c1.send("NEW PLAYER_ID=" + id2);
       String requester = c1.readLine();
       String target = c2.readLine();
 
-      assertTrue(requester.startsWith("NEW_OK"));
-      assertTrue(requester.contains("GAME_ID="));
-      assertTrue(requester.contains("OPPONENT_ID=" + id2));
-      assertTrue(requester.contains("OPPONENT_NAME=Bob"));
+      assertTrue(requester.startsWith("INVITATION_SENT"));
+      assertTrue(target.startsWith("INVITATION_RECEIVED"));
+      assertTrue(requester.contains("PLAYER=Bob"));
+      assertTrue(target.contains("FROM=Alice"));
 
-      assertTrue(target.startsWith("GAME_STARTED"));
-      assertTrue(target.contains("OPPONENT_ID=" + id1));
-      assertTrue(target.contains("OPPONENT_NAME=Alice"));
+      c1.send("CANCEL");
+      assertEquals("CANCEL_OK", c1.readLine());
+      assertTrue(c2.readLine().startsWith("INVITATION_CANCELED"));
+
+      c1.send("NEW PLAYER_ID=" + id2);
+      assertTrue(c1.readLine().startsWith("INVITATION_SENT"));
+      assertTrue(c2.readLine().startsWith("INVITATION_RECEIVED"));
+
+      c2.send("DECLINE");
+      assertEquals("DECLINE_OK", c2.readLine());
+      assertTrue(c1.readLine().startsWith("INVITATION_DECLINED"));
+
+      c1.send("NEW PLAYER_ID=" + id2);
+      assertTrue(c1.readLine().startsWith("INVITATION_SENT"));
+      assertTrue(c2.readLine().startsWith("INVITATION_RECEIVED"));
+
+      c2.send("ACCEPT");
+      assertTrue(c2.readLine().startsWith("LOBBY_JOINED"));
+      assertTrue(c2.readLine().startsWith("WAITING_MODE"));
+      assertTrue(c1.readLine().startsWith("INVITATION_ACCEPTED"));
+      assertTrue(c1.readLine().startsWith("CHOOSE_MODE"));
+
+      c2.send("MODE normal");
+      assertEquals("ERROR MESSAGE=ONLY_HOST_CAN_CHOOSE_MODE", c2.readLine());
+
+      c1.send("MODE");
+      assertEquals("ERROR MESSAGE=INVALID_MODE", c1.readLine());
+
+      c1.send("MODE invalid");
+      assertEquals("ERROR MESSAGE=INVALID_MODE", c1.readLine());
     }
   }
 
   @Test
-  @DisplayName("MOVE validation covers missing move, wrong turn and invalid move")
-  void move_validation() throws Exception {
+  @DisplayName("AWAY BACK ACCEPT DECLINE CANCEL require login")
+  void statusAndInvitationCommandsRequireLogin() throws Exception {
+    int port = startServer();
+
+    try (RawClient client = new RawClient("127.0.0.1", port)) {
+      client.send("AWAY");
+      assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
+
+      client.send("BACK");
+      assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
+
+      client.send("ACCEPT");
+      assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
+
+      client.send("DECLINE");
+      assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
+
+      client.send("CANCEL");
+      assertEquals("ERROR MESSAGE=NOT_LOGGED_IN", client.readLine());
+    }
+  }
+
+  @Test
+  @DisplayName("AWAY and BACK refuse when player is in game")
+  void statusIngameRefused() throws Exception {
+    int port = startServer();
+
+    try (GameSetup game = startLoggedGame(port)) {
+      game.c1.send("AWAY");
+      assertEquals("ERROR MESSAGE=CANNOT_SET_AWAY_NOW", game.c1.readLine());
+
+      game.c1.send("BACK");
+      assertEquals("ERROR MESSAGE=CANNOT_SET_BACK_NOW", game.c1.readLine());
+    }
+  }
+
+  @Test
+  @DisplayName("MOVE validation and success path")
+  void moveValidationAndSuccessPath() throws Exception {
     int port = startServer();
 
     try (GameSetup game = startLoggedGame(port)) {
@@ -414,42 +469,13 @@ class ClientHandlerTest {
 
       game.currentPlayer().send("MOVE badMove");
       assertEquals("ERROR MESSAGE=INVALID_MOVE", game.currentPlayer().readLine());
-    }
-  }
 
-  @Test
-  @DisplayName("MOVE returns GAME_NOT_FOUND when session is missing")
-  void move_game_not_found() throws Exception {
-    int port = startServer();
-
-    try (GameSetup game = startLoggedGame(port)) {
-      Integer gameId = server.getGameIdByPlayer(game.id1);
-      assertNotNull(gameId);
-
-      @SuppressWarnings("unchecked")
-      Map<Integer, ServerGameSession> activeGames = getField(server, "activeGames", Map.class);
-      activeGames.remove(gameId);
-
-      game.c1.send("MOVE e2e4");
-      assertEquals("ERROR MESSAGE=GAME_NOT_FOUND", game.c1.readLine());
-    }
-  }
-
-  @Test
-  @DisplayName("MOVE valid path executes extra logic")
-  void move_success_path() throws Exception {
-    int port = startServer();
-
-    try (GameSetup game = startLoggedGame(port)) {
-      RawClient current = game.currentPlayer();
-      RawClient opponent = game.wrongPlayer();
-
-      current.send("MOVE a1a2");
-      String first = current.readLine();
+      game.currentPlayer().send("MOVE a1a2");
+      String first = game.currentPlayer().readLine();
       assertNotNull(first);
 
       if (first.startsWith("MOVE_OK")) {
-        String second = opponent.readLine();
+        String second = game.wrongPlayer().readLine();
         if (second != null) {
           assertTrue(second.startsWith("OPPONENT_MOVE") || second.startsWith("GAME_OVER"));
         }
@@ -460,17 +486,25 @@ class ClientHandlerTest {
   }
 
   @Test
-  @DisplayName("RESIGN returns GAME_NOT_FOUND when session is missing")
-  void resign_game_not_found() throws Exception {
+  @DisplayName("MOVE and RESIGN return GAME_NOT_FOUND when session is missing")
+  void commandsGameNotFound() throws Exception {
     int port = startServer();
 
     try (GameSetup game = startLoggedGame(port)) {
       Integer gameId = server.getGameIdByPlayer(game.id1);
       assertNotNull(gameId);
 
-      @SuppressWarnings("unchecked")
-      Map<Integer, ServerGameSession> activeGames = getField(server, "activeGames", Map.class);
-      activeGames.remove(gameId);
+      activeGamesOf(server).remove(gameId);
+
+      game.c1.send("MOVE e2e4");
+      assertEquals("ERROR MESSAGE=GAME_NOT_FOUND", game.c1.readLine());
+    }
+
+    try (GameSetup game = startLoggedGame(port)) {
+      Integer gameId = server.getGameIdByPlayer(game.id1);
+      assertNotNull(gameId);
+
+      activeGamesOf(server).remove(gameId);
 
       game.c1.send("RESIGN");
       assertEquals("ERROR MESSAGE=GAME_NOT_FOUND", game.c1.readLine());
@@ -478,8 +512,8 @@ class ClientHandlerTest {
   }
 
   @Test
-  @DisplayName("RESIGN returns OPPONENT_NOT_FOUND when session has no opponent")
-  void resign_opponent_not_found() throws Exception {
+  @DisplayName("RESIGN handles missing opponent or ends game")
+  void resignCases() throws Exception {
     int port = startServer();
 
     try (GameSetup game = startLoggedGame(port)) {
@@ -499,17 +533,10 @@ class ClientHandlerTest {
 
       game.c1.send("RESIGN");
       String response = game.c1.readLine();
-
       assertNotNull(response);
       assertTrue(
           response.equals("ERROR MESSAGE=OPPONENT_NOT_FOUND") || response.startsWith("GAME_OVER"));
     }
-  }
-
-  @Test
-  @DisplayName("RESIGN ends the game and notifies both players")
-  void resign_ends_game() throws Exception {
-    int port = startServer();
 
     try (GameSetup game = startLoggedGame(port)) {
       game.c1.send("RESIGN");
@@ -526,7 +553,7 @@ class ClientHandlerTest {
 
   @Test
   @DisplayName("Server stop is safe when clients are connected")
-  void server_stop_with_connected_clients() throws Exception {
+  void serverStopWithConnectedClients() throws Exception {
     int port = startServer();
 
     try (RawClient c1 = new RawClient("127.0.0.1", port);
@@ -540,8 +567,9 @@ class ClientHandlerTest {
   }
 
   @Test
-  @DisplayName("ClientHandler stop is safe when called twice and with closed socket")
-  void client_handler_stop_branches() throws Exception {
+  @DisplayName(
+      "ClientHandler stop is safe when called twice and sendFromServer does nothing when writer is null")
+  void clientHandlerInternalSafety() throws Exception {
     int port = startServer();
 
     try (Socket socket = new Socket("127.0.0.1", port)) {
@@ -549,105 +577,11 @@ class ClientHandlerTest {
 
       handler.stop();
       handler.stop();
-
-      assertDoesNotThrow(socket::close);
-    }
-  }
-
-  @Test
-  @DisplayName("Private send does nothing when writer is null")
-  void send_with_null_writer() throws Exception {
-    int port = startServer();
-
-    try (Socket socket = new Socket("127.0.0.1", port)) {
-      ClientHandler handler = new ClientHandler(socket, server);
-
-      Method send = ClientHandler.class.getDeclaredMethod("send", String.class);
-      send.setAccessible(true);
 
       setField(handler, "out", null);
 
-      assertDoesNotThrow(() -> send.invoke(handler, "HELLO"));
+      assertDoesNotThrow(() -> handler.sendFromServer("HELLO"));
+      assertDoesNotThrow(socket::close);
     }
-  }
-
-  @Test
-  @DisplayName("PLAYERS with player id returns detailed player information")
-  void players_with_id_returns_player_details() throws Exception {
-    int port = startServer();
-
-    try (RawClient client = new RawClient("127.0.0.1", port)) {
-      int id = client.loginAndExtractId("Alice", "cid1");
-
-      client.send("PLAYERS " + id);
-      String response = client.readLine();
-
-      assertNotNull(response);
-      assertTrue(response.contains("PLAYER ID=" + id));
-      assertTrue(response.contains("NAME=Alice"));
-      assertTrue(response.contains("STATUS=idle"));
-      assertTrue(response.contains("WINS=0"));
-      assertTrue(response.contains("LOSSES=0"));
-      assertTrue(response.contains("GAMES=0"));
-    }
-  }
-
-  @Test
-  @DisplayName("handleAway returns not logged in when player is null")
-  void handle_away_not_logged_in() throws Exception {
-    assertPrivateStatusCommandResponse("handleAway", null, "ERROR MESSAGE=NOT_LOGGED_IN");
-  }
-
-  @Test
-  @DisplayName("handleBack returns not logged in when player is null")
-  void handle_back_not_logged_in() throws Exception {
-    assertPrivateStatusCommandResponse("handleBack", null, "ERROR MESSAGE=NOT_LOGGED_IN");
-  }
-
-  @Test
-  @DisplayName("handleAway refuses when player is in game")
-  void handle_away_ingame_refused() throws Exception {
-    OnlinePlayer player = newPlayer(1, "cid-test", "Alice", PlayerStatus.INGAME, null);
-
-    assertPrivateStatusCommandResponse(
-        "handleAway", player, "ERROR MESSAGE=CANNOT_SET_AWAY_INGAME");
-  }
-
-  @Test
-  @DisplayName("handleBack refuses when player is in game")
-  void handle_back_ingame_refused() throws Exception {
-    OnlinePlayer player = newPlayer(1, "cid-test", "Alice", PlayerStatus.INGAME, null);
-
-    assertPrivateStatusCommandResponse(
-        "handleBack", player, "ERROR MESSAGE=CANNOT_SET_BACK_INGAME");
-  }
-
-  @Test
-  @DisplayName("handlePlayers returns invalid player id when raw argument is not numeric")
-  void handle_players_invalid_id() throws Exception {
-    ClientHandler handler = newPrivateTestHandler();
-
-    String response = invokeHandlePlayersAndCaptureOutput(handler, "abc");
-
-    assertEquals("ERROR MESSAGE=INVALID_PLAYER_ID", response);
-  }
-
-  @Test
-  @DisplayName("handlePlayers returns detailed player information when id is valid")
-  void handle_players_valid_id() throws Exception {
-    if (server == null) {
-      server = new AgonServer(freePort(), "TestServer");
-    }
-
-    ClientHandler handler = new ClientHandler(null, server);
-
-    OnlinePlayer player = server.registerPlayer("cid1", "Alice", handler);
-    assertNotNull(player);
-
-    String response = invokeHandlePlayersAndCaptureOutput(handler, String.valueOf(player.getId()));
-
-    assertNotNull(response);
-    assertTrue(response.contains("PLAYER ID=" + player.getId()));
-    assertTrue(response.contains("NAME=Alice"));
   }
 }

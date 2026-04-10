@@ -1,11 +1,13 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
 import java.io.IOException;
@@ -68,12 +70,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   /** Registry containing all executable commands available in the shell. */
   private AgonRegister<CmdAction> cmds;
 
-  /** If true, the shell outputs detailed operational feedback. */
-  private boolean verbose;
-
-  /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
-  private AtomicBoolean debug;
-
   private String boardFooter = "";
 
   /**
@@ -81,8 +77,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * prompt.
    */
   private void init() {
-    this.verbose = false;
-    this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHa + "> ";
     GameLogger.info("AgonShell: CLI components initialized.");
@@ -158,28 +152,23 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     try {
       String readLine = this.reader.readLine(this.userPrompt);
 
-      // Cas du Ctrl+D (EOF)
       if (readLine == null) {
         GameLogger.debug("AgonShell: EOF received (null input).");
         return "quit";
       }
-
-      // --- CORRECTION : TRIM ET VÉRIFICATION ---
       line = readLine.trim();
       if (line.isEmpty()) {
-        return null; // Retourne null pour les lignes vides (espaces inclus)
+        return null;
       }
-      // ------------------------------------------
 
       this.reader.getHistory().add(line);
       GameLogger.debug("AgonShell: User entered command: " + line);
       return line;
 
     } catch (UserInterruptException e) {
-      // Si le thread est interrompu par le chrono, on ne veut pas quitter
       if (Thread.currentThread().isInterrupted()) {
         GameLogger.debug("AgonShell: Input interrupted by match timer.");
-        Thread.interrupted(); // Nettoie le flag d'interruption
+        Thread.interrupted();
         return null;
       }
       GameLogger.info("AgonShell: User interrupted (Ctrl+C).");
@@ -302,6 +291,11 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         .toAnsi();
   }
 
+  /**
+   * Displays an error message with the application's visual branding.
+   *
+   * @param msg The error message to display.
+   */
   @Override
   public void showError(String msg) {
     GameLogger.error("AgonShell (UI Display): " + msg);
@@ -315,8 +309,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   @Override
   public void showInfo(String msg) {
-    // On ne loggue pas systématiquement en INFO ici car c'est souvent de l'affichage pur
-    // pour l'utilisateur, mais on peut le mettre en DEBUG
     GameLogger.debug("AgonShell (UI Display Info): " + msg);
     this.cliW(this.msgHa + this.msgBi + " " + msg + "\n");
   }
@@ -333,7 +325,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Internal write method that flushes the terminal buffer immediately.
+   * Internal write method that flushes the terminal buffer immediately with a newline.
    *
    * @param msg String to print.
    */
@@ -389,7 +381,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
     } else {
       String[] timers = match.getAllPlayersRemainingTime();
-      if (timers != null) {
+      if (timers.length != 0) {
         this.showInfo(
             "Current turn: "
                 + match.getCurrentPlayer().getColor()
@@ -436,18 +428,13 @@ public class AgonShell implements GameUserInterface, MatchObserver {
 
     StringBuilder sb = new StringBuilder();
     sb.append("[history]\n");
-
-    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
     for (int i = 0; i < history.size(); i += 2) {
-      // Coup du joueur O (Premier joueur du tour)
       MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
           .append(" ")
           .append(moveO.to().toLowerCase())
           .append(";");
-
-      // Coup du joueur X (S'il existe déjà dans la liste)
       if (i + 1 < history.size()) {
         MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")
@@ -463,11 +450,84 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.showMessage(sb.toString());
   }
 
+  /** Clears the current board display in the terminal. */
   public void clearBoardDisplay() {
     this.cliWln("");
   }
 
+  /**
+   * Sets the text to be displayed as a footer below the board.
+   *
+   * @param boardFooter The footer string.
+   */
   public void setBoardFooter(String boardFooter) {
     this.boardFooter = (boardFooter == null) ? "" : boardFooter;
+  }
+
+  /**
+   * Initializes the player session directly from the shell.
+   *
+   * <p>The shell asks for the player name, then for the application mode, and updates the shared
+   * application context accordingly.
+   *
+   * @param context the shared application context to initialize
+   */
+  public void initializeSession(AppContext context) {
+    String name = askPlayerName();
+    AppMode mode = askApplicationMode();
+
+    context.setPlayerName(name);
+    context.setMode(mode);
+
+    GameLogger.info(
+        "AgonShell: Session initialized with player '" + name + "' in mode " + mode + ".");
+  }
+
+  /**
+   * Asks the user to enter a non-empty player name from the command line.
+   *
+   * @return the validated player name
+   */
+  private String askPlayerName() {
+    String name = this.reader.readLine(this.userPrompt + "Enter your player name: ").trim();
+
+    while (name.isEmpty()) {
+      name =
+          this.reader
+              .readLine(this.userPrompt + "Name cannot be empty. Enter your player name: ")
+              .trim();
+    }
+
+    return name;
+  }
+
+  /**
+   * Asks the user to select the application mode from the command line.
+   *
+   * <p>The available modes are:
+   *
+   * <ul>
+   *   <li>1 - Local
+   *   <li>2 - Online
+   * </ul>
+   *
+   * @return the selected application mode
+   */
+  private AppMode askApplicationMode() {
+    this.terminal.writer().println(this.userPrompt + "Select mode:");
+    this.terminal.writer().println("1 - Local");
+    this.terminal.writer().println("2 - Online");
+    this.terminal.flush();
+
+    String input = this.reader.readLine(this.userPrompt + "Your choice: ").trim();
+
+    while (!"1".equals(input) && !"2".equals(input)) {
+      input =
+          this.reader
+              .readLine(this.userPrompt + "Invalid choice. Enter 1 (Local) or 2 (Online): ")
+              .trim();
+    }
+
+    return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
 }

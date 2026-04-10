@@ -44,7 +44,7 @@ public class MobilityHeuristic extends AbstractHeuristic {
    * @return The number of legal moves available for the piece at this index.
    */
   @Override
-  protected long getFactor(AgonBoard board, int index) {
+  protected long getFactor(final AgonBoard board, final int index) {
     return board.getMobility(index);
   }
 }

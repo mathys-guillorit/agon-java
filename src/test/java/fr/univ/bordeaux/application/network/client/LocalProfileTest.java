@@ -9,7 +9,7 @@ class LocalProfileTest {
 
   @Test
   @DisplayName("Profile name getter/setter works")
-  void name_test() {
+  void nameTest() {
     LocalProfile p = new LocalProfile("Alice");
 
     assertEquals("Alice", p.getName());
@@ -20,7 +20,7 @@ class LocalProfileTest {
 
   @Test
   @DisplayName("ClientId is unique and not null")
-  void client_id_test() {
+  void clientIdTest() {
     LocalProfile p = new LocalProfile("Alice");
 
     assertNotNull(p.getClientId());
@@ -29,7 +29,7 @@ class LocalProfileTest {
 
   @Test
   @DisplayName("Server ID mapping works correctly")
-  void server_id_mapping() {
+  void serverIdMapping() {
     LocalProfile p = new LocalProfile("Alice");
 
     p.setIdForServer("srv", 42);

@@ -1,0 +1,54 @@
+@startuml
+
+package ai {
+    package heuristics {
+        interface Heuristic
+        interface MctsSelectionHeuristic
+        abstract class AbstractHeuristic
+        class CentralityHeuristic
+        class MobilityHeuristic
+        class MixedHeuristic
+        class MlHeuristic
+        class UctHeuristic
+    }
+
+    package strategy {
+        interface AgonAi {
+            +getBestMove(board: AgonBoard): Move
+            +setTimeLimit(millis: long): void
+        }
+
+        abstract class AbstractAgonAi
+        class AiFactory
+
+        package mcts {
+            class MctsStrategy
+            class MctsNode
+        }
+
+        package minimax {
+            class MinimaxStrategy
+        }
+    }
+}
+
+' --- RELATIONS D'IMPLEMENTATION (implements) ---
+AgonAi <|.. AbstractAgonAi
+AgonAi <|.. MctsStrategy
+AgonAi <|.. MinimaxStrategy
+Heuristic <|.. AbstractHeuristic
+Heuristic <|.. MixedHeuristic
+MctsSelectionHeuristic <|.. MlHeuristic
+MctsSelectionHeuristic <|.. UctHeuristic
+
+' --- RELATIONS D'HERITAGE (extends) ---
+AbstractHeuristic <|-- CentralityHeuristic
+AbstractHeuristic <|-- MobilityHeuristic
+AbstractAgonAi <|-- MinimaxStrategy
+AbstractAgonAi <|-- MctsStrategy
+
+' --- RELATIONS DE LA FACTORY ---
+AiFactory ..> MinimaxStrategy
+AiFactory ..> MctsStrategy
+MctsNode-- MctsStrategy
+@enduml

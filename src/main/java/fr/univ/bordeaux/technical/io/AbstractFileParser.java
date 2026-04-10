@@ -25,17 +25,17 @@ public abstract class AbstractFileParser<T> implements Parser<T> {
    * @throws IOException If the file cannot be read.
    */
   @Override
-  public final T parse(String filePath) throws IOException {
+  public final T parse(final String filePath) throws IOException {
 
-    Path path = Paths.get(filePath);
+    final Path path = Paths.get(filePath);
 
     if (!Files.exists(path)) {
       throw new IOException("Config file does not exist : " + filePath);
     }
 
-    List<String> rawLines = Files.readAllLines(path);
+    final List<String> rawLines = Files.readAllLines(path);
 
-    List<String> cleanLines = TextScrubber.clean(rawLines);
+    final List<String> cleanLines = TextScrubber.clean(rawLines);
 
     return processCleanLines(cleanLines);
   }

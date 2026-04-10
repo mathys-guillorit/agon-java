@@ -2,6 +2,8 @@ package fr.univ.bordeaux.application.network.server;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import fr.univ.bordeaux.application.network.server.game.ServerPlayerStats;
+import fr.univ.bordeaux.application.network.server.game.ServerScoreboard;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +11,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("Scoreboard is empty initially")
-  void scoreboard_empty_initially() {
+  void scoreboardEmptyInitially() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     assertTrue(scoreboard.isEmpty());
@@ -18,7 +20,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("GetOrCreateStats creates a new player stats entry")
-  void get_or_create_stats_creates_entry() {
+  void getOrCreateStatsCreatesEntry() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     ServerPlayerStats stats = scoreboard.getOrCreateStats("Alice");
@@ -31,7 +33,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("GetOrCreateStats returns same entry for same name ignoring case")
-  void get_or_create_stats_same_name_case_insensitive() {
+  void getOrCreateStatsSameNameCaseInsensitive() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     ServerPlayerStats s1 = scoreboard.getOrCreateStats("Alice");
@@ -43,7 +45,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("RecordWin updates player stats correctly")
-  void record_win() {
+  void recordWin() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     scoreboard.recordWin("Alice");
@@ -56,7 +58,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("RecordLoss updates player stats correctly")
-  void record_loss() {
+  void recordLoss() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     scoreboard.recordLoss("Alice");
@@ -69,7 +71,7 @@ class ServerScoreBoardTest {
 
   @Test
   @DisplayName("GetAllStats returns all created player stats")
-  void get_all_stats() {
+  void getAllStats() {
     ServerScoreboard scoreboard = new ServerScoreboard();
 
     scoreboard.recordWin("Alice");

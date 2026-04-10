@@ -6,7 +6,7 @@ import fr.univ.bordeaux.agoncore.history.HistoryInformations;
 import java.util.List;
 
 /**
- * Defines the core operations and state evaluations for an Agon game board. *
+ * Defines the core operations and state evaluations for an Agon game board.
  *
  * <p>This interface extends {@link RestrictedAgonBoard} to provide advanced game logic, including
  * move application, history management (undo/redo), and heuristic evaluation for AI agents.
@@ -82,12 +82,12 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   /**
    * Sets up the board with the standard initial Agon configuration. This method places all pawns
-   * and queens for both players
+   * and queens for both players in their starting positions.
    */
   void initBaseConfiguration();
 
   /**
-   * Provides access to the complete history of moves performed during the game. *
+   * Provides access to the complete history of moves performed during the game.
    *
    * <p>The returned list contains {@link HistoryInformations} objects representing each turn,
    * typically ordered from the most recent move played to the first one.
@@ -96,16 +96,31 @@ public interface AgonBoard extends RestrictedAgonBoard {
    */
   List<HistoryInformations> getHistory();
 
+  /**
+   * Retrieves the game history as a list of human-readable strings.
+   *
+   * @return A {@link List} of strings describing each move in text format.
+   */
   List<String> getHistoryAsText();
 
   /**
    * Converts the current board state into a list of ASCII strings.
    *
-   * <p>This representation is used for saving the game state to a file.
+   * <p>This representation is used for saving the game state to a file or for basic visual
+   * debugging.
    *
    * @return A list of strings representing the board visually.
    */
   List<String> toTextList();
 
+  /**
+   * Checks if a player has pieces that must be relocated.
+   *
+   * <p>In Agon rules, pieces captured or moved to specific zones might require relocation to the
+   * outer circle.
+   *
+   * @param color The {@link Color} of the player to check.
+   * @return {@code true} if the player has pending relocations, {@code false} otherwise.
+   */
   boolean hasPiecesToRelocate(Color color);
 }

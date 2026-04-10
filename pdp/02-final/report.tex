@@ -1,124 +1,142 @@
-\documentclass[a4paper]{article}
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
 
-\usepackage{pdp}
-
-%------------------------------------------------------------------------------
-%	REPORT INFORMATION
-%------------------------------------------------------------------------------
-
-\title{ProjectName -- C/Java/Python}
-\subtitle{Rapport final}
-\author{Étudiant1, Étudiant2, Étudiant3, Étudiant4, Étudiant5}
-
-%------------------------------------------------------------------------------
-
+\usepackage{xcolor}
+\usepackage{amsmath}
 \begin{document}
-
-%------------------------------------------------------------------------------
-%	TITLE PAGE
-%------------------------------------------------------------------------------
-
-\maketitle
-\thispagestyle{empty}
-
-%------------------------------------------------------------------------------
-%	MAIN MATTER
-%------------------------------------------------------------------------------
-
-\section*{Introduction}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
-
-Pellentesque iaculis molestie euismod. In hac habitasse platea dictumst. Duis eu
-gravida sem. Vivamus pulvinar, tellus auctor sollicitudin iaculis, quam massa
-blandit ligula, in mollis est tellus et velit. Nulla gravida sapien nibh, nec
-faucibus lorem aliquam sed. Curabitur rutrum elit purus, et congue neque
-venenatis vitae. Sed non magna nisi. Pellentesque euismod non ipsum a hendrerit.
-Pellentesque vehicula tincidunt lacinia. Sed rhoncus porttitor facilisis.
-
-Etiam sed molestie odio. Nunc cursus sollicitudin est vitae posuere. Nullam
-pellentesque metus eu dui porttitor bibendum. Morbi egestas arcu ut urna dictum
-placerat non non nisl. Quisque non ante in eros cursus pulvinar. Sed augue
-libero, eleifend a urna eget, pellentesque condimentum odio. Sed sed dui non
-diam mattis interdum eget sed urna. Integer consectetur, erat id rutrum posuere,
-dui velit dictum mi, quis tincidunt magna diam sit amet nunc. Etiam dui augue,
-sollicitudin rhoncus nisl a, rhoncus tempor purus.
-
-Suspendisse cursus erat et metus fermentum ullamcorper. Etiam eros arcu, dapibus
-quis efficitur ut, congue id nunc. Pellentesque aliquam venenatis convallis.
-Nulla nisi justo, aliquet quis lacus eget, aliquet maximus velit. Maecenas ex
-turpis, iaculis eget dignissim non, efficitur vel mi. Maecenas pharetra elit
-ornare sem suscipit ornare id id sapien. Vivamus sem neque, consectetur vitae
-aliquet non, finibus eu lectus. Fusce aliquam ipsum ut viverra vehicula. Donec
-ultrices varius nulla vel finibus. Donec convallis fringilla ante id porta.
-
-\section{Première section}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
-
-\section{Seconde section}
-
-Voici un exemple de code en Python :
-
-{\large
-  \begin{minted}[frame=single]{python}
-def hello_world():
-    print("Hello, World!")
-hello_world()
-  \end{minted}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{white},
+    keywordstyle=\color{blue},
+    stringstyle=\color{orange},
+    commentstyle=\color{green!70!black},
+    morecomment=[l][\color{magenta}]{\#},
+    frame=single,
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b,
 }
 
-Un exemple d'image flottante (Fig.~\ref{fig:example}).
+\title{Les trous noirs}
+\author{}
+\date{}
+\maketitle
 
-\begin{figure}[!ht]
-  \centering
-  \frame{\includegraphics[width=.85\textwidth]{layered_architectures.png}}
-  \caption{Une architecture en couches}\label{fig:example}
+\begin{figure}[h]
+   \centering
+   \includegraphics[width=0.5\textwidth]{black_hole.jpeg}
+   \caption{"Trou noir"}
+   \label{fig:black_hole.jpeg}
 \end{figure}
+\tableofcontents
 
-\section*{Conclusion}
+\newpage
+\setcounter{section}{0}
 
-Suspendisse sit amet nisi placerat, vestibulum nisl vel, iaculis nunc.
-Suspendisse quis libero vel ipsum gravida congue nec id arcu. Donec vel mi
-viverra, commodo urna vitae, tincidunt lectus. Fusce pellentesque, lectus a
-placerat vestibulum, magna lectus placerat nibh, vehicula pellentesque lacus
-erat non nulla. Suspendisse maximus, turpis at suscipit egestas, libero massa
-ultrices libero, at tincidunt velit eros a eros. Maecenas id tempor nunc.
-Phasellus condimentum porttitor sapien in sagittis. Proin in metus diam. Mauris
-in turpis sed ex viverra iaculis. Sed lobortis, tellus vitae congue blandit, leo
-elit auctor libero, id tempor ante dolor quis quam. Donec eget ligula quam.
-Maecenas porttitor massa vel felis elementum tristique.
+\section{Introduction aux trous noirs}\label{sec:introduction_trous_noirs}
 
-%------------------------------------------------------------------------------
-%	BIBLIOGRAPHY
-%------------------------------------------------------------------------------
+\subsection{Définition et caractéristiques principales}\label{sec:Définition_et_caractéristiques}  
+Un trou noir est une région de l'espace-temps où la gravité est si intense que rien, pas même la lumière, ne peut s'en échapper. Cette propriété résulte de l'effondrement gravitationnel d'une masse suffisamment élevée dans un volume suffisamment restreint. La densité de matière au sein d'un trou noir est si élevée que la vitesse d'échappement dépasse la vitesse de la lumière, formant ainsi un horizon des événements, au-delà duquel rien ne peut être observé.
+Les caractéristiques principales des trous noirs comprennent :
+\begin{itemize}
+   \item \textbf{Horizon des événements :} C'est la frontière au-delà de laquelle rien ne peut s'échapper de l'attraction gravitationnelle du trou noir. La taille de l'horizon des événements est directement liée à la masse du trou noir que nous verrons dans la section~\ref{propriétés}    .
+   
+   \item \textbf{Singularité :} Au cœur d'un trou noir se trouve une région de densité infinie appelée singularité, où les lois de la physique traditionnelle cessent de s'appliquer.
+   
+   \item \textbf{Masse :} Les trous noirs sont caractérisés par leur masse, qui peut varier de quelques masses solaires à des milliards de masses solaires pour les trous noirs supermassifs.
+   
+   \item \textbf{Rayon de Schwarzschild :} Le rayon de Schwarzschild est une caractéristique importante des trous noirs, défini comme la distance à partir du centre du trou noir jusqu'à son horizon des événements.
+   
+   \item \textbf{Charge électrique et spin :} Les trous noirs peuvent également avoir une charge électrique et un moment angulaire (spin), bien que dans de nombreux cas ils soient considérés comme nuls pour simplifier les modèles.
+\end{itemize} 
+La découverte et l'étude des trous noirs ont révolutionné notre compréhension de l'univers et ont ouvert de nouvelles perspectives en astrophysique, en cosmologie et en physique théorique. 
 
-\nocite{*}
+\subsection{Historique de la découverte des trous noirs}\label{sec:Historique}
+L'idée des trous noirs remonte à la fin du XVIIIe siècle, lorsque les premiers concepts de la gravité et de l'espace-temps ont été explorés. 
+Cependant, la compréhension moderne des trous noirs est le résultat de développements théoriques et observationnels au XXe siècle.
+
+En 1915, Albert Einstein a présenté sa théorie de la relativité générale 
+\begin{equation}
+   R_{\mu \nu} - \frac{1}{2} R \, g_{\mu \nu} = \frac{8\pi G}{c^4} T_{\mu \nu}
+\end{equation}
+où $R_{\mu \nu}$ est le tenseur de Ricci, $R$ est le scalaire de courbure, $g_{\mu \nu}$ est le tenseur métrique, $G$ est la constante gravitationnelle de Newton, $c$ est la vitesse de la lumière dans le vide, et $T_{\mu \nu}$ est le tenseur énergie-impulsion., décrivant la gravité comme une courbure de l'espace-temps causée par la présence de masse et d'énergie. Cette théorie a ouvert la voie à la compréhension des phénomènes gravitationnels extrêmes, y compris les trous noirs.
+
+Le concept de "trou noir" a été introduit pour la première fois par le physicien John Michell en 1783~\cite{Michell1783}, suivi plus tard par le mathématicien Pierre-Simon Laplace en 1796~\cite{Laplace1796}. Ils ont suggéré l'existence d'objets massifs dont le champ gravitationnel était si intense que même la lumière ne pouvait pas s'échapper.
+
+Cependant, ce n'est que dans les années 1960 que les travaux de scientifiques tels que Roger Penrose~\cite{Penrose1965} et Stephen Hawking~\cite{Hawking1971} ont donné une base théorique solide aux trous noirs. Penrose a démontré que les trous noirs pouvaient se former à partir de l'effondrement gravitationnel des étoiles massives en fin de vie, tandis que Hawking a prouvé que les trous noirs pouvaient émettre un rayonnement, maintenant connu sous le nom de "rayonnement de Hawking".
+
+Les premières observations directes de trous noirs ont été réalisées dans les années 1970 et 1980, lorsque des astronomes ont découvert des objets compacts et massifs dans des systèmes binaires stellaires. Ces découvertes ont été confirmées plus tard par des observations supplémentaires utilisant des télescopes spatiaux et des instruments au sol.
+
+En 2019, l'Event Horizon Telescope a réalisé la première image directe d'un trou noir, capturant l'ombre de l'horizon des événements d'un trou noir supermassif au centre de la galaxie M87. Cette image historique a marqué une étape majeure dans notre compréhension et notre observation des trous noirs.
+\begin{figure}[h]
+   \centering
+   \includegraphics[width=0.5\textwidth]{event_horizon.jpeg}
+   \caption{"Horizon des événements du trou noir au centre de la galaxie M87"}
+   \label{fig:event_horizon.jpeg}
+\end{figure}
+\begin{table}[h]
+   \centering
+   \begin{tabular}{cc}
+   \toprule
+   \textbf{Événement} & \textbf{Année} \\
+   \midrule
+   Prédiction théorique & 1783 \\
+   Première observation & 1971 \\
+   Confirmation directe & 2019 \\
+   \bottomrule
+   \end{tabular}
+   \caption{Étapes clés dans l'histoire des trous noirs}
+   \label{tab:histoire_trous_noirs}
+\end{table}
+\subsection{Importance des trous noirs dans l'astrophysique moderne}\label{sec:Importance}
+Les trous noirs occupent une place centrale dans l'astrophysique moderne en raison de leur rôle crucial dans de nombreux phénomènes cosmiques et de leur impact profond sur notre compréhension de l'univers. Leur étude a ouvert de nouvelles perspectives sur des domaines aussi variés que la formation des galaxies, la dynamique stellaire, et même la nature de l'espace-temps lui-même.
+
+L'une des contributions les plus significatives des trous noirs à l'astrophysique moderne réside dans leur influence sur la formation et l'évolution des galaxies~\cite{Silk1998}. Les simulations numériques montrent que la présence de trous noirs supermassifs au centre des galaxies est étroitement liée à la formation des structures à grande échelle dans l'univers. Ces trous noirs exercent une influence gravitationnelle sur leur environnement, régulant la croissance des galaxies en influençant la formation d'étoiles et en régulant l'approvisionnement en gaz.
+
+De plus, les observations de galaxies lointaines suggèrent que les trous noirs supermassifs étaient déjà présents peu de temps après le Big Bang, ce qui soulève des questions fondamentales sur leur formation et leur croissance précoce dans l'univers primordial.
+
+Les trous noirs jouent également un rôle crucial dans la dynamique des systèmes binaires stellaires. Lorsqu'une étoile massive épuise son combustible nucléaire, elle peut s'effondrer pour former un trou noir. Si cette étoile a un compagnon proche, le trou noir nouvellement formé peut capturer de la matière de son compagnon, créant ainsi un disque d'accrétion lumineux autour du trou noir. Ce processus d'accrétion peut générer d'intenses émissions de rayons X et de radiations dans différentes longueurs d'onde, fournissant aux astronomes des informations précieuses sur la physique des trous noirs et leur environnement.
+
+Enfin, les trous noirs sont également cruciaux pour la détection des ondes gravitationnelles, une prédiction majeure de la relativité générale d'Einstein. Lorsque deux trous noirs fusionnent, ils produisent des ondes gravitationnelles qui se propagent à travers l'espace-temps, déformant la géométrie de l'espace-temps lui-même. La détection directe de ces ondes gravitationnelles par des observatoires tels que LIGO et Virgo a ouvert une nouvelle fenêtre sur l'univers, nous permettant d'observer des phénomènes cosmiques auparavant invisibles.
+   
+\section{Propriétés des trous noirs}  
+   \subsection{Gravité extrême et singularité}
+   Les trous noirs sont des manifestations extrêmes de la gravité, où la courbure de l'espace-temps atteint des niveaux extraordinaires. Au cœur d'un trou noir se trouve une région appelée singularité, où la densité de matière est infinie et où les lois de la physique telles que nous les connaissons cessent de s'appliquer. Cette singularité est enveloppée par ce qu'on appelle l'horizon des événements, une frontière invisible au-delà de laquelle rien, pas même la lumière, ne peut s'échapper de l'attraction gravitationnelle du trou noir.
+
+La gravité à proximité d'un trou noir est si intense que même la lumière est piégée, créant une obscurité totale et un mystère profond. La courbure de l'espace-temps est si prononcée que le temps lui-même est affecté, se dilatant de manière significative à mesure que l'on s'approche de l'horizon des événements. Pour un observateur distant, le temps semble ralentir à mesure qu'il observe un objet s'approcher de l'horizon des événements, et finalement, il semble se figer complètement lorsque l'objet franchit l'horizon et s'effondre dans le trou noir.
+
+La singularité au cœur d'un trou noir est l'objet de nombreuses spéculations et théories. Selon la relativité générale d'Einstein, la singularité est une région où la densité de matière est infinie et où les lois de la physique traditionnelle cessent de s'appliquer. Cependant, les physiciens théoriciens cherchent depuis des décennies à développer une théorie de la gravité quantique qui pourrait unifier la relativité générale et la physique quantique et ainsi résoudre le mystère des singularités des trous noirs.
+
+Une autre caractéristique fascinante des trous noirs est la possibilité d'avoir des singularités de rotation, également connues sous le nom de "singularités de Kerr". Ces singularités se forment lorsque les trous noirs sont en rotation, créant une structure plus complexe de l'espace-temps et des possibilités théoriques intéressantes pour les voyages dans le temps et les tunnels à travers l'espace-temps.
+   \subsection{Horizon des événements et l'horizon des trous noirs}\label{propriétés}
+Au cœur de la définition d'un trou noir se trouve l'horizon des événements, une frontière invisible qui marque le point de non-retour au-delà duquel rien, pas même la lumière, ne peut échapper à l'attraction gravitationnelle du trou noir. Cet horizon des événements est une prédiction fondamentale de la relativité générale d'Einstein et représente la frontière entre l'univers observable et l'inconnu.
+
+L'horizon des événements est défini par la géométrie de l'espace-temps autour du trou noir, où la courbure de l'espace-temps devient si prononcée que les trajectoires des particules et de la lumière sont déviées de manière irréversible vers l'intérieur du trou noir. Une fois qu'un objet ou un rayon lumineux franchit l'horizon des événements, il est condamné à plonger vers la singularité au cœur du trou noir, où les lois de la physique traditionnelle cessent de s'appliquer.
+
+L'horizon des événements est une frontière statique dans l'espace-temps, ce qui signifie qu'il ne change pas avec le temps pour un observateur externe. Cependant, pour un objet en chute libre vers le trou noir, l'horizon des événements semble se rapprocher de plus en plus rapidement à mesure que l'objet s'en rapproche, jusqu'à ce qu'il soit finalement englouti.
+   \subsection{Masse, charge et mouvement angulaire des trous noirs}
+   Les trous noirs sont caractérisés par trois propriétés fondamentales : leur masse, leur charge électrique et leur moment angulaire (spin). Ces propriétés déterminent les propriétés géométriques et dynamiques des trous noirs, ainsi que leur interaction avec l'environnement qui les entoure.
+   La masse d'un trou noir est déterminée par la quantité de matière qui s'est effondrée en son sein lors de sa formation. Selon la relativité générale d'Einstein, la masse d'un trou noir est directement liée à la taille de son horizon des événements. Le rayon de Schwarzschild, $rs$, qui correspond à la taille de l'horizon des événements d'un trou noir non chargé et non en rotation, est donné par :
+   \begin{lstlisting}
+      import scipy.constants as const
+      
+      def calculer_rayon_schwarzschild(masse):
+          """
+          Calcule le rayon de Schwarzschild pour un trou noir en fonction de sa masse
+          """
+          G = const.G
+          c = const.c
+      
+          rs = 2 * G * masse / (c ** 2)  # Formule du rayon de Schwarzschild
+      
+          return rs
+      \end{lstlisting}
+
 \bibliographystyle{plain}
-\bibliography{bibliography}
-
-%------------------------------------------------------------------------------
-% BACK MATTER
-%------------------------------------------------------------------------------
-\appendix
-
-\section{Section en annexe}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
-
+\bibliography{references}
 \end{document}

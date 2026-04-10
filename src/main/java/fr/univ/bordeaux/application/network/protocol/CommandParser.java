@@ -1,10 +1,13 @@
 package fr.univ.bordeaux.application.network.protocol;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Responsible for parsing raw network messages into {@link Command} objects. */
-public class CommandParser {
+public final class CommandParser {
+
+  /** Utility class. */
+  private CommandParser() {}
 
   /**
    * Parses a raw network line into a {@link Command}.
@@ -16,38 +19,43 @@ public class CommandParser {
    * @return a {@link Command} object containing the identified {@link CommandType} and a map of its
    *     arguments
    */
-  public static Command parse(String line) {
+  public static Command parse(final String line) {
+    Command result;
+
     if (line == null) {
-      return new Command(CommandType.UNKNOWN, Map.of());
-    }
+      result = new Command(CommandType.UNKNOWN, Map.of());
+    } else {
+      final String rawLine = line.trim();
 
-    String raw = line.trim();
-    if (raw.isEmpty()) {
-      return new Command(CommandType.UNKNOWN, Map.of());
-    }
+      if (rawLine.isEmpty()) {
+        result = new Command(CommandType.UNKNOWN, Map.of());
+      } else {
+        final String[] parts = rawLine.split("\\s+");
+        final CommandType type = CommandType.convertCommandType(parts[0]);
 
-    String[] parts = raw.split("\\s+");
+        final Map<String, String> arguments = new ConcurrentHashMap<>();
+        String rawArg = null;
 
-    CommandType type = CommandType.convertCommandType(parts[0]);
+        for (int index = 1; index < parts.length; index++) {
+          final String token = parts[index];
+          final int equalIndex = token.indexOf('=');
 
-    Map<String, String> args = new HashMap<>();
-    String rawArg = null;
-    for (int i = 1; i < parts.length; i++) {
-      String token = parts[i];
-      int eq = token.indexOf('=');
+          if (equalIndex > 0) {
+            final String key = token.substring(0, equalIndex);
+            final String value = token.substring(equalIndex + 1);
 
-      if (eq > 0) {
-        String key = token.substring(0, eq);
-        String value = token.substring(eq + 1);
-
-        if (!key.isEmpty()) {
-          args.put(key, value);
+            if (!key.isEmpty()) {
+              arguments.put(key, value);
+            }
+          } else if (rawArg == null) {
+            rawArg = token;
+          }
         }
-      } else if (rawArg == null) {
-        rawArg = token;
+
+        result = new Command(type, arguments, rawArg);
       }
     }
 
-    return new Command(type, args, rawArg);
+    return result;
   }
 }

@@ -1,10 +1,5 @@
 package fr.univ.bordeaux.application.commands.specialized;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import fr.univ.bordeaux.application.AppContext;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
@@ -13,12 +8,15 @@ import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.cli.AgonShell;
 import fr.univ.bordeaux.ui.cli.tools.FakeLineReader;
 import fr.univ.bordeaux.ui.cli.tools.FakeTerminal;
-import java.io.ByteArrayOutputStream;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CmdHelpTest {
   private AgonRegister<CmdAction> cmds;
@@ -61,7 +59,6 @@ public class CmdHelpTest {
   @Test
   @DisplayName("Vérifier l'aide ciblée pour une commande existante (quit)")
   void testTargetedHelpSuccess() {
-    // Appel de "help quit"
     CmdAction cmd = cmds.get("help").get().createNew(new String[] {"quit"});
     boolean result = cmd.execute(null);
 

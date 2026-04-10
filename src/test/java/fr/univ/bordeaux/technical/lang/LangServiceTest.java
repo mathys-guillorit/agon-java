@@ -4,10 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.MissingResourceException;
+import java.util.*;
+
 import jdk.jfr.Description;
 import org.junit.jupiter.api.Test;
 
@@ -82,4 +80,14 @@ public class LangServiceTest {
         assertThrows(MissingResourceException.class, () -> lang.translate(token));
     assertTrue(exept.getMessage().contains("PropertyResourceBundle, key " + token));
   }
+
+  @Test
+  @Description("supported languages")
+  void supportedLanguagesTest() {
+    assertEquals(
+        new HashSet<>(LangService.supportedLocales()),
+        new HashSet<>(Arrays.asList(Locale.ENGLISH, Locale.UK, Locale.FRENCH, Locale.FRANCE))
+    );
+  }
+
 }
