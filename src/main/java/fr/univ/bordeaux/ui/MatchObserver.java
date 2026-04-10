@@ -3,20 +3,18 @@ package fr.univ.bordeaux.ui;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 
 /**
- * Defines a listener interested in state changes within an Agon match.
+ * Defines the contract for objects that need to be notified of changes in the match state.
  *
- * <p>This interface follows the Observer design pattern. Any class implementing this interface
- * (such as a GUI or a Console logger) will be notified whenever the match state evolves (e.g.,
- * after a move, a capture, or a turn change).
+ * <p>This interface is a key part of the Observer design pattern, allowing UI components
+ * (like CLI or GUI) to synchronize their display whenever the game state evolves.
+ *
  */
 public interface MatchObserver {
 
   /**
-   * Invoked when the state of the observed match has been updated.
+   * Invoked when the state of the match has changed.
    *
-   * @param match A {@link ReadOnlyMatch} instance representing the current state. The match is
-   *     provided in read-only mode to prevent observers from inadvertently modifying the game state
-   *     during notification.
+   * @param match A {@link ReadOnlyMatch} representing the new state of the game.
    */
   void onMatchUpdate(ReadOnlyMatch match);
 }

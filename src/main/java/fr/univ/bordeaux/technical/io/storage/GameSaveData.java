@@ -28,7 +28,10 @@ public class GameSaveData {
    * @param historyMoves {@link List}
    */
   public GameSaveData(
-          final GameConfig config, final Color currentPlayer, final List<String> boardLines, final List<String> historyMoves) {
+      final GameConfig config,
+      final Color currentPlayer,
+      final List<String> boardLines,
+      final List<String> historyMoves) {
     this.config = config;
     this.currentPlayer = currentPlayer;
     this.boardLines = boardLines;

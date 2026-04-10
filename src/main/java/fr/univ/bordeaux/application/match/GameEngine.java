@@ -261,6 +261,7 @@ public class GameEngine {
     return name.equalsIgnoreCase("undo")
         || name.equalsIgnoreCase("redo")
         || name.equalsIgnoreCase("pause")
+        || name.equalsIgnoreCase("hint")
         || name.equalsIgnoreCase("save")
         || name.equalsIgnoreCase("load");
   }

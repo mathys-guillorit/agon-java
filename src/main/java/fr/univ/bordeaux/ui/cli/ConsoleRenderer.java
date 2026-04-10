@@ -12,7 +12,6 @@ import java.util.ArrayList;
  * RestrictedAgonBoard} data into a visual ASCII-art hexagon suitable for the console.
  */
 public class ConsoleRenderer {
-
   /**
    * Calculates the indentation (spaces) needed for each line to form the hexagonal shape.
    *

@@ -14,8 +14,10 @@ public final class TextScrubber {
 
   /** Character marking the start of a block comment. */
   private static final char BLOCK_START = '{';
+
   /** Character marking the end of a block comment. */
   private static final char BLOCK_END = '}';
+
   /** Character marking an inline comment. */
   private static final char INLINE_COMMENT = '#';
 
@@ -51,14 +53,12 @@ public final class TextScrubber {
     return cleanLines;
   }
 
-  /**
-   * Processes a single line character by character, managing block comment states.
-   */
+  /** Processes a single line character by character, managing block comment states. */
   private static String processLine(
-          final String line,
-          final int lineNumber,
-          final ScrubberState state,
-          final StringBuilder lineBuilder) {
+      final String line,
+      final int lineNumber,
+      final ScrubberState state,
+      final StringBuilder lineBuilder) {
 
     lineBuilder.setLength(0);
 
@@ -84,9 +84,7 @@ public final class TextScrubber {
     return lineBuilder.toString();
   }
 
-  /**
-   * Mutable state object to track multi-line block comments across iterations.
-   */
+  /** Mutable state object to track multi-line block comments across iterations. */
   private static final class ScrubberState {
     /** Indicates if the parser is currently inside a block comment. */
     boolean isInsideBlock;

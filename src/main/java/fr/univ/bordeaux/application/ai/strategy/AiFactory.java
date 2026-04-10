@@ -56,11 +56,11 @@ public final class AiFactory {
           resultAi = null;
         } else {
           resultAi = new MinimaxStrategy(
-              heuristic,
-              color,
-              config.getAiDepth(),
-              config.isAiIterativeDeepening() || mode.equals("iterative"),
-              config.getAiTimeLimit());
+                  heuristic,
+                  color,
+                  config.getAiDepth(),
+                  config.isAiIterativeDeepening(),
+                  config.getAiTimeLimit());
         }
       }
       case "mcts" -> {
@@ -89,20 +89,30 @@ public final class AiFactory {
   }
 
   private static Heuristic createHeuristic(final String type) {
-    return switch (type) {
-      case "centrality" -> new CentralityHeuristic();
-      case "mobility" -> new MobilityHeuristic();
-      case "mixed" -> new MixedHeuristic(10, 1);
-      default -> null;
-    };
+    final Heuristic resultHeuristic;
+    switch (type) {
+      case "centrality" -> resultHeuristic = new CentralityHeuristic();
+      case "mobility" -> resultHeuristic = new MobilityHeuristic();
+      case "mixed" -> resultHeuristic = new MixedHeuristic(10, 1);
+      default -> {
+        GameLogger.warn("No heuristic found.");
+        resultHeuristic = null;
+      }
+    }
+    return resultHeuristic;
   }
 
   private static MctsSelectionHeuristic createSelectionHeuristic(final String type) {
-    return switch (type) {
-      case "uct" -> new UctHeuristic(Math.sqrt(2));
-      case "ml" -> new MlHeuristic(Math.sqrt(2));
-      default -> null;
-    };
+    final MctsSelectionHeuristic resultSelection;
+    switch (type) {
+      case "uct" -> resultSelection = new UctHeuristic(Math.sqrt(2));
+      case "ml" -> resultSelection = new MlHeuristic(Math.sqrt(2));
+      default -> {
+        GameLogger.warn("No selection heuristic found");
+        resultSelection = null;
+      }
+    }
+    return resultSelection;
   }
 
   /**

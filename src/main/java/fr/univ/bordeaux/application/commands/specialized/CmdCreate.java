@@ -6,6 +6,7 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.GameEngine;
 import fr.univ.bordeaux.application.match.MatchFactory;
 import fr.univ.bordeaux.application.match.MatchManager;
+import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.technical.io.config.ConfigBinder;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.technical.utils.GameLogger;
@@ -57,16 +58,7 @@ public class CmdCreate extends Cmd {
     this.gameEngine = gameEngine;
     this.args = args;
     Options options = super.getOptions();
-    options.addOption("a", "ai", true, "Set the [Color] player with an Ai.\n");
-    options.addOption("b", "blitz", false, "Set the game mode to blitz\n");
-    options.addOption("t", "time", true, "Set the reflexion time for both player\n");
-    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
-    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
-    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
-    options.addOption(
-        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
-    options.addOption(
-        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
+    ConfigBinder.fillOptions(options);
   }
 
   /**
@@ -95,6 +87,9 @@ public class CmdCreate extends Cmd {
       }
 
       ((ObservableMatch) match).setObserver((MatchObserver) super.getCtx());
+      if (match instanceof ReadOnlyMatch) {
+        ((MatchObserver) super.getCtx()).onMatchUpdate((ReadOnlyMatch) match);
+      }
       gameEngine.setMatchManager(match);
     } catch (ParseException | IllegalArgumentException e) {
       GameLogger.error(e.getMessage());

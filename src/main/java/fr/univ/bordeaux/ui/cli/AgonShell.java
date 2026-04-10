@@ -1,11 +1,13 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
 import fr.univ.bordeaux.application.match.ReadOnlyMatch;
 import fr.univ.bordeaux.application.match.player.Player;
-import fr.univ.bordeaux.technical.utils.GameLogger; // Import ajouté
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import fr.univ.bordeaux.ui.MatchObserver;
 import java.io.IOException;
@@ -140,8 +142,8 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * <p>Handles special cases:
    *
    * <ul>
-   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
-   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
+   * <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
+   * <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
    * </ul>
    *
    * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
@@ -290,17 +292,9 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Displays an error message to the user and logs it in the system.
+   * Displays an error message with the application's visual branding.
    *
-   * <p>This method performs two actions:
-   *
-   * <ol>
-   *   <li>It records the error in the {@link GameLogger} for debugging purposes.
-   *   <li>It prints the error to the command-line interface with a specific visual prefix to ensure
-   *       the user notices it.
-   * </ol>
-   *
-   * @param msg The error message to be displayed.
+   * @param msg The error message to display.
    */
   @Override
   public void showError(String msg) {
@@ -331,7 +325,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Internal write method that flushes the terminal buffer immediately.
+   * Internal write method that flushes the terminal buffer immediately with a newline.
    *
    * @param msg String to print.
    */
@@ -456,11 +450,86 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.showMessage(sb.toString());
   }
 
+  /**
+   * Clears the current board display in the terminal.
+   */
   public void clearBoardDisplay() {
     this.cliWln("");
   }
 
+  /**
+   * Sets the text to be displayed as a footer below the board.
+   *
+   * @param boardFooter The footer string.
+   */
   public void setBoardFooter(String boardFooter) {
     this.boardFooter = (boardFooter == null) ? "" : boardFooter;
+  }
+
+  /**
+   * Initializes the player session directly from the shell.
+   *
+   * <p>The shell asks for the player name, then for the application mode, and updates the shared
+   * application context accordingly.
+   *
+   * @param context the shared application context to initialize
+   */
+  public void initializeSession(AppContext context) {
+    String name = askPlayerName();
+    AppMode mode = askApplicationMode();
+
+    context.setPlayerName(name);
+    context.setMode(mode);
+
+    GameLogger.info(
+        "AgonShell: Session initialized with player '" + name + "' in mode " + mode + ".");
+  }
+
+  /**
+   * Asks the user to enter a non-empty player name from the command line.
+   *
+   * @return the validated player name
+   */
+  private String askPlayerName() {
+    String name = this.reader.readLine(this.userPrompt + "Enter your player name: ").trim();
+
+    while (name.isEmpty()) {
+      name =
+          this.reader
+              .readLine(this.userPrompt + "Name cannot be empty. Enter your player name: ")
+              .trim();
+    }
+
+    return name;
+  }
+
+  /**
+   * Asks the user to select the application mode from the command line.
+   *
+   * <p>The available modes are:
+   *
+   * <ul>
+   *   <li>1 - Local
+   *   <li>2 - Online
+   * </ul>
+   *
+   * @return the selected application mode
+   */
+  private AppMode askApplicationMode() {
+    this.terminal.writer().println(this.userPrompt + "Select mode:");
+    this.terminal.writer().println("1 - Local");
+    this.terminal.writer().println("2 - Online");
+    this.terminal.flush();
+
+    String input = this.reader.readLine(this.userPrompt + "Your choice: ").trim();
+
+    while (!"1".equals(input) && !"2".equals(input)) {
+      input =
+          this.reader
+              .readLine(this.userPrompt + "Invalid choice. Enter 1 (Local) or 2 (Online): ")
+              .trim();
+    }
+
+    return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
 }

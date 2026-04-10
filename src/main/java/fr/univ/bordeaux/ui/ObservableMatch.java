@@ -1,26 +1,23 @@
 package fr.univ.bordeaux.ui;
 
 /**
- * Defines the contract for a match that can be observed by a user interface.
- *
- * <p>This interface allows an external observer to register itself to receive updates. It ensures a
- * decoupled relationship between the game logic and the display logic, following the Observer
- * design pattern.
+ * Defines the contract for a match that can be monitored by a user interface.
+ * * <p>This interface allows an {@link MatchObserver} to register itself to receive
+ * real-time updates whenever the game state changes (e.g., after a move, undo, or redo).
  */
 public interface ObservableMatch {
 
   /**
-   * Registers an observer to be notified of any changes in the match state.
+   * Registers a single observer to be notified of match updates.
    *
-   * @param observer The {@link MatchObserver} that will listen for updates.
+   * @param observer The {@link MatchObserver} (typically a CLI or GUI) to attach.
    */
   void setObserver(MatchObserver observer);
 
   /**
-   * Manually triggers a notification to the registered observer. *
-   *
-   * <p>This is typically called after a significant state change (like a move or a game reset) to
-   * ensure the user interface reflects the most current board configuration.
+   * Triggers a notification to the attached observer.
+   * * <p>This method should be called manually or automatically after any significant
+   * state change to synchronize the display with the internal game logic.
    */
   void notifyUi();
 }

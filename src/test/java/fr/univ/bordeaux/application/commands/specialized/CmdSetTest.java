@@ -225,4 +225,72 @@ public class CmdSetTest {
     CmdSet cmd = new CmdSet(this.gameUserInterface, this.config);
     assertEquals("set", cmd.createNew(new String[] {"name"}).getName());
   }
+
+  @Test
+  @DisplayName("Verify error when no parameter is provided")
+  void testSetNoArguments() {
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {});
+    boolean result = cmd.execute(null);
+
+    assertFalse(result, "Command should fail when no arguments are provided");
+    assertTrue(outContent.toString().contains("No parameters provided"));
+  }
+
+  @Test
+  @DisplayName("Verify getHelp returns formatted help with options and descriptions")
+  void testGetHelp() {
+    CmdSet cmd = new CmdSet(this.gameUserInterface, this.config);
+
+    String help = cmd.getHelp();
+
+    assertTrue(help.startsWith("usage: set"), "Help should start with usage: set");
+    assertTrue(help.contains("Options"), "Help should contain the Options header");
+    assertTrue(help.contains("Description"), "Help should contain the Description header");
+
+    assertTrue(help.contains("verbose=true^false"), "Help should describe verbose option");
+    assertTrue(help.contains("debug=true^false"), "Help should describe debug option");
+    assertTrue(help.contains("timeout=0..." + Integer.MAX_VALUE), "Help should describe timeout");
+    assertTrue(help.contains("aiMode=minimax^mcts^iterative"), "Help should describe aiMode");
+    assertTrue(help.contains("whiteIsAi=true^false"), "Help should describe whiteIsAi");
+
+    assertTrue(help.contains("increase verbosity"), "Help should contain verbose description");
+    assertTrue(help.contains("to show more messages"), "Help should contain debug description");
+  }
+
+  @Test
+  @DisplayName("Verify error handling for unknown parameter")
+  void testSetUnknownParameter() {
+    CmdAction cmd = cmds.get("set").get().createNew(new String[] {"unknownParam=true"});
+    boolean result = cmd.execute(null);
+
+    assertFalse(result, "Command should fail on unknown parameter");
+    assertTrue(outContent.toString().contains("Unknown parameter: unknownParam"));
+    assertTrue(outContent.toString().contains("Usage: set PARAM=VALUE"));
+  }
+
+  @Test
+  @DisplayName("Verify getHelp lists all settable parameters")
+  void testGetHelpContainsAllOptions() {
+    CmdSet cmd = new CmdSet(this.gameUserInterface, this.config);
+    String help = cmd.getHelp();
+
+    String[] expectedOptions = {
+      "verbose=true^false",
+      "debug=true^false",
+      "blitzMode=true^false",
+      "timeout=0..." + Integer.MAX_VALUE,
+      "aiActive=true^false",
+      "aiMode=minimax^mcts^iterative",
+      "aiDepth=0..." + Integer.MAX_VALUE,
+      "aiTimeLimit=0..." + Integer.MAX_VALUE,
+      "aiIterativeDeepening=true^false",
+      "aiHeuristic=mixed^centrality^mobility^UCT^ML",
+      "whiteIsAi=true^false",
+      "blackIsAi=true^false"
+    };
+
+    for (String option : expectedOptions) {
+      assertTrue(help.contains(option), "Help should contain option: " + option);
+    }
+  }
 }

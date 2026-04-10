@@ -4,54 +4,58 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Arrays;
 /**
- * Represents the configuration settings for the Agon game. (like verbosity and debug modes), game
- * rules (like blitz mode and timeouts), and Artificial Intelligence settings (like algorithms,
- * depths, and heuristics).
+ * Represents the configuration settings for the Agon game.
+ * This includes system settings (like verbosity and debug modes),
+ * game rules (like blitz mode and timeouts), and Artificial Intelligence
+ * settings (like algorithms, depths, and heuristics).
  */
 public class GameConfig {
 
-  /** Verbose mode flag. */
+  /** Verbose mode flag for detailed output. */
   private boolean verbose;
 
-  /** Debug mode flag. */
+  /** Debug mode flag for technical logging. */
   private boolean debug;
 
-  /** Blitz mode flag. */
+  /** Blitz mode flag to enable timed gameplay. */
   private boolean blitzMode;
 
-  /** Manual placement flag. */
+  /** Manual placement flag for initial piece positioning. */
   private boolean manualPlacement;
 
-  /** Timeout duration in seconds. */
+  /** Global timeout duration in seconds for players. */
   private int timeout = 30;
 
-  /** Global AI activation flag. */
+  /** Global AI activation flag to enable computer players. */
   private boolean aiActive;
 
-  /** The AI algorithm mode. */
+  /** The specific AI algorithm mode (e.g., "minimax", "mcts"). */
   private String aiMode = "minimax";
 
-  /** Maximum depth for the AI search. */
+  /** Maximum search depth for the AI decision-making process. */
   private int aiDepth = 4;
 
-  /** Maximum computation time for AI in seconds. */
+  /** Maximum computation time allocated for AI move calculation in seconds. */
   private int aiTimeLimit = 5;
 
-  /** Flag for AI iterative deepening. */
+  /** Flag indicating if the AI should use iterative deepening techniques. */
   private boolean iterDeepening = true;
 
-  /** The heuristic strategy name. */
+  /** The name of the heuristic strategy used for board evaluation. */
   private String aiHeuristic = "mixed";
 
-  /** Flag indicating if White is AI. */
+  /** Flag indicating if the White player is controlled by the AI. */
   private boolean whiteIsAi;
 
-  /** Flag indicating if Black is AI. */
+  /** Flag indicating if the Black player is controlled by the AI. */
   private boolean blackIsAi;
 
-  /** Map of keyboard shortcuts. */
-  private Map<String, String> shortcuts = new ConcurrentHashMap<>();
+  /** Map of keyboard shortcuts for UI actions. */
+  private Map<String, String> shortcuts = createDefaultShortcuts();
 
+  /**
+   * Constructs a new GameConfig with default values.
+   */
   public GameConfig() {}
 
   /**
@@ -290,7 +294,8 @@ public class GameConfig {
   /**
    * Retrieves the map containing all configured keyboard shortcuts.
    *
-   * @return A map where the key is the shortcut identifier and the value is the assigned key combination.
+   * @return A map where the key is the shortcut identifier and the value is the assigned key
+   * combination.
    */
   public Map<String, String> getShortcuts() {
     return shortcuts;
@@ -308,7 +313,8 @@ public class GameConfig {
   /**
    * Enables or disables the manual placement of Pawns and Queens.
    *
-   * @param manualPlacement {@code true} to allow the players to manually choose the initial placement of their pawns, {@code false} to make it automatic.
+   * @param manualPlacement {@code true} to allow the players to manually choose the initial
+   * placement of their pawns, {@code false} to make it automatic.
    */
   public void setManualPlacement(final boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
@@ -317,7 +323,8 @@ public class GameConfig {
   /**
    * Sets the entire map of keyboard shortcuts.
    *
-   * @param shortcuts A map containing the shortcut identifiers and their corresponding key combinations.
+   * @param shortcuts A map containing the shortcut identifiers and their corresponding key
+   * combinations.
    */
   public void setShortcuts(final Map<String, String> shortcuts) {
     this.shortcuts = shortcuts;
@@ -326,13 +333,17 @@ public class GameConfig {
   /**
    * Adds or updates a single keyboard shortcut in the configuration.
    *
-   * @param key   The shortcut identifier (must start with "shortcut_").
+   * @param key The shortcut identifier (must start with "shortcut_").
    * @param value The key combination assigned to this shortcut.
    */
   public void addShortcut(final String key, final String value) {
     shortcuts.put(key, value);
   }
 
+  /**
+   * Returns a string representation of the current configuration.
+   * * @return A formatted string listing all key configuration settings.
+   */
   @Override
   public String toString() {
     final StringBuilder string = new StringBuilder(256);
@@ -379,5 +390,24 @@ public class GameConfig {
     clone.setShortcuts(new ConcurrentHashMap<>(this.shortcuts));
 
     return clone;
+  }
+
+  /**
+   * Generates a map of default keyboard shortcuts.
+   * * @return A {@link Map} populated with default UI shortcuts.
+   */
+  private Map<String, String> createDefaultShortcuts() {
+    final Map<String, String> shortcuts = new ConcurrentHashMap<>();
+    shortcuts.put("shortcut_new", "Ctrl+N");
+    shortcuts.put("shortcut_load", "Ctrl+L");
+    shortcuts.put("shortcut_save", "Ctrl+S");
+    shortcuts.put("shortcut_config", "Ctrl+,");
+    shortcuts.put("shortcut_info", "Ctrl+I");
+    shortcuts.put("shortcut_quit", "Ctrl+Q");
+    shortcuts.put("shortcut_undo", "Ctrl+U");
+    shortcuts.put("shortcut_redo", "Ctrl+R");
+    shortcuts.put("shortcut_pause", "Ctrl+P");
+    shortcuts.put("shortcut_hint", "Ctrl+H");
+    return shortcuts;
   }
 }

@@ -4,19 +4,26 @@ import fr.univ.bordeaux.technical.utils.GameLogger;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 
 /**
- * Utility class to bind CommandLine options to a GameConfig object. This prevents code duplication
- * between the main launcher and the 'new' command.
+ * Utility class to bind CommandLine options to a GameConfig object.
+ * * <p>This class centralizes the parsing logic for CLI arguments, ensuring consistency
+ * between the initial application launch and the 'new' game command. It handles
+ * game modes (Blitz), AI configurations (Minimax/MCTS), and logging levels.
  */
 public class ConfigBinder {
 
   /**
    * Binds parsed command line options to the provided game configuration.
    *
-   * @param cmd The parsed command line.
-   * @param config The configuration object to update.
-   * @param ui The user interface context for feedback.
+   * <p>This method updates the {@link GameConfig} state based on flags like '-b' (blitz),
+   * '-a' (AI activation), and advanced AI parameters such as depth, scoring functions,
+   * and time limits.
+   *
+   * @param cmd The parsed {@link CommandLine} containing user arguments.
+   * @param config The {@link GameConfig} object to be updated.
+   * @param ui The {@link GameUserInterface} context for displaying feedback or warnings.
    */
   public static void bindOptionsToConfig(CommandLine cmd, GameConfig config, GameUserInterface ui) {
     GameLogger.debug("ConfigBinder: Starting binding process...");
@@ -155,5 +162,27 @@ public class ConfigBinder {
       GameLogger.getInstance().setDebugMode(true);
       GameLogger.debug("ConfigBinder: Debug mode activated. Logging level increased.");
     }
+  }
+
+  /**
+   * Populates an {@link Options} object with all possible game configuration flags.
+   *
+   * <p>This includes short and long flags for Blitz mode, AI activation,
+   * and all technical AI parameters (heuristics, depth, mode).
+   *
+   * @param options The {@link Options} container to fill.
+   */
+  public static void fillOptions(Options options) {
+    options.addOption("b", "blitz", false, "Launches the game in blitz mode.");
+    options.addOption("t", "time", true, "Sets the time limit for each player (in minutes).");
+    options.addOption(
+        "a", "ai", true, "Replace the given color by an Ai. Can be both using A for color.");
+    options.addOption(null, "ai-mode", true, "Set the mode to use for Ai player.\n");
+    options.addOption(null, "ai-time", true, "Set the reflexion time for Ai players\n");
+    options.addOption(null, "ai-minimax-depth", true, "Set the minimax depth for Ai players\n");
+    options.addOption(
+        null, "ai-minimax-scoring", true, "Set the minimax scoring function for Ai players\n");
+    options.addOption(
+        null, "ai-mcts-selection", true, "Set the MCTS algorithme function for Ai players\n");
   }
 }

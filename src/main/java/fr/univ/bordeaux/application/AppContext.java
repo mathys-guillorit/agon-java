@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /** Application shared context. */
 public class AppContext implements OnlineGameStartListener {
   /** Local user profile. */
-  private final LocalProfile profile;
+  private LocalProfile profile;
 
   /** Shared TCP client instance. */
   private final AgonClient client;
@@ -167,7 +167,8 @@ public class AppContext implements OnlineGameStartListener {
   @Override
   public void onOnlineGameStarted(final OnlineGameInfo info) {
     final Match localMatch =
-        MatchFactory.createOnlineMatch(info.getWhitePlayerName(), info.getBlackPlayerName());
+        MatchFactory.createOnlineMatch(
+            info.getWhitePlayerName(), info.getBlackPlayerName(), info.isBlitzMode());
     final Color localColor = extractLocalColor(info);
 
     this.onlineGameActive = true;
@@ -271,6 +272,7 @@ public class AppContext implements OnlineGameStartListener {
           GameLogger.error("[ONLINE] Failed to apply confirmed local move: " + rawMove);
         } else {
           myOnlineTurn = false;
+          onlineMatch.startTurn();
           applied = true;
         }
       }
@@ -307,6 +309,7 @@ public class AppContext implements OnlineGameStartListener {
           GameLogger.error("[ONLINE] Failed to apply opponent move: " + rawMove);
         } else {
           myOnlineTurn = true;
+          onlineMatch.startTurn();
           applied = true;
         }
       }
@@ -397,5 +400,14 @@ public class AppContext implements OnlineGameStartListener {
       return Color.BLACK;
     }
     return Color.WHITE;
+  }
+
+  /**
+   * Set the player's name.
+   *
+   * @param name the player's name.
+   */
+  public void setPlayerName(String name) {
+    this.profile.setName(name);
   }
 }
