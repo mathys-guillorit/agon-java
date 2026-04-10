@@ -151,8 +151,7 @@ public final class CmdSet extends Cmd {
             if (gameConfig.setAiMode(value.toLowerCase())) {
               feedback.append("  - AI Mode: ").append(value.toLowerCase()).append("\n");
             } else {
-              getCtx()
-                  .showWarn("invalid aiMode. It must be mcts,minimax or iterative.\n");
+              getCtx().showWarn("invalid aiMode. It must be mcts,minimax or iterative.\n");
               return false;
             }
           }

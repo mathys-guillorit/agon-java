@@ -62,6 +62,9 @@ class ServerGameSessionTest {
     }
 
     @Override
+    public void startTurn() {}
+
+    @Override
     public boolean move(Move move) {
       this.lastMove = move;
       return moveResult;

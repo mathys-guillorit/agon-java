@@ -32,9 +32,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 /**
- * The GameLauncher class is the entry point for the Agon application.
- * It handles command-line arguments, initializes the configuration,
- * and bootstraps either the CLI or GUI environment.
+ * The GameLauncher class is the entry point for the Agon application. It handles command-line
+ * arguments, initializes the configuration, and bootstraps either the CLI or GUI environment.
  */
 public class GameLauncher {
 
@@ -44,17 +43,15 @@ public class GameLauncher {
   /** Path to the local configuration file (.agonrc). */
   private final String configPath = System.getProperty("user.dir") + File.separator + ".agonrc";
 
-  /**
-   * Constructs a new GameLauncher and initializes supported command-line options.
-   */
+  /** Constructs a new GameLauncher and initializes supported command-line options. */
   public GameLauncher() {
     this.options = new Options();
     this.setupOptions();
   }
 
   /**
-   * Configures the available command-line options using Apache Commons CLI.
-   * Includes help, version, verbose, debug, gui, and contest modes.
+   * Configures the available command-line options using Apache Commons CLI. Includes help, version,
+   * verbose, debug, gui, and contest modes.
    */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
@@ -69,6 +66,7 @@ public class GameLauncher {
 
   /**
    * Main entry point for launching the application logic.
+   *
    * @param args Array of command-line arguments provided at startup.
    */
   public void launch(final String... args) {
@@ -91,7 +89,8 @@ public class GameLauncher {
 
   /**
    * Handles information-only requests such as displaying help or version info.
-   * @param cmd  The parsed command line.
+   *
+   * @param cmd The parsed command line.
    * @param cmds The registry of commands.
    */
   private void handleInfoOptions(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
@@ -105,7 +104,8 @@ public class GameLauncher {
 
   /**
    * Initializes game configuration and context before starting the appropriate interface.
-   * @param cmd  The parsed command line.
+   *
+   * @param cmd The parsed command line.
    * @param cmds The registry of commands.
    */
   private void setupAndStartGame(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
@@ -126,7 +126,8 @@ public class GameLauncher {
 
   /**
    * Updates the game configuration based on verbose and debug flags.
-   * @param cmd    The parsed command line.
+   *
+   * @param cmd The parsed command line.
    * @param config The game configuration to update.
    */
   private void applyConfigOptions(final CommandLine cmd, final GameConfig config) {
@@ -142,6 +143,7 @@ public class GameLauncher {
 
   /**
    * Creates the application context, determining the player name and execution mode.
+   *
    * @param cmd The parsed command line.
    * @return The initialized {@link AppContext}.
    */
@@ -158,11 +160,13 @@ public class GameLauncher {
 
   /**
    * Processes file arguments and handles the specialized contest mode.
-   * @param cmd      The parsed command line.
-   * @param cmds     The command registry.
-   * @param context  The application context.
+   *
+   * @param cmd The parsed command line.
+   * @param cmds The command registry.
+   * @param context The application context.
    * @param filePath The path of the file to load, if provided.
-   * @return true if the game should proceed to start, false if it should stop (e.g., contest finished).
+   * @return true if the game should proceed to start, false if it should stop (e.g., contest
+   *     finished).
    */
   private boolean processArgumentsAndContest(
       final CommandLine cmd,
@@ -201,6 +205,7 @@ public class GameLauncher {
 
   /**
    * Loads the configuration from the .agonrc file or creates a default one if missing.
+   *
    * @return The loaded {@link GameConfig}.
    */
   private GameConfig loadInitialConfig() {
@@ -216,9 +221,7 @@ public class GameLauncher {
     return config;
   }
 
-  /**
-   * Generates a default configuration file on the local disk.
-   */
+  /** Generates a default configuration file on the local disk. */
   private void createDefaultConfigFile() {
     final ConfigSerializer serializer = new ConfigSerializer();
     try {
@@ -231,6 +234,7 @@ public class GameLauncher {
 
   /**
    * Prompts the user via terminal to enter their player name.
+   *
    * @return The non-empty player name.
    */
   protected String askPlayerName(LineReader reader) {
@@ -244,6 +248,7 @@ public class GameLauncher {
 
   /**
    * Prompts the user to choose between Local and Online application modes.
+   *
    * @return The selected {@link AppMode}.
    */
   protected AppMode askApplicationMode(LineReader reader) {
@@ -262,11 +267,12 @@ public class GameLauncher {
 
   /**
    * Starts either the GUI or the CLI based on startup arguments.
-   * @param config         The game configuration.
-   * @param cmd            The parsed command line.
-   * @param cmds           The command registry.
+   *
+   * @param config The game configuration.
+   * @param cmd The parsed command line.
+   * @param cmds The command registry.
    * @param filePathToLoad The file to load at startup, if any.
-   * @param context        The application context.
+   * @param context The application context.
    */
   protected void startGame(
       final GameConfig config,
@@ -286,9 +292,10 @@ public class GameLauncher {
 
   /**
    * Initializes and starts the JavaFX Graphical User Interface.
-   * @param config  The game configuration.
-   * @param cmds    The command registry.
-   * @param cmd     The parsed command line.
+   *
+   * @param config The game configuration.
+   * @param cmds The command registry.
+   * @param cmd The parsed command line.
    * @param context The application context.
    */
   protected void launchGUI(
@@ -346,11 +353,12 @@ public class GameLauncher {
 
   /**
    * Initializes and starts the interactive Command Line Interface using JLine.
-   * @param config         The game configuration.
-   * @param cmd            The parsed command line.
-   * @param cmds           The command registry.
+   *
+   * @param config The game configuration.
+   * @param cmd The parsed command line.
+   * @param cmds The command registry.
    * @param filePathToLoad The file to load at startup, if any.
-   * @param context        The application context.
+   * @param context The application context.
    */
   protected void launchCLI(
       GameConfig config,
@@ -407,11 +415,12 @@ public class GameLauncher {
 
   /**
    * Populates the command register with all available game and network commands.
-   *  @param cmds          The registry to populate.
+   *
+   * @param cmds The registry to populate.
    * @param userInterface The active user interface (CLI or GUI).
-   * @param config        The game configuration.
-   * @param engine        The game engine.
-   * @param context       The application context.
+   * @param config The game configuration.
+   * @param engine The game engine.
+   * @param context The application context.
    */
   private void fillRegister(
       final AgonRegister<CmdAction> cmds,
@@ -451,7 +460,8 @@ public class GameLauncher {
 
   /**
    * Prints the help message to the console, listing CLI options and shell commands.
-   *  @param cmds The registry containing available shell commands.
+   *
+   * @param cmds The registry containing available shell commands.
    */
   private void printHelp(final AgonRegister<CmdAction> cmds) {
     final HelpFormatter formatter = new HelpFormatter();
@@ -474,9 +484,7 @@ public class GameLauncher {
             + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
   }
 
-  /**
-   * Displays the application version information by reading the version.txt file.
-   */
+  /** Displays the application version information by reading the version.txt file. */
   private void printVersion() {
     try {
       System.out.println(getVersionContent());
@@ -489,7 +497,8 @@ public class GameLauncher {
 
   /**
    * Loads the content of the help documentation from a local file.
-   *  @return The help content as a String.
+   *
+   * @return The help content as a String.
    * @throws IOException If the file cannot be read.
    */
   protected String getHelpContent() throws IOException {
@@ -498,7 +507,8 @@ public class GameLauncher {
 
   /**
    * Loads the content of the version information from a local file.
-   *  @return The version content as a String.
+   *
+   * @return The version content as a String.
    * @throws IOException If the file cannot be read.
    */
   protected String getVersionContent() throws IOException {

@@ -70,7 +70,8 @@ public interface ReadOnlyMatch {
   /**
    * Identifies the player who won the game.
    *
-   * @return The winning {@link Player}, or {@code null} if the game is still in progress or ended in a draw.
+   * @return The winning {@link Player}, or {@code null} if the game is still in progress or ended
+   *     in a draw.
    */
   Player getWinner();
 }

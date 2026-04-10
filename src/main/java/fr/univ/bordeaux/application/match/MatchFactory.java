@@ -19,8 +19,8 @@ import java.util.Map;
  * Factory class responsible for instantiating the appropriate Match type based on game
  * configuration. It handles player creation (Human, AI, or Network) and board initialization.
  *
- * <p>This class centralizes the complex logic of assembling a match, ensuring that
- * dependencies like AI strategies and UI contexts are correctly injected.
+ * <p>This class centralizes the complex logic of assembling a match, ensuring that dependencies
+ * like AI strategies and UI contexts are correctly injected.
  */
 public class MatchFactory {
 
@@ -109,7 +109,8 @@ public class MatchFactory {
    *
    * @param whitePlayerName Name of the white player.
    * @param blackPlayerName Name of the black player.
-   * @param blitzMode If {@code true}, instantiates a {@link BlitzMatch}; otherwise a {@link StandardMatch}.
+   * @param blitzMode If {@code true}, instantiates a {@link BlitzMatch}; otherwise a {@link
+   *     StandardMatch}.
    * @return A fully initialized online {@link Match}.
    */
   public static Match createOnlineMatch(

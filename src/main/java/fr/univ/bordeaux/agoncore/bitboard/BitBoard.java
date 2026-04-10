@@ -247,7 +247,9 @@ public class BitBoard {
     return this;
   }
 
-  /** * Returns a string representation of the raw bits (low:high) for hashing or logging purposes.
+  /**
+   * * Returns a string representation of the raw bits (low:high) for hashing or logging purposes.
+   *
    * @return A {@link String} formatted as "lowPart:highPart".
    */
   public String getRawValueString() {

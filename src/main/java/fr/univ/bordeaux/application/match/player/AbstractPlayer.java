@@ -7,8 +7,8 @@ import fr.univ.bordeaux.application.commands.CmdAction;
 /**
  * Base implementation of the {@link Player} interface.
  *
- * <p>This abstract class maintains the common state for any player type (Human or AI),
- * including their identifier name and assigned piece color.
+ * <p>This abstract class maintains the common state for any player type (Human or AI), including
+ * their identifier name and assigned piece color.
  */
 public abstract class AbstractPlayer implements Player {
 

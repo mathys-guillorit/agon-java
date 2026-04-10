@@ -8,7 +8,6 @@ import java.io.IOException;
 /** Sends end-of-game notifications to connected players. */
 public class GameResultNotifier {
 
-
   /** Creates a new game result notifier. */
   public GameResultNotifier() {
     // Explicit constructor required by PMD.

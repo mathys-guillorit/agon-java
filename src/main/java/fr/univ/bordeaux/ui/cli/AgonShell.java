@@ -142,8 +142,8 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * <p>Handles special cases:
    *
    * <ul>
-   * <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
-   * <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
+   *   <li><b>Ctrl+C / Ctrl+D:</b> Returns "quit" to trigger the interactive save/exit logic.
+   *   <li><b>Thread Interruption (Blitz):</b> Returns null to let the engine handle the timeout.
    * </ul>
    *
    * @return The trimmed input string, "quit" on user interrupt, or null on timeout/error.
@@ -450,9 +450,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     this.showMessage(sb.toString());
   }
 
-  /**
-   * Clears the current board display in the terminal.
-   */
+  /** Clears the current board display in the terminal. */
   public void clearBoardDisplay() {
     this.cliWln("");
   }

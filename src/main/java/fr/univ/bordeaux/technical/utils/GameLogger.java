@@ -9,8 +9,8 @@ import java.util.logging.Logger;
  * Centralized logger utility for the Agon game.
  *
  * <p>This class wraps {@link Logger} to provide configurable logging levels (debug, verbose,
- * warning, error) and ensures consistent formatting across the application.
- * It follows the Singleton pattern to ensure a unique logging context.
+ * warning, error) and ensures consistent formatting across the application. It follows the
+ * Singleton pattern to ensure a unique logging context.
  */
 public final class GameLogger {
 
@@ -21,8 +21,8 @@ public final class GameLogger {
   private final Logger logger;
 
   /**
-   * Private constructor to initialize the logger with a custom ConsoleHandler.
-   * Disables parent handlers to avoid duplicate logs in the console.
+   * Private constructor to initialize the logger with a custom ConsoleHandler. Disables parent
+   * handlers to avoid duplicate logs in the console.
    */
   private GameLogger() {
     this.logger = Logger.getLogger("AgonGame");
@@ -52,7 +52,8 @@ public final class GameLogger {
 
   /**
    * Enables or disables verbose mode.
-   *  @param enabled If true, sets the level to INFO; otherwise, sets it to WARNING.
+   *
+   * @param enabled If true, sets the level to INFO; otherwise, sets it to WARNING.
    */
   public void setVerbose(final boolean enabled) {
     if (enabled) {
@@ -64,6 +65,7 @@ public final class GameLogger {
 
   /**
    * Enables or disables debug mode.
+   *
    * @param enabled If true, sets the level to FINE; otherwise, sets it to WARNING.
    */
   public void setDebugMode(final boolean enabled) {
@@ -76,6 +78,7 @@ public final class GameLogger {
 
   /**
    * Updates the logging level for both the logger and all its attached handlers.
+   *
    * @param newLevel The new {@link Level} to apply.
    */
   private void updateLevel(final Level newLevel) {
@@ -87,6 +90,7 @@ public final class GameLogger {
 
   /**
    * Checks if DEBUG (FINE) logs are currently enabled.
+   *
    * @return {@code true} if loggable at FINE level, {@code false} otherwise.
    */
   public static boolean isDebugEnabled() {
@@ -95,6 +99,7 @@ public final class GameLogger {
 
   /**
    * Checks if INFO logs are currently enabled.
+   *
    * @return {@code true} if loggable at INFO level, {@code false} otherwise.
    */
   public static boolean isInfoEnabled() {
@@ -103,6 +108,7 @@ public final class GameLogger {
 
   /**
    * Checks if WARNING logs are currently enabled.
+   *
    * @return {@code true} if loggable at WARNING level, {@code false} otherwise.
    */
   public static boolean isWarnEnabled() {
@@ -111,6 +117,7 @@ public final class GameLogger {
 
   /**
    * Checks if ERROR (SEVERE) logs are currently enabled.
+   *
    * @return {@code true} if loggable at SEVERE level, {@code false} otherwise.
    */
   public static boolean isErrorEnabled() {
@@ -119,6 +126,7 @@ public final class GameLogger {
 
   /**
    * Logs a message at the DEBUG (FINE) level.
+   *
    * @param message The message to log.
    */
   public static void debug(final String message) {
@@ -127,6 +135,7 @@ public final class GameLogger {
 
   /**
    * Logs a message at the INFO level.
+   *
    * @param message The message to log.
    */
   public static void info(final String message) {
@@ -135,6 +144,7 @@ public final class GameLogger {
 
   /**
    * Logs a message at the WARNING level.
+   *
    * @param message The message to log.
    */
   public static void warn(final String message) {
@@ -143,6 +153,7 @@ public final class GameLogger {
 
   /**
    * Logs a message at the ERROR (SEVERE) level.
+   *
    * @param message The message to log.
    */
   public static void error(final String message) {

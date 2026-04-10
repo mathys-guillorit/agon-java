@@ -55,7 +55,8 @@ public final class AiFactory {
           isIncompatible = true;
           resultAi = null;
         } else {
-          resultAi = new MinimaxStrategy(
+          resultAi =
+              new MinimaxStrategy(
                   heuristic,
                   color,
                   config.getAiDepth(),
@@ -82,7 +83,11 @@ public final class AiFactory {
       config.setAiIterativeDeepening(true);
 
       throw new IncompatibleAiConfigurationException(
-          "Heuristic '" + heuristicName + "' is incompatible with mode '" + mode + "'. Creating a base default Ai : minimax iterative deepening, depth 4 , heuristic mixed.");
+          "Heuristic '"
+              + heuristicName
+              + "' is incompatible with mode '"
+              + mode
+              + "'. Creating a base default Ai : minimax iterative deepening, depth 4 , heuristic mixed.");
     }
 
     return resultAi;

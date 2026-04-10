@@ -364,7 +364,7 @@ public abstract class Match implements MatchManager, ObservableMatch {
   }
 
   /** Hook for turn-specific initialization logic. */
-  public void startTurn() {}
+  public abstract void startTurn();
 
   /** Switches the current active player. */
   protected void switchPlayer() {

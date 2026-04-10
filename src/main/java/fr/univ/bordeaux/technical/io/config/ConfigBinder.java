@@ -7,19 +7,19 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 /**
- * Utility class to bind CommandLine options to a GameConfig object.
- * * <p>This class centralizes the parsing logic for CLI arguments, ensuring consistency
- * between the initial application launch and the 'new' game command. It handles
- * game modes (Blitz), AI configurations (Minimax/MCTS), and logging levels.
+ * Utility class to bind CommandLine options to a GameConfig object. *
+ *
+ * <p>This class centralizes the parsing logic for CLI arguments, ensuring consistency between the
+ * initial application launch and the 'new' game command. It handles game modes (Blitz), AI
+ * configurations (Minimax/MCTS), and logging levels.
  */
 public class ConfigBinder {
 
   /**
    * Binds parsed command line options to the provided game configuration.
    *
-   * <p>This method updates the {@link GameConfig} state based on flags like '-b' (blitz),
-   * '-a' (AI activation), and advanced AI parameters such as depth, scoring functions,
-   * and time limits.
+   * <p>This method updates the {@link GameConfig} state based on flags like '-b' (blitz), '-a' (AI
+   * activation), and advanced AI parameters such as depth, scoring functions, and time limits.
    *
    * @param cmd The parsed {@link CommandLine} containing user arguments.
    * @param config The {@link GameConfig} object to be updated.
@@ -167,8 +167,8 @@ public class ConfigBinder {
   /**
    * Populates an {@link Options} object with all possible game configuration flags.
    *
-   * <p>This includes short and long flags for Blitz mode, AI activation,
-   * and all technical AI parameters (heuristics, depth, mode).
+   * <p>This includes short and long flags for Blitz mode, AI activation, and all technical AI
+   * parameters (heuristics, depth, mode).
    *
    * @param options The {@link Options} container to fill.
    */

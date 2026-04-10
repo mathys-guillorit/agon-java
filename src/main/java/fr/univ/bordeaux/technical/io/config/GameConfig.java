@@ -1,13 +1,13 @@
 package fr.univ.bordeaux.technical.io.config;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Arrays;
+
 /**
- * Represents the configuration settings for the Agon game.
- * This includes system settings (like verbosity and debug modes),
- * game rules (like blitz mode and timeouts), and Artificial Intelligence
- * settings (like algorithms, depths, and heuristics).
+ * Represents the configuration settings for the Agon game. This includes system settings (like
+ * verbosity and debug modes), game rules (like blitz mode and timeouts), and Artificial
+ * Intelligence settings (like algorithms, depths, and heuristics).
  */
 public class GameConfig {
 
@@ -53,9 +53,7 @@ public class GameConfig {
   /** Map of keyboard shortcuts for UI actions. */
   private Map<String, String> shortcuts = createDefaultShortcuts();
 
-  /**
-   * Constructs a new GameConfig with default values.
-   */
+  /** Constructs a new GameConfig with default values. */
   public GameConfig() {}
 
   /**
@@ -295,7 +293,7 @@ public class GameConfig {
    * Retrieves the map containing all configured keyboard shortcuts.
    *
    * @return A map where the key is the shortcut identifier and the value is the assigned key
-   * combination.
+   *     combination.
    */
   public Map<String, String> getShortcuts() {
     return shortcuts;
@@ -314,7 +312,7 @@ public class GameConfig {
    * Enables or disables the manual placement of Pawns and Queens.
    *
    * @param manualPlacement {@code true} to allow the players to manually choose the initial
-   * placement of their pawns, {@code false} to make it automatic.
+   *     placement of their pawns, {@code false} to make it automatic.
    */
   public void setManualPlacement(final boolean manualPlacement) {
     this.manualPlacement = manualPlacement;
@@ -324,7 +322,7 @@ public class GameConfig {
    * Sets the entire map of keyboard shortcuts.
    *
    * @param shortcuts A map containing the shortcut identifiers and their corresponding key
-   * combinations.
+   *     combinations.
    */
   public void setShortcuts(final Map<String, String> shortcuts) {
     this.shortcuts = shortcuts;
@@ -341,8 +339,8 @@ public class GameConfig {
   }
 
   /**
-   * Returns a string representation of the current configuration.
-   * * @return A formatted string listing all key configuration settings.
+   * Returns a string representation of the current configuration. * @return A formatted string
+   * listing all key configuration settings.
    */
   @Override
   public String toString() {
@@ -393,8 +391,8 @@ public class GameConfig {
   }
 
   /**
-   * Generates a map of default keyboard shortcuts.
-   * * @return A {@link Map} populated with default UI shortcuts.
+   * Generates a map of default keyboard shortcuts. * @return A {@link Map} populated with default
+   * UI shortcuts.
    */
   private Map<String, String> createDefaultShortcuts() {
     final Map<String, String> shortcuts = new ConcurrentHashMap<>();

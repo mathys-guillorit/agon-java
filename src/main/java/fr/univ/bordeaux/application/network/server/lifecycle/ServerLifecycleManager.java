@@ -9,11 +9,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 /** Handles server socket lifecycle, client accept loop, and discovery broadcasting. */
 public class ServerLifecycleManager {
-
 
   /** TCP port listened to by the server socket. */
   private final int port;
@@ -79,7 +77,7 @@ public class ServerLifecycleManager {
       acceptExecutor.submit(() -> acceptClientLoop(socketConsumer));
       return true;
     } catch (IOException e) {
-        GameLogger.error("[SERVER] Failed to start on port " + port);
+      GameLogger.error("[SERVER] Failed to start on port " + port);
       return false;
     }
   }

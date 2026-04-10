@@ -41,6 +41,9 @@ class MatchTest {
       endCalled = true;
       this.switchPlayer();
     }
+
+    @Override
+    public void startTurn() {}
   }
 
   @BeforeEach

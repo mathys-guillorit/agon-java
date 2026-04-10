@@ -5,8 +5,6 @@ import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-
 
 /** Entry point of the application. */
 public final class Main {
@@ -103,8 +101,8 @@ public final class Main {
     final AgonServer server = new AgonServer(DEFAULT_PORT, owner);
 
     if (server.start()) {
-        GameLogger.info("[SERVER] Daemon mode enabled.");
-        GameLogger.info("[SERVER] Running on port " + server.getPort() + " without interface.");
+      GameLogger.info("[SERVER] Daemon mode enabled.");
+      GameLogger.info("[SERVER] Running on port " + server.getPort() + " without interface.");
       waitWhileRunning(server);
     } else {
       GameLogger.error("[SERVER] Failed to start daemon mode.");
@@ -122,8 +120,8 @@ public final class Main {
     final AgonServer server = new AgonServer(port, owner);
 
     if (server.start()) {
-        GameLogger.info("[SERVER] Server mode enabled.");
-        GameLogger.info("[SERVER] Running on port " + server.getPort() + ".");
+      GameLogger.info("[SERVER] Server mode enabled.");
+      GameLogger.info("[SERVER] Running on port " + server.getPort() + ".");
       waitWhileRunning(server);
     } else {
       GameLogger.error("[SERVER] Failed to start server mode.");
@@ -171,8 +169,7 @@ public final class Main {
     try {
       owner = InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException exception) {
-      GameLogger.error(
-           "Unable to resolve local host name. Using default owner."+ exception);
+      GameLogger.error("Unable to resolve local host name. Using default owner." + exception);
     }
 
     return owner;

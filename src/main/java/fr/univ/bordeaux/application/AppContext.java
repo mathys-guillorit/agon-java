@@ -15,7 +15,6 @@ import fr.univ.bordeaux.application.network.protocol.MoveProtocolParser;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /** Application shared context. */
 public class AppContext implements OnlineGameStartListener {

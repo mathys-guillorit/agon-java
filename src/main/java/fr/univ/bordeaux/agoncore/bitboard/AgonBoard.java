@@ -31,7 +31,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * variables such as relocation counters.
    *
    * @return {@code true} if a move sequence was successfully reverted; {@code false} if the history
-   * is empty.
+   *     is empty.
    */
   boolean undoMove();
 
@@ -53,7 +53,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    * forward and updating the game state accordingly.
    *
    * @return {@code true} if a move sequence was successfully reapplied; {@code false} if the redo
-   * stack is empty.
+   *     stack is empty.
    */
   boolean redoMove();
 
@@ -65,7 +65,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
    *
    * @param index The tile index of the piece.
    * @return The number of legal moves for the piece, or -1 if no piece exists at the specified
-   * index.
+   *     index.
    */
   int getMobility(int index);
 
@@ -81,8 +81,8 @@ public interface AgonBoard extends RestrictedAgonBoard {
   int getCentrality(int index);
 
   /**
-   * Sets up the board with the standard initial Agon configuration.
-   * This method places all pawns and queens for both players in their starting positions.
+   * Sets up the board with the standard initial Agon configuration. This method places all pawns
+   * and queens for both players in their starting positions.
    */
   void initBaseConfiguration();
 
@@ -98,6 +98,7 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   /**
    * Retrieves the game history as a list of human-readable strings.
+   *
    * @return A {@link List} of strings describing each move in text format.
    */
   List<String> getHistoryAsText();
@@ -105,8 +106,8 @@ public interface AgonBoard extends RestrictedAgonBoard {
   /**
    * Converts the current board state into a list of ASCII strings.
    *
-   * <p>This representation is used for saving the game state to a file or
-   * for basic visual debugging.
+   * <p>This representation is used for saving the game state to a file or for basic visual
+   * debugging.
    *
    * @return A list of strings representing the board visually.
    */
@@ -114,8 +115,10 @@ public interface AgonBoard extends RestrictedAgonBoard {
 
   /**
    * Checks if a player has pieces that must be relocated.
-   * <p>In Agon rules, pieces captured or moved to specific zones might
-   * require relocation to the outer circle.
+   *
+   * <p>In Agon rules, pieces captured or moved to specific zones might require relocation to the
+   * outer circle.
+   *
    * @param color The {@link Color} of the player to check.
    * @return {@code true} if the player has pending relocations, {@code false} otherwise.
    */

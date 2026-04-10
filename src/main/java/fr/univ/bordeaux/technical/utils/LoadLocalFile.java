@@ -36,6 +36,7 @@ public class LoadLocalFile {
       this.content = lines.toString();
     }
   }
+
   /**
    * Retrieves the raw text content of the loaded file.
    *

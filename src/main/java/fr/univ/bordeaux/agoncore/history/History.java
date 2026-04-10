@@ -33,17 +33,22 @@ public class History {
 
   /** Stack containing turns that were reverted and can be re-applied. */
   private final Stack<HistoryInformations> redoStack = new Stack<>();
+
   /**
-   *  Map storing the frequency of each board configuration to detect repetitions.
-   * The key is a unique string signature of the board state.
+   * Map storing the frequency of each board configuration to detect repetitions. The key is a
+   * unique string signature of the board state.
    */
   private final Map<String, Integer> configurationCounts = new HashMap<>();
-  /** * Stack of board signatures corresponding to the undo stack to maintain
-   * consistency of configuration counts during undo operations.
+
+  /**
+   * * Stack of board signatures corresponding to the undo stack to maintain consistency of
+   * configuration counts during undo operations.
    */
   private final Stack<String> signatureStack = new Stack<>();
-  /** * Stack of board signatures corresponding to the redo stack to restore
-   * configuration counts during redo operations.
+
+  /**
+   * * Stack of board signatures corresponding to the redo stack to restore configuration counts
+   * during redo operations.
    */
   private final Stack<String> redoSignatureStack = new Stack<>();
 
@@ -165,8 +170,8 @@ public class History {
   /**
    * Records a new turn in the history and updates the board configuration frequency.
    *
-   * <p>The turn is pushed onto the undo stack, its signature is recorded, and the
-   * redo stacks are cleared to prevent branching timelines.
+   * <p>The turn is pushed onto the undo stack, its signature is recorded, and the redo stacks are
+   * cleared to prevent branching timelines.
    *
    * @param informations The {@link HistoryInformations} containing the move sequence.
    * @param boardSignature A unique {@link String} representing the current state of the board.
@@ -337,13 +342,16 @@ public class History {
 
     return textMoves;
   }
+
   /**
-   * Determines if the current board state has occurred three times.
-   * * <p>This is typically used to trigger a draw rule (Threefold Repetition)
-   * in hexagonal chess variants like Agon.
+   * Determines if the current board state has occurred three times. *
+   *
+   * <p>This is typically used to trigger a draw rule (Threefold Repetition) in hexagonal chess
+   * variants like Agon.
    *
    * @param currentSignature The unique signature of the state to check.
-   * @return {@code true} if the configuration has appeared 3 or more times, {@code false} otherwise.
+   * @return {@code true} if the configuration has appeared 3 or more times, {@code false}
+   *     otherwise.
    */
   public boolean isTripleRepetition(String currentSignature) {
     return configurationCounts.getOrDefault(currentSignature, 0) >= 3;

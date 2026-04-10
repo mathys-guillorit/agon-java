@@ -52,6 +52,7 @@ public abstract class Cmd implements CmdAction {
 
   /**
    * Provides access to the current UI context.
+   *
    * @return The {@link GameUserInterface} instance.
    */
   public GameUserInterface getCtx() {
@@ -148,9 +149,10 @@ public abstract class Cmd implements CmdAction {
   }
 
   /**
-   * Show Help information about how to use the command (detailed).
-   * * <p>This method captures the output of {@link HelpFormatter} by redirecting
-   * {@link System#out} temporarily to a byte array stream.
+   * Show Help information about how to use the command (detailed). *
+   *
+   * <p>This method captures the output of {@link HelpFormatter} by redirecting {@link System#out}
+   * temporarily to a byte array stream.
    *
    * @return A formatted help string containing usage and options.
    */

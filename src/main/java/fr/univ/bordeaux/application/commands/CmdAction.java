@@ -5,12 +5,15 @@ import javax.annotation.Nonnull;
 import org.apache.commons.cli.Options;
 import org.jline.reader.Completer;
 
-/** * Default interface for all game commands (CLI Shell, GUI, etc.).
- * Defines the contract for command execution, help display, and auto-completion.
+/**
+ * * Default interface for all game commands (CLI Shell, GUI, etc.). Defines the contract for
+ * command execution, help display, and auto-completion.
  */
 public interface CmdAction {
 
-  /** * Execute actions provided by the specific command.
+  /**
+   * * Execute actions provided by the specific command.
+   *
    * @param match The {@link MatchManager} to interact with the current game state.
    * @return {@code true} if the execution was successful, {@code false} otherwise.
    */
@@ -24,7 +27,9 @@ public interface CmdAction {
    */
   CmdAction createNew(String[] args);
 
-  /** * Retrieves a brief summary of the command's purpose.
+  /**
+   * * Retrieves a brief summary of the command's purpose.
+   *
    * @return A {@link String} containing the short description.
    */
   String getDescription();
@@ -38,8 +43,8 @@ public interface CmdAction {
   Completer getAutoCompleter();
 
   /**
-   * Get the command's full trigger name (e.g., "new", "save").
-   * Unlike options, there is no short or reduced form for the command name itself.
+   * Get the command's full trigger name (e.g., "new", "save"). Unlike options, there is no short or
+   * reduced form for the command name itself.
    *
    * @return The unique {@link String} identifier of the command.
    */

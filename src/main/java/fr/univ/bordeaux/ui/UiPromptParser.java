@@ -17,11 +17,12 @@ import org.jline.reader.impl.DefaultParser;
  * Utility class to parse terminal input into executable {@link CmdAction} instances.
  *
  * <p>The parser follows a multi-step logic:
+ *
  * <ol>
- * <li>Checks for compound commands (e.g., "server start" translated to "server_start").</li>
- * <li>Checks if the input matches a standard registered command (e.g., "help", "save").</li>
- * <li>Attempts to parse the input as a move (e.g., "a1b2") or a relocation (e.g., "a1")
- * using Regular Expressions if no command matches.</li>
+ *   <li>Checks for compound commands (e.g., "server start" translated to "server_start").
+ *   <li>Checks if the input matches a standard registered command (e.g., "help", "save").
+ *   <li>Attempts to parse the input as a move (e.g., "a1b2") or a relocation (e.g., "a1") using
+ *       Regular Expressions if no command matches.
  * </ol>
  */
 public class UiPromptParser {
@@ -29,15 +30,14 @@ public class UiPromptParser {
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
   private static final Parser PARSER = new DefaultParser();
 
-  /** * Regex pattern for standard moves: origin (letter + digit) + destination (letter + digit).
+  /**
+   * * Regex pattern for standard moves: origin (letter + digit) + destination (letter + digit).
    * Example: "a1b2", "k11a1".
    */
   private static final Pattern MOVE_PATTERN =
       Pattern.compile("^([a-k])(\\d{1,2})([a-k])(\\d{1,2})$");
 
-  /** * Regex pattern for relocation moves (single coordinate).
-   * Example: "a1", "f6".
-   */
+  /** * Regex pattern for relocation moves (single coordinate). Example: "a1", "f6". */
   private static final Pattern RELOCATION_PATTERN = Pattern.compile("^([a-k])(\\d{1,2})$");
 
   /**
@@ -102,8 +102,8 @@ public class UiPromptParser {
    * Fallback method to handle inputs that are not registered commands.
    *
    * <p>Uses {@code MOVE_PATTERN} and {@code RELOCATION_PATTERN} to detect if the user typed raw
-   * coordinates to move a piece. If a match is found, it calculates the bitboard indices
-   * using {@link CoordinateMapper}.
+   * coordinates to move a piece. If a match is found, it calculates the bitboard indices using
+   * {@link CoordinateMapper}.
    *
    * @param input The raw input string from the user.
    * @param ui The {@link GameUserInterface} context for error reporting.

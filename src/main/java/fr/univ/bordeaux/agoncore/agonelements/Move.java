@@ -158,7 +158,6 @@ public class Move {
     return isEqual;
   }
 
-
   /**
    * Returns a string representation of the move.
    *

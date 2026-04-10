@@ -62,4 +62,6 @@ public class StandardMatch extends Match {
   public void endActions() {
     super.switchPlayer();
   }
+
+  public void startTurn() {}
 }
