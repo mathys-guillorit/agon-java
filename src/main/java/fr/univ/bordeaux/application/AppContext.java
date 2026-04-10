@@ -23,7 +23,7 @@ public class AppContext implements OnlineGameStartListener {
   private static final Logger LOGGER = Logger.getLogger(AppContext.class.getName());
 
   /** Local user profile. */
-  private final LocalProfile profile;
+  private LocalProfile profile;
 
   /** Shared TCP client instance. */
   private final AgonClient client;
@@ -403,5 +403,14 @@ public class AppContext implements OnlineGameStartListener {
       return Color.BLACK;
     }
     return Color.WHITE;
+  }
+
+  /**
+   * Set the player's name.
+   *
+   * @param name the player's name.
+   */
+  public void setPlayerName(String name) {
+    this.profile.setName(name);
   }
 }

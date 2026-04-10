@@ -37,11 +37,13 @@ public class GameLauncher {
   private final Options options;
   private final String configPath = System.getProperty("user.dir") + File.separator + ".agonrc";
 
+  /** Creates a new launcher and initializes available command line options. */
   public GameLauncher() {
     this.options = new Options();
     this.setupOptions();
   }
 
+  /** Registers all supported command line options for the application. */
   private void setupOptions() {
     options.addOption("h", "help", false, "Displays this help message.");
     options.addOption("V", "version", false, "Displays version information");
@@ -56,6 +58,14 @@ public class GameLauncher {
         "c", "contest", false, "Launches contest mode (reads file and outputs move).");
   }
 
+  /**
+   * Parses command line arguments and launches the appropriate application flow.
+   *
+   * <p>If help or version is requested, only informational output is displayed. Otherwise, the game
+   * setup and startup sequence is executed.
+   *
+   * @param args command line arguments provided at startup
+   */
   public void launch(final String... args) {
     final AgonRegister<CmdAction> cmds = new AgonRegister<>();
     final CommandLineParser parser = new DefaultParser();
@@ -74,6 +84,14 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Handles informational command line options.
+   *
+   * <p>This includes displaying help or version information without starting the game.
+   *
+   * @param cmd parsed command line
+   * @param cmds command register used to populate help output
+   */
   private void handleInfoOptions(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
     if (cmd.hasOption("h")) {
       this.fillRegister(cmds, null, null, null, new AppContext(new LocalProfile("Temp")));
@@ -83,11 +101,18 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Prepares configuration, application context and optional file loading before starting the
+   * selected interface.
+   *
+   * @param cmd parsed command line
+   * @param cmds command register
+   */
   private void setupAndStartGame(final CommandLine cmd, final AgonRegister<CmdAction> cmds) {
     final GameConfig config = loadInitialConfig();
     applyConfigOptions(cmd, config);
 
-    final AppContext context = createAppContext(cmd);
+    final AppContext context = createAppContext();
 
     String filePathToLoad = null;
     if (cmd.getArgs().length > 0) {
@@ -99,6 +124,12 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Applies runtime command line flags to the loaded configuration.
+   *
+   * @param cmd parsed command line
+   * @param config current game configuration
+   */
   private void applyConfigOptions(final CommandLine cmd, final GameConfig config) {
     if (cmd.hasOption("v")) {
       config.setVerbose(true);
@@ -110,16 +141,36 @@ public class GameLauncher {
     }
   }
 
-  private AppContext createAppContext(final CommandLine cmd) {
+  /**
+   * Creates the default application context used during startup.
+   *
+   * <p>A default local profile is created from the current system user name when available.
+   *
+   * @return initialized application context
+   */
+  private AppContext createAppContext() {
     String playerName = System.getProperty("user.name");
     if (playerName == null || playerName.isBlank()) {
       playerName = "Player";
     }
+
     final AppContext context = new AppContext(new LocalProfile(playerName));
     context.setMode(AppMode.LOCAL);
     return context;
   }
 
+  /**
+   * Validates input file arguments and handles contest mode when requested.
+   *
+   * <p>If contest mode is enabled, the contest execution is launched immediately and the normal
+   * game startup is skipped.
+   *
+   * @param cmd parsed command line
+   * @param cmds command register
+   * @param context current application context
+   * @param filePath optional input file path
+   * @return true if normal game startup should continue, false otherwise
+   */
   private boolean processArgumentsAndContest(
       final CommandLine cmd,
       final AgonRegister<CmdAction> cmds,
@@ -155,6 +206,14 @@ public class GameLauncher {
     return true;
   }
 
+  /**
+   * Loads the initial game configuration from the local configuration file.
+   *
+   * <p>If no configuration file exists, a default one is created and a fresh configuration is
+   * returned.
+   *
+   * @return loaded or default game configuration
+   */
   private GameConfig loadInitialConfig() {
     final ConfigParser configParser = new ConfigParser();
     GameConfig config;
@@ -168,6 +227,7 @@ public class GameLauncher {
     return config;
   }
 
+  /** Creates a minimal default configuration file in the expected config location. */
   private void createDefaultConfigFile() {
     final ConfigSerializer serializer = new ConfigSerializer();
     try {
@@ -178,29 +238,15 @@ public class GameLauncher {
     }
   }
 
-  protected String askPlayerName(LineReader reader) {
-    final String prompt = "\u001B[35m[AGON]\u001B[0m> ";
-    String name = reader.readLine(prompt + "Enter your player name: ").trim();
-    while (name.isEmpty()) {
-      name = reader.readLine(prompt + "Name cannot be empty. Enter your player name: ").trim();
-    }
-    return name;
-  }
-
-  protected AppMode askApplicationMode(LineReader reader) {
-    final String prompt = "\u001B[35m[AGON]\u001B[0m> ";
-    reader.getTerminal().writer().println(prompt + "Select mode:");
-    reader.getTerminal().writer().println("1 - Local");
-    reader.getTerminal().writer().println("2 - Online");
-    reader.getTerminal().writer().flush();
-
-    String input = reader.readLine(prompt + "Your choice: ").trim();
-    while (!"1".equals(input) && !"2".equals(input)) {
-      input = reader.readLine(prompt + "Invalid choice. Enter 1 (Local) or 2 (Online): ").trim();
-    }
-    return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
-  }
-
+  /**
+   * Starts either the GUI or CLI version of the application depending on the parsed options.
+   *
+   * @param config loaded game configuration
+   * @param cmd parsed command line
+   * @param cmds command register
+   * @param filePathToLoad optional game file to load
+   * @param context application context shared across components
+   */
   protected void startGame(
       final GameConfig config,
       final CommandLine cmd,
@@ -217,6 +263,19 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Launches the graphical interface and attaches it to the shared game engine and command
+   * registry.
+   *
+   * <p>Additional startup actions such as blitz creation or file loading are deferred until the
+   * JavaFX platform is ready.
+   *
+   * @param config loaded game configuration
+   * @param cmd parsed command line
+   * @param cmds command register
+   * @param filePathToLoad optional game file to load
+   * @param context application context shared across components
+   */
   protected void launchGUI(
       GameConfig config,
       CommandLine cmd,
@@ -270,6 +329,19 @@ public class GameLauncher {
     gameEngine.start();
   }
 
+  /**
+   * Launches the command line interface and attaches it to the shared game engine and command
+   * registry.
+   *
+   * <p>No interactive player initialization is performed here anymore. That responsibility now
+   * belongs to the shell itself after startup.
+   *
+   * @param config loaded game configuration
+   * @param cmd parsed command line
+   * @param cmds command register
+   * @param filePathToLoad optional game file to load
+   * @param context application context shared across components
+   */
   protected void launchCLI(
       GameConfig config,
       CommandLine cmd,
@@ -286,34 +358,9 @@ public class GameLauncher {
             }
           };
 
-      final boolean isTestEnv = "true".equals(System.getProperty("IS_TEST_ENV"));
       final Terminal terminal = TerminalBuilder.builder().dumb(true).build();
       final LineReader reader =
           LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
-
-      if (!isTestEnv && !cmd.hasOption("c")) {
-        String name = askPlayerName(reader);
-        AppMode mode = askApplicationMode(reader);
-        context.setMode(mode);
-        try {
-          try {
-            context
-                .getProfile()
-                .getClass()
-                .getMethod("setName", String.class)
-                .invoke(context.getProfile(), name);
-          } catch (Exception e) {
-            for (java.lang.reflect.Field field : AppContext.class.getDeclaredFields()) {
-              if (field.getType().equals(LocalProfile.class)) {
-                field.setAccessible(true);
-                field.set(context, new LocalProfile(name));
-                break;
-              }
-            }
-          }
-        } catch (Exception ignored) {
-        }
-      }
 
       final AgonShell userInterface = new AgonShell(terminal, reader, cmds);
       shellRef[0] = userInterface;
@@ -336,6 +383,11 @@ public class GameLauncher {
         loadcmd.execute(null);
       }
 
+      final boolean isTestEnv = "true".equals(System.getProperty("IS_TEST_ENV"));
+      if (!isTestEnv && !cmd.hasOption("c")) {
+        userInterface.initializeSession(context);
+      }
+
       gameEngine.start();
 
     } catch (Exception e) {
@@ -343,6 +395,15 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Registers all commands available to the current interface.
+   *
+   * @param cmds command register to populate
+   * @param userInterface current user interface
+   * @param config loaded game configuration
+   * @param engine active game engine
+   * @param context shared application context
+   */
   private void fillRegister(
       final AgonRegister<CmdAction> cmds,
       final GameUserInterface userInterface,
@@ -379,6 +440,11 @@ public class GameLauncher {
     cmds.register("quit", new CmdQuit(userInterface, context));
   }
 
+  /**
+   * Displays command line help as well as the list of commands available in the shell.
+   *
+   * @param cmds command register used to describe available commands
+   */
   private void printHelp(final AgonRegister<CmdAction> cmds) {
     final HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("agon [OPTIONS]", options);
@@ -400,6 +466,11 @@ public class GameLauncher {
             + "Exemples: a1a2, f5g6 and for relocation a1, f10\n");
   }
 
+  /**
+   * Displays the launcher version information.
+   *
+   * <p>If the version resource file cannot be read, a fallback version message is displayed.
+   */
   private void printVersion() {
     try {
       System.out.println(getVersionContent());
@@ -410,10 +481,22 @@ public class GameLauncher {
     }
   }
 
+  /**
+   * Loads the launcher help content from local resources.
+   *
+   * @return help text content
+   * @throws IOException if the resource cannot be read
+   */
   protected String getHelpContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/helpGameLauncher.txt").getContent();
   }
 
+  /**
+   * Loads the launcher version content from local resources.
+   *
+   * @return version text content
+   * @throws IOException if the resource cannot be read
+   */
   protected String getVersionContent() throws IOException {
     return new LoadLocalFile("/cmdsInformations/version.txt").getContent();
   }
