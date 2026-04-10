@@ -4,6 +4,7 @@ import fr.univ.bordeaux.application.network.player.OnlinePlayer;
 import fr.univ.bordeaux.application.network.protocol.Command;
 import fr.univ.bordeaux.application.network.protocol.CommandParser;
 import fr.univ.bordeaux.application.network.server.clientcommand.ClientCommandProcessor;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,15 +14,9 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** Handles the communication lifecycle for a single TCP client. */
 public class ClientHandler implements Runnable {
-
-  /** Logger used for client handler runtime errors. */
-  private static final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
-
   /** TCP socket associated with the connected client. */
   final Socket socket;
 
@@ -165,7 +160,7 @@ public class ClientHandler implements Runnable {
         socket.close();
       }
     } catch (IOException e) {
-      LOGGER.log(Level.FINE, "[SERVER] Error while closing client socket", e);
+      GameLogger.error("[SERVER] Error while closing client socket");
     }
   }
 
@@ -176,7 +171,7 @@ public class ClientHandler implements Runnable {
    */
   private void logRuntimeFailure(final IOException exception) {
     if (running.get()) {
-      LOGGER.log(Level.WARNING, "[SERVER] ClientHandler error", exception);
+      GameLogger.warn("[SERVER] ClientHandler error");
     }
   }
 

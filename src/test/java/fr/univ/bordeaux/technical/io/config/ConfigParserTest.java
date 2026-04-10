@@ -22,7 +22,7 @@ class ConfigParserTest {
     String content =
         "verbose = true\n"
             + "timeout = 600\n"
-            + "ai_mode = MCTS\n"
+            + "ai_mode = mcts\n"
             + "ai_color = BLACK\n"
             + "ai_depth = 3\n"
             + "ai_time_limit = 5\n"
@@ -36,7 +36,7 @@ class ConfigParserTest {
 
     assertTrue(config.isVerbose());
     assertEquals(600, config.getTimeout());
-    assertEquals("MCTS", config.getAiMode());
+    assertEquals("mcts", config.getAiMode());
     assertFalse(config.isManualPlacement());
     assertFalse(config.isWhiteAi());
     assertTrue(config.isBlackAi());

@@ -26,7 +26,7 @@ public class CmdLoadTest {
   private GameEngine engine;
   private ByteArrayOutputStream outContent;
 
-  @TempDir Path tempDir; // Crée un dossier temporaire propre à chaque test
+  @TempDir Path tempDir;
 
   @BeforeEach
   void setUp() {
@@ -37,27 +37,24 @@ public class CmdLoadTest {
       ui = new AgonShell(terminal, reader, cmds);
       engine = new GameEngine(ui, cmds);
 
-      // Enregistrement de la commande Load
       cmds.register("load", new CmdLoad(ui, engine));
     } catch (Exception e) {
-      fail("Le setup a échoué : " + e.getMessage());
+      fail("Setup failed: " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("Vérifier l'erreur si aucun nom de fichier n'est fourni")
+  @DisplayName("Verify error if no filename is provided")
   void testCreateNewNoArgs() {
     CmdAction cmd = cmds.get("load").get().createNew(new String[] {});
 
-    // createNew doit renvoyer null et afficher une erreur dans l'UI
     assertNull(cmd);
     assertTrue(outContent.toString().contains("Error: Please provide a filename."));
   }
 
   @Test
-  @DisplayName("Chargement réussi d'un fichier de sauvegarde valide")
+  @DisplayName("Successful loading of a valid save file")
   void testExecuteLoadSuccess() throws Exception {
-    // 1. Préparation d'un contenu de fichier .asv valide (format simplifié selon ton parser)
     String saveContent =
         "[settings]\n"
             + "verbose = false\n"
@@ -92,21 +89,18 @@ public class CmdLoadTest {
     Path saveFile = tempDir.resolve("test_save.asv");
     Files.writeString(saveFile, saveContent);
 
-    // 2. Création de la commande avec le chemin du fichier temporaire
     CmdAction cmd = cmds.get("load").get().createNew(new String[] {saveFile.toString()});
     assertNotNull(cmd);
 
-    // 3. Exécution
     boolean result = cmd.execute(null);
 
-    // 4. Vérifications
-    assertTrue(result, "L'exécution du load devrait réussir");
-    assertNotNull(engine.getMatchManager(), "Un MatchManager doit être présent dans l'engine");
+    assertTrue(result, "Load execution should succeed");
+    assertNotNull(engine.getMatchManager(), "A MatchManager must be present in the engine");
     assertTrue(outContent.toString().contains("Game successfully loaded from:"));
   }
 
   @Test
-  @DisplayName("Erreur lors du chargement d'un fichier inexistant")
+  @DisplayName("Error when loading a non-existent file")
   void testExecuteLoadFileNotFound() {
     String fakePath = tempDir.resolve("ghost.asv").toString();
     CmdAction cmd = cmds.get("load").get().createNew(new String[] {fakePath});
@@ -115,12 +109,11 @@ public class CmdLoadTest {
 
     assertFalse(result);
     assertTrue(
-        outContent.toString().contains("Failed to load game"),
-        "L'UI doit afficher une erreur de lecture");
+        outContent.toString().contains("Failed to load game"), "The UI must display a read error");
   }
 
   @Test
-  @DisplayName("Erreur lors du chargement d'un fichier corrompu")
+  @DisplayName("Error when loading a corrupted file")
   void testExecuteLoadCorruptedFile() throws Exception {
     Path corruptedFile = tempDir.resolve("corrupt.asv");
     Files.writeString(corruptedFile, "[invalid_header]\nnonsense content");
@@ -129,7 +122,6 @@ public class CmdLoadTest {
     boolean result = cmd.execute(null);
 
     assertFalse(result);
-    // On vérifie que le message d'erreur est bien remonté à l'UI
     assertTrue(outContent.toString().contains("Failed to load game"));
   }
 

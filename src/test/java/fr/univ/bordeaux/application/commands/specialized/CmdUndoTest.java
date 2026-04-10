@@ -38,7 +38,6 @@ public class CmdUndoTest {
     try {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
       gameUserInterface = new AgonShell(terminal, reader, cmds);
-      // Enregistrement du prototype de la commande undo
       cmds.register("undo", new CmdUndo(gameUserInterface));
     } catch (Exception e) {
       fail("Setup failed");
@@ -46,23 +45,21 @@ public class CmdUndoTest {
   }
 
   @Test
-  @DisplayName("Vérifier qu'un undo annule bien un mouvement sur le plateau")
+  @DisplayName("Verify that undo correctly reverses a move on the board")
   void executeUndoTest() {
-    // 1. Initialisation du match
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
             board,
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
     int from = CoordinateMapper.toIndex('B', 1);
     int to = CoordinateMapper.toIndex('C', 1);
     PieceType piece = board.getPieceAt(from);
 
-    // 2. On effectue un mouvement
     CmdAction move = new CmdMove(from, to, gameUserInterface);
     move.execute(match);
     assertNull(board.getPieceAt(from));
@@ -70,33 +67,32 @@ public class CmdUndoTest {
     new CmdMove(
             CoordinateMapper.toIndex('F', 11), CoordinateMapper.toIndex('F', 10), gameUserInterface)
         .execute(match);
-    // 3. On exécute la commande Undo via le registre
+
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"1"});
     boolean result = cmdUndo.execute(match);
 
-    // 4. VÉRIFICATIONS
-    assertTrue(result, "L'exécution de undo doit renvoyer true");
-    assertEquals(piece, board.getPieceAt(from), "La pièce doit être revenue à sa case de départ");
-    assertNull(board.getPieceAt(to), "La case d'arrivée doit être vide après l'undo");
+    assertTrue(result, "Undo execution should return true");
+    assertEquals(
+        piece, board.getPieceAt(from), "The piece should be back at its starting position");
+    assertNull(board.getPieceAt(to), "The destination square should be empty after undo");
     assertEquals(
         Color.WHITE,
         match.getCurrentPlayer().getColor(),
-        "Le tour doit être revenu au joueur blanc");
+        "The turn should have returned to the white player");
   }
 
   @Test
-  @DisplayName("Vérifier que undo multiple annule plusieurs coups")
+  @DisplayName("Verify that multiple undo cancels several moves")
   void executeMultipleUndoTest() {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
             board,
-            new HumanPlayer("J1", Color.WHITE, gameUserInterface),
-            new HumanPlayer("J2", Color.BLACK, gameUserInterface),
+            new HumanPlayer("P1", Color.WHITE, gameUserInterface),
+            new HumanPlayer("P2", Color.BLACK, gameUserInterface),
             new GameConfig());
 
-    // On joue deux coups
     new CmdMove(
             CoordinateMapper.toIndex('B', 1), CoordinateMapper.toIndex('C', 1), gameUserInterface)
         .execute(match);
@@ -110,25 +106,22 @@ public class CmdUndoTest {
             CoordinateMapper.toIndex('A', 2), CoordinateMapper.toIndex('A', 3), gameUserInterface)
         .execute(match);
 
-    // On demande un undo de 2 coups
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"2"});
     cmdUndo.execute(match);
 
-    // Vérification que les deux pièces sont revenues (B1 et B2 ne sont plus vides)
     assertNotNull(board.getPieceAt(CoordinateMapper.toIndex('B', 1)));
     assertNotNull(board.getPieceAt(CoordinateMapper.toIndex('F', 1)));
   }
 
   @Test
-  @DisplayName("Vérifier que undo sans historique ne crash pas et s'arrête via le break")
+  @DisplayName("Verify that undo without history does not crash and stops via break")
   void executeUndoEmptyTest() {
     AgonBoard board = new AgonBoardImpl();
     board.initBaseConfiguration();
     MatchManager match =
         new StandardMatch(
-            board, new HumanPlayer("J1", Color.WHITE, gameUserInterface), null, new GameConfig());
+            board, new HumanPlayer("P1", Color.WHITE, gameUserInterface), null, new GameConfig());
 
-    // Pas de coups joués, on tente un undo
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {"1"});
     boolean result = cmdUndo.execute(match);
 
@@ -136,23 +129,21 @@ public class CmdUndoTest {
   }
 
   @Test
-  @DisplayName("Vérifier createNew avec différents formats d'arguments")
+  @DisplayName("Verify createNew with different argument formats")
   void createNewTest() {
-    // Test format positionnel: undo 2
+
     CmdAction cmdUndo1 = cmds.get("undo").get().createNew(new String[] {"2"});
     assertNotNull(cmdUndo1);
 
-    // Test format flag: undo -n 3
     CmdAction cmdUndo2 = cmds.get("undo").get().createNew(new String[] {"-n", "3"});
     assertNotNull(cmdUndo2);
 
-    // Test erreur format: doit logger une erreur et renvoyer null (selon ton code)
     CmdAction cmdUndoErr = cmds.get("undo").get().createNew(new String[] {"abc"});
     assertNull(cmdUndoErr);
   }
 
   @Test
-  @DisplayName("Vérifier la description de undo")
+  @DisplayName("Verify undo description")
   void getDescriptionTest() {
     CmdAction cmdUndo = cmds.get("undo").get().createNew(new String[] {});
     assertTrue(cmdUndo.getDescription().contains("Usage: undo [N]"));

@@ -144,9 +144,10 @@ public class ConfigBinder {
         if (selection.equals("ML") || selection.equals("UCT")) {
           config.setAiHeuristic(selection.toLowerCase());
           GameLogger.info("AI mcts mode set to " + selection);
+        } else {
+          ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
+          GameLogger.info("AI mcts mode set to default (UCT).");
         }
-        ui.showInfo("Unreconised mode for mcts : " + selection + " setting by default UCT.\n");
-        GameLogger.info("AI mcts mode set to default (UCT).");
       }
     }
 

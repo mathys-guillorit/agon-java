@@ -68,7 +68,7 @@ public enum PieceType {
    * @return {@link PieceType}
    */
   public static PieceType getQueen(final Color color) {
-    PieceType queenType;
+    final PieceType queenType;
 
     if (color == Color.WHITE) {
       queenType = WHITE_QUEEN;
@@ -86,7 +86,7 @@ public enum PieceType {
    * @return The corresponding {@link PieceType} (WHITE_PAWN or BLACK_PAWN).
    */
   public static PieceType getPawn(final Color color) {
-    PieceType pawnType;
+    final PieceType pawnType;
 
     if (color == Color.WHITE) {
       pawnType = WHITE_PAWN;

@@ -8,8 +8,6 @@ import fr.univ.bordeaux.application.match.ReadOnlyMatch;
  * <p>This interface is a key part of the Observer design pattern, allowing UI components
  * (like CLI or GUI) to synchronize their display whenever the game state evolves.
  *
- * @author fr.univ.bordeaux
- * @version 1.0
  */
 public interface MatchObserver {
 

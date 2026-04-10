@@ -7,19 +7,27 @@ import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.commands.specialized.CmdMove;
 
-/** Default AIPlayer class to play with. */
+/**
+ * Implementation of a player controlled by Artificial Intelligence.
+ *
+ * <p>This player uses an {@link AgonAi} strategy to evaluate the board and decide the best move to
+ * execute during its turn.
+ */
 public class AiPlayer extends AbstractPlayer {
 
-  AgonBoard board;
-  AgonAi ai;
+  /** The board instance the AI uses to simulate and analyze moves. */
+  private final AgonBoard board;
+
+  /** The AI strategy engine used to calculate optimal moves. */
+  private final AgonAi ai;
 
   /**
-   * Create a AiPlayer.
+   * Constructs an AiPlayer with a specific strategy.
    *
-   * @param name {@link String} AiPlayer's name
-   * @param color {@link Color} AiPlayer's color
-   * @param board {@link AgonBoard} board to play on
-   * @param ai {@link AgonAi}
+   * @param name The display name for this AI.
+   * @param color The {@link Color} assigned to the AI.
+   * @param board The current {@link AgonBoard} state.
+   * @param ai The {@link AgonAi} strategy to be used.
    */
   public AiPlayer(String name, Color color, AgonBoard board, AgonAi ai) {
     super(name, color);
@@ -28,34 +36,16 @@ public class AiPlayer extends AbstractPlayer {
   }
 
   /**
-   * Get the player's color.
+   * Calculates the best action for the AI using its strategy engine.
    *
-   * @return {@link Color}
-   */
-  @Override
-  public Color getColor() {
-    return color;
-  }
-
-  /**
-   * Get the player's name.
+   * <p>The AI analyzes the current board state and returns a {@link CmdMove} containing its chosen
+   * move.
    *
-   * @return {@link String}
-   */
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Get command Behavior.
-   *
-   * @param cmds {@link AgonRegister}
-   * @return {@link CmdAction}
+   * @param cmds The registry of available commands (unused by the AI).
+   * @return A {@link CmdAction} representing the AI's chosen move.
    */
   @Override
   public CmdAction getAction(AgonRegister<CmdAction> cmds) {
-    CmdAction cmd = new CmdMove(ai.getBestMove(board), null);
-    return cmd;
+    return new CmdMove(ai.getBestMove(board), null);
   }
 }

@@ -112,7 +112,7 @@ public class GameLauncher {
     final GameConfig config = loadInitialConfig();
     applyConfigOptions(cmd, config);
 
-    final AppContext context = createAppContext();
+    final AppContext context = createAppContext(cmd);
 
     String filePathToLoad = null;
     if (cmd.getArgs().length > 0) {

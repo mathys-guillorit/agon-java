@@ -70,13 +70,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   /** Registry containing all executable commands available in the shell. */
   private AgonRegister<CmdAction> cmds;
 
-  /** If true, the shell outputs detailed operational feedback. */
-  private boolean verbose;
-
-  /** Atomic flag for debug mode, allowing real-time toggling of technical logs. */
-  private AtomicBoolean debug;
-
-  /** Additional text information displayed at the bottom of the board. */
   private String boardFooter = "";
 
   /**
@@ -84,8 +77,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    * prompt.
    */
   private void init() {
-    this.verbose = false;
-    this.debug = new AtomicBoolean(false);
     this.running = new AtomicBoolean(true);
     this.userPrompt = this.msgHa + "> ";
     GameLogger.info("AgonShell: CLI components initialized.");
@@ -165,7 +156,6 @@ public class AgonShell implements GameUserInterface, MatchObserver {
         GameLogger.debug("AgonShell: EOF received (null input).");
         return "quit";
       }
-
       line = readLine.trim();
       if (line.isEmpty()) {
         return null;
@@ -391,7 +381,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
       this.showInfo("MATCH FINISHED! Winner: " + winnerInfo);
     } else {
       String[] timers = match.getAllPlayersRemainingTime();
-      if (timers != null) {
+      if (timers.length != 0) {
         this.showInfo(
             "Current turn: "
                 + match.getCurrentPlayer().getColor()
@@ -438,18 +428,13 @@ public class AgonShell implements GameUserInterface, MatchObserver {
 
     StringBuilder sb = new StringBuilder();
     sb.append("[history]\n");
-
-    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
     for (int i = 0; i < history.size(); i += 2) {
-      // Coup du joueur O (Premier joueur du tour)
       MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
           .append(" ")
           .append(moveO.to().toLowerCase())
           .append(";");
-
-      // Coup du joueur X (S'il existe déjà dans la liste)
       if (i + 1 < history.size()) {
         MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")

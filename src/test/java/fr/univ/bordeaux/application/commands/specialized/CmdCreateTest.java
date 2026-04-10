@@ -30,7 +30,6 @@ public class CmdCreateTest {
 
   @BeforeEach
   void setUp() {
-    // La config globale de l'application (le "Template")
     globalConfig = new GameConfig();
     globalConfig.setBlitzMode(false);
     globalConfig.setTimeout(30);
@@ -40,45 +39,38 @@ public class CmdCreateTest {
       Terminal terminal = new FakeTerminal(new ByteArrayOutputStream());
       ui = new AgonShell(terminal, reader, cmds);
       engine = new GameEngine(ui, cmds);
-
-      // On enregistre la commande avec la config globale
       cmds.register("create", new CmdCreate(ui, globalConfig, engine));
     } catch (Exception e) {
-      fail("Le setup a échoué : " + e.getMessage());
+      fail("Setup failed: " + e.getMessage());
     }
   }
 
   @Test
-  @DisplayName("F15 : Vérifier qu'un match est bien créé dans l'engine")
+  @DisplayName("F15: Verify that a match is correctly created in the engine")
   void testExecuteCreatesMatch() {
     CmdAction cmd = cmds.get("create").get().createNew(new String[] {});
     boolean result = cmd.execute(null);
 
     assertTrue(result);
-    assertNotNull(engine.getMatchManager(), "Un MatchManager doit être créé après execute");
+    assertNotNull(engine.getMatchManager(), "A MatchManager should be created after execution");
   }
 
   @Test
-  @DisplayName("Isolation : La config globale ne doit pas être modifiée par un match")
+  @DisplayName("Isolation: Global config should not be modified by a match")
   void testConfigIsolation() {
-    // On lance un match en mode Blitz
     CmdAction cmd = cmds.get("create").get().createNew(new String[] {"-b", "-t", "60"});
     cmd.execute(null);
 
-    // 1. On vérifie que le match actuel est BIEN en blitz 60s
     GameConfig matchConfig = engine.getMatchManager().getGameConfig();
     assertTrue(matchConfig.isBlitzMode());
     assertEquals(60, matchConfig.getTimeout());
-
-    // 2. On vérifie que la config globale est RESTÉE à ses valeurs par défaut
-    assertFalse(globalConfig.isBlitzMode(), "La config globale a été polluée !");
-    assertEquals(30, globalConfig.getTimeout(), "La config globale a été polluée !");
+    assertFalse(globalConfig.isBlitzMode(), "Global config was polluted!");
+    assertEquals(30, globalConfig.getTimeout(), "Global config was polluted!");
   }
 
   @Test
-  @DisplayName("F8 : Vérifier l'activation de l'IA via la commande")
+  @DisplayName("F8: Verify AI activation via command")
   void testAiOption() {
-    // On active l'IA pour le blanc
     CmdAction cmd = cmds.get("create").get().createNew(new String[] {"-a", "white"});
     cmd.execute(null);
 
@@ -88,12 +80,11 @@ public class CmdCreateTest {
   }
 
   @Test
-  @DisplayName("Gestion d'erreur : Option inconnue")
+  @DisplayName("Error handling: Unknown option")
   void testUnknownOption() {
     CmdAction cmd = cmds.get("create").get().createNew(new String[] {"--voldemort"});
     boolean result = cmd.execute(null);
 
-    // Doit renvoyer false à cause du ParseException catché dans CmdCreate
-    assertFalse(result, "La commande devrait échouer avec une option inconnue");
+    assertFalse(result, "Command should fail with an unknown option");
   }
 }

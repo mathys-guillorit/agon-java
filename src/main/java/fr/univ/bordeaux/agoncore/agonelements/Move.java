@@ -116,11 +116,25 @@ public class Move {
     return from == -1;
   }
 
+  /**
+   * Computes the hash code for this Move based on its state.
+   *
+   * @return A hash code value for this object.
+   */
   @Override
   public int hashCode() {
     return Objects.hash(from, destination, color, pieceType);
   }
 
+  /**
+   * Compares this move to the specified object.
+   *
+   * <p>Two moves are considered equal if they have the same source, destination, and color. If
+   * piece types are provided for both, they must also match.
+   *
+   * @param obj The object to compare with.
+   * @return {@code true} if the objects are equivalent, {@code false} otherwise.
+   */
   @Override
   public boolean equals(final Object obj) {
     boolean isEqual = false;
@@ -143,6 +157,7 @@ public class Move {
 
     return isEqual;
   }
+
 
   /**
    * Returns a string representation of the move.

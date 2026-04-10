@@ -55,7 +55,6 @@ public class HumanPlayer extends AbstractPlayer {
     if (input == null || input.trim().isEmpty()) {
       return null;
     }
-    // Static call to the parser
     return UiPromptParser.parse(input, cmds, ui);
   }
 

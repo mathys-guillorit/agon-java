@@ -13,15 +13,12 @@ import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.application.network.protocol.MoveParsed;
 import fr.univ.bordeaux.application.network.protocol.MoveProtocolParser;
 import fr.univ.bordeaux.application.network.server.AgonServer;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.IOException;
 import java.util.logging.Logger;
 
 /** Application shared context. */
 public class AppContext implements OnlineGameStartListener {
-
-  /** Logger used for application context events and errors. */
-  private static final Logger LOGGER = Logger.getLogger(AppContext.class.getName());
-
   /** Local user profile. */
   private LocalProfile profile;
 
@@ -180,9 +177,9 @@ public class AppContext implements OnlineGameStartListener {
     this.myOnlineTurn = info.isMyTurn();
     this.onlineMatch = localMatch;
 
-    LOGGER.info("[ONLINE] Game started. GAME_ID=" + info.getGameId());
-    LOGGER.info("[ONLINE] You are " + localColor);
-    LOGGER.info(
+    GameLogger.info("[ONLINE] Game started. GAME_ID=" + info.getGameId());
+    GameLogger.info("[ONLINE] You are " + localColor);
+    GameLogger.info(
         "[ONLINE] WHITE=" + info.getWhitePlayerName() + " BLACK=" + info.getBlackPlayerName());
 
     if (gameEngine != null) {
@@ -190,9 +187,9 @@ public class AppContext implements OnlineGameStartListener {
     }
 
     if (myOnlineTurn) {
-      LOGGER.info("[ONLINE] Your turn");
+      GameLogger.info("[ONLINE] Your turn");
     } else {
-      LOGGER.info("[ONLINE] Opponent turn");
+      GameLogger.info("[ONLINE] Opponent turn");
     }
   }
 
@@ -266,13 +263,13 @@ public class AppContext implements OnlineGameStartListener {
       final MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
 
       if (parsedMove == null) {
-        LOGGER.severe("[ONLINE] Failed to parse confirmed move: " + rawMove);
+        GameLogger.error("[ONLINE] Failed to parse confirmed move: " + rawMove);
       } else {
         final Move move = buildMove(parsedMove, localOnlineColor);
         final boolean moveApplied = onlineMatch.move(move);
 
         if (!moveApplied) {
-          LOGGER.severe("[ONLINE] Failed to apply confirmed local move: " + rawMove);
+          GameLogger.error("[ONLINE] Failed to apply confirmed local move: " + rawMove);
         } else {
           myOnlineTurn = false;
           onlineMatch.startTurn();
@@ -302,14 +299,14 @@ public class AppContext implements OnlineGameStartListener {
       final MoveParsed parsedMove = MoveProtocolParser.parse(rawMove);
 
       if (parsedMove == null) {
-        LOGGER.severe("[ONLINE] Failed to parse opponent move: " + rawMove);
+        GameLogger.error("[ONLINE] Failed to parse opponent move: " + rawMove);
       } else {
         final Color opponentColor = getOpponentColor();
         final Move move = buildMove(parsedMove, opponentColor);
         final boolean moveApplied = onlineMatch.move(move);
 
         if (!moveApplied) {
-          LOGGER.severe("[ONLINE] Failed to apply opponent move: " + rawMove);
+          GameLogger.error("[ONLINE] Failed to apply opponent move: " + rawMove);
         } else {
           myOnlineTurn = true;
           onlineMatch.startTurn();

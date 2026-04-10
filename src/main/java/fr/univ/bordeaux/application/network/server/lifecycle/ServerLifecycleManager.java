@@ -1,6 +1,7 @@
 package fr.univ.bordeaux.application.network.server.lifecycle;
 
 import fr.univ.bordeaux.application.network.server.ServerDiscovery;
+import fr.univ.bordeaux.technical.utils.GameLogger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,13 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** Handles server socket lifecycle, client accept loop, and discovery broadcasting. */
 public class ServerLifecycleManager {
 
-  /** Logger used for lifecycle-related failures. */
-  private static final Logger LOGGER = Logger.getLogger(ServerLifecycleManager.class.getName());
 
   /** TCP port listened to by the server socket. */
   private final int port;
@@ -81,9 +79,7 @@ public class ServerLifecycleManager {
       acceptExecutor.submit(() -> acceptClientLoop(socketConsumer));
       return true;
     } catch (IOException e) {
-      if (LOGGER.isLoggable(Level.SEVERE)) {
-        LOGGER.log(Level.SEVERE, "[SERVER] Failed to start on port " + port, e);
-      }
+        GameLogger.error("[SERVER] Failed to start on port " + port);
       return false;
     }
   }
@@ -133,7 +129,7 @@ public class ServerLifecycleManager {
         socketConsumer.accept(clientSocket);
       } catch (IOException e) {
         if (running.get()) {
-          LOGGER.log(Level.WARNING, "[SERVER] Error while accepting a client", e);
+          GameLogger.warn("[SERVER] Error while accepting a client");
         }
         break;
       }
@@ -153,7 +149,7 @@ public class ServerLifecycleManager {
       try {
         serverSocket.close();
       } catch (IOException e) {
-        LOGGER.log(Level.FINE, "[SERVER] Error while closing server socket", e);
+        GameLogger.error("[SERVER] Error while closing server socket");
       }
     }
   }

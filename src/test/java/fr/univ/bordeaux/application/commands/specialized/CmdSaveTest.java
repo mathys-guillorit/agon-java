@@ -31,7 +31,7 @@ public class CmdSaveTest {
   private MatchManager match;
   private ByteArrayOutputStream outContent;
 
-  @TempDir Path tempDir; // Dossier temporaire pour les fichiers de sauvegarde
+  @TempDir Path tempDir;
 
   @BeforeEach
   void setUp() {
@@ -41,12 +41,11 @@ public class CmdSaveTest {
       Terminal terminal = new FakeTerminal(outContent);
       ui = new AgonShell(terminal, reader, cmds);
 
-      // On crée un vrai match pour avoir des données à sauvegarder
       match =
           new StandardMatch(
               new AgonBoardImpl(),
-              new HumanPlayer("J1", Color.WHITE, ui),
-              new HumanPlayer("J2", Color.BLACK, ui),
+              new HumanPlayer("P1", Color.WHITE, ui),
+              new HumanPlayer("P2", Color.BLACK, ui),
               new GameConfig());
 
       cmds.register("save", new CmdSave(ui));
@@ -56,44 +55,42 @@ public class CmdSaveTest {
   }
 
   @Test
-  @DisplayName("Sauvegarde réussie avec un nom de fichier spécifique")
+  @DisplayName("Successful save with a specific filename")
   void testSaveWithFilename() throws Exception {
-    // On définit un chemin dans le dossier temporaire
+
     String filePath = tempDir.resolve("my_save.asv").toString();
 
     CmdAction cmd = cmds.get("save").get().createNew(new String[] {filePath});
 
-    // execute renvoie false dans ton code (sans doute pour ne pas passer le tour)
     boolean result = cmd.execute(match);
 
+    // Assuming the command returns false to not end the turn
     assertFalse(result);
 
-    // Vérification physique du fichier
     File file = new File(filePath);
-    assertTrue(file.exists(), "Le fichier de sauvegarde devrait exister sur le disque");
-    assertTrue(file.length() > 0, "Le fichier ne devrait pas être vide");
-    assertTrue(match.isSaved(), "Le flag isSaved du match devrait être à true");
+    assertTrue(file.exists(), "The save file should exist on disk");
+    assertTrue(file.length() > 0, "The file should not be empty");
+    assertTrue(match.isSaved(), "The match isSaved flag should be true");
   }
 
   @Test
-  @DisplayName("Sauvegarde par défaut si aucun nom n'est fourni")
+  @DisplayName("Default save if no filename is provided")
   void testSaveDefaultFilename() {
-    // On simule l'appel à "save" sans arguments
+
     CmdAction cmd = cmds.get("save").get().createNew(new String[] {});
 
     cmd.execute(match);
-    // On vérifie qu'un fichier "default_save" a été créé
+
     File defaultFile = new File("default_save");
     if (defaultFile.exists()) {
-      defaultFile.delete(); // Nettoyage car il n'est pas dans tempDir
+      defaultFile.delete();
     }
   }
 
   @Test
-  @DisplayName("Gestion d'erreur lors de l'écriture (IOException)")
+  @DisplayName("Error handling during writing (IOException)")
   void testSaveErrorHandling() {
-    // On utilise un nom de fichier invalide (ex: dossier qui n'existe pas ou caractères interdits)
-    // Sous Linux/Mac, "/" ou un chemin vers un dossier protégé provoquera une IOException
+
     String invalidPath = "/this/path/does/not/exist/save.asv";
 
     CmdAction cmd = cmds.get("save").get().createNew(new String[] {invalidPath});
@@ -104,7 +101,7 @@ public class CmdSaveTest {
   }
 
   @Test
-  @DisplayName("Vérification des métadonnées de la commande")
+  @DisplayName("Verification of command metadata")
   void testCommandMetadata() {
     CmdAction prototype = cmds.get("save").get();
     assertEquals("save", prototype.getName());

@@ -27,7 +27,7 @@ import org.jline.reader.impl.DefaultParser;
 public class UiPromptParser {
 
   /** JLine parser used to split input lines into words, handling quotes and escapes. */
-  private static final Parser parser = new DefaultParser();
+  private static final Parser PARSER = new DefaultParser();
 
   /** * Regex pattern for standard moves: origin (letter + digit) + destination (letter + digit).
    * Example: "a1b2", "k11a1".
@@ -56,7 +56,7 @@ public class UiPromptParser {
 
     final ParsedLine parsed;
     try {
-      parsed = parser.parse(line, 0);
+      parsed = PARSER.parse(line, 0);
     } catch (Exception e) {
       GameLogger.error("UiPromptParser: JLine parsing failed for input: " + line);
       return null;
@@ -69,7 +69,6 @@ public class UiPromptParser {
 
     String firstWord = words.get(0).toLowerCase();
 
-    // 1. Try compound commands such as "server start" -> "server_start"
     if (words.size() >= 2) {
       String compoundCmdName = firstWord + "_" + words.get(1).toLowerCase();
       String[] compoundOptions = words.subList(2, words.size()).toArray(String[]::new);
@@ -80,7 +79,6 @@ public class UiPromptParser {
       }
     }
 
-    // 2. Fallback to classic one-word commands such as "join"
     String[] options = words.subList(1, words.size()).toArray(String[]::new);
 
     return registry
@@ -115,6 +113,7 @@ public class UiPromptParser {
     String lowerInput = input.toLowerCase().trim();
     Matcher moveMatcher = MOVE_PATTERN.matcher(lowerInput);
     Matcher relocationMatcher = RELOCATION_PATTERN.matcher(lowerInput);
+
     if (moveMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches MOVE_PATTERN (" + lowerInput + ")");
       char letterFrom = moveMatcher.group(1).charAt(0);
@@ -132,6 +131,7 @@ public class UiPromptParser {
         return null;
       }
     }
+
     if (relocationMatcher.matches()) {
       GameLogger.debug("UiPromptParser: Input matches RELOCATION_PATTERN (" + lowerInput + ")");
       char letter = relocationMatcher.group(1).charAt(0);

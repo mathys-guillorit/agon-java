@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.univ.bordeaux.agoncore.agonelements.Color;
@@ -95,7 +95,9 @@ class AiFactoryTest {
 
     AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
 
-    assertNull(ai, "The factory should return null for an unknown Ai mode.");
+    assertNotNull(ai, "The factory should return a base default Ai.");
+    assertTrue(config.getAiMode().equals("minimax"));
+    assertTrue(config.getAiHeuristic().equals("mixed"));
   }
 
   @Test
@@ -108,14 +110,16 @@ class AiFactoryTest {
   }
 
   @Test
-  void testCreateAiMinimaxModeUnknownHeuristic() {
+  void testCreateAiMinimaxModeIncompatibleHeuristic() {
     config.setAiMode("minimax");
-    config.setAiHeuristic("random_string");
+    config.setAiHeuristic("uct");
 
-    AbstractAgonAi ai = AiFactory.createAi(config, Color.BLACK);
-
-    assertNotNull(ai, "The factory should fallback to Mixed heuristic and return an instance.");
-    assertInstanceOf(MinimaxStrategy.class, ai, "The returned Ai should be a MinimaxStrategy.");
+    assertThrows(
+        IncompatibleAiConfigurationException.class,
+        () -> {
+          AiFactory.createAi(config, Color.BLACK);
+        },
+        "The factory should throw an exception for an unknown heuristic in minimax.");
   }
 
   @Test
@@ -145,9 +149,35 @@ class AiFactoryTest {
     config.setAiMode("mcts");
     config.setAiHeuristic("random_string");
 
-    AbstractAgonAi ai = AiFactory.createAi(config, Color.WHITE);
+    assertThrows(
+        IncompatibleAiConfigurationException.class,
+        () -> {
+          AiFactory.createAi(config, Color.WHITE);
+        },
+        "The factory should throw an exception for an unknown selection heuristic in mcts.");
+  }
 
-    assertNotNull(ai, "The factory should fallback to Uct heuristic and return an instance.");
-    assertInstanceOf(MctsStrategy.class, ai, "The returned Ai should be an MctsStrategy.");
+  @Test
+  void testIncompatibleMinimaxMctsHeuristic() {
+    config.setAiMode("minimax");
+    config.setAiHeuristic("uct"); // Incompatible
+
+    assertThrows(
+        IncompatibleAiConfigurationException.class,
+        () -> {
+          AiFactory.createAi(config, Color.WHITE);
+        });
+  }
+
+  @Test
+  void testIncompatibleMctsMinimaxHeuristic() {
+    config.setAiMode("mcts");
+    config.setAiHeuristic("centrality"); // Incompatible
+
+    assertThrows(
+        IncompatibleAiConfigurationException.class,
+        () -> {
+          AiFactory.createAi(config, Color.WHITE);
+        });
   }
 }
