@@ -1,18 +1,71 @@
 @startuml
-package io{
-package config{}
+package technical {
 
-package storage{}
-package lang{
-class LangService
-interface LangTranslationProvider{
-}
+    package io {
+        interface Parser<T> {
+            + parse(filePath: String): T
+        }
+
+        interface Serializer{
+            + save(object: T, filePath: String): void
+        }
+
+        abstract class AbstractFileParser<T> implements Parser
+
+        class TextScrubber
+
+        package config {
+            class ConfigBinder
+            class ConfigParser
+            class ConfigSerializer implements Serializer
+            class GameConfig
+        }
+
+        package storage {
+            package states {
+                interface SaveParserState {
+                    + parseLine(line: String, builder: GameSaveBuilder): void
+                }
+                class GameState implements SaveParserState
+                class HistoryState implements SaveParserState
+                class IdleState implements SaveParserState
+                class SettingsState implements SaveParserState
+            }
+
+            class GameSaveBuilder
+            class GameSaveData
+            class GameSaveParser
+            class GameSaveSerializer implements Serializer
+        }
+    }
+
+    package lang {
+        interface LangTranslationProvider{
+          + setLocale(Locale locale):boolean
+          + getLocale():Locale
+          + translate(String token):String
+        }
+        class LangService implements LangTranslationProvider
+    }
+
+    package utils {
+        class GameLogger
+        class LoadLocalFile
+    }
 }
 
+' --- RELATIONS D'HERITAGE ET DEPENDANCES ---
 
-package utils{
-class GameLogger
-class LoadLocalFile
-}
-}
+' Heritage correct
+AbstractFileParser <|-- ConfigParser
+AbstractFileParser <|-- GameSaveParser
+
+' Liens vers GameConfig (Relations de dépendance ou d'utilisation)
+ConfigSerializer ..> GameConfig
+ConfigBinder ..> GameConfig
+ConfigParser ..> GameConfig
+GameSaveData o-- GameConfig
+GameSaveParser ..> GameSaveData
+GameSaveBuilder ..> GameConfig
+
 @enduml
