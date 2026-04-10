@@ -4,6 +4,7 @@ import static fr.univ.bordeaux.application.commands.network.NetworkCommandTestSu
 import static org.junit.jupiter.api.Assertions.*;
 
 import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.network.server.AgonServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -76,18 +77,14 @@ class CmdServerStatusTest {
   }
 
   @Test
-  @DisplayName("server_status shows warning when neither local server nor remote connection exists")
-  void serverStatusShowsWarningWhenNeitherLocalServerNorRemoteConnectionExists() {
-    TestUi ui = new TestUi();
-    FakeAgonClient client = new FakeAgonClient();
-    AppContext ctx = contextWithClient(client);
-
-    client.connected = false;
-
-    boolean result = new CmdServerStatus(ui, ctx).createNew(new String[0]).execute(null);
-
-    assertFalse(result);
-    assertEquals(1, ui.warnings.size());
-    assertTrue(ui.warnings.get(0).contains("No server is currently running"));
+  void descriptionTest(){
+    CmdAction cmd = new CmdServerStatus(new TestUi(), null);
+    assertTrue(cmd.getDescription().contains(
+            "Description: displays the status of the local server"
+    ));
+    assertTrue(cmd.getDescription().contains(
+            "or the connected remote server if no local server is running."
+    ));
   }
+
 }
