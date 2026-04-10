@@ -30,7 +30,7 @@ public class CmdServerStatus extends Cmd {
     this.context = context;
     this.setName("server_status");
     this.setDesc(
-        "Usage: server_status\n"
+        "server_status\n"
             + "Description: displays the status of the local server,\n"
             + "or the connected remote server if no local server is running.\n");
   }
