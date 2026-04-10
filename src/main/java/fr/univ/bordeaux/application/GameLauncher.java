@@ -112,7 +112,7 @@ public class GameLauncher {
     final GameConfig config = loadInitialConfig();
     applyConfigOptions(cmd, config);
 
-    final AppContext context = createAppContext(cmd);
+    final AppContext context = createAppContext();
 
     String filePathToLoad = null;
     if (cmd.getArgs().length > 0) {
@@ -150,6 +150,7 @@ public class GameLauncher {
     if (playerName == null || playerName.isBlank()) {
       playerName = "Player";
     }
+
     final AppContext context = new AppContext(new LocalProfile(playerName));
     context.setMode(AppMode.LOCAL);
     return context;
@@ -367,34 +368,9 @@ public class GameLauncher {
             }
           };
 
-      final boolean isTestEnv = "true".equals(System.getProperty("IS_TEST_ENV"));
       final Terminal terminal = TerminalBuilder.builder().dumb(true).build();
       final LineReader reader =
           LineReaderBuilder.builder().terminal(terminal).completer(strategyCompleter).build();
-
-      if (!isTestEnv && !cmd.hasOption("c")) {
-        String name = askPlayerName(reader);
-        AppMode mode = askApplicationMode(reader);
-        context.setMode(mode);
-        try {
-          try {
-            context
-                .getProfile()
-                .getClass()
-                .getMethod("setName", String.class)
-                .invoke(context.getProfile(), name);
-          } catch (Exception e) {
-            for (java.lang.reflect.Field field : AppContext.class.getDeclaredFields()) {
-              if (field.getType().equals(LocalProfile.class)) {
-                field.setAccessible(true);
-                field.set(context, new LocalProfile(name));
-                break;
-              }
-            }
-          }
-        } catch (Exception ignored) {
-        }
-      }
 
       final AgonShell userInterface = new AgonShell(terminal, reader, cmds);
       shellRef[0] = userInterface;
@@ -415,6 +391,11 @@ public class GameLauncher {
       if (filePathToLoad != null && !cmd.hasOption("c")) {
         CmdAction loadcmd = cmds.get("load").get().createNew(new String[] {filePathToLoad});
         loadcmd.execute(null);
+      }
+
+      final boolean isTestEnv = "true".equals(System.getProperty("IS_TEST_ENV"));
+      if (!isTestEnv && !cmd.hasOption("c")) {
+        userInterface.initializeSession(context);
       }
 
       gameEngine.start();

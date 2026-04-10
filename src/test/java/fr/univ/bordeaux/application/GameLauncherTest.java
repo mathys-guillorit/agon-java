@@ -9,7 +9,6 @@ import fr.univ.bordeaux.application.network.client.LocalProfile;
 import fr.univ.bordeaux.technical.io.config.GameConfig;
 import fr.univ.bordeaux.ui.GameUserInterface;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,10 +18,6 @@ import java.nio.file.Files;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,73 +78,6 @@ class GameLauncherTest {
   void constructor_test() {
     GameLauncher launcher = new GameLauncher();
     assertNotNull(launcher);
-  }
-
-  @Test
-  @DisplayName("askPlayerName prompts again while input is empty")
-  void ask_player_name() throws Exception {
-    GameLauncher launcher = new GameLauncher();
-    Terminal terminal =
-        TerminalBuilder.builder()
-            .streams(new ByteArrayInputStream("\nAlice\n".getBytes()), new ByteArrayOutputStream())
-            .build();
-    LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    String name =
-        (String)
-            invokePrivate(launcher, "askPlayerName", new Class<?>[] {LineReader.class}, reader);
-    assertEquals("Alice", name);
-  }
-
-  @Test
-  @DisplayName("askApplicationMode returns LOCAL")
-  void ask_application_mode_local() throws Exception {
-    GameLauncher launcher = new GameLauncher();
-    Terminal terminal =
-        TerminalBuilder.builder()
-            .streams(new ByteArrayInputStream("1\n".getBytes()), new ByteArrayOutputStream())
-            .build();
-    LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    AppMode mode =
-        (AppMode)
-            invokePrivate(
-                launcher, "askApplicationMode", new Class<?>[] {LineReader.class}, reader);
-    assertEquals(AppMode.LOCAL, mode);
-  }
-
-  @Test
-  @DisplayName("askApplicationMode returns ONLINE")
-  void ask_application_mode_online() throws Exception {
-    GameLauncher launcher = new GameLauncher();
-    Terminal terminal =
-        TerminalBuilder.builder()
-            .streams(new ByteArrayInputStream("2\n".getBytes()), new ByteArrayOutputStream())
-            .build();
-    LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    AppMode mode =
-        (AppMode)
-            invokePrivate(
-                launcher, "askApplicationMode", new Class<?>[] {LineReader.class}, reader);
-    assertEquals(AppMode.ONLINE, mode);
-  }
-
-  @Test
-  @DisplayName("askApplicationMode prompts again after invalid input")
-  void ask_application_mode_retry() throws Exception {
-    GameLauncher launcher = new GameLauncher();
-    Terminal terminal =
-        TerminalBuilder.builder()
-            .streams(new ByteArrayInputStream("x\n3\n2\n".getBytes()), new ByteArrayOutputStream())
-            .build();
-    LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    AppMode mode =
-        (AppMode)
-            invokePrivate(
-                launcher, "askApplicationMode", new Class<?>[] {LineReader.class}, reader);
-    assertEquals(AppMode.ONLINE, mode);
   }
 
   @Test

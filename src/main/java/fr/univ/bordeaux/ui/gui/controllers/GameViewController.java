@@ -560,7 +560,7 @@ public class GameViewController {
             if (playerName.isEmpty()) {
               playerName = "Player";
             }
-
+            agonGui.getAppContext().setPlayerName(playerName);
             updateMessage("Logged in as: " + playerName);
             return btn == onlineBtn ? "ONLINE" : "LOCAL";
           });

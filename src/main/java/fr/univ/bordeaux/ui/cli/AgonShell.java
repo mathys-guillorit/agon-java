@@ -1,5 +1,7 @@
 package fr.univ.bordeaux.ui.cli;
 
+import fr.univ.bordeaux.application.AppContext;
+import fr.univ.bordeaux.application.AppMode;
 import fr.univ.bordeaux.application.commands.AgonRegister;
 import fr.univ.bordeaux.application.commands.CmdAction;
 import fr.univ.bordeaux.application.match.MoveDtO;
@@ -359,7 +361,8 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Initiates the shutdown sequence.
+   * Initiates the shutdown sequence. Asks the user for a save confirmation before flipping the
+   * running state.
    */
   @Override
   public void quit() {
@@ -367,7 +370,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Renders the current state of the game board and match information whenever the match is updated.
+   * Renders the current state of the game board and match information.
    *
    * @param match The read-only match view to render.
    */
@@ -413,18 +416,18 @@ public class AgonShell implements GameUserInterface, MatchObserver {
   }
 
   /**
-   * Returns the atomic running state of the shell.
+   * Returns the execution state of the shell.
    *
-   * @return The {@link AtomicBoolean} representing the running state.
+   * @return AtomicBoolean reference.
    */
   public AtomicBoolean getRunning() {
     return running;
   }
 
   /**
-   * Formats and displays the match history in the terminal.
+   * Explicit.
    *
-   * @param history The {@link List} of move data transfer objects.
+   * @param history {@link List}
    */
   public void displayHistory(List<MoveDtO> history) {
     GameLogger.debug("AgonShell: Displaying history with " + history.size() + " moves.");
@@ -436,7 +439,9 @@ public class AgonShell implements GameUserInterface, MatchObserver {
     StringBuilder sb = new StringBuilder();
     sb.append("[history]\n");
 
+    // On parcourt l'historique 2 par 2 (un tour = un coup O + un coup X)
     for (int i = 0; i < history.size(); i += 2) {
+      // Coup du joueur O (Premier joueur du tour)
       MoveDtO moveO = history.get(i);
       sb.append("O ")
           .append(moveO.from().toLowerCase())
@@ -444,6 +449,7 @@ public class AgonShell implements GameUserInterface, MatchObserver {
           .append(moveO.to().toLowerCase())
           .append(";");
 
+      // Coup du joueur X (S'il existe déjà dans la liste)
       if (i + 1 < history.size()) {
         MoveDtO moveX = history.get(i + 1);
         sb.append(" X ")
@@ -473,5 +479,72 @@ public class AgonShell implements GameUserInterface, MatchObserver {
    */
   public void setBoardFooter(String boardFooter) {
     this.boardFooter = (boardFooter == null) ? "" : boardFooter;
+  }
+
+  /**
+   * Initializes the player session directly from the shell.
+   *
+   * <p>The shell asks for the player name, then for the application mode, and updates the shared
+   * application context accordingly.
+   *
+   * @param context the shared application context to initialize
+   */
+  public void initializeSession(AppContext context) {
+    String name = askPlayerName();
+    AppMode mode = askApplicationMode();
+
+    context.setPlayerName(name);
+    context.setMode(mode);
+
+    GameLogger.info(
+        "AgonShell: Session initialized with player '" + name + "' in mode " + mode + ".");
+  }
+
+  /**
+   * Asks the user to enter a non-empty player name from the command line.
+   *
+   * @return the validated player name
+   */
+  private String askPlayerName() {
+    String name = this.reader.readLine(this.userPrompt + "Enter your player name: ").trim();
+
+    while (name.isEmpty()) {
+      name =
+          this.reader
+              .readLine(this.userPrompt + "Name cannot be empty. Enter your player name: ")
+              .trim();
+    }
+
+    return name;
+  }
+
+  /**
+   * Asks the user to select the application mode from the command line.
+   *
+   * <p>The available modes are:
+   *
+   * <ul>
+   *   <li>1 - Local
+   *   <li>2 - Online
+   * </ul>
+   *
+   * @return the selected application mode
+   */
+  private AppMode askApplicationMode() {
+    this.terminal.writer().println(this.userPrompt + "Select mode:");
+    this.terminal.writer().println("1 - Local");
+    this.terminal.writer().println("2 - Online");
+    this.terminal.flush();
+
+    String input = this.reader.readLine(this.userPrompt + "Your choice: ").trim();
+
+    while (!"1".equals(input) && !"2".equals(input)) {
+      input =
+          this.reader
+              .readLine(this.userPrompt + "Invalid choice. Enter 1 (Local) or 2 (Online): ")
+              .trim();
+    }
+
+    return "2".equals(input) ? AppMode.ONLINE : AppMode.LOCAL;
   }
 }
