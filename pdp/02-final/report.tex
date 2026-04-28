@@ -1,142 +1,1029 @@
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{booktabs}
+\documentclass[a4paper]{article}
+
+\usepackage{pdp}
+\usepackage{float}
+\usepackage{amsmath, amssymb}
+\usepackage{svg}
+\usepackage{algpseudocode}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{pdflscape}
 \usepackage{listings}
-\usepackage[utf8]{inputenc}
-
 \usepackage{xcolor}
-\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{booktabs} % Pour des tableaux professionnels
+\usepackage{graphicx} % 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\usepackage{verbatim}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\usepackage{eso-pic}
+\usepackage{longtable}
+\usepackage{colortbl} 
+\usepackage[htt]{hyphenat}
+\newcommand{\fait}{\textcolor{green!70!black}{\textbf{Fait}}}
+\newcommand{\partiel}{\textcolor{orange}{\textbf{Partiel}}}
+\newcommand{\pasfait}{\textcolor{red}{\textbf{Pas fait}}}
+%------------------------------------------------------------------------------
+%	REPORT INFORMATION
+%------------------------------------------------------------------------------
+
+\title{Agon-- Java}
+\subtitle{Rapport final}
+\author{Milan Theodore--Delage, Theo Lestandi, Mathys Guillorit, Felix Ton That-Lavarini, Lukas Soetens}
+
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+
+%------------------------------------------------------------------------------
+
 \begin{document}
-\lstset{
-    language=Python,
-    basicstyle=\ttfamily\small,
-    backgroundcolor=\color{white},
-    keywordstyle=\color{blue},
-    stringstyle=\color{orange},
-    commentstyle=\color{green!70!black},
-    morecomment=[l][\color{magenta}]{\#},
-    frame=single,
-    breaklines=true,
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    captionpos=b,
-}
 
-\title{Les trous noirs}
-\author{}
-\date{}
+%------------------------------------------------------------------------------
+%	TITLE PAGE
+%------------------------------------------------------------------------------
+
 \maketitle
+\thispagestyle{empty}
+
+%------------------------------------------------------------------------------
+%	MAIN MATTER
+%------------------------------------------------------------------------------
+
+\section*{Introduction}
+
+Ce projet a pour but la réalisation d’un logiciel permettant de jouer au jeu de plateau \textit{Agon}. Ce jeu déterministe à information parfaite oppose deux joueurs sur un plateau structuré et repose sur des mécanismes de déplacement, de capture et de stratégie. Sa nature combinatoire en fait un cas d’étude intéressant pour la mise en œuvre d’algorithmes de décision et de structures de données efficaces.
+
+L’objectif principal du projet est de concevoir une application complète intégrant à la fois une interface en ligne de commande et une interface graphique, tout en respectant un cahier des charges exigeant. Celui-ci inclut notamment la gestion des règles du jeu, la sauvegarde et le chargement de parties, la communication client--serveur ainsi que l’implémentation d’une intelligence artificielle capable de proposer ou de jouer des coups.
+
+Ce rapport présente dans un premier temps le contexte et les règles du jeu étudié, puis détaille l’architecture du système ainsi que les structures de données et algorithmes utilisés. Une attention particulière est portée à certaines fonctionnalités clés du projet, avant de proposer une analyse critique du travail réalisé et des perspectives d’amélioration.
+
+\section{Explication détaillée du sujet}
+
+\subsection{Présentation générale du jeu}
+
+Le projet Agon est réalisé dans le cadre de l’UE Projet de Programmation. Agon est un jeu de stratégie déterministe à information parfaite, apparu en France à la fin du XVIII\textsuperscript{e} siècle, puis popularisé en Angleterre en 1842~\cite{agon_wiki}. Il se joue à deux joueurs sur un plateau de forme hexagonale organisé en anneaux concentriques autour d’une case centrale.
+
+Il se joue à deux joueurs sur un plateau hexagonal de 91 cases. Chaque joueur dispose de 6 pions (ou gardes) et d’une Reine. En début de partie, toutes les pièces sont placées sur le cercle extérieur du plateau. Les Reines sont positionnées face à face sur l’axe central, tandis que les pions sont disposés en alternance de couleur avec des cases vides intermédiaires~\cite{agon_plateau}.
+
+Le jeu repose sur des mécanismes de déplacement et de capture, et nécessite une réflexion stratégique importante, ce qui en fait un cadre particulièrement adapté à l’étude algorithmique et à la conception d’intelligences artificielles.
+
+\subsection{Complexité du jeu}
+
+Agon appartient à la catégorie des jeux combinatoires déterministes à information parfaite~\cite{russell2010}. Sa complexité est liée à la taille de l’arbre de jeu, qui croît de manière exponentielle avec la profondeur de recherche.
+
+À chaque tour, le joueur dispose d’un certain nombre de coups possibles, appelé facteur de branchement $b$. Pour nos calculs, nous limitons une partie à 100 coups. Le facteur de branchement maximal apparaît lors de la capture d’une Reine, qui doit être replacée sur une case libre. Le nombre de positions possibles peut être estimé par :
+\[
+91 - 1 - 1 - 13 = 76
+\]
+où 91 correspond au nombre total de cases, 1 à la case centrale, 1 à la case de capture, et 13 aux cases occupées par les autres pièces.
+
+On obtient ainsi un facteur de branchement maximal de 76. Pour une profondeur de 100 coups, cela conduit à une complexité théorique de :
+\[
+76^{100}
+\]
+
+Ce cas correspond à un pic de complexité, comme étudié dans les travaux de Santiago Ontañón sur les jeux de stratégie en temps réel~\cite{ontanon2017}. En pratique, ce facteur de branchement ne représente pas le cas moyen. On estime plutôt un facteur de branchement d’environ 20, ce qui conduit à une complexité en espace de : 
+$20^{100}$.
+
+Cette explosion combinatoire rend impossible une exploration exhaustive de l’arbre de jeu. Elle justifie l’utilisation d’algorithmes de recherche efficaces tels que le minimax avec élagage $\alpha$-$\beta$ ou encore les méthodes de type Monte Carlo Tree Search (MCTS)~\cite{browne2012survey}.
+  
+\subsection{Règles principales}
+
+Les règles du jeu présentées ci-dessous sont une synthèse des règles officielles d’Agon, établies à partir de différentes sources disponibles en ligne, notamment des supports explicatifs et démonstratifs~\cite{agon_video}.
+
+\textbf{Objectif et conditions de victoire :}  
+Le but du jeu est de contrôler la case centrale du plateau, appelée \textit{Great Abyss}. Un joueur gagne la partie s'il parvient à placer sa Reine sur la case centrale tout en l'entourant de ses six gardes (Fig.~\ref{fig:victoire}). Inversement, une défaite automatique est prononcée si un joueur occupe les six cases entourant le centre avec ses gardes alors que sa propre Reine n'y est pas positionnée (Fig.~\ref{fig:defaite}).
+
+\paragraph{Déplacements}
+Les déplacements obéissent à une contrainte stricte de progression vers le centre du plateau. Une pièce ne peut se déplacer que d’une seule case vers une position adjacente, à la condition sine qua non de ne jamais s’éloigner du centre (Fig.~\ref{fig:mouvement}). En outre, il est formellement interdit d'effectuer un mouvement qui placerait volontairement une pièce entre deux pièces adverses (Fig.~\ref{fig:mouvementInterdit}). Enfin, chaque case est unique et ne peut contenir qu’une seule pièce à la fois.
+
+\paragraph{\textbf{Mécanisme de capture}}
+Une capture survient lorsqu’une pièce se retrouve prise en sandwich entre deux pièces adverses alignées. La pièce capturée doit impérativement être replacée par son propriétaire au tour suivant, ce qui consomme l'intégralité de son action. Les règles de repositionnement diffèrent selon le type de pièce : la Reine peut être placée sur n’importe quelle case libre (excepté le centre ou une position de capture immédiate), tandis qu'un pion doit obligatoirement retourner sur le cercle extérieur du plateau. En cas de captures multiples (Fig.~\ref{fig:captureMultiple}), le joueur est contraint de consacrer plusieurs tours consécutifs au repositionnement de ses pièces.
+
+% Regroupement des images 3 par 3
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{victoire.png}
+        \caption{Victoire du joueur blanc}
+        \label{fig:victoire}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{defaite.png}
+        \caption{Défaite du joueur noir}
+        \label{fig:defaite}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{mouvement.png}
+        \caption{Mouvements autorisés}
+        \label{fig:mouvement}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{mouvementInterdit.png}
+        \caption{Mouvement interdit}
+        \label{fig:mouvementInterdit}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{captureMultiple.png}
+        \caption{Capture multiple}
+        \label{fig:captureMultiple}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        % Espace vide ou troisième image si nécessaire
+    \end{minipage}
+\end{figure}
+
+\subsection{Jeux ou systèmes existants similaires}
+
+Agon peut être rapproché de plusieurs jeux de stratégie abstraits classiques tels que les échecs, les dames ou encore le jeu de Go. Ces jeux partagent des caractéristiques communes, notamment l’absence de hasard et une information parfaite.
+
+Le jeu présente certaines similitudes avec les dames, notamment en tant que jeu de plateau opposant deux joueurs disposant de pièces de même nature, avec des déplacements simples et des mécaniques de capture. Toutefois, les règles de capture diffèrent, celles-ci reposant dans le cas des dames sur des sauts successifs au-dessus des pièces adverses~\cite{checkers_rules}.
+
+Par ailleurs, Agon partage avec le jeu de Go une forte dimension stratégique liée au positionnement des pièces sur le plateau et au contrôle de zones clés. Comme dans le Go, l’anticipation et la gestion de l’espace jouent un rôle essentiel dans la prise de décision~\cite{go_rules}.
+
+\section{Architecture du projet}
+
+\subsection{Vue d'ensemble}
+L'architecture de notre projet repose sur la "Layered Architecture" (Architecture en couches)(Fig.~\ref{fig:layeredArchitecture}), où le flux de contrôle est centralisé au sein de la couche Applicative. Contrairement aux approches passives où l'interface utilisateur pilote l'ensemble du système, notre structure place la couche Application au rôle de chef d'orchestre. Dans ce modèle, la couche Applicative détient la logique de déroulement d'une partie et sollicite activement la couche d'Interface Utilisateur (UI) pour acquérir des informations ou notifier des changements d'état. Cette organisation permet de garantir que l'interface reste un simple outil d'exécution, totalement dépourvu de logique décisionnelle, ce qui facilite l'interchangeabilité entre le mode console (CLI) et le mode graphique (GUI).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.15\linewidth]{layeredArchitecture.png}
+    \caption{Layered Architecture}
+    \label{fig:layeredArchitecture}
+\end{figure}
+
+Cette architecture s'articule autour d'un cycle dirigé par le moteur de jeu. La couche Application sollicite l'UI pour récupérer les saisies utilisateur, traite ces données selon la logique métier, puis ordonne à l'UI de refléter le nouvel état du plateau. Ce flux reste hiérarchique : l'UI sert de fournisseur d'entrées/sorties, tandis que l'Application pilote le cycle de vie logiciel.
+
+Cette séparation repose sur des interfaces d'abstraction. L'Application communique via un contrat défini dans les couches hautes, lui permettant d'actualiser l'affichage sans dépendre d'une technologie spécifique (JavaFX ou Terminal). Cette structure renforce la robustesse et la maintenance : toute modification de la séquence de jeu est isolée dans le package application, sans impacter les composants visuels ou les règles fondamentales du domaine.
+
+\bigskip
+\subsection{AgonCore : cœur du projet}
+La couche \texttt{agoncore} constitue le socle fondamental du projet, regroupant la logique métier pure du jeu Agon sans dépendance technologique.
+
+\paragraph{Modélisation des Éléments de Jeu}
+Le module \texttt{agonelements} définit les structures de base : \texttt{Color} pour les camps, \texttt{PieceType} pour la hiérarchie des pièces, et \texttt{Move} pour encapsuler la sémantique d'un déplacement. Ce regroupement garantit une cohérence sémantique à travers tout le système.
+
+\paragraph{Moteur de Représentation : Le Bitboard}
+Le module \texttt{bitboard} gère la représentation performante du plateau hexagonal. L'interface \texttt{AgonBoard} expose les fonctionnalités de manipulation des pièces, dont l'implémentation est centralisée dans \texttt{AgonBoardImpl}. Pour garantir l'encapsulation, l'interface \texttt{RestrictedAgonBoard} offre une vue limitée en lecture seule, empêchant toute modification illégale par les couches externes. Enfin, le \texttt{CoordinateMapper} assure la traduction entre les coordonnées logiques utilisateur et les structures de données binaires internes.
+
+\paragraph{Gestion de la Persistance Temporelle}
+Le module \texttt{history} apporte une dimension temporelle via la classe \texttt{History}, qui gère la pile des états successifs de la partie. En s'appuyant sur \texttt{HistoryInformations}, elle permet d'implémenter nativement les fonctionnalités d'annulation (\textit{undo}) et de rétablissement (\textit{redo}), garantissant que la navigation temporelle respecte strictement la logique métier du noyau.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{UMLCore.png}
+    \caption{UML du package AgonCore}
+    \label{fig:UMLCore}
+\end{figure}
+
+\subsection{Couche application}
+La couche \texttt{application} agit comme le médiateur central et l'orchestrateur de l'architecture. Contrairement à \texttt{agoncore}, elle gère le cycle de vie d'une session, l'intelligence des adversaires et la logique de communication en manipulant les composants du noyau.
+
+\paragraph{Moteur de Match et Logique de Jeu}
+Le sous-module \texttt{match} constitue le cœur opérationnel. La classe \texttt{GameEngine} y officie comme contrôleur principal, synchronisant les actions entre les joueurs, le plateau et l'interface via une machine à états. Elle délègue la validation au noyau mais gère les responsabilités de haut niveau comme le chronométrage et les conditions de victoire.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\linewidth]{match.png}
+\caption{UML du package Match}
+\label{fig:UMLMatch}
+\end{figure}
+
+\paragraph{Système de Commandes}
+Le package \texttt{commands} implémente le patron de conception \textit{Command}. Chaque action (sauvegarder, charger, annuler) est encapsulée dans un objet autonome, permettant au \texttt{GameEngine} de traiter uniformément les instructions, qu'elles proviennent d'un clic ou d'un terminal. Cette abstraction facilite l'extension fonctionnelle sans modifier le code existant.
 
 \begin{figure}[h]
-   \centering
-   \includegraphics[width=0.5\textwidth]{black_hole.jpeg}
-   \caption{"Trou noir"}
-   \label{fig:black_hole.jpeg}
+\centering
+\includegraphics[width=0.2\linewidth]{UMLCommands.png}
+\caption{UML du package Commands}
+\label{fig:UMLCommands}
 \end{figure}
-\tableofcontents
 
-\newpage
-\setcounter{section}{0}
+\paragraph{Intelligence Artificielle et Stratégies}
+Le module \texttt{ai} regroupe les agents simulant un comportement humain via des algorithmes comme Minimax ou MCTS. Cette isolation permet au moteur de jeu d'interagir avec une IA exactement comme avec un joueur humain, garantissant une intégration transparente des stratégies de recherche.
 
-\section{Introduction aux trous noirs}\label{sec:introduction_trous_noirs}
+\paragraph{Communication et Réseau}
+Le module \texttt{network} assure le jeu multi-joueurs à distance en gérant les sockets et les protocoles de communication. Il abstrait la complexité technique (latence, déconnexion) pour le reste du système : le moteur de jeu manipule des objets \texttt{Move} sans se soucier de leur transmission physique.
 
-\subsection{Définition et caractéristiques principales}\label{sec:Définition_et_caractéristiques}  
-Un trou noir est une région de l'espace-temps où la gravité est si intense que rien, pas même la lumière, ne peut s'en échapper. Cette propriété résulte de l'effondrement gravitationnel d'une masse suffisamment élevée dans un volume suffisamment restreint. La densité de matière au sein d'un trou noir est si élevée que la vitesse d'échappement dépasse la vitesse de la lumière, formant ainsi un horizon des événements, au-delà duquel rien ne peut être observé.
-Les caractéristiques principales des trous noirs comprennent :
-\begin{itemize}
-   \item \textbf{Horizon des événements :} C'est la frontière au-delà de laquelle rien ne peut s'échapper de l'attraction gravitationnelle du trou noir. La taille de l'horizon des événements est directement liée à la masse du trou noir que nous verrons dans la section~\ref{propriétés}    .
-   
-   \item \textbf{Singularité :} Au cœur d'un trou noir se trouve une région de densité infinie appelée singularité, où les lois de la physique traditionnelle cessent de s'appliquer.
-   
-   \item \textbf{Masse :} Les trous noirs sont caractérisés par leur masse, qui peut varier de quelques masses solaires à des milliards de masses solaires pour les trous noirs supermassifs.
-   
-   \item \textbf{Rayon de Schwarzschild :} Le rayon de Schwarzschild est une caractéristique importante des trous noirs, défini comme la distance à partir du centre du trou noir jusqu'à son horizon des événements.
-   
-   \item \textbf{Charge électrique et spin :} Les trous noirs peuvent également avoir une charge électrique et un moment angulaire (spin), bien que dans de nombreux cas ils soient considérés comme nuls pour simplifier les modèles.
-\end{itemize} 
-La découverte et l'étude des trous noirs ont révolutionné notre compréhension de l'univers et ont ouvert de nouvelles perspectives en astrophysique, en cosmologie et en physique théorique. 
+\paragraph{Contexte et Initialisation}
+À la racine, \texttt{AppContext} et \texttt{GameLauncher} assurent la cohésion. L'\texttt{AppContext} centralise l'état de la session (profil, mode, configuration), tandis que le \texttt{GameLauncher} coordonne le démarrage et l'instanciation des composants selon les paramètres de lancement. Par souci de lisibilité, l'UML de cette couche est compacté, ne présentant pour les commandes que l'interface et la classe abstraite \texttt{Cmd}.
 
-\subsection{Historique de la découverte des trous noirs}\label{sec:Historique}
-L'idée des trous noirs remonte à la fin du XVIIIe siècle, lorsque les premiers concepts de la gravité et de l'espace-temps ont été explorés. 
-Cependant, la compréhension moderne des trous noirs est le résultat de développements théoriques et observationnels au XXe siècle.
+\subsection{Couche interface utilisateur}
+La couche \texttt{ui} est conçue selon un principe de découplage strict : elle ne contient aucune règle de jeu, mais se contente d'afficher les données fournies par la couche \texttt{application} et de lui renvoyer les intentions de l'utilisateur. Elle repose sur l'interface \texttt{GameUserInterface}, qui permet au système de basculer de manière transparente entre un mode textuel et un mode graphique sans impacter le moteur de jeu.
 
-En 1915, Albert Einstein a présenté sa théorie de la relativité générale 
-\begin{equation}
-   R_{\mu \nu} - \frac{1}{2} R \, g_{\mu \nu} = \frac{8\pi G}{c^4} T_{\mu \nu}
-\end{equation}
-où $R_{\mu \nu}$ est le tenseur de Ricci, $R$ est le scalaire de courbure, $g_{\mu \nu}$ est le tenseur métrique, $G$ est la constante gravitationnelle de Newton, $c$ est la vitesse de la lumière dans le vide, et $T_{\mu \nu}$ est le tenseur énergie-impulsion., décrivant la gravité comme une courbure de l'espace-temps causée par la présence de masse et d'énergie. Cette théorie a ouvert la voie à la compréhension des phénomènes gravitationnels extrêmes, y compris les trous noirs.
+\paragraph{Interface en Ligne de Commande (CLI)}
+Le sous-package \texttt{cli} contient la logique nécessaire au fonctionnement de l'application dans un terminal. Le composant principal, \texttt{AgonShell}, s'appuie sur la bibliothèque JLine pour offrir une expérience utilisateur fluide incluant l'historique des commandes et l'auto-complétion. Le rendu visuel du plateau est assuré par le \texttt{ConsoleRenderer}, qui transforme la grille hexagonale abstraite en une représentation textuelle ASCII lisible. Enfin, l'utilitaire \texttt{OptCompleterAdapter} adapte les options des commandes pour fournir des suggestions intelligentes lors de la saisie.(Fig.~\ref{fig:cli.png})
 
-Le concept de "trou noir" a été introduit pour la première fois par le physicien John Michell en 1783~\cite{Michell1783}, suivi plus tard par le mathématicien Pierre-Simon Laplace en 1796~\cite{Laplace1796}. Ils ont suggéré l'existence d'objets massifs dont le champ gravitationnel était si intense que même la lumière ne pouvait pas s'échapper.
+\paragraph{Interface Graphique (GUI)}
+Le package \texttt{gui} propose une structuré basée sur JavaFX et suit une architecture proche du modèle MVC. Le \texttt{GameViewController} agit comme le cerveau de la vue graphique en orchestrant les mises à jour visuelles selon les événements du jeu. Le dessin du plateau est confié au \texttt{HexagonCanvas}, un composant personnalisé gérant le rendu géométrique des hexagones et la détection des clics. Cette interface utilise également un \textit{State Pattern} pour réagir au contexte, comme dans le cas de \texttt{PieceSelectedState} pour le déplacement d'un pion ou \texttt{IdleCanvasState} pour l'attente d'une action.(Fig.~\ref{fig:gui.png})
 
-Cependant, ce n'est que dans les années 1960 que les travaux de scientifiques tels que Roger Penrose~\cite{Penrose1965} et Stephen Hawking~\cite{Hawking1971} ont donné une base théorique solide aux trous noirs. Penrose a démontré que les trous noirs pouvaient se former à partir de l'effondrement gravitationnel des étoiles massives en fin de vie, tandis que Hawking a prouvé que les trous noirs pouvaient émettre un rayonnement, maintenant connu sous le nom de "rayonnement de Hawking".
+\paragraph{Observation et Communication}
+L'un des points clés de cette couche est l'utilisation du patron de conception \textbf{Observer}. Grâce aux interfaces \texttt{MatchObserver} et \texttt{ObservableMatch}, l'interface utilisateur est notifiée automatiquement dès qu'un mouvement est validé dans la couche inférieure. Cela permet une mise à jour réactive de l'affichage sans que le moteur de jeu n'ait à connaître les détails de l'implémentation de la vue.
 
-Les premières observations directes de trous noirs ont été réalisées dans les années 1970 et 1980, lorsque des astronomes ont découvert des objets compacts et massifs dans des systèmes binaires stellaires. Ces découvertes ont été confirmées plus tard par des observations supplémentaires utilisant des télescopes spatiaux et des instruments au sol.
+Enfin, le \texttt{UiPromptParser} assure la validation syntaxique des entrées utilisateur. Ce mécanisme garantit que seules des instructions correctement formatées sont transmises au système de commandes de l'application, sécurisant ainsi la communication entre l'utilisateur et le cœur du programme.
 
-En 2019, l'Event Horizon Telescope a réalisé la première image directe d'un trou noir, capturant l'ombre de l'horizon des événements d'un trou noir supermassif au centre de la galaxie M87. Cette image historique a marqué une étape majeure dans notre compréhension et notre observation des trous noirs.
-\begin{figure}[h]
-   \centering
-   \includegraphics[width=0.5\textwidth]{event_horizon.jpeg}
-   \caption{"Horizon des événements du trou noir au centre de la galaxie M87"}
-   \label{fig:event_horizon.jpeg}
+\subsection{Couche technique}
+La couche \texttt{technical} constitue le socle infrastructurel de l'application. Elle regroupe l'ensemble des outils utilitaires et des mécanismes de persistance nécessaires au bon fonctionnement des couches supérieures, tout en restant totalement indépendante des règles métier du jeu Agon. Son rôle est de fournir des services génériques pour la gestion des données, la configuration et le support technique du système.
+
+\paragraph{Gestion des entrées et sorties (I/O)}
+Le package \texttt{io} est le plus dense de cette couche et s'organise autour de deux interfaces génériques fondamentales : \texttt{Parser<T>} et \texttt{Serializer<T>}. Ces interfaces définissent un contrat strict pour la lecture et l'écriture de données sur le disque. Le sous-package \texttt{config} utilise ces mécanismes pour gérer la personnalisation de l'application via la classe \texttt{GameConfig}, permettant de charger les préférences utilisateur dès le démarrage. Parallèlement, le sous-package \texttt{storage} assure la persistance des parties. Il utilise un \texttt{GameSaveBuilder} et un système d'états (\texttt{states}) pour reconstruire l'état exact d'un match à partir d'un fichier de sauvegarde, garantissant ainsi l'intégrité des données lors du transfert entre la mémoire vive et le stockage physique.
+
+\paragraph{Internationalisation et Support linguistique}
+Le module \texttt{lang} gère l'adaptabilité culturelle de l'application. À travers l'interface \texttt{LangTranslationProvider} et son implémentation \texttt{LangService}, ce module permet de centraliser toutes les chaînes de caractères affichées à l'utilisateur. En découplant les messages textuels du code source, cette architecture facilite l'ajout de nouvelles langues sans nécessiter de modification de la logique applicative. Le service charge dynamiquement les fichiers de traduction correspondants à la localisation sélectionnée, assurant une expérience utilisateur cohérente quel que soit le pays d'origine.
+
+\paragraph{Outils transverses et Utilitaires}
+Enfin, le package \texttt{utils} fournit des composants d'assistance utilisés à travers l'ensemble du projet. Le \texttt{GameLogger} centralise la gestion des traces et des erreurs, offrant une visibilité cruciale pour le débogage et la surveillance du système en temps réel. La classe \texttt{LoadLocalFile} simplifie quant à elle l'accès aux ressources internes du projet, comme les fichiers de configuration par défaut ou les assets. Ces outils, bien que simples, renforcent la robustesse globale en évitant la duplication de code technique redondant dans les couches \texttt{application} ou \texttt{ui}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{technical.png}
+    \caption{UML du package technical}
+    \label{fig:UMLMatch}
 \end{figure}
+\subsection{Interactions entre les couches}
+
+\section{Explication approfondie de fonctionnalités}
+
+Cette partie présente une analyse détaillée de deux fonctionnalités majeures du projet. Elle met en évidence les choix de conception, les contraintes rencontrées ainsi que les solutions mises en œuvre.
+
+Les fonctionnalités étudiées sont le mode réseau de l’application, permettant la gestion des interactions entre joueurs, et le système d’intelligence artificielle, assurant la prise de décision automatisée.
+
+\subsection{Implémentation du mode réseau de l'application}
+
+Cette sous-partie présente l’implémentation du mode réseau de l’application. Elle décrit les choix de conception effectués ainsi que les différentes étapes ayant permis de répondre aux exigences du cahier des charges en matière de communication entre clients et serveur.
+
+\subsubsection{Objectifs et contraintes du mode réseau}
+
+Le mode réseau étend l’application à un fonctionnement distribué, dans lequel plusieurs joueurs interagissent à distance à travers une architecture client--serveur. Contrairement au mode local, où les actions sont exécutées directement dans un même processus, le mode réseau introduit une médiation systématique par un serveur central. Les actions des joueurs ne sont donc plus appliquées immédiatement, mais transmises, validées puis redistribuées, ce qui modifie profondément le modèle d’exécution de l’application.
+
+L’objectif principal de cette extension est de permettre des parties multijoueurs cohérentes, malgré la distribution des traitements et la multiplicité des clients connectés. Le serveur devient ainsi l’autorité centrale du système : il maintient l’état des parties, valide les actions reçues, coordonne les interactions entre joueurs et assure la synchronisation globale.
+
+Le cahier des charges impose plusieurs fonctionnalités structurantes, parmi lesquelles la découverte de serveurs sur le réseau local, l’établissement de connexions client--serveur, ainsi que la prise en charge de parties en ligne avec suivi des joueurs et échanges en temps réel. Ces exigences s’accompagnent de contraintes techniques fortes. Les échanges reposent sur un protocole textuel volontairement simple, mais le système doit malgré tout gérer la concurrence entre plusieurs clients, les délais de communication, les déconnexions ainsi que les risques d’incohérence entre états locaux et état serveur.
+
+L’enjeu principal n’est donc pas uniquement de transmettre des messages sur le réseau, mais de garantir la cohérence du système distribué. Cette contrainte justifie une conception centralisée, fondée sur la validation côté serveur, la maîtrise des transitions d’état et l’utilisation de structures adaptées à un environnement concurrent.
+
+\subsubsection{Architecture client--serveur}
+
+L’architecture du mode réseau repose sur un modèle client--serveur classique, dans lequel la gestion des interactions et de l’état global est centralisée côté serveur~\cite{client_server}. Ce choix simplifie la cohérence des parties et permet de dissocier les responsabilités entre les composants liés au transport, au traitement des commandes et à la logique métier.
+
+L’implémentation est structurée autour de quatre packages principaux : \texttt{client}, \texttt{server}, \texttt{player} et \texttt{protocol}. Le package \texttt{client} regroupe les composants chargés d’établir la connexion, d’envoyer les actions de l’utilisateur et de recevoir les événements en provenance du serveur. Il ne réalise pas de validation métier, celle-ci étant entièrement déléguée au serveur.
+
+Le package \texttt{server} constitue le cœur du système. Il gère les connexions entrantes, les joueurs actifs, les invitations, les lobbies et les parties en cours. Il reçoit les requêtes des clients, les interprète, applique les règles du jeu et diffuse les réponses ou événements nécessaires.
+
+Le package \texttt{player} regroupe les structures représentant les joueurs connectés et leurs états. Ces objets sont utilisés par le serveur pour suivre les transitions entre disponibilité, attente de partie et partie en cours. Enfin, le package \texttt{protocol} définit le format des messages échangés entre clients et serveur. Le recours à un protocole textuel simple facilite à la fois le débogage et la lisibilité des échanges~\cite{ascii_protocol}.
+
+Cette organisation permet de séparer les responsabilités de manière claire : le client prend en charge l’interaction réseau côté utilisateur, le serveur centralise la logique applicative, les objets métier décrivent l’état des joueurs, et le protocole assure une représentation commune des échanges. Elle facilite ainsi la maintenance et l’évolution du système.
+
+\subsubsection{Découverte des serveurs (UDP)}
+
+La découverte des serveurs sur le réseau local repose sur UDP (\textit{User Datagram Protocol}), un protocole non connecté bien adapté aux mécanismes de diffusion locale~\cite{udp_protocol}. Contrairement à TCP, UDP ne garantit ni la livraison ni l’ordre des messages, mais son faible coût d’utilisation le rend pertinent pour des annonces de présence périodiques, où une perte ponctuelle de paquet reste acceptable.
+
+Le principe retenu consiste à faire diffuser régulièrement par chaque serveur un message de présence sur le port UDP \texttt{12346}. Les clients écoutent en continu ce port afin de détecter les serveurs actifs sans configuration manuelle. Côté serveur, la classe \texttt{ServerDiscovery} utilise un \texttt{DatagramSocket} en mode broadcast et envoie périodiquement un message ASCII de la forme \texttt{name=<serverName>;tcp=<port>}. Cette diffusion est réalisée dans un thread dédié afin de ne pas bloquer le reste du système.
+
+\begin{center}
+\begin{minipage}{0.35\textwidth}
+\begin{lstlisting}[language=Java, caption={Envoi d'un message UDP}]
+socket = new DatagramSocket();
+socket.setBroadcast(true);
+socket.send(packet);
+\end{lstlisting}
+\end{minipage}
+\end{center}
+
+Côté client, la classe \texttt{ClientDiscovery} reçoit ces messages, les parse et les convertit en objets \texttt{ServerInfo}. Les serveurs détectés sont stockés dans une \texttt{ConcurrentHashMap}, chaque entrée étant associée à un horodatage mis à jour à chaque nouvelle annonce. Cette approche permet de maintenir une vue dynamique du réseau local : lorsqu’un serveur cesse d’émettre, il disparaît automatiquement de la liste après expiration d’un délai fixé à 30 secondes.
+
+L’intérêt de cette solution réside dans sa simplicité et dans son adéquation au besoin fonctionnel. La découverte ne requiert pas de connexion persistante, seulement une information de présence périodique. UDP permet donc de satisfaire ce besoin avec un coût minimal, tout en conservant une logique robuste grâce au rafraîchissement temporel des entrées détectées.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{UDP.png}
+    \caption{Principe de découverte des serveurs via UDP}
+\end{figure}
+
+
+\subsubsection{Établissement des connexions (TCP)}
+
+Après la phase de découverte des serveurs sur le réseau local via UDP, l’établissement d’une communication entre un client et un serveur repose sur le protocole TCP (\textit{Transmission Control Protocol}). Contrairement à UDP, TCP met en place une connexion persistante entre deux hôtes et fournit une abstraction de flux ordonné et fiable. Ce modèle est particulièrement adapté aux applications distribuées interactives, car il permet de maintenir un canal de communication continu entre le client et le serveur, garantissant que les messages sont reçus dans l’ordre d’émission~\cite{tcp_protocol}.
+
+Dans notre projet, l’établissement d’une connexion TCP ne se limite pas à l’ouverture d’une socket. Il correspond à une série d’étapes qui permettent de passer d’une simple connexion réseau à une véritable session applicative associée à un joueur.
+
+\paragraph{Démarrage du serveur}
+
+Avant toute connexion TCP, le serveur doit être explicitement lancé. L’application propose pour cela deux modes. Le mode \texttt{--server} démarre un serveur sur un port spécifié ou, à défaut, sur un port par défaut. Le mode \texttt{--daemon} lance également un serveur, mais sans interface utilisateur, ce qui permet une exécution autonome en arrière-plan. Dans les deux cas, le démarrage conduit à la création d’un \texttt{ServerSocket} et à l’initialisation du \texttt{ServerLifecycleManager}, chargé d’orchestrer l’acceptation des connexions entrantes.
+
+
+\paragraph{Initialisation du serveur et mise en écoute}
+
+Le point d’entrée côté serveur est la classe \texttt{AgonServer}. Lors de son démarrage, elle s’appuie sur \texttt{ServerLifecycleManager}, qui prend en charge les aspects techniques liés au réseau.
+
+Concrètement, cela commence par la création d’un \texttt{ServerSocket} sur un port donné. Cet objet permet au serveur d’attendre des connexions entrantes. Le serveur entre alors dans une phase d’écoute, où il reste bloqué sur la méthode \texttt{accept()} tant qu’aucun client ne se connecte. Dès qu’une tentative de connexion est effectuée, une nouvelle instance de \texttt{Socket} est créée pour représenter ce lien entre le client et le serveur.
+
+On peut voir le \texttt{ServerSocket} comme un point d’entrée global, tandis que chaque \texttt{Socket} correspond à une connexion individuelle. Les sockets acceptées sont ensuite transmises à la méthode \texttt{registerNewClient}, ce qui permet de garder une séparation claire entre la gestion réseau et la logique du serveur.
+
+\paragraph{Création de la session réseau côté serveur}
+
+Lorsqu’une connexion est acceptée, \texttt{AgonServer} crée un \texttt{ClientHandler} associé à la socket reçue. Ce composant représente la session active entre le serveur et le client. Il est ensuite enregistré dans le \texttt{ClientConnectionRegistry}, puis exécuté afin de gérer les échanges avec ce client.
+
+Le \texttt{ClientHandler} s’occupe d’initialiser les flux de communication. Une socket TCP fournit des flux binaires, ce qui correspond à des données sous forme d’octets. Or, dans notre cas, les messages échangés sont textuels. Il faut donc convertir ces données pour pouvoir les manipuler plus facilement.
+
+Cette conversion est réalisée avec \texttt{InputStreamReader} et \texttt{OutputStreamWriter}, qui transforment les flux d’octets en flux de caractères en tenant compte de l’encodage. Ensuite, ces flux sont enveloppés dans des \texttt{BufferedReader} et \texttt{BufferedWriter}. L’idée du buffering est de stocker temporairement les données en mémoire avant de les lire ou de les écrire, ce qui rend les échanges plus efficaces et plus simples à manipuler. Cela permet notamment d’utiliser des méthodes comme \texttt{readLine()}, très pratiques dans cette situation.
+
+Une fois cette initialisation effectuée, le \texttt{ClientHandler} entre dans une boucle de lecture continue, dans laquelle chaque message reçu est analysé puis transmis au système de traitement des commandes. À partir de ce moment, la connexion TCP est pleinement exploitable côté serveur.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.82,
+    transform shape,
+    box/.style={draw, rounded corners, align=center, minimum width=2.6cm, minimum height=0.8cm},
+    arrow/.style={->, thick}
+]
+
+\node[box] (socket) at (0,0) {\texttt{Socket} acceptée};
+\node[box] (server) at (4.6,0) {\texttt{AgonServer}};
+\node[box] (handler) at (9.2,0) {\texttt{ClientHandler}};
+\node[box] (registry) at (3,-1.7) {\texttt{ClientConnectionRegistry}};
+\node[box] (player) at (7.6,-1.7) {\texttt{OnlinePlayer}};
+
+\draw[arrow] (socket) -- node[above, font=\scriptsize]{transmise à} (server);
+\draw[arrow] (server) -- node[above, font=\scriptsize]{création} (handler);
+\draw[arrow] (server) -- node[left, font=\scriptsize]{enregistrement} (registry);
+\draw[arrow] (handler) -- node[right, font=\scriptsize]{association} (player);
+
+\end{tikzpicture}
+\caption{Transformation d'une connexion TCP en session applicative côté serveur}
+\label{fig:tcp_session_serveur}
+\end{figure}
+
+\paragraph{Établissement de la connexion côté client}
+
+Côté client, la connexion est assurée par \texttt{AgonClient}, qui s’appuie sur l’abstraction \texttt{ClientTransport}, concrètement implémentée par \texttt{SocketClientTransport}. Cette séparation permet d’isoler la logique de transport du reste du client. Une fois la socket ouverte vers l’adresse et le port du serveur, le client initialise ses flux en mode texte, puis démarre un thread dédié à l’écoute continue des messages entrants. La connexion TCP ne se limite donc pas à un simple lien réseau : elle met en place un canal d’échange persistant, utilisable par les commandes synchrones comme par les événements asynchrones.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.82,
+    transform shape,
+    box/.style={draw, rounded corners, align=center, minimum width=2.6cm, minimum height=0.8cm},
+    arrow/.style={->, thick}
+]
+
+\node[box] (client) at (0,0) {\texttt{AgonClient}};
+\node[box] (transport) at (0,-1.6) {\texttt{SocketClientTransport}};
+\node[box] (serverlife) at (6,-1.6) {\texttt{ServerLifecycleManager}};
+\node[box] (server) at (6,0) {\texttt{AgonServer}};
+
+\draw[arrow] (client) -- (transport);
+\draw[arrow] (server) -- (serverlife);
+\draw[arrow] (transport) -- node[above, font=\scriptsize]{connexion TCP} (serverlife);
+
+\end{tikzpicture}
+\caption{Établissement de la connexion TCP entre le client et le serveur}
+\label{fig:tcp_etablissement}
+\end{figure}
+
+\paragraph{Association de la connexion à une entité applicative}
+
+Une fois la connexion établie, le serveur ne manipule plus seulement une socket. La connexion est progressivement intégrée dans le modèle applicatif.
+
+Le \texttt{ClientHandler} est associé à un joueur via le service de gestion des joueurs, implémenté par \texttt{PlayerRegistry}. Ce composant permet soit de créer un nouveau joueur, soit de reconnecter un joueur existant à partir d’un identifiant persistant. Un objet \texttt{OnlinePlayer} est alors créé ou mis à jour. Il contient les informations essentielles du joueur, comme son identifiant, son nom, son statut et la référence vers le \texttt{ClientHandler}.
+
+À partir de là, la connexion TCP n’est plus simplement une communication réseau. Elle devient une session associée à un joueur identifié, ce qui permet au reste de l’application de raisonner en termes de joueurs plutôt qu’en termes de connexions.
+
+\subsubsection{Conception du protocole de communication}
+
+\subsubsection{Conception du protocole de communication}
+
+Au-dessus de la connexion TCP, le système repose sur un protocole applicatif textuel chargé de structurer les échanges entre le client et le serveur. Ce protocole constitue une couche intermédiaire entre le transport réseau et la logique métier : il fournit une représentation commune des commandes, des réponses et des événements.
+
+Chaque message est transmis sous la forme d’une ligne de texte. Le premier élément correspond au type de commande, tandis que les suivants représentent des arguments, le plus souvent exprimés sous la forme de paires clé--valeur. Ce format reste volontairement simple afin de faciliter l’implémentation, l’observation des échanges et le débogage.
+
+Dans l’application, cette représentation textuelle est convertie en objets manipulables via la classe \texttt{Command}, qui encapsule le type de commande et ses arguments. Le type lui-même est défini par l’énumération \texttt{CommandType}, ce qui évite les comparaisons directes sur les chaînes et fiabilise le traitement. La conversion entre ligne reçue et représentation interne est assurée par \texttt{CommandParser}.
+
+Une fois parsée, la commande est transmise au \texttt{ClientCommandProcessor}, qui joue le rôle de répartiteur. Il oriente le traitement vers le service compétent selon la nature de la requête. Les commandes de session, d’invitation et de jeu sont ainsi prises en charge par des services spécialisés, ce qui évite de concentrer toute la logique dans un composant unique.
+
+Le protocole ne sert donc pas uniquement à transporter des chaînes de caractères. Il organise l’interface entre le client et le serveur en imposant un cadre commun d’échange, suffisamment simple pour rester lisible, mais assez structuré pour supporter l’ensemble des interactions nécessaires au mode réseau.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.85,
+    transform shape,
+    box/.style={
+        draw,
+        rounded corners,
+        align=center,
+        minimum width=2.6cm,
+        minimum height=0.8cm
+    },
+    arrow/.style={
+        line width=0.9pt,
+        -{Latex[length=2.5mm,width=1.8mm]}
+    },
+    font=\scriptsize
+]
+
+\node[box] (client) at (0,0) {Client\\création commande};
+\node[box] (send) at (3.8,0) {Envoi\\texte TCP};
+\node[box] (receive) at (7.6,0) {\texttt{ClientHandler}\\réception};
+
+\node[box] (parse) at (7.6,-2) {\texttt{CommandParser}\\+\ \texttt{CommandType}};
+\node[box] (dispatch) at (3.8,-2) {\texttt{ClientCommandProcessor}};
+\node[box] (service) at (0,-2) {Services\\(session / jeu / invitation)};
+
+\node[box] (response) at (0,-4) {Réponse\\ou événement};
+\node[box] (back) at (3.8,-4) {Retour TCP};
+\node[box] (clientrecv) at (7.6,-4) {Client\\traitement};
+
+\draw[arrow] (client) -- (send);
+\draw[arrow] (send) -- (receive);
+\draw[arrow] (receive) -- (parse);
+\draw[arrow] (parse) -- (dispatch);
+\draw[arrow] (dispatch) -- (service);
+\draw[arrow] (service) -- (response);
+\draw[arrow] (response) -- (back);
+\draw[arrow] (back) -- (clientrecv);
+
+\end{tikzpicture}
+\caption{Cycle de traitement d'un message dans le protocole de communication}
+\label{fig:protocol_cycle}
+\end{figure}
+
+\subsubsection{Implémentation des commandes réseau}
+
+Les commandes réseau constituent l’interface opérationnelle entre l’utilisateur, le client et le serveur. Après parsing par \texttt{CommandParser}, elles sont transmises au \texttt{ClientCommandProcessor}, qui les redirige vers le service adapté. Leur implémentation suit ainsi une chaîne cohérente : saisie côté client, sérialisation textuelle, traitement côté serveur, puis émission d’une réponse ou d’un événement.
+
+Les commandes de connexion et de contrôle permettent d’établir ou d’interrompre le lien avec un serveur. La commande \texttt{join} ouvre une connexion TCP, éventuellement vers une adresse et un port explicitement fournis. La commande \texttt{quit}, quant à elle, adapte son comportement au contexte : elle peut mettre fin à une partie, fermer la connexion réseau ou quitter l’application. Cette logique s’appuie sur \texttt{AppContext}, qui centralise l’état courant de l’exécution.
+
+Les commandes de session permettent de consulter ou modifier l’état du joueur connecté. Les commandes \texttt{away} et \texttt{back} changent sa disponibilité, tandis que \texttt{players} permet soit d’obtenir la liste des joueurs connectés, soit de demander les informations détaillées d’un joueur particulier. La commande \texttt{ping} fournit enfin un mécanisme simple de vérification de connectivité et de mesure de latence à travers l’échange \texttt{PING}/\texttt{PONG}.
+
+Les commandes d’invitation structurent la mise en relation des joueurs. La commande \texttt{new} déclenche la création d’une invitation à destination d’un joueur cible, après validation de son existence et de sa disponibilité. Les commandes \texttt{accept}, \texttt{decline} et \texttt{cancel} permettent ensuite de faire évoluer cette invitation, jusqu’à la création éventuelle d’un lobby. Une fois ce lobby créé, la commande \texttt{mode} permet à l’hôte de choisir le mode de jeu avant le lancement effectif de la partie.
+
+Les commandes liées à la partie portent principalement sur la transmission des coups. La commande \texttt{move} envoie un déplacement encodé sous une forme compacte, ensuite validé côté serveur avant mise à jour de la session de jeu. Le serveur joue ici un rôle d’autorité : un coup n’est appliqué que s’il respecte les règles de la partie et l’état courant du jeu.
+
+Enfin, certaines commandes concernent l’administration du serveur lui-même. Les commandes \texttt{server start}, \texttt{server stop}, \texttt{server status} et \texttt{server list} permettent respectivement de démarrer un serveur local, de l’arrêter, d’en consulter l’état et de détecter les serveurs actifs sur le réseau local. L’ensemble forme ainsi un jeu de commandes cohérent, couvrant à la fois le cycle de connexion, l’état du joueur, la préparation de la partie et son déroulement.
+
+\begin{figure}[htbp]
+    \centering
+    % --- BLOC CLIENT ---
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \textbf{Côté Client (Terminal)}
+        \begin{verbatim}
+[AGON]> ping
+[SERVER] PONG TIME=1ms
+
+[AGON]> move a9a8
+[SERVER] MOVE_OK
+        \end{verbatim}
+    \end{minipage}
+    \hfill % Ajoute un espace élastique entre les deux blocs
+    % --- BLOC SERVEUR ---
+    \begin{minipage}
+    {0.48\textwidth}
+        \centering
+        \textbf{Côté Serveur}
+        \begin{verbatim}
+Reçu: "PING"
+Réponse: "PONG TIME=1ms"
+
+Reçu: "MOVE a9a8" => Vérification coup
+Réponse: "MOVE_OK" "
+        \end{verbatim}
+    \end{minipage}
+    
+    \caption{Visualisation synchrone des interactions : interface client vs serveur.}
+    \label{fig:comparaison_client_serveur}
+\end{figure}
+
+\subsubsection{Gestion du multi-clients et concurrence}
+
+Le passage à une architecture réseau multi-clients introduit des problématiques de concurrence importantes. Le serveur doit être capable de gérer plusieurs connexions simultanées tout en garantissant la cohérence de son état interne. Dans notre implémentation, cette gestion repose sur une combinaison de threads dédiés, de structures de données synchronisées et de mécanismes explicites de protection des accès concurrents.
+
+Du point de vue du cycle de vie réseau, la gestion des connexions est assurée par la classe \texttt{ServerLifecycleManager}. Celle-ci repose sur deux exécuteurs distincts : un premier thread dédié à la boucle d’acceptation des connexions, et un second pool de threads utilisé pour exécuter les \texttt{ClientHandler}. Ce découpage permet d’éviter que l’acceptation de nouvelles connexions ne soit bloquée par le traitement des clients déjà connectés. Chaque connexion entrante est acceptée via un \texttt{ServerSocket}, puis transmise au serveur pour être encapsulée dans un gestionnaire dédié. 
+
+Le cœur du modèle de concurrence repose sur la classe \texttt{ClientHandler}. Chaque client connecté est associé à une instance distincte de cette classe, exécutée dans un thread séparé. Le gestionnaire maintient une boucle de lecture continue sur la socket, dans laquelle chaque message reçu est parsé puis traité. Cette approche permet de traiter les clients de manière indépendante, sans blocage global du serveur. La gestion des accès concurrents aux ressources partagées constitue un point critique. Pour les connexions actives, le serveur utilise la classe \texttt{ClientConnectionRegistry}, qui repose sur une liste synchronisée. L’utilisation de \texttt{Collections.synchronizedList} garantit que les opérations d’ajout et de suppression sont sûres en environnement concurrent. De plus, la méthode \texttt{snapshot} permet de créer une copie stable de la liste, évitant les problèmes liés aux modifications concurrentes lors de l’itération, notamment lors de l’arrêt du serveur.
+
+Du côté des données métier, la gestion des joueurs est assurée par \texttt{PlayerRegistry}, qui utilise des \texttt{ConcurrentHashMap} pour stocker les joueurs actifs et les joueurs connus. Ce choix permet d’éviter l’utilisation de verrous explicites tout en garantissant des accès thread-safe. Par ailleurs, un \texttt{AtomicInteger} est utilisé pour générer les identifiants uniques des joueurs, ce qui évite les collisions en cas de connexions simultanées. 
+
+Un point important de la conception concerne la persistance de l’identité des joueurs. Chaque joueur est associé à un identifiant client unique (\texttt{clientId}), conservé côté serveur. Lorsqu’un joueur se reconnecte, le serveur est capable de retrouver son instance existante et de réassocier le nouveau \texttt{ClientHandler} à ce joueur. Cette approche permet de conserver les informations liées au joueur (statut, statistiques, parties en cours) même en cas de déconnexion temporaire. 
+
+La synchronisation est également nécessaire au niveau des communications réseau. Dans \texttt{ClientHandler}, l’écriture sur le flux de sortie est protégée par un verrou explicite (\texttt{sendLock}). Ce choix permet de garantir que plusieurs threads ne puissent pas écrire simultanément sur la même socket, ce qui pourrait entraîner des corruptions de messages. Cette synchronisation fine permet de limiter le coût des verrous tout en assurant la cohérence des échanges. 
+
+Enfin, la gestion des déconnexions est intégrée dans le cycle de vie des \texttt{ClientHandler}. Lorsqu’un client se déconnecte ou qu’une erreur survient, le handler est arrêté, la socket est fermée et le serveur est notifié afin de retirer le client du registre des connexions. Les structures métier associées, comme les joueurs actifs ou les invitations, sont également mises à jour afin de maintenir un état cohérent du système. Ainsi, la gestion du multi-clients repose sur un modèle simple mais robuste : un thread par client pour l’isolation des traitements, des structures concurrentes pour les données partagées, et des mécanismes de synchronisation ciblés pour les ressources critiques. Cette combinaison permet de garantir à la fois la réactivité du serveur et la cohérence de son état interne.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.88,
+    transform shape,
+    box/.style={
+        draw,
+        rounded corners,
+        align=center,
+        minimum width=2.9cm,
+        minimum height=0.85cm
+    },
+    shared/.style={
+        draw,
+        rounded corners,
+        align=center,
+        minimum width=3.1cm,
+        minimum height=0.85cm,
+        dashed
+    },
+    arrow/.style={
+        line width=0.9pt,
+        -{Latex[length=2.6mm,width=1.8mm]}
+    },
+    font=\scriptsize
+]
+
+\node[box] (serverSocket) at (0,0) {\texttt{ServerSocket}};
+\node[box] (acceptLoop) at (0,-1.8) {Thread d'acceptation\\\texttt{accept-client-loop}};
+\node[box] (executor) at (0,-3.6) {\texttt{clientExecutor}};
+
+\node[box] (handler1) at (4.4,-2.2) {\texttt{ClientHandler} 1\\Thread client};
+\node[box] (handler2) at (4.4,-4.0) {\texttt{ClientHandler} 2\\Thread client};
+\node[box] (handler3) at (4.4,-5.8) {\texttt{ClientHandler} n\\Thread client};
+
+\node[shared] (registry) at (8.7,-1.3) {\texttt{ClientConnectionRegistry}};
+\node[shared] (players) at (8.7,-3.6) {\texttt{PlayerRegistry}};
+\node[shared] (server) at (8.7,-5.8) {\texttt{AgonServer}};
+
+\draw[arrow] (serverSocket) -- (acceptLoop);
+\draw[arrow] (acceptLoop) -- (executor);
+
+\draw[arrow] (executor) -- (handler1);
+\draw[arrow] (executor) -- (handler2);
+\draw[arrow] (executor) -- (handler3);
+
+\draw[arrow] (handler1) -- (registry);
+\draw[arrow] (handler2) -- (registry);
+
+\draw[arrow] (handler1) -- (players);
+\draw[arrow] (handler2) -- (players);
+\draw[arrow] (handler3) -- (players);
+
+\draw[arrow] (handler1) -- (server);
+\draw[arrow] (handler2) -- (server);
+\draw[arrow] (handler3) -- (server);
+
+\end{tikzpicture}
+\caption{Organisation multi-clients du serveur et accès concurrents aux composants partagés}
+\label{fig:multi_clients_threads}
+\end{figure}
+\subsubsection{Gestion des invitations et des états joueurs}
+
+La gestion des invitations et des états joueurs constitue un élément central du mode réseau, car elle permet d’orchestrer la mise en relation des joueurs avant le lancement d’une partie. Cette logique repose sur un enchaînement structuré d’étapes, allant de l’émission d’une invitation à la création d’une session de jeu.
+
+Sur le serveur, chaque utilisateur connecté est représenté par une instance de \texttt{OnlinePlayer}, qui contient son identifiant, son nom, son état courant ainsi que la référence vers son \texttt{ClientHandler} associé. L’état du joueur est modélisé à l’aide de l’énumération \texttt{PlayerStatus}, qui distingue notamment les états \texttt{IDLE}, \texttt{AWAY}, \texttt{WAITGAME} et \texttt{INGAME}. Cette modélisation permet au serveur de contrôler précisément les interactions entre les joueurs et d’éviter les conflits d’état, notamment lors des phases d’invitation ou de jeu.
+
+Le processus d’invitation débute côté client par la commande \texttt{new <playerId>}. Cette commande permet à un joueur connecté de proposer une partie à un autre joueur identifié par son identifiant. Le serveur traite cette requête à travers le composant \texttt{InvitationNewHandler}, qui effectue plusieurs vérifications afin de garantir la validité de la demande. Le joueur cible doit exister, l’utilisateur ne peut pas s’inviter lui-même, et les deux joueurs doivent être disponibles, c’est-à-dire dans l’état \texttt{IDLE}. Si ces conditions sont respectées, une invitation est créée sous la forme d’un objet \texttt{Invitation}, contenant les identifiants des deux joueurs ainsi qu’une date d’expiration.
+
+La gestion des invitations est assurée par \texttt{InvitationManager}, qui stocke les invitations actives dans des structures concurrentes afin de permettre un accès sûr en environnement multi-thread. Lors de la création d’une invitation, les deux joueurs passent immédiatement dans l’état \texttt{WAITGAME}, ce qui empêche toute interaction concurrente et garantit la cohérence du système pendant la phase d’attente.
+
+Une fois l’invitation envoyée, le joueur cible peut y répondre à l’aide des commandes \texttt{accept}, \texttt{decline} ou \texttt{cancel}, traitées par le composant \texttt{InvitationResponseHandler}. Lorsque l’invitation est acceptée, elle est supprimée du système, puis le serveur crée un lobby via le service de gestion des parties. Ce lobby est représenté par la classe \texttt{GameLobby}, qui associe un joueur hôte, correspondant à l’émetteur de la commande \texttt{new}, et un joueur invité :contentReference[oaicite:4]{index=4}. Le lobby constitue une étape intermédiaire essentielle, permettant de synchroniser les deux joueurs avant le démarrage effectif de la partie.
+
+Une fois les deux joueurs réunis dans un lobby, le choix du mode de jeu est effectué par le joueur hôte. Cette opération est réalisée via la commande \texttt{mode}, qui est traitée par \texttt{InvitationModeHandler}. Le serveur vérifie alors que le joueur est bien dans un lobby et qu’il en est l’hôte, garantissant ainsi que seul le créateur de l’invitation peut configurer la partie. Le mode de jeu est représenté par l’énumération \texttt{GameMode}, qui propose notamment les modes \texttt{NORMAL} et \texttt{BLITZ}.
+
+Lorsque le mode est sélectionné, le lobby est supprimé et une nouvelle partie est créée à travers le composant \texttt{GameManager}. Cette opération donne lieu à la création d’un objet \texttt{ServerGameSession}, qui représente la session de jeu active entre les deux joueurs. À ce stade, les deux joueurs passent dans l’état \texttt{INGAME}, une instance de \texttt{Match} est initialisée, et les rôles des joueurs sont attribués. La partie est alors prête à recevoir les actions des joueurs et à évoluer de manière synchronisée.
+
+Enfin, le système intègre plusieurs mécanismes visant à garantir sa robustesse. Les invitations disposent d’une durée de vie limitée et sont automatiquement supprimées lorsqu’elles expirent, grâce à un processus de nettoyage périodique. De plus, les états des joueurs sont systématiquement réinitialisés en cas d’annulation ou d’expiration, ce qui permet d’éviter les situations incohérentes. L’utilisation de structures concurrentes et la centralisation des transitions côté serveur assurent ainsi une gestion fiable et cohérente des interactions entre les joueurs.
+
+Ainsi, le cycle complet peut être décrit comme une succession d’étapes allant de l’envoi d’une commande \texttt{new} à la création d’une session de jeu, en passant par une phase d’invitation, la formation d’un lobby et la sélection du mode de jeu. Cette organisation permet de structurer clairement les interactions et de garantir une expérience multijoueur cohérente et sécurisée.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.88,
+    transform shape,
+    box/.style={draw, rounded corners, align=center, minimum width=2.7cm, minimum height=0.9cm},
+    arrow/.style={->, thick},
+    font=\small
+]
+
+% Ligne du haut
+\node[box] (new) at (0,0) {Commande \texttt{new}};
+\node[box] (invite) at (3.6,0) {Invitation};
+\node[box] (accept) at (7.2,0) {Acceptation};
+
+% Ligne du bas (retour gauche)
+\node[box] (lobby) at (7.2,-1.8) {Lobby};
+\node[box] (mode) at (3.6,-1.8) {Choix du mode};
+\node[box] (game) at (0,-1.8) {Partie lancée};
+
+% Flèches
+\draw[arrow] (new) -- (invite);
+\draw[arrow] (invite) -- (accept);
+\draw[arrow] (accept) -- (lobby);
+\draw[arrow] (lobby) -- (mode);
+\draw[arrow] (mode) -- (game);
+
+\end{tikzpicture}
+\caption{Cycle d’une interaction multijoueur pour l’invitation}
+\label{fig:cycle_zigzag_left}
+\end{figure}
+
+\subsubsection{Intégration dans l'application}
+
+
+\subsubsection{Intégration dans l'application}
+
+L’intégration du mode réseau dans l’application repose essentiellement sur la classe \texttt{AppContext}, qui constitue le point central de coordination entre les différentes composantes du système. Cette classe regroupe en effet les éléments nécessaires au fonctionnement global de l’application, comme le profil utilisateur, le client réseau, le serveur local éventuel, le moteur de jeu ainsi que le mode courant de fonctionnement. Elle joue ainsi un rôle d’interface entre la logique applicative générale et les mécanismes spécifiques au mode réseau.
+
+Cette intégration commence dès le lancement de l’application. Dans \texttt{GameLauncher}, l’utilisateur est d’abord invité à saisir son nom, puis à choisir un mode de fonctionnement entre le mode local et le mode réseau. À partir de ces informations, un profil local est créé, puis transmis au constructeur de \texttt{AppContext}. Le contexte est donc initialisé dès le démarrage avec le profil de l’utilisateur courant, puis mis à jour selon le mode sélectionné. Ce choix est représenté par l’énumération \texttt{AppMode}, qui distingue explicitement les modes \texttt{LOCAL} et \texttt{ONLINE}.
+
+Ce mécanisme permet de modifier le comportement de l’application sans changer son interface générale. Une fois entré dans \texttt{AgonShell}, ou dans une interface graphique, l’utilisateur interagit avec le même programme, mais l’exécution interne diffère selon le mode actif. En mode local, les commandes agissent directement sur les structures locales du jeu. En mode réseau, ces mêmes interactions s’appuient sur les composants réseau intégrés au \texttt{AppContext}, en particulier \texttt{AgonClient}, qui devient l’intermédiaire entre l’application et le serveur.
+
+Le \texttt{AppContext} ne se contente pas de stocker ces composants : il assure également leur synchronisation. Il implémente l’interface \texttt{OnlineGameStartListener}, ce qui lui permet de recevoir les événements asynchrones envoyés par le client réseau, comme le démarrage d’une partie, la confirmation d’un coup local, la réception d’un coup adverse ou la fin d’une partie . Lorsqu’une partie réseau commence, les informations reçues sont encapsulées dans un objet \texttt{OnlineGameInfo}, puis utilisées pour créer une représentation locale de la partie et mettre à jour le moteur de jeu .
+
+Ainsi, \texttt{AppContext} joue un rôle structurant dans l’intégration du mode réseau à l’application. Il permet d’introduire les mécanismes client--serveur dans l’architecture existante sans dupliquer l’interface ni dissocier complètement les modes de fonctionnement. Le passage du mode local au mode réseau ne correspond donc pas à un changement d’application, mais à une variation de comportement pilotée par le contexte global.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.88,
+    transform shape,
+    box/.style={draw, rounded corners, align=center, minimum width=3cm, minimum height=0.9cm},
+    arrow/.style={->, thick},
+    font=\small
+]
+
+\node[box] (launcher) at (0,1.8) {\texttt{GameLauncher}\\chargement profil};
+\node[box] (context) at (0,0) {\texttt{AppContext}\\mode local / réseau};
+\node[box] (local) at (-3.6,-2.2) {Mode local\\jeu local};
+\node[box] (online) at (3.6,-2.2) {Mode réseau\\\texttt{AgonClient}};
+\node[box] (ui) at (0,-4.2) {\texttt{AgonShell} / GUI};
+
+\draw[arrow] (launcher) -- node[right, font=\scriptsize]{initialise} (context);
+\draw[arrow] (context) -- node[above left, font=\scriptsize]{LOCAL} (local);
+\draw[arrow] (context) -- node[above right, font=\scriptsize]{ONLINE} (online);
+\draw[arrow] (local) -- (ui);
+\draw[arrow] (online) -- (ui);
+
+\end{tikzpicture}
+\caption{Intégration du mode réseau dans le fonctionnement global de l’application}
+\label{fig:integration_app}
+\end{figure}
+
+%==============================================================================
+% DÉBUT DE LA SECTION INTELLIGENCE ARTIFICIELLE
+%==============================================================================
+
+\subsection{Conception et Implémentation de l'Intelligence Artificielle}
+
+Le jeu d'Agon, se distinguant par sa topologie hexagonale de 91 cases et ses conditions de victoire asymétriques (atteindre le trône central sans se faire bloquer), présente un défi computationnel singulier. Contrairement aux jeux d'annihilation classiques comme les Échecs, l'évaluation d'une position dans Agon requiert une compréhension fine de la topologie spatiale et des dynamiques de restriction de mouvement. 
+
+Pour répondre à ce défi, notre architecture d'Intelligence Artificielle a été structurée autour d'une confrontation entre deux paradigmes algorithmiques fondamentaux : une approche déterministe historique (Minimax avec élagage Alpha-Beta) et une approche stochastique moderne (Monte-Carlo Tree Search). Cette fondation a ensuite été augmentée par l'intégration d'un modèle d'apprentissage automatique (Machine Learning) entraîné sur mesure via TensorFlow, afin d'hybrider la recherche probabiliste avec une inférence neuronale.
+
+\subsubsection{Architecture Logicielle et Ingénierie des Composants}
+
+La robustesse d'un moteur d'intelligence artificielle repose sur son isolation stricte vis-à-vis du contrôleur de jeu principal et de l'interface graphique. Pour garantir une extensibilité maximale et une maintenance facilitée, le module IA a été architecturé autour des principes SOLID, en orchestrant la communication inter-objets via plusieurs patrons de conception (\textit{Design Patterns}) issus du standard \textit{Gang of Four}.
+
+\subsubsection{Orchestration et Injection de Dépendances (Factory et IoC)}
+Le cycle de vie de l'IA débute hors de la boucle de jeu, lors de la configuration de la partie. L'instanciation des agents est centralisée au sein de la classe \texttt{AiFactory}. Cette usine logicielle agit comme un conteneur d'Inversion de Contrôle (IoC - \textit{Inversion of Control}). Elle consomme l'objet \texttt{GameConfig} contenant les paramètres bruts choisis par l'utilisateur (type de moteur, heuristique désirée, profondeur, temps de réflexion).
+
+Le rôle de la Factory n'est pas simplement d'instancier une classe, mais d'assembler les dépendances. L'usine crée d'abord l'interface d'évaluation appropriée (par exemple \texttt{MixedHeuristic} ou \texttt{MlHeuristic}), puis l'injecte directement dans le constructeur du moteur de recherche (\texttt{MinimaxStrategy} ou \texttt{MctsStrategy}). Ce paradigme d'injection de dépendances garantit que les moteurs de recherche n'ont pas la responsabilité de créer leurs propres outils d'évaluation, assurant un découplage total. Le code client (le contrôleur de la vue) reçoit ainsi une instance abstraite d'IA prête à l'emploi, ignorant totalement la complexité de son assemblage interne.
+
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize]{java}
+public static AbstractAgonAi createAi(final GameConfig config, final Color color) {
+    final AbstractAgonAi resultAi;
+    switch (config.getAiMode()) {
+        case "minimax" -> {
+            final Heuristic heuristic = createHeuristic(config.getAiHeuristic());
+            resultAi = new MinimaxStrategy(
+                heuristic, color, config.getAiDepth(),
+                config.isAiIterativeDeepening(), config.getAiTimeLimit());
+        }
+        case "mcts" -> {
+            final MctsSelectionHeuristic heuristic = createSelectionHeuristic(config.getAiHeuristic());
+            resultAi = new MctsStrategy(color, heuristic, config.getAiTimeLimit());
+        }
+        default -> resultAi = null;
+    }
+    return resultAi;
+}
+\end{minted}
+
+\subsubsection{Contrat d'Exécution et Plomberie Algorithmique (Template Method)}
+Une fois injectée dans la boucle de jeu, l'interaction avec l'IA est dictée par une interface unique, \texttt{AgonAi}, qui expose la méthode contractuelle \texttt{getBestMove(AgonBoard board)}. Cette façade cache l'intégralité du traitement algorithmique.
+
+Cependant, tous les moteurs d'IA partagent un socle de contraintes communes : surveiller le temps d'exécution (pour respecter les règles de Blitz) et monitorer les performances (le comptage des nœuds explorés via la variable \texttt{nodeCount}). Pour éviter la duplication de ce code de "plomberie" dans chaque algorithme, l'architecture s'appuie sur la classe abstraite \texttt{AbstractAgonAi} implémentant le patron \textbf{Template Method}. 
+
+Lors du \textit{Call Stack} (la pile d'exécution), l'appel à \texttt{getBestMove} transite d'abord par cette classe abstraite. Elle initialise le chronomètre système (\texttt{startTime}) et remet les compteurs de statistiques à zéro. Elle fournit également la méthode de vérification \texttt{isTimeRemaining()} que les moteurs devront appeler à chaque itération. Enfin, elle délègue le véritable calcul mathématique en appelant la méthode abstraite \texttt{computeMove()}, forçant les classes filles à se concentrer uniquement sur la pure logique de parcours d'arbre.
+
+\begin{landscape}
+    \begin{figure}[p]
+        \centering
+        \includegraphics[width=\linewidth, keepaspectratio]{ai_uml.pdf}
+        \caption{Diagramme de classes complet de l'architecture de l'Intelligence Artificielle.}
+        \label{fig:ai_architecture}
+    \end{figure}
+\end{landscape}
+
+\subsubsection{L'Orthogonalité par le Double Pattern Strategy}
+Le cœur mathématique du module IA repose sur une architecture qualifiable de \textbf{Double Strategy}. La résolution d'un coup aux jeux de plateau abstraits nécessite deux compétences distinctes : la navigation dans l'arbre des possibles (la prédiction), et l'évaluation statique d'un état du plateau à un instant T (le jugement).
+
+La première couche de Strategy permet d'interchanger la logique de \textit{navigation}. C'est la distinction entre \texttt{MinimaxStrategy} (parcours exhaustif en profondeur d'abord) et \texttt{MctsStrategy} (parcours probabiliste asymétrique). 
+La seconde couche de Strategy, imbriquée dans la première, concerne l'interface \texttt{Heuristic}. Elle permet d'interchanger la logique de \textit{jugement} statique (\texttt{CentralityHeuristic}, \texttt{MobilityHeuristic}, etc.). 
+
+Cette orthogonalité architecturale est un atout majeur : elle permet à notre moteur d'évaluer un nœud en appelant \texttt{heuristic.evaluate(board, this.color)}, sans jamais se soucier de savoir si ce score est calculé par une équation mathématique quadratique classique ou par l'inférence complexe d'un réseau de neurones TensorFlow.
+
+\subsubsection{Passage par Référence et Paradigme de Backtracking}
+L'un des défis majeurs d'une architecture orientée objet dans le cadre d'une recherche arborescente est la surcharge mémoire (\textit{Garbage Collection Overhead}). L'exploration d'un arbre nécessite la génération de millions d'états de jeu par seconde. Une implémentation naïve consisterait, à chaque nœud, à cloner l'objet \texttt{AgonBoard} pour y jouer le nouveau coup. La création et destruction frénétique de millions de tableaux en mémoire vive aurait conduit à un effondrement des performances (goulet d'étranglement de la JVM).
+
+Pour pallier ce problème, notre architecture proscrit le clonage. Le plateau de jeu \texttt{AgonBoard} est un \textit{Singleton dynamique} dans le contexte de l'arbre, passé \textbf{par référence} à travers tous les nœuds de la recherche. 
+
+Les moteurs (Minimax et MCTS) utilisent un paradigme de gestion d'état basé sur le \textit{Backtracking}. Lors de la descente dans une branche, le moteur applique le déplacement modifiant physiquement l'état unique du Bitboard via \texttt{board.applyMove(move)}. Une fois l'évaluation de la feuille terminée, avant de remonter dans l'arbre pour explorer le nœud frère, le moteur annule obligatoirement son action via la méthode miroir \texttt{board.undoMove()}. L'empreinte mémoire reste ainsi strictement constante (\(\mathcal{O}(1)\)) quelle que soit la profondeur de l'arbre généré, permettant au processeur de concentrer ses cycles d'horloge exclusivement sur l'évaluation heuristique et les opérations binaires de la structure Bitboard sous-jacente.
+
+\subsubsection{Optimisation Mémoire : La structure Bitboard}
+L'exploration d'arbres de jeu nécessite la génération et l'évaluation de millions d'états de plateaux par seconde. Une représentation sous forme de tableau bidimensionnel d'objets (orienté-objet classique) aurait entraîné un goulot d'étranglement fatal (\textit{Garbage Collection overhead}). Nous avons donc opté pour une structure de données de type \textbf{Bitboard}. L'état du jeu est encodé sur des entiers natifs de 64 bits (\texttt{long}). Les déplacements et les calculs d'adjacence hexagonale s'effectuent via des opérations binaires bit-à-bit (\textit{bitwise shifts}, masques logiques AND/OR/XOR), garantissant une complexité temporelle de $\mathcal{O}(1)$ pour les évaluations de base.
+
+\subsubsection{L'Approche Déterministe : Minimax et Alpha-Beta}
+
+L'algorithme Minimax, théorisé dans les années 1950 \cite{shannon1950programming}, repose sur le principe d'un jeu à somme nulle : la stratégie optimale consiste à maximiser son propre gain tout en assumant que l'adversaire jouera le coup minimisant ce même gain.
+
+\subsubsection{Exploration de l'arbre et Élagage}
+Avec un facteur de branchement moyen estimé à $b \approx 30$ pour Agon, la complexité spatiale d'une recherche exhaustive à profondeur $d$ est de $\mathcal{O}(b^d)$. Pour une simple profondeur $d=4$, l'arbre génère près d'un million de feuilles. Pour pallier cette explosion combinatoire, notre \texttt{MinimaxStrategy} intègre l'\textbf{Élagage Alpha-Beta} \cite{knuth1975alpha}. 
+
+En maintenant deux variables, $\alpha$ (le meilleur score assuré pour le maximisant) et $\beta$ (le meilleur score assuré pour le minimisant), l'algorithme coupe l'exploration de toute branche vérifiant $\beta \leq \alpha$. 
+
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize]{java}
+// Extrait de l'élagage dans la fonction evaluateMaximizing
+maxEval = Math.max(maxEval, eval);
+currentAlpha = Math.max(currentAlpha, eval);
+if (beta <= currentAlpha) {
+    break; // Coupure Alpha-Beta : la branche est inutile
+}
+\end{minted}
+
+Cette optimisation permet, dans le meilleur des cas (si les coups sont ordonnés parfaitement), de réduire la complexité à $\mathcal{O}(b^{d/2})$, doublant ainsi la profondeur de recherche pour un temps de calcul équivalent.
+
+\subsubsection{Gestion du temps et Heuristiques Métier}
+Dans un contexte de compétition où la limite de temps est stricte, l'approche d'\textbf{Approfondissement Itératif} (\textit{Iterative Deepening}) a été implémentée pour garantir le renvoi d'un coup sécurisé avant la fin du chronomètre. Par ailleurs, l'évaluation statique d'une position est encapsulée via le patron Strategy et repose sur trois déclinaisons heuristiques. La \textbf{CentralityHeuristic} utilise une fonction de coût quadratique pour modéliser la gravité du trône central en considérant qu'un rapprochement vers le centre a une valeur exponentielle. La \textbf{MobilityHeuristic} évalue quant à elle les degrés de liberté en comptabilisant les coups légaux générés pour éviter l'auto-blocage. Enfin, la \textbf{MixedHeuristic} combine linéairement ces deux métriques. Un fort coefficient multiplicateur est appliqué à la mobilité (poids de 10) par rapport à la centralité (poids de 1) afin de normaliser les échelles de valeurs de ces deux facteurs et d'assurer un profil de jeu équilibré, à la fois attiré par le trône et extrêmement prudent face à l'auto-blocage.
+
+\subsubsection{L'Approche Probabiliste : Monte-Carlo Tree Search (MCTS)}
+
+Le Minimax souffrant structurellement de l'incapacité à percevoir une récompense au-delà de sa profondeur maximale de calcul, notre seconde implémentation (\texttt{MctsStrategy}) repose sur la recherche arborescente Monte-Carlo \cite{coulom2006efficient}.
+
+\subsubsection{Gestion de l'Arbre et Exécution}
+La structure du graphe est construite via des instances de \texttt{MctsNode}. Pour préserver la mémoire vive lors de l'expansion massive, un nœud ne clone jamais le plateau de jeu mais stocke uniquement la référence de l'objet \texttt{Move} ayant mené à son état. L'algorithme opère de manière cyclique en enchaînant quatre phases distinctes. Il débute par une phase de \textbf{Sélection} où il descend dans l'arbre en choisissant l'enfant maximisant la formule mathématique UCB1 \cite{kocsis2006bandit}. S'ensuit une phase d'\textbf{Expansion} où un nouveau nœud est instancié si l'état n'est pas totalement exploré. Le moteur lance ensuite une \textbf{Simulation} (Rollout) en jouant une partie aléatoire jusqu'à une condition terminale ou une limite prédéfinie. Enfin, l'algorithme conclut par la \textbf{Rétropropagation} du résultat (victoire, nul ou défaite) en remontant vers la racine pour mettre à jour les statistiques de l'arbre.
+
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize]{java}
+private int simulate(final AgonBoard board, final Color startTurn) {
+    int rolloutMoves = 0;
+    Color turn = startTurn;
+    Color winner = checkWinner(board);
+
+    while (winner == null && rolloutMoves < 50 && isTimeRemaining()) {
+        final List<Move> moves = board.generateLegalMoves(turn);
+        if (moves.isEmpty()) break;
+
+        final Move randMove = moves.get(random.nextInt(moves.size()));
+        board.applyMove(randMove);
+        rolloutMoves++;
+
+        turn = (turn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        winner = checkWinner(board);
+    }
+    return rolloutMoves;
+}
+\end{minted}
+
+\subsubsection{Hybridation par Apprentissage Automatique (Machine Learning)}
+
+Les simulations purement aléatoires du MCTS tendant à produire des séquences de jeu asémantiques, l'agent stochastique a été doté d'une capacité prédictive. La phase de sélection classique UCT a été remplacée par une inférence neuronale (\texttt{MlHeuristic}), pilotée par \textbf{TensorFlow Core en Java pur}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{flowchart_ml.png}
+    \caption{Pipeline de l'hybridation Machine Learning : de la génération du dataset à l'inférence Tensor dans la sélection MCTS.}
+    \label{fig:ml_pipeline}
+\end{figure}
+
+\subsubsection{Théorie des Réseaux de Neurones et Anatomie}
+Dans notre implémentation, le modèle mathématique s'appuie sur une \textbf{Régression Logistique}, correspondant à l'architecture d'un Perceptron simple couplé à une fonction d'activation non-linéaire. La mécanique interne du modèle débute par la réception d'un vecteur de caractéristiques du plateau. Chaque entrée est ensuite multipliée par un poids synaptique appris durant l'entraînement, auquel s'ajoute un biais statistique. La sommation pondérée de ces éléments génère une valeur brute qui traverse finalement une fonction d'activation logistique (Sigmoïde). Cette dernière opération mathématique force le résultat dans l'intervalle strict entre 0 et 1, fournissant ainsi une probabilité continue directement exploitable par la sélection de l'arbre Monte-Carlo.
+
+\subsubsection{Génération de Données et Inférence}
+Pour entraîner ce modèle, la classe \texttt{DatasetGenerator} simule des centaines de parties entre deux moteurs MCTS. Afin d'éviter le surapprentissage sur des ouvertures stéréotypées, un brouillage préliminaire est effectué en jouant aléatoirement entre 5 et 20 coups. Pour chaque position évaluée, le moteur extrait un vecteur normalisé regroupant les distances absolues au centre des Reines, l'avantage topologique global (différentiel des centralités), l'avantage matériel lié aux captures, ainsi que la mobilité tactique des deux camps.
+
+\begin{minted}[frame=lines, framesep=2mm, fontsize=\footnotesize]{java}
+// Extrait de l'extraction des features pour le réseau de neurones
+final float posAdvantage = wCentSum - bCentSum;
+final float captureAdv = wPawns - bPawns;
+final float whiteMob = board.generateLegalMoves(Color.WHITE).size();
+final float blackMob = board.generateLegalMoves(Color.BLACK).size();
+return new float[] {wQueenDist, bQueenDist, posAdvantage, captureAdv, whiteMob, blackMob};
+\end{minted}
+
+\subsubsection{Entraînement Logistique en Java et Fonction de Coût}
+Contrairement aux approches déléguant l'apprentissage à des scripts Python externes, le graphe de calcul est bâti intégralement en Java via \texttt{TensorFlowTrainer}. La mise à jour des poids s'effectue en minimisant l'Erreur Quadratique Moyenne (MSE). Le système évalue la différence entre la prédiction et le résultat réel de la partie, l'élève au carré pour pénaliser les erreurs majeures, puis en calcule la moyenne sur le volume de données. Le graphe TensorFlow automatise ensuite le calcul des gradients et applique une descente de gradient stochastique. Une fois optimisé, le modèle prédictif est exporté physiquement sur le disque et instancié à chaud durant les parties par l'heuristique neuronale.
+
+\subsection{Évaluation Empirique et Synthèse des Performances}
+
+Afin de qualifier les performances de notre architecture logicielle, un module de benchmark automatisé a exécuté des séries de matchs asymétriques avec un temps de réflexion fixé à une seconde par coup.
+
 \begin{table}[h]
-   \centering
-   \begin{tabular}{cc}
-   \toprule
-   \textbf{Événement} & \textbf{Année} \\
-   \midrule
-   Prédiction théorique & 1783 \\
-   Première observation & 1971 \\
-   Confirmation directe & 2019 \\
-   \bottomrule
-   \end{tabular}
-   \caption{Étapes clés dans l'histoire des trous noirs}
-   \label{tab:histoire_trous_noirs}
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Confrontation (10 matchs, 1s/coup)} & \textbf{Vict. IA 1} & \textbf{Vict. IA 2} & \textbf{Égalités} & \textbf{Moy. Nœuds (IA 1 / IA 2)} \\ \hline
+Minimax (Mixed) \textbf{vs} MCTS (UCT) & 0 & 0 & 10 & 137 226 / 2 892 \\ \hline
+MCTS (ML) \textbf{vs} MCTS (UCT) & 0 & 0 & 10 & 529 / 2 840 \\ \hline
+MCTS (ML) \textbf{vs} Minimax (Mixed) & 0 & 0 & 10 & 511 / 147 837 \\ \hline
+Minimax (Centr.) \textbf{vs} Minimax (Mob.) & 0 & 0 & 10 & 100 806 / 85 693 \\ \hline
+\end{tabular}
+\caption{Synthèse empirique des performances algorithmiques et métriques de parcours d'arbres.}
+\label{tab:benchmark_results}
 \end{table}
-\subsection{Importance des trous noirs dans l'astrophysique moderne}\label{sec:Importance}
-Les trous noirs occupent une place centrale dans l'astrophysique moderne en raison de leur rôle crucial dans de nombreux phénomènes cosmiques et de leur impact profond sur notre compréhension de l'univers. Leur étude a ouvert de nouvelles perspectives sur des domaines aussi variés que la formation des galaxies, la dynamique stellaire, et même la nature de l'espace-temps lui-même.
 
-L'une des contributions les plus significatives des trous noirs à l'astrophysique moderne réside dans leur influence sur la formation et l'évolution des galaxies~\cite{Silk1998}. Les simulations numériques montrent que la présence de trous noirs supermassifs au centre des galaxies est étroitement liée à la formation des structures à grande échelle dans l'univers. Ces trous noirs exercent une influence gravitationnelle sur leur environnement, régulant la croissance des galaxies en influençant la formation d'étoiles et en régulant l'approvisionnement en gaz.
+Les métriques extraites corroborent l'efficience de l'architecture bas niveau. Le moteur Minimax atteint une moyenne de plus de 140 000 nœuds évalués par seconde, validant la pertinence du Bitboard et des calculs binaires. De son côté, le MCTS classique plafonne à environ 2 800 itérations, un volume cohérent au vu du coût computationnel généré par la simulation aléatoire de fin de partie. Par ailleurs, la totalité des affrontements impliquant des agents à haut niveau d'heuristique s'est soldée par des matchs nuls après 100 tours d'exécution. L'hybridation par apprentissage automatique a enfin démontré un traitement moyen de l'ordre de 500 évaluations de nœuds par seconde.
 
-De plus, les observations de galaxies lointaines suggèrent que les trous noirs supermassifs étaient déjà présents peu de temps après le Big Bang, ce qui soulève des questions fondamentales sur leur formation et leur croissance précoce dans l'univers primordial.
+%==============================================================================
+% FIN DE LA SECTION IA
+%==============================================================================
 
-Les trous noirs jouent également un rôle crucial dans la dynamique des systèmes binaires stellaires. Lorsqu'une étoile massive épuise son combustible nucléaire, elle peut s'effondrer pour former un trou noir. Si cette étoile a un compagnon proche, le trou noir nouvellement formé peut capturer de la matière de son compagnon, créant ainsi un disque d'accrétion lumineux autour du trou noir. Ce processus d'accrétion peut générer d'intenses émissions de rayons X et de radiations dans différentes longueurs d'onde, fournissant aux astronomes des informations précieuses sur la physique des trous noirs et leur environnement.
+\section{Revue critique du projet}
 
-Enfin, les trous noirs sont également cruciaux pour la détection des ondes gravitationnelles, une prédiction majeure de la relativité générale d'Einstein. Lorsque deux trous noirs fusionnent, ils produisent des ondes gravitationnelles qui se propagent à travers l'espace-temps, déformant la géométrie de l'espace-temps lui-même. La détection directe de ces ondes gravitationnelles par des observatoires tels que LIGO et Virgo a ouvert une nouvelle fenêtre sur l'univers, nous permettant d'observer des phénomènes cosmiques auparavant invisibles.
-   
-\section{Propriétés des trous noirs}  
-   \subsection{Gravité extrême et singularité}
-   Les trous noirs sont des manifestations extrêmes de la gravité, où la courbure de l'espace-temps atteint des niveaux extraordinaires. Au cœur d'un trou noir se trouve une région appelée singularité, où la densité de matière est infinie et où les lois de la physique telles que nous les connaissons cessent de s'appliquer. Cette singularité est enveloppée par ce qu'on appelle l'horizon des événements, une frontière invisible au-delà de laquelle rien, pas même la lumière, ne peut s'échapper de l'attraction gravitationnelle du trou noir.
+\subsection{Points forts}
+L'usage du \textbf{Design Pattern State} simplifie les interactions utilisateur en remplaçant les conditions complexes. L'architecture est optimisée par la centralisation des calculs dans \texttt{HexMath} et une gestion mémoire efficace des textures..
 
-La gravité à proximité d'un trou noir est si intense que même la lumière est piégée, créant une obscurité totale et un mystère profond. La courbure de l'espace-temps est si prononcée que le temps lui-même est affecté, se dilatant de manière significative à mesure que l'on s'approche de l'horizon des événements. Pour un observateur distant, le temps semble ralentir à mesure qu'il observe un objet s'approcher de l'horizon des événements, et finalement, il semble se figer complètement lorsque l'objet franchit l'horizon et s'effondre dans le trou noir.
+La gestion des commandes grâce au design pattern Command permet un bon polymorphisme pour la boucle de jeu ce qui permet un ajout facile de nouvelle commande.
 
-La singularité au cœur d'un trou noir est l'objet de nombreuses spéculations et théories. Selon la relativité générale d'Einstein, la singularité est une région où la densité de matière est infinie et où les lois de la physique traditionnelle cessent de s'appliquer. Cependant, les physiciens théoriciens cherchent depuis des décennies à développer une théorie de la gravité quantique qui pourrait unifier la relativité générale et la physique quantique et ainsi résoudre le mystère des singularités des trous noirs.
+L'application est en partie threader (i.e la demande d'action du joueur) ce qui fait que l'ia lors de sa recherche de coup tourne toute seule sans faire ralentir le programme.
 
-Une autre caractéristique fascinante des trous noirs est la possibilité d'avoir des singularités de rotation, également connues sous le nom de "singularités de Kerr". Ces singularités se forment lorsque les trous noirs sont en rotation, créant une structure plus complexe de l'espace-temps et des possibilités théoriques intéressantes pour les voyages dans le temps et les tunnels à travers l'espace-temps.
-   \subsection{Horizon des événements et l'horizon des trous noirs}\label{propriétés}
-Au cœur de la définition d'un trou noir se trouve l'horizon des événements, une frontière invisible qui marque le point de non-retour au-delà duquel rien, pas même la lumière, ne peut échapper à l'attraction gravitationnelle du trou noir. Cet horizon des événements est une prédiction fondamentale de la relativité générale d'Einstein et représente la frontière entre l'univers observable et l'inconnu.
 
-L'horizon des événements est défini par la géométrie de l'espace-temps autour du trou noir, où la courbure de l'espace-temps devient si prononcée que les trajectoires des particules et de la lumière sont déviées de manière irréversible vers l'intérieur du trou noir. Une fois qu'un objet ou un rayon lumineux franchit l'horizon des événements, il est condamné à plonger vers la singularité au cœur du trou noir, où les lois de la physique traditionnelle cessent de s'appliquer.
+\subsection{Difficultés rencontrées}
+Le déploiement en \textbf{CI} a été bloqué par l'absence d'interface graphique pour JavaFX. Ce problème a été résolu par la configuration de \textbf{Xvfb}, permettant d'exécuter les tests graphiques de manière virtuelle.
 
-L'horizon des événements est une frontière statique dans l'espace-temps, ce qui signifie qu'il ne change pas avec le temps pour un observateur externe. Cependant, pour un objet en chute libre vers le trou noir, l'horizon des événements semble se rapprocher de plus en plus rapidement à mesure que l'objet s'en rapproche, jusqu'à ce qu'il soit finalement englouti.
-   \subsection{Masse, charge et mouvement angulaire des trous noirs}
-   Les trous noirs sont caractérisés par trois propriétés fondamentales : leur masse, leur charge électrique et leur moment angulaire (spin). Ces propriétés déterminent les propriétés géométriques et dynamiques des trous noirs, ainsi que leur interaction avec l'environnement qui les entoure.
-   La masse d'un trou noir est déterminée par la quantité de matière qui s'est effondrée en son sein lors de sa formation. Selon la relativité générale d'Einstein, la masse d'un trou noir est directement liée à la taille de son horizon des événements. Le rayon de Schwarzschild, $rs$, qui correspond à la taille de l'horizon des événements d'un trou noir non chargé et non en rotation, est donné par :
-   \begin{lstlisting}
-      import scipy.constants as const
-      
-      def calculer_rayon_schwarzschild(masse):
-          """
-          Calcule le rayon de Schwarzschild pour un trou noir en fonction de sa masse
-          """
-          G = const.G
-          c = const.c
-      
-          rs = 2 * G * masse / (c ** 2)  # Formule du rayon de Schwarzschild
-      
-          return rs
-      \end{lstlisting}
+La compréhension de la structure de donnée bitboard à été un frein au début car elle était nouvelle pour nous. Il a fallut réussir à transformer une mémoire linéaire en un jeu hexagonal. Et comprendre tout les algorithmes autours.
+\subsection{Limites actuelles}
+Le moteur actuel utilise un \textbf{redessin complet} systématique. Même un simple survol de souris force le rafraîchissement inutile de la totalité des éléments (grille et fond), ce qui pèse sur les performances.
+Pour permettre l'arret rapide des threads en cas de timeout en mode blitz nous devons faire dormir les threads ce sommeil régulier ralenti par rapport a une version optimale.
 
-\bibliographystyle{plain}
+La classe AgonBoardImpl qui est l maitre du plateau est considerer comme une godclass ce qui signifie donc qu'elle fait trop de chose cela represente une limite si nous devions étendre le fonctionnement brut du jeu.
+
+\subsubsection{L'Hybridation face à la Myopie Tactique}
+
+Durant le cycle de développement, la possibilité d'utiliser le modèle prédictif TensorFlow de manière autonome (Agent ML Pur) a été envisagée. L'entraînement de ce modèle a reposé sur la génération d'un ensemble de données regroupant 100 parties complètes, plafonnées à 350 tours pour éviter les boucles infinies, générant ainsi un échantillon d'environ 13 500 états de plateau uniques. L'expérimentation d'un agent se basant exclusivement sur les prédictions de ce modèle a cependant révélé une incompétence structurelle caractérisée par une forte myopie tactique. Le modèle, évaluant un état de manière purement statique à l'instant T, s'est avéré incapable de se projeter temporellement, sanctionnant positivement des mouvements centraux menant inéluctablement à des captures au tour suivant.
+
+Face à ce biais cognitif de la machine, le parti a été pris d'hybrider l'approche. Cette architecture fait écho aux travaux fondateurs de Silver et al. \cite{silver2016mastering} sur le programme AlphaGo, démontrant qu'un réseau de neurones évaluant la valeur globale d'une position (\textit{Value Network}) ne peut exprimer son plein potentiel que s'il est couplé à la rigueur asymétrique d'un arbre Monte-Carlo (MCTS). Dans notre implémentation, le modèle TensorFlow agit comme l'intuition (Système 1) chargée d'orienter la descente dans l'arbre, tandis que le MCTS assure la rationalité et la vérification tactique (Système 2) par la simulation.
+
+\subsubsection{Le Compromis Computationnel de l'Inférence Tensorielle}
+
+L'analyse des vélocités d'évaluation met en évidence le principal goulot d'étranglement de cette hybridation. L'architecture bas niveau (Bitboard) s'est montrée extrêmement performante sur des algorithmes purement Java, propulsant le Minimax à plus de 147 000 nœuds évalués par seconde. Cependant, l'intégration de l'heuristique neuronale provoque une chute drastique de cette vélocité arborescente, faisant passer le moteur MCTS de 2 840 itérations par seconde avec une formule UCT classique à environ 520 itérations. 
+
+Ce ratio illustre un compromis technique inévitable lié à l'infrastructure logicielle. L'inférence d'un modèle TensorFlow requiert une communication constante entre la machine virtuelle Java (JVM) et la couche native du cœur TensorFlow exécutée en C++. Ce pont de communication, bien qu'optimisé, induit une latence incompressible à chaque évaluation de feuille. L'intelligence artificielle gagne ainsi en finesse d'évaluation heuristique, mais perd mécaniquement en profondeur mathématique d'exploration.
+
+\subsubsection{Deadlock Stratégique et Théorie des Jeux}
+
+Le résultat statistique le plus marquant de notre banc d'essai est le taux d'égalité de 100 \% entre les agents de haut niveau. Loin de traduire une défaillance du code, ce phénomène met en exergue une robustesse défensive parfaite menant à un \textit{Deadlock} (blocage) stratégique. Dans un jeu à somme nulle et à information parfaite, ce verrouillage illustre la convergence des agents vers un Équilibre de Nash \cite{neumann1944theory}, où l'initiateur d'une rupture de symétrie dégrade sa propre espérance de victoire.
+
+Cette situation est exacerbée par la contrainte de la grille hexagonale. À l'approche du trône central, les moteurs identifient que tout mouvement offensif s'apparente à une situation de \textit{Zugzwang} \cite{elkies1996zugzwang}, où le fait d'être obligé de jouer un coup altère négativement la structure de défense. Néanmoins, contrairement aux Échecs, le plateau de 91 cases d'Agon offre suffisamment d'espace extérieur pour que les intelligences artificielles contournent ce Zugzwang central en cyclant sur des mouvements parasites de temporisation sur la périphérie. La persistance de ces boucles d'évitement valide expérimentalement le concept d'Effet d'Horizon \cite{berliner1973horizon} : pour espérer percer une structure défensive optimale, l'algorithme devrait être en mesure de calculer et justifier un sacrifice sur un horizon de plus d'une dizaine de demi-coups, une profondeur inatteignable sous nos contraintes temporelles strictes d'une seconde.
+\subsection{Améliorations possibles}
+La solution pour contrer le \textbf{redessin complet} systématique est l'adoption d'un \textbf{système de calques} (\textit{Layers}). En isolant le fond statique sur un \texttt{Canvas} dédié, seul le calque des pièces mobiles sera mis à jour, fluidifiant ainsi le rendu.
+
+\subsubsection{Limites de l'Apprentissage et Perspectives d'Évolution}
+
+Le modèle prédictif actuel, bien que fonctionnel, présente des limites liées à la nature même des données ingérées. Le volume restreint de 13 500 états justifie pleinement l'utilisation d'une Régression Logistique (un perceptron simple avec fonction Sigmoïde et optimisation MSE), mais cette simplicité architecturale restreint la capacité de l'intelligence artificielle à extraire des motifs non linéaires ou des combinaisons tactiques complexes propres à la topologie d'Agon. De plus, le jeu de données ayant été généré exclusivement par des affrontements entre agents MCTS, le modèle neuronal souffre d'un biais d'imitation, limitant sa capacité à innover stratégiquement en dehors des schémas de son créateur.
+
+Si le cycle de développement devait se poursuivre, l'architecture logicielle mériterait une refonte orientée vers les micro-services. Le découplage du moteur TensorFlow de la JVM Java vers une API REST externe développée en Python permettrait d'exploiter les capacités de traitement par lots (\textit{Batching}). Le MCTS pourrait ainsi requérir l'évaluation de dizaines de feuilles simultanément, lissant le coût temporel de l'inférence. Enfin, concernant l'approche déterministe, l'intégration du hachage de Zobrist couplé à des tables de transposition permettrait de mutualiser les calculs du Minimax lors des transpositions de plateau, repoussant ainsi les limites de l'Effet d'Horizon sans coût matériel supplémentaire.
+
+\section{Utilisation de l'IA dans le projet}
+
+\subsection{Outils utilisés}
+
+Dans le cadre de ce projet, des outils d’intelligence artificielle générative tels que ChatGPT et Gemini chat et agent ont été utilisés comme supports d’aide au développement. Ces outils ont permis d’obtenir rapidement des informations, des explications ou des exemples liés à des problématiques rencontrées au cours du projet.
+
+\subsection{Apports dans le développement}
+
+L’intelligence artificielle a principalement été utilisée comme un outil d’assistance.
+
+Elle a notamment permis de faciliter la recherche d’informations techniques, en proposant rapidement des ressources, des exemples ou des explications sur des notions spécifiques. Cela a été particulièrement utile pour identifier les classes et structures adaptées en Java, notamment dans des domaines comme la gestion du réseau où certaines fonctionnalités sont déjà prises en charge par des bibliothèques existantes.
+
+L’IA a également contribué à améliorer la qualité du code. Elle a été utilisée pour rédiger ou améliorer des commentaires, proposer des structures de tests, et aider à mieux comprendre certaines erreurs signalées par les outils d’analyse statique.
+
+En particulier, elle a été utile pour interpréter les erreurs remontées par l’outil PMD. Ces erreurs n’étant pas toujours explicites, l’IA a permis de mieux comprendre leur origine et de proposer des corrections adaptées afin d’améliorer la qualité et la conformité du code.
+
+\section{Conclusion et Perspectives}
+
+La phase préliminaire a permis de valider la faisabilité du projet Agon tout en respectant les principes de la \textit{Clean Architecture}. Les choix techniques structurants, notamment l’utilisation d’une représentation en Bitboard pour la gestion du plateau, ainsi qu’une séparation claire des couches (core, application, UI), d’une gestion rigoureuse de la concurrence réseau, ont contribué à poser des bases solides pour l’évolution du projet.
+
+Les tests ont joué un rôle central dans la conception. Ils ont permis de mettre en évidence des problèmes de couplage, en particulier dans la partie CLI, où il a été nécessaire de découpler l’interface des entrées/sorties système afin de permettre des tests automatisés (via des implémentations simulées du terminal et du lecteur de ligne). Cette approche a conduit à une amélioration globale de la qualité du code et à une meilleure testabilité des composants.
+
+Par ailleurs, les expérimentations sur la partie IA ont révélé des comportements émergents intéressants. À partir d’un certain niveau d’entraînement, les agents exploitent des propriétés spécifiques du jeu Agon pour générer des cycles de jeu difficiles à détecter. Cela a mis en évidence des limites dans la gestion des règles, notamment autour de la répétition de positions (règle des “3 coups”), et souligne l’importance d’une gestion rigoureuse de l’état du jeu, y compris lors des opérations de sauvegarde et de chargement.
+
+Le projet a également permis de renforcer les compétences en travail collaboratif, en particulier sur des aspects tels que la gestion de version, la résolution de conflits et la coordination des évolutions d’architecture.
+
+\medskip
+
+En termes de perspectives, plusieurs axes d’amélioration sont identifiés. D’une part, l’enrichissement du moteur d’IA (optimisation des heuristiques, amélioration des stratégies comme le minimax ou le MCTS) constitue une évolution naturelle. D’autre part, l’interface utilisateur, notamment graphique, pourrait être approfondie afin d’offrir une meilleure expérience utilisateur et intégrer des fonctionnalités avancées (raccourcis clavier, visualisation dynamique, etc.).
+
+Enfin, la mise en place d’un système d’internationalisation complet (via des \textit{ResourceBundle}) ouvre la voie à un support multilingue plus robuste pour rajouter d'autres langues autre que le Français et l'Anglais, tandis que l’amélioration des outils de ligne de commande (aide contextuelle, auto-complétion avec JLine) permettrait de rapprocher l’application d’un outil professionnel.
+
+\nocite{*}
+\bibliographystyle{unsrt}
 \bibliography{references}
+
+\section*{Annexes}
+\addcontentsline{toc}{section}{Annexes}
+
+\begin{center}
+\begin{longtable}{|c|p{8.5cm}|c|}
+\hline
+\textbf{ID} & \textbf{Description de l'exigence} & \textbf{Statut} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Description de l'exigence} & \textbf{Statut} \\
+\hline
+\endhead
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Généralités \& Options au lancement}} \\ \hline
+F1 & Lancement via CLI (options standards)  & \fait \\ \hline
+F2 & Fichier de configuration .agonrc  & \fait \\ \hline
+F3 & Internationalisation (anglais/français)  & \partiel \\ \hline
+F4 & Interface CLI (Lancement)  & \fait \\ \hline
+F5 & Mode Blitz (limite de temps)  & \fait \\ \hline
+F6 & Mode Contest (lecture de fichier)  & \fait \\ \hline
+F7 & Interface graphique JavaFX (option -g)  & \fait \\ \hline
+F8 & Mode IA (choix de la couleur)  & \fait \\ \hline
+F9 & Placement initial manuel  & \pasfait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Gestion du Jeu (Besoins communs)}} \\ \hline
+F10 & Respect des règles d'Agon  & \fait \\ \hline
+F11 & Gestion des erreurs utilisateur  & \fait \\ \hline
+F12 & Gestion du Undo / Redo  & \fait \\ \hline
+F13 & Système de conseils (Hint)  & \fait \\ \hline
+F14 & Gestion du blitz (temps restant, pause)  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Command Line Interface (CLI)}} \\ \hline
+F15 & Shell interactif (prompt, commandes)  & \fait \\ \hline
+F16 & Proposer de sauvegarder avant de quitter  & \fait \\ \hline
+F17 & Édition de la commande en cours  & \fait \\ \hline
+F18 & Historique des commandes tapées  & \fait \\ \hline
+F19 & Complétion des commandes  & \fait \\ \hline
+F20 & Notation ABA-pro pour les coups  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Format de sauvegarde}} \\ \hline
+F21 & Sauvegarde et restauration (format texte)  & \fait \\ \hline
+F22 & Commentaires dans la sauvegarde  & \fait \\ \hline
+F23 & Format des paramètres du jeu  & \fait \\ \hline
+F24 & Format du plateau de jeu (ASCII)  & \fait \\ \hline
+F25 & Format de l'historique des tours  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Structures de données}} \\ \hline
+F26 & Module Bitboard indépendant  & \fait \\ \hline
+F27 & Algorithmes de manipulation des bitboards  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Interface Graphique (GUI)}} \\ \hline
+F28 & Menus de l'application (File, Game, etc.)  & \fait \\ \hline
+F29 & Raccourcis clavier personnalisables  & \fait \\ \hline
+F30 & Drag'n'Drop des pièces à la souris  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Intelligence Artificielle}} \\ \hline
+F31 & Temps de réflexion borné  & \fait \\ \hline
+F32 & Minimax avec élagage Alpha-Bêta  & \fait \\ \hline
+F33 & Trois fonctions d'évaluation Minimax  & \fait \\ \hline
+F34 & Approfondissement itératif  & \fait \\ \hline
+F35 & Profondeur de recherche de Minimax  & \fait \\ \hline
+F36 & Monte Carlo Tree Search (MCTS)  & \fait \\ \hline
+F37 & Sélection MCTS par Machine Learning  & \fait \\ \hline
+
+\multicolumn{3}{|c|}{\cellcolor{gray!20}\textbf{Multijoueur \& Réseau}} \\ \hline
+F38 & Découverte UDP et connexion TCP  & \fait \\ \hline
+F39 & Serveur multi-clients et arbitrage  & \fait \\ \hline
+F40 & Système d'invitations et gestion joueurs  & \fait \\ \hline
+\end{longtable}
+\end{center}
+
+\begin{landscape}
+    \begin{figure}[p]
+        \centering
+        \includegraphics[width=1\textwidth, keepaspectratio]{gui.png}
+        \caption{UML du package gui du package UI}
+        \label{fig:gui.png}
+    \end{figure}
+\end{landscape}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{cli.png}
+    \caption{UML du package cli du package UI}
+    \label{fig:cli.png}
+\end{figure}
 \end{document}
